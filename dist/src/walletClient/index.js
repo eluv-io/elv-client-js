@@ -6,15 +6,13 @@ var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
 var _typeof = require("@babel/runtime/helpers/typeof");
 
-var _asyncToGenerator = require("@babel/runtime/helpers/asyncToGenerator");
-
 var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
 
 var _createClass = require("@babel/runtime/helpers/createClass");
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 var _require = require("../ElvClient"),
     ElvClient = _require.ElvClient;
@@ -43,7 +41,9 @@ var embedded = inBrowser && window.top !== window.self;
  * See the Modules section on the sidebar for all client methods unrelated to login and authorization
  */
 
-var ElvWalletClient = /*#__PURE__*/function () {
+var ElvWalletClient =
+/*#__PURE__*/
+function () {
   "use strict";
 
   function ElvWalletClient(_ref) {
@@ -118,7 +118,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
   }, {
     key: "CanSign",
-    value:
+
     /* Login and authorization */
 
     /**
@@ -129,7 +129,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
      * @methodGroup Signatures
      * @returns {boolean} - Whether or not this client can sign a message without a popup.
      */
-    function CanSign() {
+    value: function CanSign() {
       if (!this.loggedIn) {
         return false;
       }
@@ -156,168 +156,146 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
   }, {
     key: "PersonalSign",
-    value: function () {
-      var _PersonalSign = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(_ref2) {
-        var message, parameters, url;
-        return _regeneratorRuntime.wrap(function _callee3$(_context3) {
-          while (1) {
-            switch (_context3.prev = _context3.next) {
-              case 0:
-                message = _ref2.message;
+    value: function PersonalSign(_ref2) {
+      var message, parameters, url;
+      return _regeneratorRuntime.async(function PersonalSign$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              message = _ref2.message;
 
-                if (this.loggedIn) {
-                  _context3.next = 3;
-                  break;
-                }
+              if (this.loggedIn) {
+                _context3.next = 3;
+                break;
+              }
 
-                throw Error("ElvWalletClient: Unable to perform signature - Not logged in");
+              throw Error("ElvWalletClient: Unable to perform signature - Not logged in");
 
-              case 3:
-                if (!this.CanSign()) {
-                  _context3.next = 19;
-                  break;
-                }
+            case 3:
+              if (!this.CanSign()) {
+                _context3.next = 19;
+                break;
+              }
 
-                if (!this.__authorization.clusterToken) {
-                  _context3.next = 12;
-                  break;
-                }
+              if (!this.__authorization.clusterToken) {
+                _context3.next = 12;
+                break;
+              }
 
-                // Custodial wallet sign
-                message = _typeof(message) === "object" ? JSON.stringify(message) : message;
-                message = Ethers.utils.keccak256(Buffer.from("\x19Ethereum Signed Message:\n".concat(message.length).concat(message), "utf-8"));
-                _context3.next = 9;
-                return this.client.authClient.Sign(message);
+              // Custodial wallet sign
+              message = _typeof(message) === "object" ? JSON.stringify(message) : message;
+              message = Ethers.utils.keccak256(Buffer.from("\x19Ethereum Signed Message:\n".concat(message.length).concat(message), "utf-8"));
+              _context3.next = 9;
+              return _regeneratorRuntime.awrap(this.client.authClient.Sign(message));
 
-              case 9:
-                return _context3.abrupt("return", _context3.sent);
+            case 9:
+              return _context3.abrupt("return", _context3.sent);
 
-              case 12:
-                if (!(this.UserInfo().walletName.toLowerCase() === "metamask")) {
-                  _context3.next = 16;
-                  break;
-                }
+            case 12:
+              if (!(this.UserInfo().walletName.toLowerCase() === "metamask")) {
+                _context3.next = 16;
+                break;
+              }
 
-                return _context3.abrupt("return", this.SignMetamask({
-                  message: message,
-                  address: this.UserAddress()
-                }));
+              return _context3.abrupt("return", this.SignMetamask({
+                message: message,
+                address: this.UserAddress()
+              }));
 
-              case 16:
-                throw Error("ElvWalletClient: Unable to sign");
+            case 16:
+              throw Error("ElvWalletClient: Unable to sign");
 
-              case 17:
+            case 17:
+              _context3.next = 21;
+              break;
+
+            case 19:
+              if (inBrowser) {
                 _context3.next = 21;
                 break;
+              }
 
-              case 19:
-                if (inBrowser) {
-                  _context3.next = 21;
-                  break;
-                }
+              throw Error("ElvWalletClient: Unable to sign");
 
-                throw Error("ElvWalletClient: Unable to sign");
+            case 21:
+              parameters = {
+                action: "personal-sign",
+                message: message,
+                logIn: true
+              };
+              url = new URL(this.appUrl);
+              url.hash = UrlJoin("/action", "sign", Utils.B58(JSON.stringify(parameters)));
+              url.searchParams.set("origin", window.location.origin);
 
-              case 21:
-                parameters = {
-                  action: "personal-sign",
-                  message: message,
-                  logIn: true
-                };
-                url = new URL(this.appUrl);
-                url.hash = UrlJoin("/action", "sign", Utils.B58(JSON.stringify(parameters)));
-                url.searchParams.set("origin", window.location.origin);
+              if (!(!embedded && window.location.origin === url.origin)) {
+                _context3.next = 27;
+                break;
+              }
 
-                if (!(!embedded && window.location.origin === url.origin)) {
-                  _context3.next = 27;
-                  break;
-                }
+              throw Error("ElvWalletClient: Unable to sign");
 
-                throw Error("ElvWalletClient: Unable to sign");
-
-              case 27:
-                _context3.next = 29;
-                return new Promise( /*#__PURE__*/function () {
-                  var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(resolve, reject) {
-                    return _regeneratorRuntime.wrap(function _callee2$(_context2) {
-                      while (1) {
-                        switch (_context2.prev = _context2.next) {
-                          case 0:
-                            _context2.next = 2;
-                            return ActionPopup({
-                              mode: "tab",
-                              url: url.toString(),
-                              onCancel: function onCancel() {
-                                return reject("User cancelled sign");
-                              },
-                              onMessage: function () {
-                                var _onMessage = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(event, Close) {
-                                  return _regeneratorRuntime.wrap(function _callee$(_context) {
-                                    while (1) {
-                                      switch (_context.prev = _context.next) {
-                                        case 0:
-                                          if (!(!event || !event.data || event.data.type !== "FlowResponse")) {
-                                            _context.next = 2;
-                                            break;
-                                          }
-
-                                          return _context.abrupt("return");
-
-                                        case 2:
-                                          try {
-                                            resolve(event.data.response);
-                                          } catch (error) {
-                                            reject(error);
-                                          } finally {
-                                            Close();
-                                          }
-
-                                        case 3:
-                                        case "end":
-                                          return _context.stop();
-                                      }
+            case 27:
+              _context3.next = 29;
+              return _regeneratorRuntime.awrap(new Promise(function _callee(resolve, reject) {
+                return _regeneratorRuntime.async(function _callee$(_context2) {
+                  while (1) {
+                    switch (_context2.prev = _context2.next) {
+                      case 0:
+                        _context2.next = 2;
+                        return _regeneratorRuntime.awrap(ActionPopup({
+                          mode: "tab",
+                          url: url.toString(),
+                          onCancel: function onCancel() {
+                            return reject("User cancelled sign");
+                          },
+                          onMessage: function onMessage(event, Close) {
+                            return _regeneratorRuntime.async(function onMessage$(_context) {
+                              while (1) {
+                                switch (_context.prev = _context.next) {
+                                  case 0:
+                                    if (!(!event || !event.data || event.data.type !== "FlowResponse")) {
+                                      _context.next = 2;
+                                      break;
                                     }
-                                  }, _callee);
-                                }));
 
-                                function onMessage(_x4, _x5) {
-                                  return _onMessage.apply(this, arguments);
+                                    return _context.abrupt("return");
+
+                                  case 2:
+                                    try {
+                                      resolve(event.data.response);
+                                    } catch (error) {
+                                      reject(error);
+                                    } finally {
+                                      Close();
+                                    }
+
+                                  case 3:
+                                  case "end":
+                                    return _context.stop();
                                 }
-
-                                return onMessage;
-                              }()
+                              }
                             });
+                          }
+                        }));
 
-                          case 2:
-                          case "end":
-                            return _context2.stop();
-                        }
-                      }
-                    }, _callee2);
-                  }));
+                      case 2:
+                      case "end":
+                        return _context2.stop();
+                    }
+                  }
+                });
+              }));
 
-                  return function (_x2, _x3) {
-                    return _ref3.apply(this, arguments);
-                  };
-                }());
+            case 29:
+              return _context3.abrupt("return", _context3.sent);
 
-              case 29:
-                return _context3.abrupt("return", _context3.sent);
-
-              case 30:
-              case "end":
-                return _context3.stop();
-            }
+            case 30:
+            case "end":
+              return _context3.stop();
           }
-        }, _callee3, this);
-      }));
-
-      function PersonalSign(_x) {
-        return _PersonalSign.apply(this, arguments);
-      }
-
-      return PersonalSign;
-    }()
+        }
+      }, null, this);
+    }
     /**
      * Direct the user to the Eluvio Media Wallet login page.
      *
@@ -342,180 +320,158 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
   }, {
     key: "LogIn",
-    value: function () {
-      var _LogIn = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee6(_ref4) {
-        var _this = this;
+    value: function LogIn(_ref3) {
+      var _this = this;
 
-        var _ref4$method, method, provider, _ref4$mode, mode, callbackUrl, marketplaceParams, _ref4$clearLogin, clearLogin, callback, loginUrl;
+      var _ref3$method, method, provider, _ref3$mode, mode, callbackUrl, marketplaceParams, _ref3$clearLogin, clearLogin, callback, loginUrl;
 
-        return _regeneratorRuntime.wrap(function _callee6$(_context6) {
-          while (1) {
-            switch (_context6.prev = _context6.next) {
-              case 0:
-                _ref4$method = _ref4.method, method = _ref4$method === void 0 ? "redirect" : _ref4$method, provider = _ref4.provider, _ref4$mode = _ref4.mode, mode = _ref4$mode === void 0 ? "login" : _ref4$mode, callbackUrl = _ref4.callbackUrl, marketplaceParams = _ref4.marketplaceParams, _ref4$clearLogin = _ref4.clearLogin, clearLogin = _ref4$clearLogin === void 0 ? false : _ref4$clearLogin, callback = _ref4.callback;
-                loginUrl = new URL(this.appUrl);
-                loginUrl.hash = "/login";
-                loginUrl.searchParams.set("origin", window.location.origin);
-                loginUrl.searchParams.set("action", "login");
+      return _regeneratorRuntime.async(function LogIn$(_context6) {
+        while (1) {
+          switch (_context6.prev = _context6.next) {
+            case 0:
+              _ref3$method = _ref3.method, method = _ref3$method === void 0 ? "redirect" : _ref3$method, provider = _ref3.provider, _ref3$mode = _ref3.mode, mode = _ref3$mode === void 0 ? "login" : _ref3$mode, callbackUrl = _ref3.callbackUrl, marketplaceParams = _ref3.marketplaceParams, _ref3$clearLogin = _ref3.clearLogin, clearLogin = _ref3$clearLogin === void 0 ? false : _ref3$clearLogin, callback = _ref3.callback;
+              loginUrl = new URL(this.appUrl);
+              loginUrl.hash = "/login";
+              loginUrl.searchParams.set("origin", window.location.origin);
+              loginUrl.searchParams.set("action", "login");
 
-                if (provider) {
-                  loginUrl.searchParams.set("provider", provider);
-                }
+              if (provider) {
+                loginUrl.searchParams.set("provider", provider);
+              }
 
-                if (mode) {
-                  loginUrl.searchParams.set("mode", mode);
-                }
+              if (mode) {
+                loginUrl.searchParams.set("mode", mode);
+              }
 
-                if (!marketplaceParams) {
-                  _context6.next = 15;
-                  break;
-                }
-
-                _context6.t0 = loginUrl.searchParams;
-                _context6.next = 11;
-                return this.MarketplaceInfo({
-                  marketplaceParams: marketplaceParams
-                });
-
-              case 11:
-                _context6.t1 = _context6.sent.marketplaceHash;
-
-                _context6.t0.set.call(_context6.t0, "mid", _context6.t1);
-
-                _context6.next = 16;
+              if (!marketplaceParams) {
+                _context6.next = 15;
                 break;
+              }
 
-              case 15:
-                if ((this.selectedMarketplaceInfo || {}).marketplaceHash) {
-                  loginUrl.searchParams.set("mid", this.selectedMarketplaceInfo.marketplaceHash);
-                }
+              _context6.t0 = loginUrl.searchParams;
+              _context6.next = 11;
+              return _regeneratorRuntime.awrap(this.MarketplaceInfo({
+                marketplaceParams: marketplaceParams
+              }));
 
-              case 16:
-                if (clearLogin) {
-                  loginUrl.searchParams.set("clear", "");
-                }
+            case 11:
+              _context6.t1 = _context6.sent.marketplaceHash;
 
-                if (!(method === "redirect")) {
-                  _context6.next = 24;
-                  break;
-                }
+              _context6.t0.set.call(_context6.t0, "mid", _context6.t1);
 
-                loginUrl.searchParams.set("response", "redirect");
-                loginUrl.searchParams.set("source", "origin");
-                loginUrl.searchParams.set("redirect", callbackUrl);
-                window.location = loginUrl;
-                _context6.next = 28;
+              _context6.next = 16;
+              break;
+
+            case 15:
+              if ((this.selectedMarketplaceInfo || {}).marketplaceHash) {
+                loginUrl.searchParams.set("mid", this.selectedMarketplaceInfo.marketplaceHash);
+              }
+
+            case 16:
+              if (clearLogin) {
+                loginUrl.searchParams.set("clear", "");
+              }
+
+              if (!(method === "redirect")) {
+                _context6.next = 24;
                 break;
+              }
 
-              case 24:
-                loginUrl.searchParams.set("response", "message");
-                loginUrl.searchParams.set("source", "parent");
-                _context6.next = 28;
-                return new Promise( /*#__PURE__*/function () {
-                  var _ref5 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee5(resolve, reject) {
-                    return _regeneratorRuntime.wrap(function _callee5$(_context5) {
-                      while (1) {
-                        switch (_context5.prev = _context5.next) {
-                          case 0:
-                            _context5.next = 2;
-                            return ActionPopup({
-                              mode: "tab",
-                              url: loginUrl.toString(),
-                              onCancel: function onCancel() {
-                                return reject("User cancelled login");
-                              },
-                              onMessage: function () {
-                                var _onMessage2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(event, Close) {
-                                  return _regeneratorRuntime.wrap(function _callee4$(_context4) {
-                                    while (1) {
-                                      switch (_context4.prev = _context4.next) {
-                                        case 0:
-                                          if (!(!event || !event.data || event.data.type !== "LoginResponse")) {
-                                            _context4.next = 2;
-                                            break;
-                                          }
+              loginUrl.searchParams.set("response", "redirect");
+              loginUrl.searchParams.set("source", "origin");
+              loginUrl.searchParams.set("redirect", callbackUrl);
+              window.location = loginUrl;
+              _context6.next = 28;
+              break;
 
-                                          return _context4.abrupt("return");
-
-                                        case 2:
-                                          _context4.prev = 2;
-
-                                          if (!callback) {
-                                            _context4.next = 8;
-                                            break;
-                                          }
-
-                                          _context4.next = 6;
-                                          return callback(event.data.params);
-
-                                        case 6:
-                                          _context4.next = 10;
-                                          break;
-
-                                        case 8:
-                                          _context4.next = 10;
-                                          return _this.Authenticate({
-                                            token: event.data.params.clientSigningToken || event.data.params.clientAuthToken
-                                          });
-
-                                        case 10:
-                                          resolve();
-                                          _context4.next = 16;
-                                          break;
-
-                                        case 13:
-                                          _context4.prev = 13;
-                                          _context4.t0 = _context4["catch"](2);
-                                          reject(_context4.t0);
-
-                                        case 16:
-                                          _context4.prev = 16;
-                                          Close();
-                                          return _context4.finish(16);
-
-                                        case 19:
-                                        case "end":
-                                          return _context4.stop();
-                                      }
+            case 24:
+              loginUrl.searchParams.set("response", "message");
+              loginUrl.searchParams.set("source", "parent");
+              _context6.next = 28;
+              return _regeneratorRuntime.awrap(new Promise(function _callee2(resolve, reject) {
+                return _regeneratorRuntime.async(function _callee2$(_context5) {
+                  while (1) {
+                    switch (_context5.prev = _context5.next) {
+                      case 0:
+                        _context5.next = 2;
+                        return _regeneratorRuntime.awrap(ActionPopup({
+                          mode: "tab",
+                          url: loginUrl.toString(),
+                          onCancel: function onCancel() {
+                            return reject("User cancelled login");
+                          },
+                          onMessage: function onMessage(event, Close) {
+                            return _regeneratorRuntime.async(function onMessage$(_context4) {
+                              while (1) {
+                                switch (_context4.prev = _context4.next) {
+                                  case 0:
+                                    if (!(!event || !event.data || event.data.type !== "LoginResponse")) {
+                                      _context4.next = 2;
+                                      break;
                                     }
-                                  }, _callee4, null, [[2, 13, 16, 19]]);
-                                }));
 
-                                function onMessage(_x9, _x10) {
-                                  return _onMessage2.apply(this, arguments);
+                                    return _context4.abrupt("return");
+
+                                  case 2:
+                                    _context4.prev = 2;
+
+                                    if (!callback) {
+                                      _context4.next = 8;
+                                      break;
+                                    }
+
+                                    _context4.next = 6;
+                                    return _regeneratorRuntime.awrap(callback(event.data.params));
+
+                                  case 6:
+                                    _context4.next = 10;
+                                    break;
+
+                                  case 8:
+                                    _context4.next = 10;
+                                    return _regeneratorRuntime.awrap(_this.Authenticate({
+                                      token: event.data.params.clientSigningToken || event.data.params.clientAuthToken
+                                    }));
+
+                                  case 10:
+                                    resolve();
+                                    _context4.next = 16;
+                                    break;
+
+                                  case 13:
+                                    _context4.prev = 13;
+                                    _context4.t0 = _context4["catch"](2);
+                                    reject(_context4.t0);
+
+                                  case 16:
+                                    _context4.prev = 16;
+                                    Close();
+                                    return _context4.finish(16);
+
+                                  case 19:
+                                  case "end":
+                                    return _context4.stop();
                                 }
+                              }
+                            }, null, null, [[2, 13, 16, 19]]);
+                          }
+                        }));
 
-                                return onMessage;
-                              }()
-                            });
+                      case 2:
+                      case "end":
+                        return _context5.stop();
+                    }
+                  }
+                });
+              }));
 
-                          case 2:
-                          case "end":
-                            return _context5.stop();
-                        }
-                      }
-                    }, _callee5);
-                  }));
-
-                  return function (_x7, _x8) {
-                    return _ref5.apply(this, arguments);
-                  };
-                }());
-
-              case 28:
-              case "end":
-                return _context6.stop();
-            }
+            case 28:
+            case "end":
+              return _context6.stop();
           }
-        }, _callee6, this);
-      }));
-
-      function LogIn(_x6) {
-        return _LogIn.apply(this, arguments);
-      }
-
-      return LogIn;
-    }()
+        }
+      }, null, this);
+    }
     /**
      * Remove authorization for the current user.
      *
@@ -545,64 +501,56 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
   }, {
     key: "Authenticate",
-    value: function () {
-      var _Authenticate = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee7(_ref6) {
-        var token, decodedToken;
-        return _regeneratorRuntime.wrap(function _callee7$(_context7) {
-          while (1) {
-            switch (_context7.prev = _context7.next) {
-              case 0:
-                token = _ref6.token;
-                _context7.prev = 1;
-                decodedToken = JSON.parse(this.utils.FromB58ToStr(token)) || {};
-                _context7.next = 8;
+    value: function Authenticate(_ref4) {
+      var token, decodedToken;
+      return _regeneratorRuntime.async(function Authenticate$(_context7) {
+        while (1) {
+          switch (_context7.prev = _context7.next) {
+            case 0:
+              token = _ref4.token;
+              _context7.prev = 1;
+              decodedToken = JSON.parse(this.utils.FromB58ToStr(token)) || {};
+              _context7.next = 8;
+              break;
+
+            case 5:
+              _context7.prev = 5;
+              _context7.t0 = _context7["catch"](1);
+              throw new Error("Invalid authorization token " + token);
+
+            case 8:
+              if (!(!decodedToken.expiresAt || Date.now() > decodedToken.expiresAt)) {
+                _context7.next = 10;
                 break;
+              }
 
-              case 5:
-                _context7.prev = 5;
-                _context7.t0 = _context7["catch"](1);
-                throw new Error("Invalid authorization token " + token);
+              throw Error("ElvWalletClient: Provided authorization token has expired");
 
-              case 8:
-                if (!(!decodedToken.expiresAt || Date.now() > decodedToken.expiresAt)) {
-                  _context7.next = 10;
-                  break;
-                }
-
-                throw Error("ElvWalletClient: Provided authorization token has expired");
-
-              case 10:
-                if (!decodedToken.clusterToken) {
-                  _context7.next = 13;
-                  break;
-                }
-
+            case 10:
+              if (!decodedToken.clusterToken) {
                 _context7.next = 13;
-                return this.client.SetRemoteSigner({
-                  authToken: decodedToken.clusterToken,
-                  signerURIs: decodedToken.signerURIs
-                });
+                break;
+              }
 
-              case 13:
-                this.client.SetStaticToken({
-                  token: decodedToken.fabricToken
-                });
-                return _context7.abrupt("return", this.SetAuthorization(_objectSpread({}, decodedToken)));
+              _context7.next = 13;
+              return _regeneratorRuntime.awrap(this.client.SetRemoteSigner({
+                authToken: decodedToken.clusterToken,
+                signerURIs: decodedToken.signerURIs
+              }));
 
-              case 15:
-              case "end":
-                return _context7.stop();
-            }
+            case 13:
+              this.client.SetStaticToken({
+                token: decodedToken.fabricToken
+              });
+              return _context7.abrupt("return", this.SetAuthorization(_objectSpread({}, decodedToken)));
+
+            case 15:
+            case "end":
+              return _context7.stop();
           }
-        }, _callee7, this, [[1, 5]]);
-      }));
-
-      function Authenticate(_x11) {
-        return _Authenticate.apply(this, arguments);
-      }
-
-      return Authenticate;
-    }()
+        }
+      }, null, this, [[1, 5]]);
+    }
     /**
      * Authenticate with an OAuth ID token
      *
@@ -625,110 +573,102 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
   }, {
     key: "AuthenticateOAuth",
-    value: function () {
-      var _AuthenticateOAuth = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee8(_ref7) {
-        var idToken, tenantId, email, signerURIs, _ref7$shareEmail, shareEmail, tokenDuration, expiresAt, fabricToken, address, decodedToken;
+    value: function AuthenticateOAuth(_ref5) {
+      var idToken, tenantId, email, signerURIs, _ref5$shareEmail, shareEmail, tokenDuration, expiresAt, fabricToken, address, decodedToken;
 
-        return _regeneratorRuntime.wrap(function _callee8$(_context8) {
-          while (1) {
-            switch (_context8.prev = _context8.next) {
-              case 0:
-                idToken = _ref7.idToken, tenantId = _ref7.tenantId, email = _ref7.email, signerURIs = _ref7.signerURIs, _ref7$shareEmail = _ref7.shareEmail, shareEmail = _ref7$shareEmail === void 0 ? false : _ref7$shareEmail;
-                tokenDuration = 24;
+      return _regeneratorRuntime.async(function AuthenticateOAuth$(_context8) {
+        while (1) {
+          switch (_context8.prev = _context8.next) {
+            case 0:
+              idToken = _ref5.idToken, tenantId = _ref5.tenantId, email = _ref5.email, signerURIs = _ref5.signerURIs, _ref5$shareEmail = _ref5.shareEmail, shareEmail = _ref5$shareEmail === void 0 ? false : _ref5$shareEmail;
+              tokenDuration = 24;
 
-                if (!(!tenantId && this.selectedMarketplaceInfo)) {
-                  _context8.next = 6;
-                  break;
-                }
+              if (!(!tenantId && this.selectedMarketplaceInfo)) {
+                _context8.next = 6;
+                break;
+              }
 
-                _context8.next = 5;
-                return this.AvailableMarketplaces();
+              _context8.next = 5;
+              return _regeneratorRuntime.awrap(this.AvailableMarketplaces());
 
-              case 5:
-                tenantId = this.selectedMarketplaceInfo.tenantId;
+            case 5:
+              tenantId = this.selectedMarketplaceInfo.tenantId;
 
-              case 6:
-                _context8.next = 8;
-                return this.client.SetRemoteSigner({
-                  idToken: idToken,
-                  tenantId: tenantId,
-                  signerURIs: signerURIs,
-                  extraData: {
-                    share_email: shareEmail
-                  },
-                  unsignedPublicAuth: true
-                });
+            case 6:
+              _context8.next = 8;
+              return _regeneratorRuntime.awrap(this.client.SetRemoteSigner({
+                idToken: idToken,
+                tenantId: tenantId,
+                signerURIs: signerURIs,
+                extraData: {
+                  share_email: shareEmail
+                },
+                unsignedPublicAuth: true
+              }));
 
-              case 8:
-                expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
-                _context8.next = 11;
-                return this.client.CreateFabricToken({
-                  duration: tokenDuration * 60 * 60 * 1000
-                });
+            case 8:
+              expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
+              _context8.next = 11;
+              return _regeneratorRuntime.awrap(this.client.CreateFabricToken({
+                duration: tokenDuration * 60 * 60 * 1000
+              }));
 
-              case 11:
-                fabricToken = _context8.sent;
-                address = this.client.utils.FormatAddress(this.client.CurrentAccountAddress());
+            case 11:
+              fabricToken = _context8.sent;
+              address = this.client.utils.FormatAddress(this.client.CurrentAccountAddress());
 
-                if (email) {
-                  _context8.next = 22;
-                  break;
-                }
-
-                _context8.prev = 14;
-                decodedToken = JSON.parse(this.utils.FromB64URL(idToken.split(".")[1]));
-                email = decodedToken.email;
+              if (email) {
                 _context8.next = 22;
                 break;
+              }
 
-              case 19:
-                _context8.prev = 19;
-                _context8.t0 = _context8["catch"](14);
-                throw Error("Failed to decode ID token");
+              _context8.prev = 14;
+              decodedToken = JSON.parse(this.utils.FromB64URL(idToken.split(".")[1]));
+              email = decodedToken.email;
+              _context8.next = 22;
+              break;
 
-              case 22:
-                this.client.SetStaticToken({
-                  token: fabricToken
-                });
-                return _context8.abrupt("return", {
-                  authToken: this.SetAuthorization({
-                    fabricToken: fabricToken,
-                    tenantId: tenantId,
-                    address: address,
-                    email: email,
-                    expiresAt: expiresAt,
-                    signerURIs: signerURIs,
-                    walletType: "Custodial",
-                    walletName: "Eluvio",
-                    register: true
-                  }),
-                  signingToken: this.SetAuthorization({
-                    clusterToken: this.client.signer.authToken,
-                    fabricToken: fabricToken,
-                    tenantId: tenantId,
-                    address: address,
-                    email: email,
-                    expiresAt: expiresAt,
-                    signerURIs: signerURIs,
-                    walletType: "Custodial",
-                    walletName: "Eluvio"
-                  })
-                });
+            case 19:
+              _context8.prev = 19;
+              _context8.t0 = _context8["catch"](14);
+              throw Error("Failed to decode ID token");
 
-              case 24:
-              case "end":
-                return _context8.stop();
-            }
+            case 22:
+              this.client.SetStaticToken({
+                token: fabricToken
+              });
+              return _context8.abrupt("return", {
+                authToken: this.SetAuthorization({
+                  fabricToken: fabricToken,
+                  tenantId: tenantId,
+                  address: address,
+                  email: email,
+                  expiresAt: expiresAt,
+                  signerURIs: signerURIs,
+                  walletType: "Custodial",
+                  walletName: "Eluvio",
+                  register: true
+                }),
+                signingToken: this.SetAuthorization({
+                  clusterToken: this.client.signer.authToken,
+                  fabricToken: fabricToken,
+                  tenantId: tenantId,
+                  address: address,
+                  email: email,
+                  expiresAt: expiresAt,
+                  signerURIs: signerURIs,
+                  walletType: "Custodial",
+                  walletName: "Eluvio"
+                })
+              });
+
+            case 24:
+            case "end":
+              return _context8.stop();
           }
-        }, _callee8, this, [[14, 19]]);
-      }));
-
-      function AuthenticateOAuth(_x12) {
-        return _AuthenticateOAuth.apply(this, arguments);
-      }
-
-      return AuthenticateOAuth;
-    }()
+        }
+      }, null, this, [[14, 19]]);
+    }
     /**
      * Authenticate with an external Ethereum compatible wallet, like Metamask.
      *
@@ -745,84 +685,70 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
   }, {
     key: "AuthenticateExternalWallet",
-    value: function () {
-      var _AuthenticateExternalWallet = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee10(_ref8) {
-        var _this2 = this;
+    value: function AuthenticateExternalWallet(_ref6) {
+      var _this2 = this;
 
-        var address, _ref8$tokenDuration, tokenDuration, _ref8$walletName, walletName, Sign, expiresAt, fabricToken;
+      var address, _ref6$tokenDuration, tokenDuration, _ref6$walletName, walletName, Sign, expiresAt, fabricToken;
 
-        return _regeneratorRuntime.wrap(function _callee10$(_context10) {
-          while (1) {
-            switch (_context10.prev = _context10.next) {
-              case 0:
-                address = _ref8.address, _ref8$tokenDuration = _ref8.tokenDuration, tokenDuration = _ref8$tokenDuration === void 0 ? 24 : _ref8$tokenDuration, _ref8$walletName = _ref8.walletName, walletName = _ref8$walletName === void 0 ? "Metamask" : _ref8$walletName, Sign = _ref8.Sign;
+      return _regeneratorRuntime.async(function AuthenticateExternalWallet$(_context10) {
+        while (1) {
+          switch (_context10.prev = _context10.next) {
+            case 0:
+              address = _ref6.address, _ref6$tokenDuration = _ref6.tokenDuration, tokenDuration = _ref6$tokenDuration === void 0 ? 24 : _ref6$tokenDuration, _ref6$walletName = _ref6.walletName, walletName = _ref6$walletName === void 0 ? "Metamask" : _ref6$walletName, Sign = _ref6.Sign;
 
-                if (!address) {
-                  address = window.ethereum.selectedAddress;
-                }
+              if (!address) {
+                address = window.ethereum.selectedAddress;
+              }
 
-                address = this.utils.FormatAddress(address);
+              address = this.utils.FormatAddress(address);
 
-                if (!Sign) {
-                  Sign = /*#__PURE__*/function () {
-                    var _ref9 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee9(message) {
-                      return _regeneratorRuntime.wrap(function _callee9$(_context9) {
-                        while (1) {
-                          switch (_context9.prev = _context9.next) {
-                            case 0:
-                              return _context9.abrupt("return", _this2.SignMetamask({
-                                message: message,
-                                address: address
-                              }));
+              if (!Sign) {
+                Sign = function Sign(message) {
+                  return _regeneratorRuntime.async(function Sign$(_context9) {
+                    while (1) {
+                      switch (_context9.prev = _context9.next) {
+                        case 0:
+                          return _context9.abrupt("return", _this2.SignMetamask({
+                            message: message,
+                            address: address
+                          }));
 
-                            case 1:
-                            case "end":
-                              return _context9.stop();
-                          }
-                        }
-                      }, _callee9);
-                    }));
+                        case 1:
+                        case "end":
+                          return _context9.stop();
+                      }
+                    }
+                  });
+                };
+              }
 
-                    return function Sign(_x14) {
-                      return _ref9.apply(this, arguments);
-                    };
-                  }();
-                }
+              expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
+              _context10.next = 7;
+              return _regeneratorRuntime.awrap(this.client.CreateFabricToken({
+                address: address,
+                duration: tokenDuration * 60 * 60 * 1000,
+                Sign: Sign,
+                addEthereumPrefix: false
+              }));
 
-                expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
-                _context10.next = 7;
-                return this.client.CreateFabricToken({
-                  address: address,
-                  duration: tokenDuration * 60 * 60 * 1000,
-                  Sign: Sign,
-                  addEthereumPrefix: false
-                });
+            case 7:
+              fabricToken = _context10.sent;
+              return _context10.abrupt("return", this.SetAuthorization({
+                fabricToken: fabricToken,
+                address: address,
+                expiresAt: expiresAt,
+                walletType: "External",
+                walletName: walletName,
+                register: true
+              }));
 
-              case 7:
-                fabricToken = _context10.sent;
-                return _context10.abrupt("return", this.SetAuthorization({
-                  fabricToken: fabricToken,
-                  address: address,
-                  expiresAt: expiresAt,
-                  walletType: "External",
-                  walletName: walletName,
-                  register: true
-                }));
-
-              case 9:
-              case "end":
-                return _context10.stop();
-            }
+            case 9:
+            case "end":
+              return _context10.stop();
           }
-        }, _callee10, this);
-      }));
-
-      function AuthenticateExternalWallet(_x13) {
-        return _AuthenticateExternalWallet.apply(this, arguments);
-      }
-
-      return AuthenticateExternalWallet;
-    }()
+        }
+      }, null, this);
+    }
     /**
      * <b><i>Requires login</i></b>
      *
@@ -851,20 +777,20 @@ var ElvWalletClient = /*#__PURE__*/function () {
     }
   }, {
     key: "SetAuthorization",
-    value: function SetAuthorization(_ref10) {
+    value: function SetAuthorization(_ref7) {
       var _this3 = this;
 
-      var clusterToken = _ref10.clusterToken,
-          fabricToken = _ref10.fabricToken,
-          tenantId = _ref10.tenantId,
-          address = _ref10.address,
-          email = _ref10.email,
-          expiresAt = _ref10.expiresAt,
-          signerURIs = _ref10.signerURIs,
-          walletType = _ref10.walletType,
-          walletName = _ref10.walletName,
-          _ref10$register = _ref10.register,
-          register = _ref10$register === void 0 ? false : _ref10$register;
+      var clusterToken = _ref7.clusterToken,
+          fabricToken = _ref7.fabricToken,
+          tenantId = _ref7.tenantId,
+          address = _ref7.address,
+          email = _ref7.email,
+          expiresAt = _ref7.expiresAt,
+          signerURIs = _ref7.signerURIs,
+          walletType = _ref7.walletType,
+          walletName = _ref7.walletName,
+          _ref7$register = _ref7.register,
+          register = _ref7$register === void 0 ? false : _ref7$register;
       address = this.client.utils.FormatAddress(address);
       this.__authorization = {
         fabricToken: fabricToken,
@@ -910,936 +836,876 @@ var ElvWalletClient = /*#__PURE__*/function () {
     }
   }, {
     key: "SignMetamask",
-    value: function () {
-      var _SignMetamask = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee11(_ref11) {
-        var message, address, accounts;
-        return _regeneratorRuntime.wrap(function _callee11$(_context11) {
-          while (1) {
-            switch (_context11.prev = _context11.next) {
-              case 0:
-                message = _ref11.message, address = _ref11.address;
+    value: function SignMetamask(_ref8) {
+      var message, address, accounts;
+      return _regeneratorRuntime.async(function SignMetamask$(_context11) {
+        while (1) {
+          switch (_context11.prev = _context11.next) {
+            case 0:
+              message = _ref8.message, address = _ref8.address;
 
-                if (!(!inBrowser || !window.ethereum)) {
-                  _context11.next = 3;
-                  break;
-                }
+              if (!(!inBrowser || !window.ethereum)) {
+                _context11.next = 3;
+                break;
+              }
 
-                throw Error("ElvWalletClient: Unable to initialize - Metamask not available");
+              throw Error("ElvWalletClient: Unable to initialize - Metamask not available");
 
-              case 3:
-                address = address || this.UserAddress();
-                _context11.next = 6;
-                return window.ethereum.request({
-                  method: "eth_requestAccounts"
-                });
+            case 3:
+              address = address || this.UserAddress();
+              _context11.next = 6;
+              return _regeneratorRuntime.awrap(window.ethereum.request({
+                method: "eth_requestAccounts"
+              }));
 
-              case 6:
-                accounts = _context11.sent;
+            case 6:
+              accounts = _context11.sent;
 
-                if (!(address && !Utils.EqualAddress(accounts[0], address))) {
-                  _context11.next = 9;
-                  break;
-                }
+              if (!(address && !Utils.EqualAddress(accounts[0], address))) {
+                _context11.next = 9;
+                break;
+              }
 
-                throw Error("ElvWalletClient: Incorrect MetaMask account selected. Expected ".concat(address, ", got ").concat(accounts[0]));
+              throw Error("ElvWalletClient: Incorrect MetaMask account selected. Expected ".concat(address, ", got ").concat(accounts[0]));
 
-              case 9:
-                _context11.next = 11;
-                return window.ethereum.request({
-                  method: "personal_sign",
-                  params: [message, address, ""]
-                });
+            case 9:
+              _context11.next = 11;
+              return _regeneratorRuntime.awrap(window.ethereum.request({
+                method: "personal_sign",
+                params: [message, address, ""]
+              }));
 
-              case 11:
-                return _context11.abrupt("return", _context11.sent);
+            case 11:
+              return _context11.abrupt("return", _context11.sent);
 
-              case 12:
-              case "end":
-                return _context11.stop();
-            }
+            case 12:
+            case "end":
+              return _context11.stop();
           }
-        }, _callee11, this);
-      }));
-
-      function SignMetamask(_x15) {
-        return _SignMetamask.apply(this, arguments);
-      }
-
-      return SignMetamask;
-    }() // Internal loading methods
+        }
+      }, null, this);
+    } // Internal loading methods
     // If marketplace slug is specified, load only that marketplace. Otherwise load all
 
   }, {
     key: "LoadAvailableMarketplaces",
-    value: function () {
-      var _LoadAvailableMarketplaces = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee12() {
-        var _this4 = this;
+    value: function LoadAvailableMarketplaces() {
+      var _this4 = this;
 
-        var forceReload,
-            mainSiteHash,
-            metadata,
-            availableMarketplaces,
-            availableMarketplacesById,
-            _args12 = arguments;
-        return _regeneratorRuntime.wrap(function _callee12$(_context12) {
-          while (1) {
-            switch (_context12.prev = _context12.next) {
-              case 0:
-                forceReload = _args12.length > 0 && _args12[0] !== undefined ? _args12[0] : false;
+      var forceReload,
+          mainSiteHash,
+          metadata,
+          availableMarketplaces,
+          availableMarketplacesById,
+          _args12 = arguments;
+      return _regeneratorRuntime.async(function LoadAvailableMarketplaces$(_context12) {
+        while (1) {
+          switch (_context12.prev = _context12.next) {
+            case 0:
+              forceReload = _args12.length > 0 && _args12[0] !== undefined ? _args12[0] : false;
 
-                if (!(!forceReload && Object.keys(this.availableMarketplaces) > 0)) {
-                  _context12.next = 3;
-                  break;
-                }
+              if (!(!forceReload && Object.keys(this.availableMarketplaces) > 0)) {
+                _context12.next = 3;
+                break;
+              }
 
-                return _context12.abrupt("return");
+              return _context12.abrupt("return");
 
-              case 3:
-                _context12.next = 5;
-                return this.client.LatestVersionHash({
-                  objectId: this.mainSiteId
-                });
+            case 3:
+              _context12.next = 5;
+              return _regeneratorRuntime.awrap(this.client.LatestVersionHash({
+                objectId: this.mainSiteId
+              }));
 
-              case 5:
-                mainSiteHash = _context12.sent;
-                _context12.next = 8;
-                return this.client.ContentObjectMetadata({
-                  versionHash: mainSiteHash,
-                  metadataSubtree: "public/asset_metadata/tenants",
-                  resolveLinks: true,
-                  linkDepthLimit: 2,
-                  resolveIncludeSource: true,
-                  resolveIgnoreErrors: true,
-                  produceLinkUrls: true,
-                  authorizationToken: this.publicStaticToken,
-                  noAuth: true,
-                  select: ["*/.", "*/marketplaces/*/.", "*/marketplaces/*/info/tenant_id", "*/marketplaces/*/info/tenant_name", "*/marketplaces/*/info/branding"],
-                  remove: ["*/marketplaces/*/info/branding/custom_css"]
-                });
+            case 5:
+              mainSiteHash = _context12.sent;
+              _context12.next = 8;
+              return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
+                versionHash: mainSiteHash,
+                metadataSubtree: "public/asset_metadata/tenants",
+                resolveLinks: true,
+                linkDepthLimit: 2,
+                resolveIncludeSource: true,
+                resolveIgnoreErrors: true,
+                produceLinkUrls: true,
+                authorizationToken: this.publicStaticToken,
+                noAuth: true,
+                select: ["*/.", "*/marketplaces/*/.", "*/marketplaces/*/info/tenant_id", "*/marketplaces/*/info/tenant_name", "*/marketplaces/*/info/branding"],
+                remove: ["*/marketplaces/*/info/branding/custom_css"]
+              }));
 
-              case 8:
-                metadata = _context12.sent;
-                availableMarketplaces = _objectSpread({}, this.availableMarketplaces || {});
-                availableMarketplacesById = _objectSpread({}, this.availableMarketplacesById || {});
-                Object.keys(metadata || {}).forEach(function (tenantSlug) {
-                  try {
-                    availableMarketplaces[tenantSlug] = {
-                      versionHash: metadata[tenantSlug]["."].source
-                    };
-                    Object.keys(metadata[tenantSlug].marketplaces || {}).forEach(function (marketplaceSlug) {
-                      try {
-                        var versionHash = metadata[tenantSlug].marketplaces[marketplaceSlug]["."].source;
+            case 8:
+              metadata = _context12.sent;
+              availableMarketplaces = _objectSpread({}, this.availableMarketplaces || {});
+              availableMarketplacesById = _objectSpread({}, this.availableMarketplacesById || {});
+              Object.keys(metadata || {}).forEach(function (tenantSlug) {
+                try {
+                  availableMarketplaces[tenantSlug] = {
+                    versionHash: metadata[tenantSlug]["."].source
+                  };
+                  Object.keys(metadata[tenantSlug].marketplaces || {}).forEach(function (marketplaceSlug) {
+                    try {
+                      var versionHash = metadata[tenantSlug].marketplaces[marketplaceSlug]["."].source;
 
-                        var objectId = _this4.utils.DecodeVersionHash(versionHash).objectId;
+                      var objectId = _this4.utils.DecodeVersionHash(versionHash).objectId;
 
-                        availableMarketplaces[tenantSlug][marketplaceSlug] = _objectSpread(_objectSpread({}, metadata[tenantSlug].marketplaces[marketplaceSlug].info || {}), {}, {
-                          tenantName: metadata[tenantSlug].marketplaces[marketplaceSlug].info.tenant_name,
-                          tenantId: metadata[tenantSlug].marketplaces[marketplaceSlug].info.tenant_id,
-                          tenantSlug: tenantSlug,
-                          marketplaceSlug: marketplaceSlug,
-                          marketplaceId: objectId,
-                          marketplaceHash: versionHash,
-                          order: Configuration.__MARKETPLACE_ORDER.findIndex(function (slug) {
-                            return slug === marketplaceSlug;
-                          })
-                        });
-                        availableMarketplacesById[objectId] = availableMarketplaces[tenantSlug][marketplaceSlug];
-                        _this4.marketplaceHashes[objectId] = versionHash; // Fill out selected marketplace info
+                      availableMarketplaces[tenantSlug][marketplaceSlug] = _objectSpread({}, metadata[tenantSlug].marketplaces[marketplaceSlug].info || {}, {
+                        tenantName: metadata[tenantSlug].marketplaces[marketplaceSlug].info.tenant_name,
+                        tenantId: metadata[tenantSlug].marketplaces[marketplaceSlug].info.tenant_id,
+                        tenantSlug: tenantSlug,
+                        marketplaceSlug: marketplaceSlug,
+                        marketplaceId: objectId,
+                        marketplaceHash: versionHash,
+                        order: Configuration.__MARKETPLACE_ORDER.findIndex(function (slug) {
+                          return slug === marketplaceSlug;
+                        })
+                      });
+                      availableMarketplacesById[objectId] = availableMarketplaces[tenantSlug][marketplaceSlug];
+                      _this4.marketplaceHashes[objectId] = versionHash; // Fill out selected marketplace info
 
-                        if (_this4.selectedMarketplaceInfo) {
-                          if (_this4.selectedMarketplaceInfo.tenantSlug === tenantSlug && _this4.selectedMarketplaceInfo.marketplaceSlug === marketplaceSlug || _this4.selectedMarketplaceInfo.marketplaceId === objectId) {
-                            _this4.selectedMarketplaceInfo = availableMarketplaces[tenantSlug][marketplaceSlug];
-                          }
+                      if (_this4.selectedMarketplaceInfo) {
+                        if (_this4.selectedMarketplaceInfo.tenantSlug === tenantSlug && _this4.selectedMarketplaceInfo.marketplaceSlug === marketplaceSlug || _this4.selectedMarketplaceInfo.marketplaceId === objectId) {
+                          _this4.selectedMarketplaceInfo = availableMarketplaces[tenantSlug][marketplaceSlug];
                         }
-                      } catch (error) {
-                        _this4.Log("Eluvio Wallet Client: Unable to load info for marketplace ".concat(tenantSlug, "/").concat(marketplaceSlug), true);
                       }
-                    });
-                  } catch (error) {
-                    _this4.Log("Eluvio Wallet Client: Failed to load tenant info ".concat(tenantSlug), true, error);
-                  }
-                });
-                this.availableMarketplaces = availableMarketplaces;
-                this.availableMarketplacesById = availableMarketplacesById;
+                    } catch (error) {
+                      _this4.Log("Eluvio Wallet Client: Unable to load info for marketplace ".concat(tenantSlug, "/").concat(marketplaceSlug), true);
+                    }
+                  });
+                } catch (error) {
+                  _this4.Log("Eluvio Wallet Client: Failed to load tenant info ".concat(tenantSlug), true, error);
+                }
+              });
+              this.availableMarketplaces = availableMarketplaces;
+              this.availableMarketplacesById = availableMarketplacesById;
 
-              case 14:
-              case "end":
-                return _context12.stop();
-            }
+            case 14:
+            case "end":
+              return _context12.stop();
           }
-        }, _callee12, this);
-      }));
-
-      function LoadAvailableMarketplaces() {
-        return _LoadAvailableMarketplaces.apply(this, arguments);
-      }
-
-      return LoadAvailableMarketplaces;
-    }() // Get the hash of the currently linked marketplace
+        }
+      }, null, this);
+    } // Get the hash of the currently linked marketplace
 
   }, {
     key: "LatestMarketplaceHash",
-    value: function () {
-      var _LatestMarketplaceHash = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee13(_ref12) {
-        var tenantSlug, marketplaceSlug, mainSiteHash, marketplaceLink;
-        return _regeneratorRuntime.wrap(function _callee13$(_context13) {
-          while (1) {
-            switch (_context13.prev = _context13.next) {
-              case 0:
-                tenantSlug = _ref12.tenantSlug, marketplaceSlug = _ref12.marketplaceSlug;
-                _context13.next = 3;
-                return this.client.LatestVersionHash({
-                  objectId: this.mainSiteId
-                });
+    value: function LatestMarketplaceHash(_ref9) {
+      var tenantSlug, marketplaceSlug, mainSiteHash, marketplaceLink;
+      return _regeneratorRuntime.async(function LatestMarketplaceHash$(_context13) {
+        while (1) {
+          switch (_context13.prev = _context13.next) {
+            case 0:
+              tenantSlug = _ref9.tenantSlug, marketplaceSlug = _ref9.marketplaceSlug;
+              _context13.next = 3;
+              return _regeneratorRuntime.awrap(this.client.LatestVersionHash({
+                objectId: this.mainSiteId
+              }));
 
-              case 3:
-                mainSiteHash = _context13.sent;
-                _context13.next = 6;
-                return this.client.ContentObjectMetadata({
-                  versionHash: mainSiteHash,
-                  metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", tenantSlug, "marketplaces", marketplaceSlug),
-                  resolveLinks: false
-                });
+            case 3:
+              mainSiteHash = _context13.sent;
+              _context13.next = 6;
+              return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
+                versionHash: mainSiteHash,
+                metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", tenantSlug, "marketplaces", marketplaceSlug),
+                resolveLinks: false
+              }));
 
-              case 6:
-                marketplaceLink = _context13.sent;
-                return _context13.abrupt("return", LinkTargetHash(marketplaceLink));
+            case 6:
+              marketplaceLink = _context13.sent;
+              return _context13.abrupt("return", LinkTargetHash(marketplaceLink));
 
-              case 8:
-              case "end":
-                return _context13.stop();
-            }
+            case 8:
+            case "end":
+              return _context13.stop();
           }
-        }, _callee13, this);
-      }));
-
-      function LatestMarketplaceHash(_x16) {
-        return _LatestMarketplaceHash.apply(this, arguments);
-      }
-
-      return LatestMarketplaceHash;
-    }()
+        }
+      }, null, this);
+    }
   }, {
     key: "LoadMarketplace",
-    value: function () {
-      var _LoadMarketplace = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee15(marketplaceParams) {
-        var _this5 = this;
+    value: function LoadMarketplace(marketplaceParams) {
+      var _this5 = this;
 
-        var marketplaceInfo, marketplaceId, marketplaceHash, marketplace;
-        return _regeneratorRuntime.wrap(function _callee15$(_context15) {
-          while (1) {
-            switch (_context15.prev = _context15.next) {
-              case 0:
-                marketplaceInfo = this.MarketplaceInfo({
-                  marketplaceParams: marketplaceParams
-                });
-                marketplaceId = marketplaceInfo.marketplaceId;
-                _context15.next = 4;
-                return this.LatestMarketplaceHash({
-                  tenantSlug: marketplaceInfo.tenantSlug,
-                  marketplaceSlug: marketplaceInfo.marketplaceSlug
-                });
+      var marketplaceInfo, marketplaceId, marketplaceHash, marketplace;
+      return _regeneratorRuntime.async(function LoadMarketplace$(_context15) {
+        while (1) {
+          switch (_context15.prev = _context15.next) {
+            case 0:
+              marketplaceInfo = this.MarketplaceInfo({
+                marketplaceParams: marketplaceParams
+              });
+              marketplaceId = marketplaceInfo.marketplaceId;
+              _context15.next = 4;
+              return _regeneratorRuntime.awrap(this.LatestMarketplaceHash({
+                tenantSlug: marketplaceInfo.tenantSlug,
+                marketplaceSlug: marketplaceInfo.marketplaceSlug
+              }));
 
-              case 4:
-                marketplaceHash = _context15.sent;
+            case 4:
+              marketplaceHash = _context15.sent;
 
-                if (this.cachedMarketplaces[marketplaceId] && this.cachedMarketplaces[marketplaceId].versionHash !== marketplaceHash) {
-                  delete this.cachedMarketplaces[marketplaceId];
-                }
+              if (this.cachedMarketplaces[marketplaceId] && this.cachedMarketplaces[marketplaceId].versionHash !== marketplaceHash) {
+                delete this.cachedMarketplaces[marketplaceId];
+              }
 
-                if (this.cachedMarketplaces[marketplaceId]) {
-                  _context15.next = 19;
-                  break;
-                }
+              if (this.cachedMarketplaces[marketplaceId]) {
+                _context15.next = 19;
+                break;
+              }
 
-                _context15.next = 9;
-                return this.client.ContentObjectMetadata({
-                  versionHash: marketplaceHash,
-                  metadataSubtree: "public/asset_metadata/info",
-                  linkDepthLimit: 2,
-                  resolveLinks: true,
-                  resolveIgnoreErrors: true,
-                  resolveIncludeSource: true,
-                  produceLinkUrls: true,
-                  authorizationToken: this.publicStaticToken
-                });
+              _context15.next = 9;
+              return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
+                versionHash: marketplaceHash,
+                metadataSubtree: "public/asset_metadata/info",
+                linkDepthLimit: 2,
+                resolveLinks: true,
+                resolveIgnoreErrors: true,
+                resolveIncludeSource: true,
+                produceLinkUrls: true,
+                authorizationToken: this.publicStaticToken
+              }));
 
-              case 9:
-                marketplace = _context15.sent;
-                _context15.next = 12;
-                return Promise.all(marketplace.items.map( /*#__PURE__*/function () {
-                  var _ref13 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee14(item, index) {
-                    return _regeneratorRuntime.wrap(function _callee14$(_context14) {
-                      while (1) {
-                        switch (_context14.prev = _context14.next) {
-                          case 0:
-                            if (!item.requires_permissions) {
-                              _context14.next = 14;
-                              break;
-                            }
-
-                            if (_this5.loggedIn) {
-                              _context14.next = 5;
-                              break;
-                            }
-
-                            item.authorized = false;
-                            _context14.next = 14;
-                            break;
-
-                          case 5:
-                            _context14.prev = 5;
-                            _context14.next = 8;
-                            return _this5.client.ContentObjectMetadata({
-                              versionHash: LinkTargetHash(item.nft_template),
-                              metadataSubtree: "permissioned"
-                            });
-
-                          case 8:
-                            item.authorized = true;
-                            _context14.next = 14;
-                            break;
-
-                          case 11:
-                            _context14.prev = 11;
-                            _context14.t0 = _context14["catch"](5);
-                            item.authorized = false;
-
-                          case 14:
-                            item.nftTemplateMetadata = (item.nft_template || {}).nft || {};
-                            item.nftTemplateHash = ((item.nft_template || {})["."] || {}).source;
-                            item.itemIndex = index;
-                            return _context14.abrupt("return", item);
-
-                          case 18:
-                          case "end":
-                            return _context14.stop();
+            case 9:
+              marketplace = _context15.sent;
+              _context15.next = 12;
+              return _regeneratorRuntime.awrap(Promise.all(marketplace.items.map(function _callee3(item, index) {
+                return _regeneratorRuntime.async(function _callee3$(_context14) {
+                  while (1) {
+                    switch (_context14.prev = _context14.next) {
+                      case 0:
+                        if (!item.requires_permissions) {
+                          _context14.next = 14;
+                          break;
                         }
-                      }
-                    }, _callee14, null, [[5, 11]]);
-                  }));
 
-                  return function (_x18, _x19) {
-                    return _ref13.apply(this, arguments);
-                  };
-                }()));
+                        if (_this5.loggedIn) {
+                          _context14.next = 5;
+                          break;
+                        }
 
-              case 12:
-                marketplace.items = _context15.sent;
-                marketplace.collections = (marketplace.collections || []).map(function (collection, collectionIndex) {
-                  return _objectSpread(_objectSpread({}, collection), {}, {
-                    collectionIndex: collectionIndex
-                  });
+                        item.authorized = false;
+                        _context14.next = 14;
+                        break;
+
+                      case 5:
+                        _context14.prev = 5;
+                        _context14.next = 8;
+                        return _regeneratorRuntime.awrap(_this5.client.ContentObjectMetadata({
+                          versionHash: LinkTargetHash(item.nft_template),
+                          metadataSubtree: "permissioned"
+                        }));
+
+                      case 8:
+                        item.authorized = true;
+                        _context14.next = 14;
+                        break;
+
+                      case 11:
+                        _context14.prev = 11;
+                        _context14.t0 = _context14["catch"](5);
+                        item.authorized = false;
+
+                      case 14:
+                        item.nftTemplateMetadata = (item.nft_template || {}).nft || {};
+                        item.nftTemplateHash = ((item.nft_template || {})["."] || {}).source;
+                        item.itemIndex = index;
+                        return _context14.abrupt("return", item);
+
+                      case 18:
+                      case "end":
+                        return _context14.stop();
+                    }
+                  }
+                }, null, null, [[5, 11]]);
+              })));
+
+            case 12:
+              marketplace.items = _context15.sent;
+              marketplace.collections = (marketplace.collections || []).map(function (collection, collectionIndex) {
+                return _objectSpread({}, collection, {
+                  collectionIndex: collectionIndex
                 });
-                marketplace.retrievedAt = Date.now();
-                marketplace.marketplaceId = marketplaceId;
-                marketplace.versionHash = marketplaceHash; // Generate embed URLs for pack opening animations
+              });
+              marketplace.retrievedAt = Date.now();
+              marketplace.marketplaceId = marketplaceId;
+              marketplace.versionHash = marketplaceHash; // Generate embed URLs for pack opening animations
 
-                ["purchase_animation", "purchase_animation__mobile", "reveal_animation", "reveal_animation_mobile"].forEach(function (key) {
-                  try {
-                    if (marketplace.storefront[key]) {
-                      var embedUrl = new URL("https://embed.v3.contentfabric.io");
-                      var targetHash = LinkTargetHash(marketplace.storefront[key]);
-                      embedUrl.searchParams.set("p", "");
-                      embedUrl.searchParams.set("net", _this5.network === "main" ? "main" : "demo");
-                      embedUrl.searchParams.set("ath", (_this5.__authorization || {}).authToken || _this5.publicStaticToken);
-                      embedUrl.searchParams.set("vid", targetHash);
-                      embedUrl.searchParams.set("ap", "");
+              ["purchase_animation", "purchase_animation__mobile", "reveal_animation", "reveal_animation_mobile"].forEach(function (key) {
+                try {
+                  if (marketplace.storefront[key]) {
+                    var embedUrl = new URL("https://embed.v3.contentfabric.io");
+                    var targetHash = LinkTargetHash(marketplace.storefront[key]);
+                    embedUrl.searchParams.set("p", "");
+                    embedUrl.searchParams.set("net", _this5.network === "main" ? "main" : "demo");
+                    embedUrl.searchParams.set("ath", (_this5.__authorization || {}).authToken || _this5.publicStaticToken);
+                    embedUrl.searchParams.set("vid", targetHash);
+                    embedUrl.searchParams.set("ap", "");
 
-                      if (!key.startsWith("reveal")) {
-                        embedUrl.searchParams.set("m", "");
-                        embedUrl.searchParams.set("lp", "");
-                      }
+                    if (!key.startsWith("reveal")) {
+                      embedUrl.searchParams.set("m", "");
+                      embedUrl.searchParams.set("lp", "");
+                    }
 
-                      marketplace.storefront["".concat(key, "_embed_url")] = embedUrl.toString();
-                    } // eslint-disable-next-line no-empty
+                    marketplace.storefront["".concat(key, "_embed_url")] = embedUrl.toString();
+                  } // eslint-disable-next-line no-empty
 
-                  } catch (error) {}
-                });
-                this.cachedMarketplaces[marketplaceId] = marketplace;
+                } catch (error) {}
+              });
+              this.cachedMarketplaces[marketplaceId] = marketplace;
 
-              case 19:
-                return _context15.abrupt("return", this.cachedMarketplaces[marketplaceId]);
+            case 19:
+              return _context15.abrupt("return", this.cachedMarketplaces[marketplaceId]);
 
-              case 20:
-              case "end":
-                return _context15.stop();
-            }
+            case 20:
+            case "end":
+              return _context15.stop();
           }
-        }, _callee15, this);
-      }));
-
-      function LoadMarketplace(_x17) {
-        return _LoadMarketplace.apply(this, arguments);
-      }
-
-      return LoadMarketplace;
-    }()
+        }
+      }, null, this);
+    }
   }, {
     key: "FilteredQuery",
-    value: function () {
-      var _FilteredQuery = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee16() {
-        var _this6 = this;
+    value: function FilteredQuery() {
+      var _this6 = this;
 
-        var _ref14,
-            _ref14$mode,
-            mode,
-            _ref14$sortBy,
-            sortBy,
-            _ref14$sortDesc,
-            sortDesc,
-            filter,
-            editionFilters,
-            attributeFilters,
-            contractAddress,
-            tokenId,
-            currency,
-            marketplaceParams,
-            tenantId,
-            collectionIndexes,
-            priceRange,
-            tokenIdRange,
-            capLimit,
-            userAddress,
-            sellerAddress,
-            _ref14$lastNDays,
-            lastNDays,
-            _ref14$includeCheckou,
-            includeCheckoutLocked,
-            _ref14$start,
-            start,
-            _ref14$limit,
-            limit,
-            params,
-            marketplaceInfo,
-            marketplace,
-            filters,
-            path,
-            _ref16,
-            contents,
-            paging,
-            _args16 = arguments;
+      var _ref10,
+          _ref10$mode,
+          mode,
+          _ref10$sortBy,
+          sortBy,
+          _ref10$sortDesc,
+          sortDesc,
+          filter,
+          editionFilters,
+          attributeFilters,
+          contractAddress,
+          tokenId,
+          currency,
+          marketplaceParams,
+          tenantId,
+          collectionIndexes,
+          priceRange,
+          tokenIdRange,
+          capLimit,
+          userAddress,
+          sellerAddress,
+          _ref10$lastNDays,
+          lastNDays,
+          _ref10$includeCheckou,
+          includeCheckoutLocked,
+          _ref10$start,
+          start,
+          _ref10$limit,
+          limit,
+          params,
+          marketplaceInfo,
+          marketplace,
+          filters,
+          path,
+          _ref12,
+          contents,
+          paging,
+          _args16 = arguments;
 
-        return _regeneratorRuntime.wrap(function _callee16$(_context16) {
-          while (1) {
-            switch (_context16.prev = _context16.next) {
-              case 0:
-                _ref14 = _args16.length > 0 && _args16[0] !== undefined ? _args16[0] : {}, _ref14$mode = _ref14.mode, mode = _ref14$mode === void 0 ? "listings" : _ref14$mode, _ref14$sortBy = _ref14.sortBy, sortBy = _ref14$sortBy === void 0 ? "created" : _ref14$sortBy, _ref14$sortDesc = _ref14.sortDesc, sortDesc = _ref14$sortDesc === void 0 ? false : _ref14$sortDesc, filter = _ref14.filter, editionFilters = _ref14.editionFilters, attributeFilters = _ref14.attributeFilters, contractAddress = _ref14.contractAddress, tokenId = _ref14.tokenId, currency = _ref14.currency, marketplaceParams = _ref14.marketplaceParams, tenantId = _ref14.tenantId, collectionIndexes = _ref14.collectionIndexes, priceRange = _ref14.priceRange, tokenIdRange = _ref14.tokenIdRange, capLimit = _ref14.capLimit, userAddress = _ref14.userAddress, sellerAddress = _ref14.sellerAddress, _ref14$lastNDays = _ref14.lastNDays, lastNDays = _ref14$lastNDays === void 0 ? -1 : _ref14$lastNDays, _ref14$includeCheckou = _ref14.includeCheckoutLocked, includeCheckoutLocked = _ref14$includeCheckou === void 0 ? false : _ref14$includeCheckou, _ref14$start = _ref14.start, start = _ref14$start === void 0 ? 0 : _ref14$start, _ref14$limit = _ref14.limit, limit = _ref14$limit === void 0 ? 50 : _ref14$limit;
-                collectionIndexes = (collectionIndexes || []).map(function (i) {
-                  return parseInt(i);
-                });
-                params = {
-                  start: start,
-                  limit: limit,
-                  sort_descending: sortDesc
-                };
+      return _regeneratorRuntime.async(function FilteredQuery$(_context16) {
+        while (1) {
+          switch (_context16.prev = _context16.next) {
+            case 0:
+              _ref10 = _args16.length > 0 && _args16[0] !== undefined ? _args16[0] : {}, _ref10$mode = _ref10.mode, mode = _ref10$mode === void 0 ? "listings" : _ref10$mode, _ref10$sortBy = _ref10.sortBy, sortBy = _ref10$sortBy === void 0 ? "created" : _ref10$sortBy, _ref10$sortDesc = _ref10.sortDesc, sortDesc = _ref10$sortDesc === void 0 ? false : _ref10$sortDesc, filter = _ref10.filter, editionFilters = _ref10.editionFilters, attributeFilters = _ref10.attributeFilters, contractAddress = _ref10.contractAddress, tokenId = _ref10.tokenId, currency = _ref10.currency, marketplaceParams = _ref10.marketplaceParams, tenantId = _ref10.tenantId, collectionIndexes = _ref10.collectionIndexes, priceRange = _ref10.priceRange, tokenIdRange = _ref10.tokenIdRange, capLimit = _ref10.capLimit, userAddress = _ref10.userAddress, sellerAddress = _ref10.sellerAddress, _ref10$lastNDays = _ref10.lastNDays, lastNDays = _ref10$lastNDays === void 0 ? -1 : _ref10$lastNDays, _ref10$includeCheckou = _ref10.includeCheckoutLocked, includeCheckoutLocked = _ref10$includeCheckou === void 0 ? false : _ref10$includeCheckou, _ref10$start = _ref10.start, start = _ref10$start === void 0 ? 0 : _ref10$start, _ref10$limit = _ref10.limit, limit = _ref10$limit === void 0 ? 50 : _ref10$limit;
+              collectionIndexes = (collectionIndexes || []).map(function (i) {
+                return parseInt(i);
+              });
+              params = {
+                start: start,
+                limit: limit,
+                sort_descending: sortDesc
+              };
 
-                if (mode !== "leaderboard") {
-                  params.sort_by = sortBy;
-                }
+              if (mode !== "leaderboard") {
+                params.sort_by = sortBy;
+              }
 
-                if (mode.includes("listings") && includeCheckoutLocked) {
-                  params.checkout = true;
-                }
+              if (mode.includes("listings") && includeCheckoutLocked) {
+                params.checkout = true;
+              }
 
-                if (!marketplaceParams) {
-                  _context16.next = 13;
-                  break;
-                }
+              if (!marketplaceParams) {
+                _context16.next = 13;
+                break;
+              }
 
-                _context16.next = 8;
-                return this.MarketplaceInfo({
-                  marketplaceParams: marketplaceParams
-                });
+              _context16.next = 8;
+              return _regeneratorRuntime.awrap(this.MarketplaceInfo({
+                marketplaceParams: marketplaceParams
+              }));
 
-              case 8:
-                marketplaceInfo = _context16.sent;
+            case 8:
+              marketplaceInfo = _context16.sent;
 
-                if (!(collectionIndexes.length > 0)) {
-                  _context16.next = 13;
-                  break;
-                }
+              if (!(collectionIndexes.length > 0)) {
+                _context16.next = 13;
+                break;
+              }
 
-                _context16.next = 12;
-                return this.Marketplace({
-                  marketplaceParams: marketplaceParams
-                });
+              _context16.next = 12;
+              return _regeneratorRuntime.awrap(this.Marketplace({
+                marketplaceParams: marketplaceParams
+              }));
 
-              case 12:
-                marketplace = _context16.sent;
+            case 12:
+              marketplace = _context16.sent;
 
-              case 13:
-                _context16.prev = 13;
-                filters = [];
+            case 13:
+              _context16.prev = 13;
+              filters = [];
 
-                if (sellerAddress) {
-                  filters.push("seller:eq:".concat(this.client.utils.FormatAddress(sellerAddress)));
-                } else if (userAddress && mode !== "owned") {
-                  filters.push("addr:eq:".concat(this.client.utils.FormatAddress(userAddress)));
-                }
+              if (sellerAddress) {
+                filters.push("seller:eq:".concat(this.client.utils.FormatAddress(sellerAddress)));
+              } else if (userAddress && mode !== "owned") {
+                filters.push("addr:eq:".concat(this.client.utils.FormatAddress(userAddress)));
+              }
 
-                if (marketplace && collectionIndexes.length >= 0) {
-                  collectionIndexes.forEach(function (collectionIndex) {
-                    var collection = marketplace.collections[collectionIndex];
-                    collection.items.forEach(function (sku) {
-                      if (!sku) {
-                        return;
-                      }
-
-                      var item = marketplace.items.find(function (item) {
-                        return item.sku === sku;
-                      });
-
-                      if (!item) {
-                        return;
-                      }
-
-                      var address = Utils.SafeTraverse(item, "nft_template", "nft", "address");
-
-                      if (address) {
-                        filters.push("".concat(mode === "owned" ? "contract_addr" : "contract", ":eq:").concat(Utils.FormatAddress(address)));
-                      }
-                    });
-                  });
-                } else if (marketplaceInfo || tenantId) {
-                  filters.push("tenant:eq:".concat(marketplaceInfo ? marketplaceInfo.tenantId : tenantId));
-                }
-
-                if (contractAddress) {
-                  if (mode === "owned") {
-                    filters.push("contract_addr:eq:".concat(Utils.FormatAddress(contractAddress)));
-                  } else {
-                    filters.push("contract:eq:".concat(Utils.FormatAddress(contractAddress)));
-                  }
-
-                  if (tokenId) {
-                    filters.push("token:eq:".concat(tokenId));
-                  }
-                } else if (filter) {
-                  if (mode === "listing") {
-                    filters.push("nft/display_name:eq:".concat(filter));
-                  } else if (mode === "owned") {
-                    filters.push("meta/display_name:eq:".concat(filter));
-                  } else {
-                    filters.push("name:eq:".concat(filter));
-                  }
-                }
-
-                if (editionFilters) {
-                  editionFilters.forEach(function (editionFilter) {
-                    if (mode.includes("listing")) {
-                      filters.push("nft/edition_name:eq:".concat(editionFilter));
-                    } else if (mode === "owned") {
-                      filters.push("meta:@>:{\"edition_name\":\"".concat(editionFilter, "\"}"));
-                      params.exact = false;
-                    } else {
-                      filters.push("edition:eq:".concat(editionFilter));
-                    }
-                  });
-                }
-
-                if (attributeFilters) {
-                  attributeFilters.map(function (_ref15) {
-                    var name = _ref15.name,
-                        value = _ref15.value;
-
-                    if (!name || !value) {
+              if (marketplace && collectionIndexes.length >= 0) {
+                collectionIndexes.forEach(function (collectionIndex) {
+                  var collection = marketplace.collections[collectionIndex];
+                  collection.items.forEach(function (sku) {
+                    if (!sku) {
                       return;
                     }
 
-                    filters.push("nft/attributes/".concat(name, ":eq:").concat(value));
+                    var item = marketplace.items.find(function (item) {
+                      return item.sku === sku;
+                    });
+
+                    if (!item) {
+                      return;
+                    }
+
+                    var address = Utils.SafeTraverse(item, "nft_template", "nft", "address");
+
+                    if (address) {
+                      filters.push("".concat(mode === "owned" ? "contract_addr" : "contract", ":eq:").concat(Utils.FormatAddress(address)));
+                    }
                   });
+                });
+              } else if (marketplaceInfo || tenantId) {
+                filters.push("tenant:eq:".concat(marketplaceInfo ? marketplaceInfo.tenantId : tenantId));
+              }
+
+              if (contractAddress) {
+                if (mode === "owned") {
+                  filters.push("contract_addr:eq:".concat(Utils.FormatAddress(contractAddress)));
+                } else {
+                  filters.push("contract:eq:".concat(Utils.FormatAddress(contractAddress)));
                 }
 
-                if (currency) {
-                  filters.push("link_type:eq:sol");
+                if (tokenId) {
+                  filters.push("token:eq:".concat(tokenId));
                 }
-
-                if (lastNDays && lastNDays > 0) {
-                  filters.push("created:gt:".concat((Date.now() / 1000 - lastNDays * 24 * 60 * 60).toFixed(0)));
+              } else if (filter) {
+                if (mode === "listing") {
+                  filters.push("nft/display_name:eq:".concat(filter));
+                } else if (mode === "owned") {
+                  filters.push("meta/display_name:eq:".concat(filter));
+                } else {
+                  filters.push("name:eq:".concat(filter));
                 }
+              }
 
-                if (priceRange) {
-                  if (priceRange.min) {
-                    filters.push("price:ge:".concat(parseFloat(priceRange.min)));
+              if (editionFilters) {
+                editionFilters.forEach(function (editionFilter) {
+                  if (mode.includes("listing")) {
+                    filters.push("nft/edition_name:eq:".concat(editionFilter));
+                  } else if (mode === "owned") {
+                    filters.push("meta:@>:{\"edition_name\":\"".concat(editionFilter, "\"}"));
+                    params.exact = false;
+                  } else {
+                    filters.push("edition:eq:".concat(editionFilter));
+                  }
+                });
+              }
+
+              if (attributeFilters) {
+                attributeFilters.map(function (_ref11) {
+                  var name = _ref11.name,
+                      value = _ref11.value;
+
+                  if (!name || !value) {
+                    return;
                   }
 
-                  if (priceRange.max) {
-                    filters.push("price:le:".concat(parseFloat(priceRange.max)));
-                  }
+                  filters.push("nft/attributes/".concat(name, ":eq:").concat(value));
+                });
+              }
+
+              if (currency) {
+                filters.push("link_type:eq:sol");
+              }
+
+              if (lastNDays && lastNDays > 0) {
+                filters.push("created:gt:".concat((Date.now() / 1000 - lastNDays * 24 * 60 * 60).toFixed(0)));
+              }
+
+              if (priceRange) {
+                if (priceRange.min) {
+                  filters.push("price:ge:".concat(parseFloat(priceRange.min)));
                 }
 
-                if (tokenIdRange) {
-                  if (tokenIdRange.min) {
-                    filters.push("info/token_id:ge:".concat(parseInt(tokenIdRange.min)));
-                  }
+                if (priceRange.max) {
+                  filters.push("price:le:".concat(parseFloat(priceRange.max)));
+                }
+              }
 
-                  if (tokenIdRange.max) {
-                    filters.push("info/token_id:le:".concat(parseInt(tokenIdRange.max)));
-                  }
+              if (tokenIdRange) {
+                if (tokenIdRange.min) {
+                  filters.push("info/token_id:ge:".concat(parseInt(tokenIdRange.min)));
                 }
 
-                if (capLimit) {
-                  filters.push("info/cap:le:".concat(parseInt(capLimit)));
+                if (tokenIdRange.max) {
+                  filters.push("info/token_id:le:".concat(parseInt(tokenIdRange.max)));
                 }
+              }
 
-                _context16.t0 = mode;
-                _context16.next = _context16.t0 === "owned" ? 28 : _context16.t0 === "listings" ? 30 : _context16.t0 === "transfers" ? 32 : _context16.t0 === "sales" ? 36 : _context16.t0 === "listing-stats" ? 40 : _context16.t0 === "sales-stats" ? 42 : _context16.t0 === "leaderboard" ? 45 : 47;
+              if (capLimit) {
+                filters.push("info/cap:le:".concat(parseInt(capLimit)));
+              }
+
+              _context16.t0 = mode;
+              _context16.next = _context16.t0 === "owned" ? 28 : _context16.t0 === "listings" ? 30 : _context16.t0 === "transfers" ? 32 : _context16.t0 === "sales" ? 36 : _context16.t0 === "listing-stats" ? 40 : _context16.t0 === "sales-stats" ? 42 : _context16.t0 === "leaderboard" ? 45 : 47;
+              break;
+
+            case 28:
+              path = UrlJoin("as", "wlt", userAddress || this.UserAddress());
+              return _context16.abrupt("break", 47);
+
+            case 30:
+              path = UrlJoin("as", "mkt", "f");
+              return _context16.abrupt("break", 47);
+
+            case 32:
+              path = UrlJoin("as", "mkt", "hst", "f");
+              filters.push("action:eq:TRANSFERRED");
+              filters.push("action:eq:SOLD");
+              return _context16.abrupt("break", 47);
+
+            case 36:
+              path = UrlJoin("as", "mkt", "hst", "f");
+              filters.push("action:eq:SOLD");
+              filters.push("seller:co:0x");
+              return _context16.abrupt("break", 47);
+
+            case 40:
+              path = UrlJoin("as", "mkt", "stats", "listed");
+              return _context16.abrupt("break", 47);
+
+            case 42:
+              path = UrlJoin("as", "mkt", "stats", "sold");
+              filters.push("seller:co:0x");
+              return _context16.abrupt("break", 47);
+
+            case 45:
+              path = UrlJoin("as", "wlt", "leaders");
+              return _context16.abrupt("break", 47);
+
+            case 47:
+              if (filters.length > 0) {
+                params.filter = filters;
+              }
+
+              if (!mode.includes("stats")) {
+                _context16.next = 52;
                 break;
+              }
 
-              case 28:
-                path = UrlJoin("as", "wlt", userAddress || this.UserAddress());
-                return _context16.abrupt("break", 47);
+              _context16.next = 51;
+              return _regeneratorRuntime.awrap(Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
+                path: path,
+                method: "GET",
+                queryParams: params
+              })));
 
-              case 30:
-                path = UrlJoin("as", "mkt", "f");
-                return _context16.abrupt("break", 47);
+            case 51:
+              return _context16.abrupt("return", _context16.sent);
 
-              case 32:
-                path = UrlJoin("as", "mkt", "hst", "f");
-                filters.push("action:eq:TRANSFERRED");
-                filters.push("action:eq:SOLD");
-                return _context16.abrupt("break", 47);
+            case 52:
+              _context16.t2 = _regeneratorRuntime;
+              _context16.t3 = Utils;
+              _context16.next = 56;
+              return _regeneratorRuntime.awrap(this.client.authClient.MakeAuthServiceRequest({
+                path: path,
+                method: "GET",
+                queryParams: params
+              }));
 
-              case 36:
-                path = UrlJoin("as", "mkt", "hst", "f");
-                filters.push("action:eq:SOLD");
-                filters.push("seller:co:0x");
-                return _context16.abrupt("break", 47);
+            case 56:
+              _context16.t4 = _context16.sent;
+              _context16.t5 = _context16.t3.ResponseToJson.call(_context16.t3, _context16.t4);
+              _context16.next = 60;
+              return _context16.t2.awrap.call(_context16.t2, _context16.t5);
 
-              case 40:
-                path = UrlJoin("as", "mkt", "stats", "listed");
-                return _context16.abrupt("break", 47);
+            case 60:
+              _context16.t1 = _context16.sent;
 
-              case 42:
-                path = UrlJoin("as", "mkt", "stats", "sold");
-                filters.push("seller:co:0x");
-                return _context16.abrupt("break", 47);
+              if (_context16.t1) {
+                _context16.next = 63;
+                break;
+              }
 
-              case 45:
-                path = UrlJoin("as", "wlt", "leaders");
-                return _context16.abrupt("break", 47);
+              _context16.t1 = [];
 
-              case 47:
-                if (filters.length > 0) {
-                  params.filter = filters;
-                }
+            case 63:
+              _ref12 = _context16.t1;
+              contents = _ref12.contents;
+              paging = _ref12.paging;
+              return _context16.abrupt("return", {
+                paging: {
+                  start: params.start,
+                  limit: params.limit,
+                  total: paging.total,
+                  more: paging.total > start + limit
+                },
+                results: (contents || []).map(function (item) {
+                  return ["owned", "listings"].includes(mode) ? FormatNFT(_this6, item) : item;
+                })
+              });
 
-                if (!mode.includes("stats")) {
-                  _context16.next = 52;
-                  break;
-                }
+            case 69:
+              _context16.prev = 69;
+              _context16.t6 = _context16["catch"](13);
 
-                _context16.next = 51;
-                return Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
-                  path: path,
-                  method: "GET",
-                  queryParams: params
-                }));
+              if (!(_context16.t6.status && _context16.t6.status.toString() === "404")) {
+                _context16.next = 73;
+                break;
+              }
 
-              case 51:
-                return _context16.abrupt("return", _context16.sent);
+              return _context16.abrupt("return", {
+                paging: {
+                  start: params.start,
+                  limit: params.limit,
+                  total: 0,
+                  more: false
+                },
+                results: []
+              });
 
-              case 52:
-                _context16.t2 = Utils;
-                _context16.next = 55;
-                return this.client.authClient.MakeAuthServiceRequest({
-                  path: path,
-                  method: "GET",
-                  queryParams: params
-                });
+            case 73:
+              throw _context16.t6;
 
-              case 55:
-                _context16.t3 = _context16.sent;
-                _context16.next = 58;
-                return _context16.t2.ResponseToJson.call(_context16.t2, _context16.t3);
-
-              case 58:
-                _context16.t1 = _context16.sent;
-
-                if (_context16.t1) {
-                  _context16.next = 61;
-                  break;
-                }
-
-                _context16.t1 = [];
-
-              case 61:
-                _ref16 = _context16.t1;
-                contents = _ref16.contents;
-                paging = _ref16.paging;
-                return _context16.abrupt("return", {
-                  paging: {
-                    start: params.start,
-                    limit: params.limit,
-                    total: paging.total,
-                    more: paging.total > start + limit
-                  },
-                  results: (contents || []).map(function (item) {
-                    return ["owned", "listings"].includes(mode) ? FormatNFT(_this6, item) : item;
-                  })
-                });
-
-              case 67:
-                _context16.prev = 67;
-                _context16.t4 = _context16["catch"](13);
-
-                if (!(_context16.t4.status && _context16.t4.status.toString() === "404")) {
-                  _context16.next = 71;
-                  break;
-                }
-
-                return _context16.abrupt("return", {
-                  paging: {
-                    start: params.start,
-                    limit: params.limit,
-                    total: 0,
-                    more: false
-                  },
-                  results: []
-                });
-
-              case 71:
-                throw _context16.t4;
-
-              case 72:
-              case "end":
-                return _context16.stop();
-            }
+            case 74:
+            case "end":
+              return _context16.stop();
           }
-        }, _callee16, this, [[13, 67]]);
-      }));
-
-      function FilteredQuery() {
-        return _FilteredQuery.apply(this, arguments);
-      }
-
-      return FilteredQuery;
-    }()
+        }
+      }, null, this, [[13, 69]]);
+    }
   }, {
     key: "MintingStatus",
-    value: function () {
-      var _MintingStatus = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee17(_ref17) {
-        var marketplaceParams, tenantId, marketplaceInfo, response;
-        return _regeneratorRuntime.wrap(function _callee17$(_context17) {
-          while (1) {
-            switch (_context17.prev = _context17.next) {
-              case 0:
-                marketplaceParams = _ref17.marketplaceParams, tenantId = _ref17.tenantId;
+    value: function MintingStatus(_ref13) {
+      var marketplaceParams, tenantId, marketplaceInfo, response;
+      return _regeneratorRuntime.async(function MintingStatus$(_context17) {
+        while (1) {
+          switch (_context17.prev = _context17.next) {
+            case 0:
+              marketplaceParams = _ref13.marketplaceParams, tenantId = _ref13.tenantId;
 
-                if (tenantId) {
-                  _context17.next = 6;
-                  break;
+              if (tenantId) {
+                _context17.next = 6;
+                break;
+              }
+
+              _context17.next = 4;
+              return _regeneratorRuntime.awrap(this.MarketplaceInfo({
+                marketplaceParams: marketplaceParams || this.selectedMarketplaceInfo
+              }));
+
+            case 4:
+              marketplaceInfo = _context17.sent;
+              tenantId = marketplaceInfo.tenantId;
+
+            case 6:
+              _context17.prev = 6;
+              _context17.next = 9;
+              return _regeneratorRuntime.awrap(Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
+                path: UrlJoin("as", "wlt", "status", "act", tenantId),
+                method: "GET",
+                headers: {
+                  Authorization: "Bearer ".concat(this.AuthToken())
+                }
+              })));
+
+            case 9:
+              response = _context17.sent;
+              return _context17.abrupt("return", response.map(function (status) {
+                var _status$op$split = status.op.split(":"),
+                    _status$op$split2 = _slicedToArray(_status$op$split, 3),
+                    op = _status$op$split2[0],
+                    address = _status$op$split2[1],
+                    id = _status$op$split2[2];
+
+                address = address.startsWith("0x") ? Utils.FormatAddress(address) : address;
+                var confirmationId, tokenId;
+
+                if (op === "nft-buy") {
+                  confirmationId = id;
+                } else if (op === "nft-claim") {
+                  confirmationId = id;
+                  status.marketplaceId = address;
+
+                  if (status.extra && status.extra["0"]) {
+                    address = status.extra.token_addr;
+                    tokenId = status.extra.token_id_str;
+                  }
+                } else if (op === "nft-redeem") {
+                  confirmationId = status.op.split(":").slice(-1)[0];
+                } else {
+                  tokenId = id;
                 }
 
-                _context17.next = 4;
-                return this.MarketplaceInfo({
-                  marketplaceParams: marketplaceParams || this.selectedMarketplaceInfo
+                if (op === "nft-transfer") {
+                  confirmationId = status.extra && status.extra.trans_id;
+                }
+
+                return _objectSpread({}, status, {
+                  timestamp: new Date(status.ts),
+                  state: status.state && _typeof(status.state) === "object" ? Object.values(status.state) : status.state,
+                  extra: status.extra && _typeof(status.extra) === "object" ? Object.values(status.extra) : status.extra,
+                  confirmationId: confirmationId,
+                  op: op,
+                  address: address,
+                  tokenId: tokenId
                 });
+              }).sort(function (a, b) {
+                return a.ts < b.ts ? 1 : -1;
+              }));
 
-              case 4:
-                marketplaceInfo = _context17.sent;
-                tenantId = marketplaceInfo.tenantId;
+            case 13:
+              _context17.prev = 13;
+              _context17.t0 = _context17["catch"](6);
+              this.Log("Failed to retrieve minting status", true, _context17.t0);
+              return _context17.abrupt("return", []);
 
-              case 6:
-                _context17.prev = 6;
-                _context17.next = 9;
-                return Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
-                  path: UrlJoin("as", "wlt", "status", "act", tenantId),
-                  method: "GET",
-                  headers: {
-                    Authorization: "Bearer ".concat(this.AuthToken())
-                  }
-                }));
-
-              case 9:
-                response = _context17.sent;
-                return _context17.abrupt("return", response.map(function (status) {
-                  var _status$op$split = status.op.split(":"),
-                      _status$op$split2 = _slicedToArray(_status$op$split, 3),
-                      op = _status$op$split2[0],
-                      address = _status$op$split2[1],
-                      id = _status$op$split2[2];
-
-                  address = address.startsWith("0x") ? Utils.FormatAddress(address) : address;
-                  var confirmationId, tokenId;
-
-                  if (op === "nft-buy") {
-                    confirmationId = id;
-                  } else if (op === "nft-claim") {
-                    confirmationId = id;
-                    status.marketplaceId = address;
-
-                    if (status.extra && status.extra["0"]) {
-                      address = status.extra.token_addr;
-                      tokenId = status.extra.token_id_str;
-                    }
-                  } else if (op === "nft-redeem") {
-                    confirmationId = status.op.split(":").slice(-1)[0];
-                  } else {
-                    tokenId = id;
-                  }
-
-                  if (op === "nft-transfer") {
-                    confirmationId = status.extra && status.extra.trans_id;
-                  }
-
-                  return _objectSpread(_objectSpread({}, status), {}, {
-                    timestamp: new Date(status.ts),
-                    state: status.state && _typeof(status.state) === "object" ? Object.values(status.state) : status.state,
-                    extra: status.extra && _typeof(status.extra) === "object" ? Object.values(status.extra) : status.extra,
-                    confirmationId: confirmationId,
-                    op: op,
-                    address: address,
-                    tokenId: tokenId
-                  });
-                }).sort(function (a, b) {
-                  return a.ts < b.ts ? 1 : -1;
-                }));
-
-              case 13:
-                _context17.prev = 13;
-                _context17.t0 = _context17["catch"](6);
-                this.Log("Failed to retrieve minting status", true, _context17.t0);
-                return _context17.abrupt("return", []);
-
-              case 17:
-              case "end":
-                return _context17.stop();
-            }
+            case 17:
+            case "end":
+              return _context17.stop();
           }
-        }, _callee17, this, [[6, 13]]);
-      }));
-
-      function MintingStatus(_x20) {
-        return _MintingStatus.apply(this, arguments);
-      }
-
-      return MintingStatus;
-    }()
+        }
+      }, null, this, [[6, 13]]);
+    }
   }], [{
     key: "Initialize",
-    value: function () {
-      var _Initialize = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18(_ref18) {
-        var _ref18$appId, appId, _ref18$network, network, _ref18$mode, mode, marketplaceParams, _ref18$storeAuthToken, storeAuthToken, _ref19, tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash, client, walletClient, url, savedToken;
+    value: function Initialize(_ref14) {
+      var _ref14$appId, appId, _ref14$network, network, _ref14$mode, mode, marketplaceParams, _ref14$storeAuthToken, storeAuthToken, _ref15, tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash, client, walletClient, url, savedToken;
 
-        return _regeneratorRuntime.wrap(function _callee18$(_context18) {
-          while (1) {
-            switch (_context18.prev = _context18.next) {
-              case 0:
-                _ref18$appId = _ref18.appId, appId = _ref18$appId === void 0 ? "general" : _ref18$appId, _ref18$network = _ref18.network, network = _ref18$network === void 0 ? "main" : _ref18$network, _ref18$mode = _ref18.mode, mode = _ref18$mode === void 0 ? "production" : _ref18$mode, marketplaceParams = _ref18.marketplaceParams, _ref18$storeAuthToken = _ref18.storeAuthToken, storeAuthToken = _ref18$storeAuthToken === void 0 ? true : _ref18$storeAuthToken;
-                _ref19 = marketplaceParams || {}, tenantSlug = _ref19.tenantSlug, marketplaceSlug = _ref19.marketplaceSlug, marketplaceId = _ref19.marketplaceId, marketplaceHash = _ref19.marketplaceHash;
+      return _regeneratorRuntime.async(function Initialize$(_context18) {
+        while (1) {
+          switch (_context18.prev = _context18.next) {
+            case 0:
+              _ref14$appId = _ref14.appId, appId = _ref14$appId === void 0 ? "general" : _ref14$appId, _ref14$network = _ref14.network, network = _ref14$network === void 0 ? "main" : _ref14$network, _ref14$mode = _ref14.mode, mode = _ref14$mode === void 0 ? "production" : _ref14$mode, marketplaceParams = _ref14.marketplaceParams, _ref14$storeAuthToken = _ref14.storeAuthToken, storeAuthToken = _ref14$storeAuthToken === void 0 ? true : _ref14$storeAuthToken;
+              _ref15 = marketplaceParams || {}, tenantSlug = _ref15.tenantSlug, marketplaceSlug = _ref15.marketplaceSlug, marketplaceId = _ref15.marketplaceId, marketplaceHash = _ref15.marketplaceHash;
 
-                if (Configuration[network]) {
-                  _context18.next = 6;
-                  break;
-                }
+              if (Configuration[network]) {
+                _context18.next = 6;
+                break;
+              }
 
-                throw Error("ElvWalletClient: Invalid network ".concat(network));
+              throw Error("ElvWalletClient: Invalid network ".concat(network));
 
-              case 6:
-                if (Configuration[network][mode]) {
-                  _context18.next = 8;
-                  break;
-                }
+            case 6:
+              if (Configuration[network][mode]) {
+                _context18.next = 8;
+                break;
+              }
 
-                throw Error("ElvWalletClient: Invalid mode ".concat(mode));
+              throw Error("ElvWalletClient: Invalid mode ".concat(mode));
 
-              case 8:
-                _context18.next = 10;
-                return ElvClient.FromNetworkName({
-                  networkName: network,
-                  assumeV3: true
-                });
+            case 8:
+              _context18.next = 10;
+              return _regeneratorRuntime.awrap(ElvClient.FromNetworkName({
+                networkName: network,
+                assumeV3: true
+              }));
 
-              case 10:
-                client = _context18.sent;
-                walletClient = new ElvWalletClient({
-                  appId: appId,
-                  client: client,
-                  network: network,
-                  mode: mode,
-                  marketplaceInfo: {
-                    tenantSlug: tenantSlug,
-                    marketplaceSlug: marketplaceSlug,
-                    marketplaceId: marketplaceHash ? client.utils.DecodeVersionHash(marketplaceHash).objectId : marketplaceId,
-                    marketplaceHash: marketplaceHash
-                  },
-                  storeAuthToken: storeAuthToken
-                });
+            case 10:
+              client = _context18.sent;
+              walletClient = new ElvWalletClient({
+                appId: appId,
+                client: client,
+                network: network,
+                mode: mode,
+                marketplaceInfo: {
+                  tenantSlug: tenantSlug,
+                  marketplaceSlug: marketplaceSlug,
+                  marketplaceId: marketplaceHash ? client.utils.DecodeVersionHash(marketplaceHash).objectId : marketplaceId,
+                  marketplaceHash: marketplaceHash
+                },
+                storeAuthToken: storeAuthToken
+              });
 
-                if (!(inBrowser && window.location && window.location.href)) {
-                  _context18.next = 31;
-                  break;
-                }
-
-                url = new URL(window.location.href);
-
-                if (!url.searchParams.get("elvToken")) {
-                  _context18.next = 21;
-                  break;
-                }
-
-                _context18.next = 17;
-                return walletClient.Authenticate({
-                  token: url.searchParams.get("elvToken")
-                });
-
-              case 17:
-                url.searchParams["delete"]("elvToken");
-                window.history.replaceState("", "", url);
+              if (!(inBrowser && window.location && window.location.href)) {
                 _context18.next = 31;
                 break;
+              }
 
-              case 21:
-                if (!(storeAuthToken && typeof localStorage !== "undefined")) {
-                  _context18.next = 31;
-                  break;
-                }
+              url = new URL(window.location.href);
 
-                _context18.prev = 22;
-                // Load saved auth token
-                savedToken = localStorage.getItem("__elv-token-".concat(network));
+              if (!url.searchParams.get("elvToken")) {
+                _context18.next = 21;
+                break;
+              }
 
-                if (!savedToken) {
-                  _context18.next = 27;
-                  break;
-                }
+              _context18.next = 17;
+              return _regeneratorRuntime.awrap(walletClient.Authenticate({
+                token: url.searchParams.get("elvToken")
+              }));
 
+            case 17:
+              url.searchParams["delete"]("elvToken");
+              window.history.replaceState("", "", url);
+              _context18.next = 31;
+              break;
+
+            case 21:
+              if (!(storeAuthToken && typeof localStorage !== "undefined")) {
+                _context18.next = 31;
+                break;
+              }
+
+              _context18.prev = 22;
+              // Load saved auth token
+              savedToken = localStorage.getItem("__elv-token-".concat(network));
+
+              if (!savedToken) {
                 _context18.next = 27;
-                return walletClient.Authenticate({
-                  token: savedToken
-                });
-
-              case 27:
-                _context18.next = 31;
                 break;
+              }
 
-              case 29:
-                _context18.prev = 29;
-                _context18.t0 = _context18["catch"](22);
+              _context18.next = 27;
+              return _regeneratorRuntime.awrap(walletClient.Authenticate({
+                token: savedToken
+              }));
 
-              case 31:
-                _context18.next = 33;
-                return walletClient.LoadAvailableMarketplaces();
+            case 27:
+              _context18.next = 31;
+              break;
 
-              case 33:
-                return _context18.abrupt("return", walletClient);
+            case 29:
+              _context18.prev = 29;
+              _context18.t0 = _context18["catch"](22);
 
-              case 34:
-              case "end":
-                return _context18.stop();
-            }
+            case 31:
+              _context18.next = 33;
+              return _regeneratorRuntime.awrap(walletClient.LoadAvailableMarketplaces());
+
+            case 33:
+              return _context18.abrupt("return", walletClient);
+
+            case 34:
+            case "end":
+              return _context18.stop();
           }
-        }, _callee18, null, [[22, 29]]);
-      }));
-
-      function Initialize(_x21) {
-        return _Initialize.apply(this, arguments);
-      }
-
-      return Initialize;
-    }()
+        }
+      }, null, null, [[22, 29]]);
+    }
   }]);
 
   return ElvWalletClient;
