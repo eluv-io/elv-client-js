@@ -27,6 +27,8 @@ var permissionLevels = require("./client/ContentAccess").permissionLevels;
 var _require = require("./LogMessage"),
     LogMessage = _require.LogMessage;
 
+var Crypto = require("./Crypto");
+
 var FrameClient = /*#__PURE__*/function () {
   "use strict";
 
@@ -78,7 +80,9 @@ var FrameClient = /*#__PURE__*/function () {
 
     this.target = target;
     this.timeout = timeout;
-    this.utils = Utils; // Dynamically defined methods defined in AllowedMethods
+    this.utils = Utils;
+    this.Crypto = Crypto;
+    this.Crypto.ElvCrypto(); // Dynamically defined methods defined in AllowedMethods
 
     var _iterator = _createForOfIteratorHelper(this.AllowedMethods()),
         _step;
