@@ -1,6 +1,7 @@
 // for scripts that work with Drafts (new unfinalized objects/versions)
 const Client = require("./Client");
 const Logger = require("./Logger");
+const Utils = require("../../../src/Utils");
 
 const blueprint = {
   name: "Draft",
@@ -44,9 +45,15 @@ const New = context => {
     };
   };
 
+  const decode = ({writeToken}) => {
+    if(!writeToken) throw Error("Draft.decode() - missing writeToken");
+    return Utils.DecodeWriteToken(writeToken);
+  };
+
   // instance interface
   return {
-    create
+    create,
+    decode
   };
 };
 
