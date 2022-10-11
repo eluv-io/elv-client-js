@@ -764,19 +764,23 @@ class ElvWalletClient {
       marketplace.items = await Promise.all(
         marketplace.items.map(async (item, index) => {
           if(item.requires_permissions) {
+            let authorizationToken;
             if(!this.loggedIn) {
-              item.authorized = false;
-            } else {
-              try {
-                await this.client.ContentObjectMetadata({
-                  versionHash: LinkTargetHash(item.nft_template),
-                  metadataSubtree: "permissioned"
-                });
+              // If not logged in, generated a dummy signed token
+              // Authorization may be based on geo-restriction, which doesn't require login
+              authorizationToken = await this.client.CreateFabricToken({});
+            }
 
-                item.authorized = true;
-              } catch(error) {
-                item.authorized = false;
-              }
+            try {
+              await this.client.ContentObjectMetadata({
+                versionHash: LinkTargetHash(item.nft_template),
+                metadataSubtree: "permissioned",
+                authorizationToken
+              });
+
+              item.authorized = true;
+            } catch(error) {
+              item.authorized = false;
             }
           }
 
