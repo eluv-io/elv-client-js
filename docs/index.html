@@ -82,6 +82,11 @@
 <h4>Install from NPM:</h4>
 <pre class="prettyprint source"><code>npm install --save @eluvio/elv-client-js
 </code></pre>
+<p>NOTE: If you see an <code>unsupported architecture</code> error on Mac OS X, try the following:</p>
+<pre class="prettyprint source"><code>export SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+
+export SDK_DIR=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+</code></pre>
 <h4>Usage</h4>
 <pre class="prettyprint source"><code>// From source
 import { ElvClient } from &quot;elv-client-js&quot;;
