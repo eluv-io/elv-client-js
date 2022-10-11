@@ -1259,6 +1259,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 _context15.next = 12;
                 return Promise.all(marketplace.items.map( /*#__PURE__*/function () {
                   var _ref13 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee14(item, index) {
+                    var authorizationToken;
                     return _regeneratorRuntime.wrap(function _callee14$(_context14) {
                       while (1) {
                         switch (_context14.prev = _context14.next) {
@@ -1273,16 +1274,19 @@ var ElvWalletClient = /*#__PURE__*/function () {
                               break;
                             }
 
-                            item.authorized = false;
-                            _context14.next = 14;
-                            break;
+                            _context14.next = 4;
+                            return _this5.client.CreateFabricToken({});
+
+                          case 4:
+                            authorizationToken = _context14.sent;
 
                           case 5:
                             _context14.prev = 5;
                             _context14.next = 8;
                             return _this5.client.ContentObjectMetadata({
                               versionHash: LinkTargetHash(item.nft_template),
-                              metadataSubtree: "permissioned"
+                              metadataSubtree: "permissioned",
+                              authorizationToken: authorizationToken
                             });
 
                           case 8:
