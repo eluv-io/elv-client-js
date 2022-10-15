@@ -97,9 +97,8 @@ exports.SetProfileMetadata = async function({type="app", mode="public", appId, k
  * @param {string=} mode="public" - Specify `public` or `private` metadata.
  * @param {string=} appId - Namespace to use for the metadata, if retrieving app metadata.. Uses the app ID specified on client initialization by default.
  * @param {string} key - The metadata key to set
- * @param {string} value - The metadata value to set
  */
-exports.RemoveProfileMetadata = async function({type="app", mode="public", appId, key, value}) {
+exports.RemoveProfileMetadata = async function({type="app", mode="public", appId, key}) {
   await this.stateStoreClient.Request({
     method: "DELETE",
     path: UserProfilePath({
@@ -110,7 +109,6 @@ exports.RemoveProfileMetadata = async function({type="app", mode="public", appId
       mode,
       key
     }),
-    body: value,
     headers: {
       Authorization: `Bearer ${this.AuthToken()}`
     }
