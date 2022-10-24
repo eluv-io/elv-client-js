@@ -1614,13 +1614,9 @@ var AuthorizationClient = /*#__PURE__*/function () {
 
               case 10:
                 _context17.t2 = _context17.t1;
-                _context17.next = 13;
-                return _context17.t0.joinSignature.call(_context17.t0, _context17.t2);
+                return _context17.abrupt("return", _context17.t0.joinSignature.call(_context17.t0, _context17.t2));
 
-              case 13:
-                return _context17.abrupt("return", _context17.sent);
-
-              case 14:
+              case 12:
               case "end":
                 return _context17.stop();
             }
