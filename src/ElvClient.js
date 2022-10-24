@@ -638,8 +638,20 @@ class ElvClient {
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
 
-    window.console.log("set signDigest");
+    await this.InitializeClients();
+  }
+  /**
+   * Set the signDigest for this client to use for blockchain transactions from an existing web3 provider.
+   * Useful for integrating with MetaMask
+   *
+   * @methodGroup Signers
+   * @namedParams
+   * @param {object} provider - The web3 provider object
+   */
+  async SetSignDigestFromWeb3Provider({provider}) {
+    const address = await this.signer.getAddress();
     const signer=this.signer;
+    window.console.log("set signDigest, addr=", address);
     let signDigest;
     if(signer.signDigest) {
       window.console.log("use signer.signDigest");
@@ -652,7 +664,7 @@ class ElvClient {
       signDigest = (_message) => {
         return provider.request({
           method: "personal_sign",
-          params: [signer.address, _message],
+          params: [address, _message],
         });
       };
     } else if(provider && provider.provider && provider.provider.request) {
@@ -660,7 +672,7 @@ class ElvClient {
       signDigest = (_message) => {
         return provider.provider.request({
           method: "personal_sign",
-          params: [signer.address, _message],
+          params: [address, _message],
         });
       };
     } else {
@@ -668,8 +680,6 @@ class ElvClient {
     }
     this.signDigest = signDigest;
     this.signer.signDigest = signDigest;
-
-    await this.InitializeClients();
   }
 
   /**
