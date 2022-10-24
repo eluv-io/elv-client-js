@@ -649,8 +649,8 @@ class ElvClient {
    * @param {object} provider - The web3 provider object
    */
   async SetSignDigestFromWeb3Provider({provider}) {
-    const address = await this.signer.getAddress();
-    const signer=this.signer;
+    const signer = this.signer;
+    const address = this.signer.address;
     window.console.log("set signDigest, addr=", address);
     let signDigest;
     if(signer.signDigest) {
