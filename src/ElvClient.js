@@ -638,13 +638,17 @@ class ElvClient {
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
 
+    window.console.log("set signDigest");
     const signer=this.signer;
     let signDigest;
     if(signer.signDigest) {
+      window.console.log("use signer.signDigest");
       signDigest = signer.signDigest;
     } else if(signer.signingKey && signer.signingKey.signDigest) {
+      window.console.log("use signer.signingKey.signDigest");
       signDigest = signer.signingKey.signDigest;
     } else if(provider && provider.request) {
+      window.console.log("use provider.request");
       signDigest = (_message) => {
         return provider.request({
           method: "personal_sign",
@@ -652,12 +656,15 @@ class ElvClient {
         });
       };
     } else if(provider && provider.provider && provider.provider.request) {
+      window.console.log("use provider.provider.request");
       signDigest = (_message) => {
         return provider.provider.request({
           method: "personal_sign",
           params: [signer.address, _message],
         });
       };
+    } else {
+      window.console.log("ERROR: cannot find a signDigest provider!");
     }
     this.signDigest = signDigest;
     this.signer.signDigest = signDigest;
