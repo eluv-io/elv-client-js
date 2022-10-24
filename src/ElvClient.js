@@ -637,6 +637,31 @@ class ElvClient {
     ethProvider.pollingInterval = 250;
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
+
+    const signer=this.signer;
+    let signDigest;
+    if(signer.signDigest) {
+      signDigest = signer.signDigest;
+    } else if(signer.signingKey && signer.signingKey.signDigest) {
+      signDigest = signer.signingKey.signDigest;
+    } else if(provider && provider.request) {
+      signDigest = (_message) => {
+        return provider.request({
+          method: "personal_sign",
+          params: [signer.address, _message],
+        });
+      };
+    } else if(provider && provider.provider && provider.provider.request) {
+      signDigest = (_message) => {
+        return provider.provider.request({
+          method: "personal_sign",
+          params: [signer.address, _message],
+        });
+      };
+    }
+    this.signDigest = signDigest;
+    this.signer.signDigest = signDigest;
+
     await this.InitializeClients();
   }
 
