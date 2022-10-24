@@ -637,9 +637,9 @@ class ElvClient {
     ethProvider.pollingInterval = 250;
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
-
     await this.InitializeClients();
   }
+
   /**
    * Set the signDigest for this client to use for blockchain transactions from an existing web3 provider.
    * Useful for integrating with MetaMask
