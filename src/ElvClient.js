@@ -1098,6 +1098,7 @@ class ElvClient {
       "SetRemoteSigner",
       "SetSigner",
       "SetSignerFromWeb3Provider",
+      "SetSignDigestFromWeb3Provider",
       "Sign",
       "ToggleLogging"
     ];
