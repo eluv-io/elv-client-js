@@ -11,6 +11,7 @@ const EthClient = require("./EthClient");
 const UserProfileClient = require("./UserProfileClient");
 const HttpClient = require("./HttpClient");
 const RemoteSigner = require("./RemoteSigner");
+const CrossChainOracle = require("./CrossChainOracle");
 
 // const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
@@ -390,6 +391,12 @@ class ElvClient {
       debug: this.debug
     });
 
+    this.crossChainOracle = new CrossChainOracle({
+      client: this,
+      contentSpaceId: this.contentSpaceId,
+      debug: this.debug
+    });
+
     // Initialize crypto wasm
     this.Crypto = Crypto;
     this.Crypto.ElvCrypto();
@@ -631,12 +638,16 @@ class ElvClient {
    * @param {object} provider - The web3 provider object
    */
   async SetSignerFromWeb3Provider({provider}) {
+    window.console.log("SetSignerFromWeb3Provider");
     this.staticToken = undefined;
 
     let ethProvider = new Ethers.providers.Web3Provider(provider);
     ethProvider.pollingInterval = 250;
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
+    window.console.log("this.signer", this.signer);
+
+    await this.SetSignDigestFromWeb3Provider({provider});
     await this.InitializeClients();
   }
 
@@ -649,22 +660,15 @@ class ElvClient {
    * @param {object} provider - The web3 provider object
    */
   async SetSignDigestFromWeb3Provider({provider}) {
-    const signer = this.signer;
-    const address = this.signer.address;
-    window.console.log("set signDigest, addr=", address);
+    window.console.log("SetSignDigestFromWeb3Provider");
+    const userAddress = await this.signer.getAddress();
     let signDigest;
-    if(signer.signDigest) {
-      window.console.log("use signer.signDigest");
-      signDigest = signer.signDigest;
-    } else if(signer.signingKey && signer.signingKey.signDigest) {
-      window.console.log("use signer.signingKey.signDigest");
-      signDigest = signer.signingKey.signDigest;
-    } else if(provider && provider.request) {
+    if(provider && provider.request) {
       window.console.log("use provider.request");
       signDigest = (_message) => {
         return provider.request({
           method: "personal_sign",
-          params: [address, _message],
+          params: [userAddress, _message],
         });
       };
     } else if(provider && provider.provider && provider.provider.request) {
@@ -672,11 +676,11 @@ class ElvClient {
       signDigest = (_message) => {
         return provider.provider.request({
           method: "personal_sign",
-          params: [address, _message],
+          params: [userAddress, _message],
         });
       };
     } else {
-      window.console.log("ERROR: cannot find a signDigest provider!");
+      window.console.log("ERROR: cannot find a signDigest from provider, assume default");
     }
     this.signDigest = signDigest;
     this.signer.signDigest = signDigest;
