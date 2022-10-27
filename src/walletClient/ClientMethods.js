@@ -425,6 +425,28 @@ exports.TenantConfiguration = async function({tenantId, contractAddress}) {
 };
 
 
+/**
+ * Retrieve the current exchange rate for the specified currency to USD
+ *
+ * @methodGroup Tenants
+ * @namedParams
+ * @param {string} currency - The currency for which to retrieve the USD exchange rate
+ */
+exports.ExchangeRate = async function({currency}) {
+  if(!currency) {
+    throw Error("Eluvio Wallet Client: Invalid or missing currency in ExchangeRate");
+  }
+
+  return await Utils.ResponseToJson(
+    this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "xr", "ebanx", currency),
+      method: "GET"
+    })
+  );
+};
+
+
+
 /* MARKETPLACE */
 
 /**
