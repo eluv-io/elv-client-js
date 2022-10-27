@@ -46,7 +46,19 @@ class CrossChainOracle {
   }
 
   /**
-   * Format a cross-chain oracle request.  Used as the xcoRequest argument to this.XcoView().
+   * Format a cross-chain oracle request.
+   * Used as the xcoRequest argument to this.XcoView().
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {string=} chain_type - the chain type; "eip155", "flow", "solana", etc
+   * @param {string=} chain_id - the chain ID; a number for ethereum (eip155), "mainnet" or "testnet" for flow,
+   *                             a hash "4sGjMW1sUnHzSxGspuhpqLDx6wiyjNtZ" or "8E9rvCKLFQia2Y35HXjjpWzj8weVo44K"
+   *                             for solana, etc
+   * @param {string=} asset_type - the asset type; "erc721" or "erc20" for an ethereum token or NFT,
+   *                               "NonFungibleToken" for a flow NFT, etc
+   * @param {string=} asset_id - the asset contract address or other ID; "0x123.." hex for ethereum,
+   *                             "0x...:NFT_NAME" for flow, etc
    */
   CreateXcoRequest({chain_type= "eip155", chain_id= "1", asset_type= "erc721", asset_id}) {
     const xcoReq = {
@@ -63,8 +75,12 @@ class CrossChainOracle {
   /**
    * Make a cross-chain oracle call for the chain asset specified in the xcoRequest.
    * Create the xcoRequest via this.CreateXcoRequest().
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {object} xcoRequest - Object containing specification of the chain asset to query for token balance
    */
-  async XcoView({xcoRequest}) {
+  async XcoBalanceView({xcoRequest}) {
     // Create a client-signed access token  in order to access the cross-chain oracle API
     const xcoToken = await this.CreateOracleAccessToken();
     this.Log("oracle access token", xcoToken);

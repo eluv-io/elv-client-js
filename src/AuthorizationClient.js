@@ -803,9 +803,7 @@ class AuthorizationClient {
     if(!this.client.signer.signDigest) {
       const signer = this.client.signer;
       let signDigest;
-      if(signer.signDigest) {
-        signDigest = signer.signDigest;
-      } else if(signer.signingKey && signer.signingKey.signDigest) {
+      if(signer.signingKey && signer.signingKey.signDigest) {
         signDigest = signer.signingKey.signDigest;
       } else if(signer.provider && signer.provider.request && signer.address) {
         signDigest = (_message) => {
