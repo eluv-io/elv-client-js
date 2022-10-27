@@ -640,14 +640,12 @@ class ElvClient {
    * @param {object} provider - The web3 provider object
    */
   async SetSignerFromWeb3Provider({provider}) {
-    this.Log(["SetSignerFromWeb3Provider", provider]);
     this.staticToken = undefined;
 
     let ethProvider = new Ethers.providers.Web3Provider(provider);
     ethProvider.pollingInterval = 250;
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
-
     await this.SetSignDigestFromWeb3Provider({provider});
     await this.InitializeClients();
   }
@@ -661,7 +659,6 @@ class ElvClient {
    * @param {object} provider - The web3 provider object
    */
   async SetSignDigestFromWeb3Provider({provider}) {
-    this.Log(["SetSignDigestFromWeb3Provider", provider]);
     const userAddress = await this.signer.getAddress();
     let signDigest;
     if(provider && provider.request) {
