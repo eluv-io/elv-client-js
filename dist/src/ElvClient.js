@@ -758,78 +758,6 @@ var ElvClient = /*#__PURE__*/function () {
       return SetSignerFromWeb3Provider;
     }()
     /**
-     * Set the signDigest for this client to use for blockchain transactions from an existing web3 provider.
-     * Useful for integrating with MetaMask
-     *
-     * @methodGroup Signers
-     * @namedParams
-     * @param {object} provider - The web3 provider object
-     */
-
-  }, {
-    key: "SetSignDigestFromWeb3Provider",
-    value: function () {
-      var _SetSignDigestFromWeb3Provider = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee8(_ref10) {
-        var provider, address, signer, signDigest;
-        return _regeneratorRuntime.wrap(function _callee8$(_context8) {
-          while (1) {
-            switch (_context8.prev = _context8.next) {
-              case 0:
-                provider = _ref10.provider;
-                _context8.next = 3;
-                return this.signer.getAddress();
-
-              case 3:
-                address = _context8.sent;
-                signer = this.signer;
-                window.console.log("set signDigest, addr=", address);
-
-                if (signer.signDigest) {
-                  window.console.log("use signer.signDigest");
-                  signDigest = signer.signDigest;
-                } else if (signer.signingKey && signer.signingKey.signDigest) {
-                  window.console.log("use signer.signingKey.signDigest");
-                  signDigest = signer.signingKey.signDigest;
-                } else if (provider && provider.request) {
-                  window.console.log("use provider.request");
-
-                  signDigest = function signDigest(_message) {
-                    return provider.request({
-                      method: "personal_sign",
-                      params: [address, _message]
-                    });
-                  };
-                } else if (provider && provider.provider && provider.provider.request) {
-                  window.console.log("use provider.provider.request");
-
-                  signDigest = function signDigest(_message) {
-                    return provider.provider.request({
-                      method: "personal_sign",
-                      params: [address, _message]
-                    });
-                  };
-                } else {
-                  window.console.log("ERROR: cannot find a signDigest provider!");
-                }
-
-                this.signDigest = signDigest;
-                this.signer.signDigest = signDigest;
-
-              case 9:
-              case "end":
-                return _context8.stop();
-            }
-          }
-        }, _callee8, this);
-      }));
-
-      function SetSignDigestFromWeb3Provider(_x5) {
-        return _SetSignDigestFromWeb3Provider.apply(this, arguments);
-      }
-
-      return SetSignDigestFromWeb3Provider;
-    }()
-    /**
      * Initialize a new account using the provided funding and group tokens.
      *
      * This method will redeem the tokens for the current account (or create a new one if not set) in order to
@@ -848,14 +776,14 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "CreateAccount",
     value: function () {
-      var _CreateAccount = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee9(_ref11) {
-        var tenantId, fundingToken, _ref11$funds, funds, groupToken, wallet, signer;
+      var _CreateAccount = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee8(_ref10) {
+        var tenantId, fundingToken, _ref10$funds, funds, groupToken, wallet, signer;
 
-        return _regeneratorRuntime.wrap(function _callee9$(_context9) {
+        return _regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
-            switch (_context9.prev = _context9.next) {
+            switch (_context8.prev = _context8.next) {
               case 0:
-                tenantId = _ref11.tenantId, fundingToken = _ref11.fundingToken, _ref11$funds = _ref11.funds, funds = _ref11$funds === void 0 ? 0.5 : _ref11$funds, groupToken = _ref11.groupToken;
+                tenantId = _ref10.tenantId, fundingToken = _ref10.fundingToken, _ref10$funds = _ref10.funds, funds = _ref10$funds === void 0 ? 0.5 : _ref10$funds, groupToken = _ref10.groupToken;
 
                 if (!this.signer) {
                   wallet = this.GenerateWallet();
@@ -867,7 +795,7 @@ var ElvClient = /*#__PURE__*/function () {
                   });
                 }
 
-                _context9.next = 4;
+                _context8.next = 4;
                 return this.authClient.MakeKMSRequest({
                   method: "POST",
                   path: "/ks/otp/fnd/".concat(tenantId),
@@ -881,11 +809,11 @@ var ElvClient = /*#__PURE__*/function () {
                 });
 
               case 4:
-                _context9.next = 6;
+                _context8.next = 6;
                 return this.userProfileClient.CreateWallet();
 
               case 6:
-                _context9.next = 8;
+                _context8.next = 8;
                 return this.userProfileClient.ReplaceUserMetadata({
                   metadataSubtree: "tenantContractId",
                   metadata: tenantId
@@ -893,11 +821,11 @@ var ElvClient = /*#__PURE__*/function () {
 
               case 8:
                 if (!groupToken) {
-                  _context9.next = 11;
+                  _context8.next = 11;
                   break;
                 }
 
-                _context9.next = 11;
+                _context8.next = 11;
                 return this.authClient.MakeKMSRequest({
                   method: "POST",
                   path: "/ks/otp/grp/".concat(tenantId),
@@ -910,17 +838,17 @@ var ElvClient = /*#__PURE__*/function () {
                 });
 
               case 11:
-                return _context9.abrupt("return", this.utils.FormatAddress(this.signer.address));
+                return _context8.abrupt("return", this.utils.FormatAddress(this.signer.address));
 
               case 12:
               case "end":
-                return _context9.stop();
+                return _context8.stop();
             }
           }
-        }, _callee9, this);
+        }, _callee8, this);
       }));
 
-      function CreateAccount(_x6) {
+      function CreateAccount(_x5) {
         return _CreateAccount.apply(this, arguments);
       }
 
@@ -951,70 +879,70 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "CreateFabricToken",
     value: function () {
-      var _CreateFabricToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee11() {
+      var _CreateFabricToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee10() {
         var _this = this;
 
-        var _ref12,
-            _ref12$duration,
+        var _ref11,
+            _ref11$duration,
             duration,
-            _ref12$spec,
+            _ref11$spec,
             spec,
             address,
             Sign,
-            _ref12$addEthereumPre,
+            _ref11$addEthereumPre,
             addEthereumPrefix,
             token,
             message,
             signature,
             compressedToken,
-            _args11 = arguments;
+            _args10 = arguments;
 
-        return _regeneratorRuntime.wrap(function _callee11$(_context11) {
+        return _regeneratorRuntime.wrap(function _callee10$(_context10) {
           while (1) {
-            switch (_context11.prev = _context11.next) {
+            switch (_context10.prev = _context10.next) {
               case 0:
-                _ref12 = _args11.length > 0 && _args11[0] !== undefined ? _args11[0] : {}, _ref12$duration = _ref12.duration, duration = _ref12$duration === void 0 ? 24 * 60 * 60 * 1000 : _ref12$duration, _ref12$spec = _ref12.spec, spec = _ref12$spec === void 0 ? {} : _ref12$spec, address = _ref12.address, Sign = _ref12.Sign, _ref12$addEthereumPre = _ref12.addEthereumPrefix, addEthereumPrefix = _ref12$addEthereumPre === void 0 ? true : _ref12$addEthereumPre;
+                _ref11 = _args10.length > 0 && _args10[0] !== undefined ? _args10[0] : {}, _ref11$duration = _ref11.duration, duration = _ref11$duration === void 0 ? 24 * 60 * 60 * 1000 : _ref11$duration, _ref11$spec = _ref11.spec, spec = _ref11$spec === void 0 ? {} : _ref11$spec, address = _ref11.address, Sign = _ref11.Sign, _ref11$addEthereumPre = _ref11.addEthereumPrefix, addEthereumPrefix = _ref11$addEthereumPre === void 0 ? true : _ref11$addEthereumPre;
                 address = address || this.CurrentAccountAddress();
-                _context11.t0 = _objectSpread;
-                _context11.t1 = _objectSpread({}, spec);
-                _context11.t2 = {};
-                _context11.t3 = "iusr".concat(Utils.AddressToHash(address));
-                _context11.t4 = Buffer.from(address.replace(/^0x/, ""), "hex").toString("base64");
-                _context11.next = 9;
+                _context10.t0 = _objectSpread;
+                _context10.t1 = _objectSpread({}, spec);
+                _context10.t2 = {};
+                _context10.t3 = "iusr".concat(Utils.AddressToHash(address));
+                _context10.t4 = Buffer.from(address.replace(/^0x/, ""), "hex").toString("base64");
+                _context10.next = 9;
                 return this.ContentSpaceId();
 
               case 9:
-                _context11.t5 = _context11.sent;
-                _context11.t6 = Date.now();
-                _context11.t7 = Date.now() + duration;
-                _context11.t8 = {
-                  sub: _context11.t3,
-                  adr: _context11.t4,
-                  spc: _context11.t5,
-                  iat: _context11.t6,
-                  exp: _context11.t7
+                _context10.t5 = _context10.sent;
+                _context10.t6 = Date.now();
+                _context10.t7 = Date.now() + duration;
+                _context10.t8 = {
+                  sub: _context10.t3,
+                  adr: _context10.t4,
+                  spc: _context10.t5,
+                  iat: _context10.t6,
+                  exp: _context10.t7
                 };
-                token = (0, _context11.t0)(_context11.t1, _context11.t2, _context11.t8);
+                token = (0, _context10.t0)(_context10.t1, _context10.t2, _context10.t8);
 
                 if (!Sign) {
                   Sign = /*#__PURE__*/function () {
-                    var _ref13 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee10(message) {
-                      return _regeneratorRuntime.wrap(function _callee10$(_context10) {
+                    var _ref12 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee9(message) {
+                      return _regeneratorRuntime.wrap(function _callee9$(_context9) {
                         while (1) {
-                          switch (_context10.prev = _context10.next) {
+                          switch (_context9.prev = _context9.next) {
                             case 0:
-                              return _context10.abrupt("return", _this.authClient.Sign(message));
+                              return _context9.abrupt("return", _this.authClient.Sign(message));
 
                             case 1:
                             case "end":
-                              return _context10.stop();
+                              return _context9.stop();
                           }
                         }
-                      }, _callee10);
+                      }, _callee9);
                     }));
 
-                    return function Sign(_x7) {
-                      return _ref13.apply(this, arguments);
+                    return function Sign(_x6) {
+                      return _ref12.apply(this, arguments);
                     };
                   }();
                 }
@@ -1025,20 +953,20 @@ var ElvClient = /*#__PURE__*/function () {
                   message = Ethers.utils.keccak256(Buffer.from("\x19Ethereum Signed Message:\n".concat(message.length).concat(message), "utf-8"));
                 }
 
-                _context11.next = 19;
+                _context10.next = 19;
                 return Sign(message);
 
               case 19:
-                signature = _context11.sent;
+                signature = _context10.sent;
                 compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
-                return _context11.abrupt("return", "acspjc".concat(this.utils.B58(Buffer.concat([Buffer.from(signature.replace(/^0x/, ""), "hex"), Buffer.from(compressedToken)]))));
+                return _context10.abrupt("return", "acspjc".concat(this.utils.B58(Buffer.concat([Buffer.from(signature.replace(/^0x/, ""), "hex"), Buffer.from(compressedToken)]))));
 
               case 22:
               case "end":
-                return _context11.stop();
+                return _context10.stop();
             }
           }
-        }, _callee11, this);
+        }, _callee10, this);
       }));
 
       function CreateFabricToken() {
@@ -1067,60 +995,60 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "CreateSignedToken",
     value: function () {
-      var _CreateSignedToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee12(_ref14) {
-        var libraryId, objectId, versionHash, policyId, subject, _ref14$grantType, grantType, _ref14$allowDecryptio, allowDecryption, duration, _ref14$context, context, token, cap, compressedToken, signature;
+      var _CreateSignedToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee11(_ref13) {
+        var libraryId, objectId, versionHash, policyId, subject, _ref13$grantType, grantType, _ref13$allowDecryptio, allowDecryption, duration, _ref13$context, context, token, cap, compressedToken, signature;
 
-        return _regeneratorRuntime.wrap(function _callee12$(_context12) {
+        return _regeneratorRuntime.wrap(function _callee11$(_context11) {
           while (1) {
-            switch (_context12.prev = _context12.next) {
+            switch (_context11.prev = _context11.next) {
               case 0:
-                libraryId = _ref14.libraryId, objectId = _ref14.objectId, versionHash = _ref14.versionHash, policyId = _ref14.policyId, subject = _ref14.subject, _ref14$grantType = _ref14.grantType, grantType = _ref14$grantType === void 0 ? "read" : _ref14$grantType, _ref14$allowDecryptio = _ref14.allowDecryption, allowDecryption = _ref14$allowDecryptio === void 0 ? false : _ref14$allowDecryptio, duration = _ref14.duration, _ref14$context = _ref14.context, context = _ref14$context === void 0 ? {} : _ref14$context;
+                libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, policyId = _ref13.policyId, subject = _ref13.subject, _ref13$grantType = _ref13.grantType, grantType = _ref13$grantType === void 0 ? "read" : _ref13$grantType, _ref13$allowDecryptio = _ref13.allowDecryption, allowDecryption = _ref13$allowDecryptio === void 0 ? false : _ref13$allowDecryptio, duration = _ref13.duration, _ref13$context = _ref13.context, context = _ref13$context === void 0 ? {} : _ref13$context;
 
                 if (subject) {
-                  _context12.next = 9;
+                  _context11.next = 9;
                   break;
                 }
 
-                _context12.t0 = "iusr";
-                _context12.t1 = this.utils;
-                _context12.next = 6;
+                _context11.t0 = "iusr";
+                _context11.t1 = this.utils;
+                _context11.next = 6;
                 return this.CurrentAccountAddress();
 
               case 6:
-                _context12.t2 = _context12.sent;
-                _context12.t3 = _context12.t1.AddressToHash.call(_context12.t1, _context12.t2);
-                subject = _context12.t0.concat.call(_context12.t0, _context12.t3);
+                _context11.t2 = _context11.sent;
+                _context11.t3 = _context11.t1.AddressToHash.call(_context11.t1, _context11.t2);
+                subject = _context11.t0.concat.call(_context11.t0, _context11.t3);
 
               case 9:
                 if (policyId) {
                   context["elv:delegation-id"] = policyId;
                 }
 
-                _context12.t4 = Buffer;
-                _context12.next = 13;
+                _context11.t4 = Buffer;
+                _context11.next = 13;
                 return this.CurrentAccountAddress().replace(/^0x/, "");
 
               case 13:
-                _context12.t5 = _context12.sent;
-                _context12.t6 = _context12.t4.from.call(_context12.t4, _context12.t5, "hex").toString("base64");
-                _context12.t7 = subject;
-                _context12.next = 18;
+                _context11.t5 = _context11.sent;
+                _context11.t6 = _context11.t4.from.call(_context11.t4, _context11.t5, "hex").toString("base64");
+                _context11.t7 = subject;
+                _context11.next = 18;
                 return this.ContentSpaceId();
 
               case 18:
-                _context12.t8 = _context12.sent;
-                _context12.t9 = Date.now();
-                _context12.t10 = Date.now() + duration;
-                _context12.t11 = grantType;
-                _context12.t12 = context;
+                _context11.t8 = _context11.sent;
+                _context11.t9 = Date.now();
+                _context11.t10 = Date.now() + duration;
+                _context11.t11 = grantType;
+                _context11.t12 = context;
                 token = {
-                  adr: _context12.t6,
-                  sub: _context12.t7,
-                  spc: _context12.t8,
-                  iat: _context12.t9,
-                  exp: _context12.t10,
-                  gra: _context12.t11,
-                  ctx: _context12.t12
+                  adr: _context11.t6,
+                  sub: _context11.t7,
+                  spc: _context11.t8,
+                  iat: _context11.t9,
+                  exp: _context11.t10,
+                  gra: _context11.t11,
+                  ctx: _context11.t12
                 };
 
                 if (versionHash) {
@@ -1128,24 +1056,24 @@ var ElvClient = /*#__PURE__*/function () {
                 }
 
                 if (!objectId) {
-                  _context12.next = 31;
+                  _context11.next = 31;
                   break;
                 }
 
                 token.qid = objectId;
 
                 if (libraryId) {
-                  _context12.next = 31;
+                  _context11.next = 31;
                   break;
                 }
 
-                _context12.next = 30;
+                _context11.next = 30;
                 return this.ContentObjectLibraryId({
                   objectId: objectId
                 });
 
               case 30:
-                libraryId = _context12.sent;
+                libraryId = _context11.sent;
 
               case 31:
                 if (libraryId) {
@@ -1153,38 +1081,38 @@ var ElvClient = /*#__PURE__*/function () {
                 }
 
                 if (!allowDecryption) {
-                  _context12.next = 37;
+                  _context11.next = 37;
                   break;
                 }
 
-                _context12.next = 35;
+                _context11.next = 35;
                 return this.authClient.ReEncryptionConk({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
               case 35:
-                cap = _context12.sent;
+                cap = _context11.sent;
                 token.apk = cap.public_key;
 
               case 37:
                 compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
-                _context12.next = 40;
+                _context11.next = 40;
                 return this.authClient.Sign(Ethers.utils.keccak256(compressedToken));
 
               case 40:
-                signature = _context12.sent;
-                return _context12.abrupt("return", "aessjc".concat(this.utils.B58(Buffer.concat([Buffer.from(signature.replace(/^0x/, ""), "hex"), Buffer.from(compressedToken)]))));
+                signature = _context11.sent;
+                return _context11.abrupt("return", "aessjc".concat(this.utils.B58(Buffer.concat([Buffer.from(signature.replace(/^0x/, ""), "hex"), Buffer.from(compressedToken)]))));
 
               case 42:
               case "end":
-                return _context12.stop();
+                return _context11.stop();
             }
           }
-        }, _callee12, this);
+        }, _callee11, this);
       }));
 
-      function CreateSignedToken(_x8) {
+      function CreateSignedToken(_x7) {
         return _CreateSignedToken.apply(this, arguments);
       }
 
@@ -1213,13 +1141,13 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "SetOauthToken",
     value: function () {
-      var _SetOauthToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee13(_ref15) {
+      var _SetOauthToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee12(_ref14) {
         var token, wallet, signer;
-        return _regeneratorRuntime.wrap(function _callee13$(_context13) {
+        return _regeneratorRuntime.wrap(function _callee12$(_context12) {
           while (1) {
-            switch (_context13.prev = _context13.next) {
+            switch (_context12.prev = _context12.next) {
               case 0:
-                token = _ref15.token;
+                token = _ref14.token;
                 this.oauthToken = token;
                 wallet = this.GenerateWallet();
                 signer = wallet.AddAccountFromMnemonic({
@@ -1231,13 +1159,13 @@ var ElvClient = /*#__PURE__*/function () {
 
               case 5:
               case "end":
-                return _context13.stop();
+                return _context12.stop();
             }
           }
-        }, _callee13, this);
+        }, _callee12, this);
       }));
 
-      function SetOauthToken(_x9) {
+      function SetOauthToken(_x8) {
         return _SetOauthToken.apply(this, arguments);
       }
 
@@ -1257,17 +1185,17 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "SetSignerFromOauthToken",
     value: function () {
-      var _SetSignerFromOauthToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee14(_ref16) {
+      var _SetSignerFromOauthToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee13(_ref15) {
         var token, wallet, client, _yield$client$authCli, urls, path, httpClient, response, privateKey;
 
-        return _regeneratorRuntime.wrap(function _callee14$(_context14) {
+        return _regeneratorRuntime.wrap(function _callee13$(_context13) {
           while (1) {
-            switch (_context14.prev = _context14.next) {
+            switch (_context13.prev = _context13.next) {
               case 0:
-                token = _ref16.token;
+                token = _ref15.token;
 
                 if (this.trustAuthorityId) {
-                  _context14.next = 3;
+                  _context13.next = 3;
                   break;
                 }
 
@@ -1275,36 +1203,36 @@ var ElvClient = /*#__PURE__*/function () {
 
               case 3:
                 wallet = this.GenerateWallet();
-                _context14.prev = 4;
+                _context13.prev = 4;
 
                 if (this.kmsURIs) {
-                  _context14.next = 17;
+                  _context13.next = 17;
                   break;
                 }
 
-                _context14.next = 8;
+                _context13.next = 8;
                 return ElvClient.FromConfigurationUrl({
                   configUrl: this.configUrl
                 });
 
               case 8:
-                client = _context14.sent;
+                client = _context13.sent;
                 client.SetSigner({
                   signer: wallet.AddAccountFromMnemonic({
                     mnemonic: wallet.GenerateMnemonic()
                   })
                 });
-                _context14.next = 12;
+                _context13.next = 12;
                 return client.authClient.KMSInfo({
                   kmsId: this.trustAuthorityId
                 });
 
               case 12:
-                _yield$client$authCli = _context14.sent;
+                _yield$client$authCli = _context13.sent;
                 urls = _yield$client$authCli.urls;
 
                 if (!(!urls || urls.length === 0)) {
-                  _context14.next = 16;
+                  _context13.next = 16;
                   break;
                 }
 
@@ -1320,7 +1248,7 @@ var ElvClient = /*#__PURE__*/function () {
                   uris: this.kmsURIs,
                   debug: this.debug
                 });
-                _context14.next = 22;
+                _context13.next = 22;
                 return this.utils.ResponseToJson(httpClient.Request({
                   headers: {
                     Authorization: "Bearer ".concat(token)
@@ -1331,7 +1259,7 @@ var ElvClient = /*#__PURE__*/function () {
                 }));
 
               case 22:
-                response = _context14.sent;
+                response = _context13.sent;
                 privateKey = response["UserSKHex"];
                 this.SetSigner({
                   signer: wallet.AddAccount({
@@ -1339,33 +1267,33 @@ var ElvClient = /*#__PURE__*/function () {
                   })
                 }); // Ensure wallet is initialized
 
-                _context14.next = 27;
+                _context13.next = 27;
                 return this.userProfileClient.WalletAddress();
 
               case 27:
-                _context14.next = 36;
+                _context13.next = 36;
                 break;
 
               case 29:
-                _context14.prev = 29;
-                _context14.t0 = _context14["catch"](4);
+                _context13.prev = 29;
+                _context13.t0 = _context13["catch"](4);
                 this.Log("Failed to set signer from OAuth token:", true);
-                this.Log(_context14.t0, true);
-                _context14.next = 35;
+                this.Log(_context13.t0, true);
+                _context13.next = 35;
                 return this.ClearSigner();
 
               case 35:
-                throw _context14.t0;
+                throw _context13.t0;
 
               case 36:
               case "end":
-                return _context14.stop();
+                return _context13.stop();
             }
           }
-        }, _callee14, this, [[4, 29]]);
+        }, _callee13, this, [[4, 29]]);
       }));
 
-      function SetSignerFromOauthToken(_x10) {
+      function SetSignerFromOauthToken(_x9) {
         return _SetSignerFromOauthToken.apply(this, arguments);
       }
 
@@ -1382,8 +1310,8 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "SetStaticToken",
     value: function SetStaticToken() {
-      var _ref17 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          token = _ref17.token;
+      var _ref16 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          token = _ref16.token;
 
       if (!token) {
         token = this.utils.B64(JSON.stringify({
@@ -1415,36 +1343,36 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "SetPolicyAuthorization",
     value: function () {
-      var _SetPolicyAuthorization = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee15(_ref18) {
+      var _SetPolicyAuthorization = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee14(_ref17) {
         var objectId;
-        return _regeneratorRuntime.wrap(function _callee15$(_context15) {
+        return _regeneratorRuntime.wrap(function _callee14$(_context14) {
           while (1) {
-            switch (_context15.prev = _context15.next) {
+            switch (_context14.prev = _context14.next) {
               case 0:
-                objectId = _ref18.objectId;
-                _context15.t0 = this;
-                _context15.next = 4;
+                objectId = _ref17.objectId;
+                _context14.t0 = this;
+                _context14.next = 4;
                 return this.GenerateStateChannelToken({
                   objectId: objectId
                 });
 
               case 4:
-                _context15.t1 = _context15.sent;
-                _context15.t2 = {
-                  token: _context15.t1
+                _context14.t1 = _context14.sent;
+                _context14.t2 = {
+                  token: _context14.t1
                 };
 
-                _context15.t0.SetStaticToken.call(_context15.t0, _context15.t2);
+                _context14.t0.SetStaticToken.call(_context14.t0, _context14.t2);
 
               case 7:
               case "end":
-                return _context15.stop();
+                return _context14.stop();
             }
           }
-        }, _callee15, this);
+        }, _callee14, this);
       }));
 
-      function SetPolicyAuthorization(_x11) {
+      function SetPolicyAuthorization(_x10) {
         return _SetPolicyAuthorization.apply(this, arguments);
       }
 
@@ -1460,28 +1388,28 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "Sign",
     value: function () {
-      var _Sign = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee16(string) {
+      var _Sign = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee15(string) {
         var signature;
-        return _regeneratorRuntime.wrap(function _callee16$(_context16) {
+        return _regeneratorRuntime.wrap(function _callee15$(_context15) {
           while (1) {
-            switch (_context16.prev = _context16.next) {
+            switch (_context15.prev = _context15.next) {
               case 0:
-                _context16.next = 2;
+                _context15.next = 2;
                 return this.authClient.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(string)));
 
               case 2:
-                signature = _context16.sent;
-                return _context16.abrupt("return", this.utils.FormatSignature(signature));
+                signature = _context15.sent;
+                return _context15.abrupt("return", this.utils.FormatSignature(signature));
 
               case 4:
               case "end":
-                return _context16.stop();
+                return _context15.stop();
             }
           }
-        }, _callee16, this);
+        }, _callee15, this);
       }));
 
-      function Sign(_x12) {
+      function Sign(_x11) {
         return _Sign.apply(this, arguments);
       }
 
@@ -1500,16 +1428,16 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "EncryptECIES",
     value: function () {
-      var _EncryptECIES = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee17(_ref19) {
+      var _EncryptECIES = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee16(_ref18) {
         var message, publicKey;
-        return _regeneratorRuntime.wrap(function _callee17$(_context17) {
+        return _regeneratorRuntime.wrap(function _callee16$(_context16) {
           while (1) {
-            switch (_context17.prev = _context17.next) {
+            switch (_context16.prev = _context16.next) {
               case 0:
-                message = _ref19.message, publicKey = _ref19.publicKey;
+                message = _ref18.message, publicKey = _ref18.publicKey;
 
                 if (this.signer) {
-                  _context17.next = 3;
+                  _context16.next = 3;
                   break;
                 }
 
@@ -1517,21 +1445,21 @@ var ElvClient = /*#__PURE__*/function () {
 
               case 3:
                 ValidatePresence("message", message);
-                _context17.next = 6;
+                _context16.next = 6;
                 return this.Crypto.EncryptConk(message, publicKey || this.signer.signingKey.keyPair.publicKey);
 
               case 6:
-                return _context17.abrupt("return", _context17.sent);
+                return _context16.abrupt("return", _context16.sent);
 
               case 7:
               case "end":
-                return _context17.stop();
+                return _context16.stop();
             }
           }
-        }, _callee17, this);
+        }, _callee16, this);
       }));
 
-      function EncryptECIES(_x13) {
+      function EncryptECIES(_x12) {
         return _EncryptECIES.apply(this, arguments);
       }
 
@@ -1549,16 +1477,16 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "DecryptECIES",
     value: function () {
-      var _DecryptECIES = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18(_ref20) {
+      var _DecryptECIES = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee17(_ref19) {
         var message;
-        return _regeneratorRuntime.wrap(function _callee18$(_context18) {
+        return _regeneratorRuntime.wrap(function _callee17$(_context17) {
           while (1) {
-            switch (_context18.prev = _context18.next) {
+            switch (_context17.prev = _context17.next) {
               case 0:
-                message = _ref20.message;
+                message = _ref19.message;
 
                 if (this.signer) {
-                  _context18.next = 3;
+                  _context17.next = 3;
                   break;
                 }
 
@@ -1566,21 +1494,21 @@ var ElvClient = /*#__PURE__*/function () {
 
               case 3:
                 ValidatePresence("message", message);
-                _context18.next = 6;
+                _context17.next = 6;
                 return this.Crypto.DecryptCap(message, this.signer.signingKey.privateKey);
 
               case 6:
-                return _context18.abrupt("return", _context18.sent);
+                return _context17.abrupt("return", _context17.sent);
 
               case 7:
               case "end":
-                return _context18.stop();
+                return _context17.stop();
             }
           }
-        }, _callee18, this);
+        }, _callee17, this);
       }));
 
-      function DecryptECIES(_x14) {
+      function DecryptECIES(_x13) {
         return _DecryptECIES.apply(this, arguments);
       }
 
@@ -1601,15 +1529,15 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "Request",
     value: function () {
-      var _Request = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee19(_ref21) {
-        var url, _ref21$format, format, _ref21$method, method, _ref21$headers, headers, body;
+      var _Request = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18(_ref20) {
+        var url, _ref20$format, format, _ref20$method, method, _ref20$headers, headers, body;
 
-        return _regeneratorRuntime.wrap(function _callee19$(_context19) {
+        return _regeneratorRuntime.wrap(function _callee18$(_context18) {
           while (1) {
-            switch (_context19.prev = _context19.next) {
+            switch (_context18.prev = _context18.next) {
               case 0:
-                url = _ref21.url, _ref21$format = _ref21.format, format = _ref21$format === void 0 ? "json" : _ref21$format, _ref21$method = _ref21.method, method = _ref21$method === void 0 ? "GET" : _ref21$method, _ref21$headers = _ref21.headers, headers = _ref21$headers === void 0 ? {} : _ref21$headers, body = _ref21.body;
-                return _context19.abrupt("return", this.utils.ResponseToFormat(format, HttpClient.Fetch(url, {
+                url = _ref20.url, _ref20$format = _ref20.format, format = _ref20$format === void 0 ? "json" : _ref20$format, _ref20$method = _ref20.method, method = _ref20$method === void 0 ? "GET" : _ref20$method, _ref20$headers = _ref20.headers, headers = _ref20$headers === void 0 ? {} : _ref20$headers, body = _ref20.body;
+                return _context18.abrupt("return", this.utils.ResponseToFormat(format, HttpClient.Fetch(url, {
                   method: method,
                   headers: headers,
                   body: body
@@ -1617,13 +1545,13 @@ var ElvClient = /*#__PURE__*/function () {
 
               case 2:
               case "end":
-                return _context19.stop();
+                return _context18.stop();
             }
           }
-        }, _callee19, this);
+        }, _callee18, this);
       }));
 
-      function Request(_x15) {
+      function Request(_x14) {
         return _Request.apply(this, arguments);
       }
 
@@ -1637,7 +1565,7 @@ var ElvClient = /*#__PURE__*/function () {
     value: function FrameAllowedMethods() {
       var _this2 = this;
 
-      var forbiddenMethods = ["constructor", "AccessGroupMembershipMethod", "CallFromFrameMessage", "ClearSigner", "CreateAccount", "EnableMethodLogging", "FormatBlockNumbers", "FrameAllowedMethods", "FromConfigurationUrl", "GenerateWallet", "InitializeClients", "Log", "SetRemoteSigner", "SetSigner", "SetSignerFromWeb3Provider", "SetSignDigestFromWeb3Provider", "Sign", "ToggleLogging"];
+      var forbiddenMethods = ["constructor", "AccessGroupMembershipMethod", "CallFromFrameMessage", "ClearSigner", "CreateAccount", "EnableMethodLogging", "FormatBlockNumbers", "FrameAllowedMethods", "FromConfigurationUrl", "GenerateWallet", "InitializeClients", "Log", "SetRemoteSigner", "SetSigner", "SetSignerFromWeb3Provider", "Sign", "ToggleLogging"];
       return Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(function (method) {
         return typeof _this2[method] === "function" && !forbiddenMethods.includes(method);
       });
@@ -1646,20 +1574,20 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "CallFromFrameMessage",
     value: function () {
-      var _CallFromFrameMessage = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee20(message, Respond) {
+      var _CallFromFrameMessage = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee19(message, Respond) {
         var _this3 = this;
 
         var callback, method, methodResults, responseError;
-        return _regeneratorRuntime.wrap(function _callee20$(_context20) {
+        return _regeneratorRuntime.wrap(function _callee19$(_context19) {
           while (1) {
-            switch (_context20.prev = _context20.next) {
+            switch (_context19.prev = _context19.next) {
               case 0:
                 if (!(message.type !== "ElvFrameRequest")) {
-                  _context20.next = 2;
+                  _context19.next = 2;
                   break;
                 }
 
-                return _context20.abrupt("return");
+                return _context19.abrupt("return");
 
               case 2:
                 if (message.callbackId) {
@@ -1674,44 +1602,44 @@ var ElvClient = /*#__PURE__*/function () {
                   message.args.callback = callback;
                 }
 
-                _context20.prev = 3;
+                _context19.prev = 3;
                 method = message.calledMethod;
 
                 if (!(message.module === "userProfileClient")) {
-                  _context20.next = 13;
+                  _context19.next = 13;
                   break;
                 }
 
                 if (this.userProfileClient.FrameAllowedMethods().includes(method)) {
-                  _context20.next = 8;
+                  _context19.next = 8;
                   break;
                 }
 
                 throw Error("Invalid user profile method: " + method);
 
               case 8:
-                _context20.next = 10;
+                _context19.next = 10;
                 return this.userProfileClient[method](message.args);
 
               case 10:
-                methodResults = _context20.sent;
-                _context20.next = 18;
+                methodResults = _context19.sent;
+                _context19.next = 18;
                 break;
 
               case 13:
                 if (this.FrameAllowedMethods().includes(method)) {
-                  _context20.next = 15;
+                  _context19.next = 15;
                   break;
                 }
 
                 throw Error("Invalid method: " + method);
 
               case 15:
-                _context20.next = 17;
+                _context19.next = 17;
                 return this[method](message.args);
 
               case 17:
-                methodResults = _context20.sent;
+                methodResults = _context19.sent;
 
               case 18:
                 Respond(this.utils.MakeClonable({
@@ -1719,17 +1647,17 @@ var ElvClient = /*#__PURE__*/function () {
                   requestId: message.requestId,
                   response: methodResults
                 }));
-                _context20.next = 27;
+                _context19.next = 27;
                 break;
 
               case 21:
-                _context20.prev = 21;
-                _context20.t0 = _context20["catch"](3);
+                _context19.prev = 21;
+                _context19.t0 = _context19["catch"](3);
                 // eslint-disable-next-line no-console
-                this.Log("Frame Message Error:\n        Method: ".concat(message.calledMethod, "\n        Arguments: ").concat(JSON.stringify(message.args, null, 2), "\n        Error: ").concat(_typeof(_context20.t0) === "object" ? JSON.stringify(_context20.t0, null, 2) : _context20.t0), true); // eslint-disable-next-line no-console
+                this.Log("Frame Message Error:\n        Method: ".concat(message.calledMethod, "\n        Arguments: ").concat(JSON.stringify(message.args, null, 2), "\n        Error: ").concat(_typeof(_context19.t0) === "object" ? JSON.stringify(_context19.t0, null, 2) : _context19.t0), true); // eslint-disable-next-line no-console
 
-                console.error(_context20.t0);
-                responseError = _context20.t0 instanceof Error ? _context20.t0.message : _context20.t0;
+                console.error(_context19.t0);
+                responseError = _context19.t0 instanceof Error ? _context19.t0.message : _context19.t0;
                 Respond(this.utils.MakeClonable({
                   type: "ElvFrameResponse",
                   requestId: message.requestId,
@@ -1738,13 +1666,13 @@ var ElvClient = /*#__PURE__*/function () {
 
               case 27:
               case "end":
-                return _context20.stop();
+                return _context19.stop();
             }
           }
-        }, _callee20, this, [[3, 21]]);
+        }, _callee19, this, [[3, 21]]);
       }));
 
-      function CallFromFrameMessage(_x16, _x17) {
+      function CallFromFrameMessage(_x15, _x16) {
         return _CallFromFrameMessage.apply(this, arguments);
       }
 
@@ -1753,15 +1681,15 @@ var ElvClient = /*#__PURE__*/function () {
   }], [{
     key: "Configuration",
     value: function () {
-      var _Configuration = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee21(_ref22) {
-        var configUrl, _ref22$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs, authServiceURIs, fabricVersion;
+      var _Configuration = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee20(_ref21) {
+        var configUrl, _ref21$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs, authServiceURIs, fabricVersion;
 
-        return _regeneratorRuntime.wrap(function _callee21$(_context21) {
+        return _regeneratorRuntime.wrap(function _callee20$(_context20) {
           while (1) {
-            switch (_context21.prev = _context21.next) {
+            switch (_context20.prev = _context20.next) {
               case 0:
-                configUrl = _ref22.configUrl, _ref22$kmsUrls = _ref22.kmsUrls, kmsUrls = _ref22$kmsUrls === void 0 ? [] : _ref22$kmsUrls, region = _ref22.region;
-                _context21.prev = 1;
+                configUrl = _ref21.configUrl, _ref21$kmsUrls = _ref21.kmsUrls, kmsUrls = _ref21$kmsUrls === void 0 ? [] : _ref21$kmsUrls, region = _ref21.region;
+                _context20.prev = 1;
                 uri = new URI(configUrl);
                 uri.pathname("/config");
 
@@ -1769,11 +1697,11 @@ var ElvClient = /*#__PURE__*/function () {
                   uri.addSearch("elvgeo", region);
                 }
 
-                _context21.next = 7;
+                _context20.next = 7;
                 return Utils.ResponseToJson(HttpClient.Fetch(uri.toString()));
 
               case 7:
-                fabricInfo = _context21.sent;
+                fabricInfo = _context20.sent;
 
                 // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
                 filterHTTPS = function filterHTTPS(uri) {
@@ -1799,7 +1727,7 @@ var ElvClient = /*#__PURE__*/function () {
                 }
 
                 fabricVersion = Math.max.apply(Math, _toConsumableArray(fabricInfo.network.api_versions || [2]));
-                return _context21.abrupt("return", {
+                return _context20.abrupt("return", {
                   nodeId: fabricInfo.node_id,
                   contentSpaceId: fabricInfo.qspace.id,
                   networkId: (fabricInfo.qspace.ethereum || {}).network_id,
@@ -1812,23 +1740,23 @@ var ElvClient = /*#__PURE__*/function () {
                 });
 
               case 19:
-                _context21.prev = 19;
-                _context21.t0 = _context21["catch"](1);
+                _context20.prev = 19;
+                _context20.t0 = _context20["catch"](1);
                 // eslint-disable-next-line no-console
                 console.error("Error retrieving fabric configuration:"); // eslint-disable-next-line no-console
 
-                console.error(_context21.t0);
-                throw _context21.t0;
+                console.error(_context20.t0);
+                throw _context20.t0;
 
               case 24:
               case "end":
-                return _context21.stop();
+                return _context20.stop();
             }
           }
-        }, _callee21, null, [[1, 19]]);
+        }, _callee20, null, [[1, 19]]);
       }));
 
-      function Configuration(_x18) {
+      function Configuration(_x17) {
         return _Configuration.apply(this, arguments);
       }
 
@@ -1853,25 +1781,25 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "FromNetworkName",
     value: function () {
-      var _FromNetworkName = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee22(_ref23) {
-        var networkName, region, trustAuthorityId, staticToken, _ref23$ethereumContra, ethereumContractTimeout, _ref23$noCache, noCache, _ref23$noAuth, noAuth, assumeV3, configUrl;
+      var _FromNetworkName = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee21(_ref22) {
+        var networkName, region, trustAuthorityId, staticToken, _ref22$ethereumContra, ethereumContractTimeout, _ref22$noCache, noCache, _ref22$noAuth, noAuth, assumeV3, configUrl;
 
-        return _regeneratorRuntime.wrap(function _callee22$(_context22) {
+        return _regeneratorRuntime.wrap(function _callee21$(_context21) {
           while (1) {
-            switch (_context22.prev = _context22.next) {
+            switch (_context21.prev = _context21.next) {
               case 0:
-                networkName = _ref23.networkName, region = _ref23.region, trustAuthorityId = _ref23.trustAuthorityId, staticToken = _ref23.staticToken, _ref23$ethereumContra = _ref23.ethereumContractTimeout, ethereumContractTimeout = _ref23$ethereumContra === void 0 ? 10 : _ref23$ethereumContra, _ref23$noCache = _ref23.noCache, noCache = _ref23$noCache === void 0 ? false : _ref23$noCache, _ref23$noAuth = _ref23.noAuth, noAuth = _ref23$noAuth === void 0 ? false : _ref23$noAuth, assumeV3 = _ref23.assumeV3;
+                networkName = _ref22.networkName, region = _ref22.region, trustAuthorityId = _ref22.trustAuthorityId, staticToken = _ref22.staticToken, _ref22$ethereumContra = _ref22.ethereumContractTimeout, ethereumContractTimeout = _ref22$ethereumContra === void 0 ? 10 : _ref22$ethereumContra, _ref22$noCache = _ref22.noCache, noCache = _ref22$noCache === void 0 ? false : _ref22$noCache, _ref22$noAuth = _ref22.noAuth, noAuth = _ref22$noAuth === void 0 ? false : _ref22$noAuth, assumeV3 = _ref22.assumeV3;
                 configUrl = networks[networkName];
 
                 if (configUrl) {
-                  _context22.next = 4;
+                  _context21.next = 4;
                   break;
                 }
 
                 throw Error("Invalid network name: " + networkName);
 
               case 4:
-                _context22.next = 6;
+                _context21.next = 6;
                 return this.FromConfigurationUrl({
                   configUrl: configUrl,
                   region: region,
@@ -1884,17 +1812,17 @@ var ElvClient = /*#__PURE__*/function () {
                 });
 
               case 6:
-                return _context22.abrupt("return", _context22.sent);
+                return _context21.abrupt("return", _context21.sent);
 
               case 7:
               case "end":
-                return _context22.stop();
+                return _context21.stop();
             }
           }
-        }, _callee22, this);
+        }, _callee21, this);
       }));
 
-      function FromNetworkName(_x19) {
+      function FromNetworkName(_x18) {
         return _FromNetworkName.apply(this, arguments);
       }
 
@@ -1919,22 +1847,22 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "FromConfigurationUrl",
     value: function () {
-      var _FromConfigurationUrl = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee23(_ref24) {
-        var configUrl, region, trustAuthorityId, staticToken, _ref24$ethereumContra, ethereumContractTimeout, _ref24$noCache, noCache, _ref24$noAuth, noAuth, _ref24$assumeV, assumeV3, _yield$ElvClient$Conf3, contentSpaceId, networkId, networkName, fabricURIs, ethereumURIs, authServiceURIs, fabricVersion, client;
+      var _FromConfigurationUrl = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee22(_ref23) {
+        var configUrl, region, trustAuthorityId, staticToken, _ref23$ethereumContra, ethereumContractTimeout, _ref23$noCache, noCache, _ref23$noAuth, noAuth, _ref23$assumeV, assumeV3, _yield$ElvClient$Conf3, contentSpaceId, networkId, networkName, fabricURIs, ethereumURIs, authServiceURIs, fabricVersion, client;
 
-        return _regeneratorRuntime.wrap(function _callee23$(_context23) {
+        return _regeneratorRuntime.wrap(function _callee22$(_context22) {
           while (1) {
-            switch (_context23.prev = _context23.next) {
+            switch (_context22.prev = _context22.next) {
               case 0:
-                configUrl = _ref24.configUrl, region = _ref24.region, trustAuthorityId = _ref24.trustAuthorityId, staticToken = _ref24.staticToken, _ref24$ethereumContra = _ref24.ethereumContractTimeout, ethereumContractTimeout = _ref24$ethereumContra === void 0 ? 10 : _ref24$ethereumContra, _ref24$noCache = _ref24.noCache, noCache = _ref24$noCache === void 0 ? false : _ref24$noCache, _ref24$noAuth = _ref24.noAuth, noAuth = _ref24$noAuth === void 0 ? false : _ref24$noAuth, _ref24$assumeV = _ref24.assumeV3, assumeV3 = _ref24$assumeV === void 0 ? false : _ref24$assumeV;
-                _context23.next = 3;
+                configUrl = _ref23.configUrl, region = _ref23.region, trustAuthorityId = _ref23.trustAuthorityId, staticToken = _ref23.staticToken, _ref23$ethereumContra = _ref23.ethereumContractTimeout, ethereumContractTimeout = _ref23$ethereumContra === void 0 ? 10 : _ref23$ethereumContra, _ref23$noCache = _ref23.noCache, noCache = _ref23$noCache === void 0 ? false : _ref23$noCache, _ref23$noAuth = _ref23.noAuth, noAuth = _ref23$noAuth === void 0 ? false : _ref23$noAuth, _ref23$assumeV = _ref23.assumeV3, assumeV3 = _ref23$assumeV === void 0 ? false : _ref23$assumeV;
+                _context22.next = 3;
                 return ElvClient.Configuration({
                   configUrl: configUrl,
                   region: region
                 });
 
               case 3:
-                _yield$ElvClient$Conf3 = _context23.sent;
+                _yield$ElvClient$Conf3 = _context22.sent;
                 contentSpaceId = _yield$ElvClient$Conf3.contentSpaceId;
                 networkId = _yield$ElvClient$Conf3.networkId;
                 networkName = _yield$ElvClient$Conf3.networkName;
@@ -1958,17 +1886,17 @@ var ElvClient = /*#__PURE__*/function () {
                   assumeV3: assumeV3
                 });
                 client.configUrl = configUrl;
-                return _context23.abrupt("return", client);
+                return _context22.abrupt("return", client);
 
               case 14:
               case "end":
-                return _context23.stop();
+                return _context22.stop();
             }
           }
-        }, _callee23);
+        }, _callee22);
       }));
 
-      function FromConfigurationUrl(_x20) {
+      function FromConfigurationUrl(_x19) {
         return _FromConfigurationUrl.apply(this, arguments);
       }
 
