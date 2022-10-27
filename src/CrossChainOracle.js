@@ -1,4 +1,3 @@
-const Ethers = require("ethers");
 const Utils = require("./Utils");
 const {LogMessage} = require("./LogMessage");
 const Pako = require("pako");
@@ -91,34 +90,6 @@ class CrossChainOracle {
       this.Log("XcoView error: ", err);
       return null;
     }
-  }
-
-  async Sign(message) {
-    const signer=this.client.signer;
-    let signDigest;
-    if(signer.signDigest) {
-      signDigest = signer.signDigest;
-    } else if(signer.signingKey && signer.signingKey.signDigest) {
-      signDigest = signer.signingKey.signDigest;
-    } else if(signer.provider && signer.provider.request) {
-      signDigest = (_message) => {
-        return signer.provider.request({
-          method: "personal_sign",
-          params: [signer.address, _message],
-        });
-      };
-    } else if(signer.provider && signer.provider.provider && signer.provider.provider.request) {
-      signDigest = (_message) => {
-        return signer.provider.provider.request({
-          method: "personal_sign",
-          params: [signer.address, _message],
-        });
-      };
-    }
-    this.client.signDigest = signDigest;
-    this.client.signer.signDigest = signDigest;
-
-    return Ethers.utils.joinSignature(await this.client.signDigest(message));
   }
 }
 

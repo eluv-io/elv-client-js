@@ -651,8 +651,8 @@ class ElvClient {
   }
 
   /**
-   * Set the signDigest for this client to use for blockchain transactions from an existing web3 provider.
-   * Useful for integrating with MetaMask
+   * Set the client SignDigest method from an existing web3 provider.
+   * Called as part of SetSignerFromWeb3Provider.
    *
    * @methodGroup Signers
    * @namedParams
