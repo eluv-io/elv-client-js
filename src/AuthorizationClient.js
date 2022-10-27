@@ -800,30 +800,32 @@ class AuthorizationClient {
   }
 
   async Sign(message) {
-    const signer = this.client.signer;
-    let signDigest;
-    if(signer.signDigest) {
-      signDigest = signer.signDigest;
-    } else if(signer.signingKey && signer.signingKey.signDigest) {
-      signDigest = signer.signingKey.signDigest;
-    } else if(signer.provider && signer.provider.request && signer.address) {
-      signDigest = (_message) => {
-        return signer.provider.request({
-          method: "personal_sign",
-          params: [signer.address, _message],
-        });
-      };
-    } else if(signer.provider && signer.provider.provider && signer.provider.provider.request && signer.address) {
-      signDigest = (_message) => {
-        return signer.provider.provider.request({
-          method: "personal_sign",
-          params: [signer.address, _message],
-        });
-      };
-    } else {
-      throw Error("Unable to Sign(), SignDigest() not available; did you set a valid provider?");
+    if(!this.client.signer.signDigest) {
+      const signer = this.client.signer;
+      let signDigest;
+      if(signer.signDigest) {
+        signDigest = signer.signDigest;
+      } else if(signer.signingKey && signer.signingKey.signDigest) {
+        signDigest = signer.signingKey.signDigest;
+      } else if(signer.provider && signer.provider.request && signer.address) {
+        signDigest = (_message) => {
+          return signer.provider.request({
+            method: "personal_sign",
+            params: [signer.address, _message],
+          });
+        };
+      } else if(signer.provider && signer.provider.provider && signer.provider.provider.request && signer.address) {
+        signDigest = (_message) => {
+          return signer.provider.provider.request({
+            method: "personal_sign",
+            params: [signer.address, _message],
+          });
+        };
+      } else {
+        throw Error("Unable to Sign(), SignDigest() not available; did you set a valid provider?");
+      }
+      this.client.signer.signDigest = signDigest;
     }
-    this.client.signer.signDigest = signDigest;
 
     return Ethers.utils.joinSignature(await this.client.signer.signDigest(message));
   }
