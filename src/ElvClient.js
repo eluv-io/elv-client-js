@@ -262,7 +262,8 @@ class ElvClient {
    * @param {string} networkName - Name of the network to connect to ("main", "demo", "test)
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
    * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
-   * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+   * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
+   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
@@ -303,7 +304,8 @@ class ElvClient {
    * @param {string} configUrl - Full URL to the config endpoint
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
    * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
-   * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+   * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
+   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed

@@ -51,14 +51,14 @@ class CrossChainOracle {
    *
    * @methodGroup Authorization
    * @namedParams
-   * @param {string=} chain_type - the chain type; "eip155", "flow", "solana", etc
+   * @param {string=} chain_type - the chain type; "eip155", "flow", "solana"
    * @param {string=} chain_id - the chain ID; a number for ethereum (eip155), "mainnet" or "testnet" for flow,
-   *                             a hash "4sGjMW1sUnHzSxGspuhpqLDx6wiyjNtZ" or "8E9rvCKLFQia2Y35HXjjpWzj8weVo44K"
-   *                             for solana, etc
+   * - a hash "4sGjMW1sUnHzSxGspuhpqLDx6wiyjNtZ" or "8E9rvCKLFQia2Y35HXjjpWzj8weVo44K" for solana
    * @param {string=} asset_type - the asset type; "erc721" or "erc20" for an ethereum token or NFT,
-   *                               "NonFungibleToken" for a flow NFT, etc
-   * @param {string=} asset_id - the asset contract address or other ID; "0x123.." hex for ethereum,
-   *                             "0x...:NFT_NAME" for flow, etc
+   * - "NonFungibleToken" for a flow NFT
+   * @param {string=} asset_id - the asset contract ID; a hex address "0x123.." for ethereum,
+   * - a hex:string - "0x...:NFT_NAME" for flow,
+   * - a base58 string for solana
    */
   CreateXcoRequest({chain_type= "eip155", chain_id= "1", asset_type= "erc721", asset_id}) {
     const xcoReq = {
