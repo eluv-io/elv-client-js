@@ -19,8 +19,8 @@ class CrossChainOracle {
    * Create a signed authorization token used for calling the cross-chain oracle.
    * No need to call this externally, is called via this.XcoView().
    */
-  async CreateOracleAccessToken({userAddress}) {
-    const address = userAddress;
+  async CreateOracleAccessToken() {
+    const address = this.client.signer.address;
     let token = {
       sub: `iusr${Utils.AddressToHash(address)}`,
       adr: Buffer.from(address.replace(/^0x/, ""), "hex").toString("base64"),
@@ -65,11 +65,11 @@ class CrossChainOracle {
    * Make a cross-chain oracle call for the chain asset specified in the xcoRequest.
    * Create the xcoRequest via this.CreateXcoRequest().
    */
-  async XcoView({userAddress, xcoRequest}) {
+  async XcoView({xcoRequest}) {
     // Create a client-signed access token  in order to access the cross-chain oracle API
-    const xcoToken = await this.CreateOracleAccessToken({userAddress: userAddress});
-    this.Log("ORACLE ACCESS TOKEN", xcoToken,
-      JSON.stringify(this.client.utils.DecodeSignedToken(xcoToken), null, 2));
+    const xcoToken = await this.CreateOracleAccessToken();
+    this.Log("oracle access token", xcoToken);
+    this.Log("oracle decoded token", this.client.utils.DecodeSignedToken(xcoToken));
     this.Log("xcoRequest: ", xcoRequest);
 
     // Call the cross-chain oracle 'view' API
@@ -85,10 +85,10 @@ class CrossChainOracle {
           },
         })
       );
-      this.Log("XCO RESPONSE", res);
+      this.Log("xcoResponse", res);
       return res;
     } catch(err) {
-      this.Log("XcoView (res) error: ", err);
+      this.Log("XcoView error: ", err);
       return null;
     }
   }
