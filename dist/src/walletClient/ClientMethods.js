@@ -1535,18 +1535,6 @@ exports.SalesStats = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRu
     }
   }, _callee24, this);
 }));
-/**
- * Get the leaderboard rankings for the specified marketplace. If user address is specified, will return the ranking for the specified user (if present)
- *
- * @methodGroup Leaderboard
- * @namedParams
- * @param {Object=} marketplaceParams - Filter results by marketplace
- * @param {string=} userAddress - Retrieve the ranking for a specific user
- * @param {integer=} start=0 - PAGINATION: Index from which the results should start
- * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
- *
- * @returns {Promise<Array|Object>} - Returns a list of leaderboard rankings or, if userAddress is specified, ranking for that user.
- */
 
 exports.Leaderboard = /*#__PURE__*/function () {
   var _ref47 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee25(_ref46) {
