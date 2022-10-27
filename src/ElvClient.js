@@ -638,14 +638,13 @@ class ElvClient {
    * @param {object} provider - The web3 provider object
    */
   async SetSignerFromWeb3Provider({provider}) {
-    window.console.log("SetSignerFromWeb3Provider");
+    this.Log(["SetSignerFromWeb3Provider", provider]);
     this.staticToken = undefined;
 
     let ethProvider = new Ethers.providers.Web3Provider(provider);
     ethProvider.pollingInterval = 250;
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
-    window.console.log("this.signer", this.signer);
 
     await this.SetSignDigestFromWeb3Provider({provider});
     await this.InitializeClients();
@@ -660,11 +659,10 @@ class ElvClient {
    * @param {object} provider - The web3 provider object
    */
   async SetSignDigestFromWeb3Provider({provider}) {
-    window.console.log("SetSignDigestFromWeb3Provider");
+    this.Log(["SetSignDigestFromWeb3Provider", provider]);
     const userAddress = await this.signer.getAddress();
     let signDigest;
     if(provider && provider.request) {
-      window.console.log("use provider.request");
       signDigest = (_message) => {
         return provider.request({
           method: "personal_sign",
@@ -672,7 +670,6 @@ class ElvClient {
         });
       };
     } else if(provider && provider.provider && provider.provider.request) {
-      window.console.log("use provider.provider.request");
       signDigest = (_message) => {
         return provider.provider.request({
           method: "personal_sign",
@@ -680,7 +677,7 @@ class ElvClient {
         });
       };
     } else {
-      window.console.log("ERROR: cannot find a signDigest from provider, assume default");
+      this.Log("ERROR: cannot find a signDigest from provider, will use existing default", true);
     }
     this.signDigest = signDigest;
     this.signer.signDigest = signDigest;
