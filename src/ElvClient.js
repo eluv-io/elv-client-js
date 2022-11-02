@@ -39,6 +39,9 @@ if(Utils.Platform() === Utils.PLATFORM_NODE) {
 /**
  * See the Modules section on the sidebar for details about methods related to interacting with the Fabric.
  *
+ * <br/>
+ *
+ * For information about the Eluvio Wallet Client, go <a href="wallet-client/index.html">here</a>.
  */
 class ElvClient {
   Log(message, error = false) {
@@ -116,7 +119,7 @@ class ElvClient {
   /**
    * Create a new ElvClient
    *
-   * NOTE: It is highly recommended to use ElvClient.FromConfiguration to
+   * NOTE: It is highly recommended to use the <a href="#.FromConfigurationUrl">FromConfigurationUrl</a> or <a href="#.FromNetworkName">FromNetworkName</a> method
    * automatically import the client settings from the fabric
    *
    * @constructor
@@ -598,15 +601,16 @@ class ElvClient {
    * @param {string=} authToken - Eluvio authorization token previously issued from OAuth ID token
    * @param {string=} tenantId - If specified, user will be associated with the tenant
    * @param {Object=} extraData - Additional data to pass to the login API
+   * @param {Array<string>=} signerURIs - (Only if using custom OAuth) - URIs corresponding to the key server(s) to use
    * @param {boolean=} unsignedPublicAuth=false - If specified, the client will use an unsigned static token for calls that don't require authorization (reduces remote signature calls)
    */
-  async SetRemoteSigner({idToken, authToken, tenantId, extraData, unsignedPublicAuth}) {
+  async SetRemoteSigner({idToken, authToken, tenantId, extraData, signerURIs, unsignedPublicAuth}) {
     const signer = new RemoteSigner({
-      rpcUris: this.authServiceURIs,
+      signerURIs: signerURIs || this.authServiceURIs,
       idToken,
       authToken,
       tenantId,
-      provider: this.ethClient.provider,
+      provider: await this.ethClient.Provider(),
       extraData,
       unsignedPublicAuth
     });
@@ -694,6 +698,75 @@ class ElvClient {
     return this.utils.FormatAddress(this.signer.address);
   }
 
+  /*
+    TOKEN                  211b  PREFIX + BODY | aplsjcJf1HYcDDUuCdXcSZtU86nYK162YmYJeuqwMczEBJVkD5D5EvsBvVwYDRsf4hzDvBWMoe9piBpqx...
+    PREFIX                   6b  aplsjc | apl=plain s=ES256K jc=json-compressed
+    BODY                   205b  base58(SIGNATURE + PAYLOAD)
+    SIGNATURE + PAYLOAD    151b  151b * 138 / 100 + 1 = 209b (>= 205b)
+    SIGNATURE               66b  ES256K_Di9Lu83mz4wMoehCEeQhKpJJ7ApmDZLumAa2Cge48F6EHYnbn8msATGGpjucScwimei1TWGd7aeyQY45AdXd5tT1Z
+    PAYLOAD                 85b  json-compressed
+    json                    79b  {"adr":"VVf4DQU357tDnZGYQeDrntRJ5rs=","spc":"ispc3ANoVSzNA3P6t7abLR69ho5YPPZU"}
+   */
+
+  async PersonalSign({
+    message,
+    addEthereumPrefix,
+    Sign
+  }) {
+    if(!Sign) {
+      Sign = async message => this.authClient.Sign(message);
+    }
+
+    if(addEthereumPrefix) {
+      message = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${message.length}${message}`, "utf-8"));
+    }
+
+    return await Sign(message);
+  }
+
+  /**
+   * Create a signed authorization token that can be used to authorize against the fabric
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {number} duration=86400000 - Time until the token expires, in milliseconds (1 hour = 60 * 60 * 1000 = 3600000). Default is 24 hours.
+   * @param {Object=} spec - Additional attributes for this token
+   * @param {string=} address - Address of the signing account - if not specified, the current signer address will be used.
+   * @param {function=} Sign - If specified, this function will be used to produce the signature instead of the client's current signer
+   * @param {boolean=} addEthereumPrefix=true - If specified, the 'Ethereum Signed Message' prefixed hash format will be performed. Disable this if the provided Sign method already does this (e.g. Metamask)
+   */
+  async CreateFabricToken({
+    duration=24 * 60 * 60 * 1000,
+    spec={},
+    address,
+    Sign,
+    addEthereumPrefix=true,
+  }={}) {
+    address = address || this.CurrentAccountAddress();
+
+    let token = {
+      ...spec,
+      sub:`iusr${Utils.AddressToHash(address)}`,
+      adr: Buffer.from(address.replace(/^0x/, ""), "hex").toString("base64"),
+      spc: await this.ContentSpaceId(),
+      iat: Date.now(),
+      exp: Date.now() + duration,
+    };
+
+    let message = `Eluvio Content Fabric Access Token 1.0\n${JSON.stringify(token)}`;
+
+    const signature = await this.PersonalSign({message, addEthereumPrefix, Sign});
+
+    const compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
+    return `acspjc${this.utils.B58(
+      Buffer.concat([
+        Buffer.from(signature.replace(/^0x/, ""), "hex"),
+        Buffer.from(compressedToken)
+      ])
+    )}`;
+  }
+
+
   /**
    * Issue a self-signed authorization token
    *
@@ -705,7 +778,7 @@ class ElvClient {
    * @param {string=} policyId - The object ID of the policy for this token
    * @param {string=} subject - The subject of the token
    * @param {string} grantType=read - Permissions to grant for this token. Options: "access", "read", "create", "update", "read-crypt"
-   * @param {number} duration - Time until the token expires, in milliseconds (1 hour = 60 * 60 * 1000)
+   * @param {number} duration - Time until the token expires, in milliseconds (1 hour = 60 * 60 * 1000 = 3600000)
    * @param {boolean} allowDecryption=false - If specified, the re-encryption key will be included in the token,
    * enabling the user of this token to download encrypted content from the specified object
    * @param {Object=} context - Additional JSON context

@@ -5,7 +5,7 @@ const UrlJoin = require("url-join");
 
 class RemoteSigner extends Ethers.Signer {
   constructor({
-    rpcUris,
+    signerURIs,
     idToken,
     authToken,
     tenantId,
@@ -18,7 +18,7 @@ class RemoteSigner extends Ethers.Signer {
     this.remoteSigner = true;
     this.unsignedPublicAuth = unsignedPublicAuth;
 
-    this.HttpClient = new HttpClient({uris: rpcUris});
+    this.HttpClient = new HttpClient({uris: signerURIs});
     this.idToken = idToken;
     this.tenantId = tenantId;
 
@@ -85,24 +85,28 @@ class RemoteSigner extends Ethers.Signer {
    */
   async signDigest(digest) {
     if(!this.signatureCache[digest]) {
-      this.signatureCache[digest] = new Promise(async resolve => {
-        let signature = await Utils.ResponseToJson(
-          this.HttpClient.Request({
-            method: "POST",
-            path: UrlJoin("as", "wlt", "sign", "eth", this.id),
-            headers: {
-              Authorization: `Bearer ${this.authToken}`
-            },
-            body: {
-              hash: digest
-            }
-          })
-        );
+      this.signatureCache[digest] = new Promise(async (resolve, reject) => {
+        try {
+          let signature = await Utils.ResponseToJson(
+            this.HttpClient.Request({
+              method: "POST",
+              path: UrlJoin("as", "wlt", "sign", "eth", this.id),
+              headers: {
+                Authorization: `Bearer ${this.authToken}`
+              },
+              body: {
+                hash: digest
+              }
+            })
+          );
 
-        signature.v = parseInt(signature.v, 16);
-        signature.recoveryParam = signature.v - 27;
+          signature.v = parseInt(signature.v, 16);
+          signature.recoveryParam = signature.v - 27;
 
-        resolve(signature);
+          resolve(signature);
+        } catch(error) {
+          reject(error);
+        }
       });
     }
 

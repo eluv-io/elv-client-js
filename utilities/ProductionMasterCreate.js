@@ -110,7 +110,7 @@ class ProductionMasterCreate extends Utility {
         objectId: id,
         writeToken: write_token,
         metadata: streams,
-        metadataSubtree: "/production_master/variants/default"
+        metadataSubtree: "/production_master/variants/default/streams"
       });
 
       const finalizeResponse = await client.FinalizeContentObject({

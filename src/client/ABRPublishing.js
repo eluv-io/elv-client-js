@@ -314,7 +314,7 @@ exports.CreateABRMezzanine = async function({
   }
 
   if(!storeClear) {
-    // If files are encrypted, generate encryption conks
+    // If mez parts are to be encrypted, generate encryption conks
     await this.EncryptionConk({
       libraryId,
       objectId: id,
@@ -478,7 +478,7 @@ exports.StartABRMezzanineJobs = async function({
     metadata: lroInfo
   });
 
-  await this.FinalizeContentObject({
+  const finalizeResponse = await this.FinalizeContentObject({
     libraryId,
     objectId,
     writeToken: statusDraft.write_token,
@@ -500,6 +500,7 @@ exports.StartABRMezzanineJobs = async function({
   });
 
   return {
+    hash: finalizeResponse.hash,
     lro_draft: lroInfo,
     writeToken: processingDraft.write_token,
     data,

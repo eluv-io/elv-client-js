@@ -1,8 +1,14 @@
 const Id = require("./Id");
 const Utils = require("./Utils");
 const permissionLevels = require("./client/ContentAccess").permissionLevels;
+const {LogMessage} = require("./LogMessage");
+const Crypto = require("./Crypto");
 
 class FrameClient {
+  Log(message, error = false) {
+    LogMessage(this, message, error);
+  }
+
   /**
    * FrameClient is a client that looks to the user like an ElvClient, but works by passing messages
    * to another frame with an actual ElvClient instead of making the calls itself.
@@ -44,6 +50,10 @@ class FrameClient {
     this.timeout = timeout;
 
     this.utils = Utils;
+
+    this.Crypto = Crypto;
+    this.Crypto.ElvCrypto();
+
 
     // Dynamically defined methods defined in AllowedMethods
     for(const methodName of this.AllowedMethods()){
@@ -195,7 +205,6 @@ class FrameClient {
       methodListener = async (event) => {
         try {
           const message = event.data;
-
           if(message.type !== "ElvFrameResponse" || message.requestId !== requestId) {
             return;
           }
@@ -431,7 +440,7 @@ class FrameClient {
       "UpdateContentObjectGraph",
       "UpdateNTPInstance",
       "UploadFileData",
-      "UploadFiles",
+      /*"UploadFiles",*/ //Override
       "UploadFilesFromS3",
       "UploadJobStatus",
       "UploadPart",
@@ -461,5 +470,8 @@ class FrameClient {
     ];
   }
 }
+
+const { UploadFiles } = require("./client/Files");
+FrameClient.prototype.UploadFiles=UploadFiles;
 
 exports.FrameClient = FrameClient;
