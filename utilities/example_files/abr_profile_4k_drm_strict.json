@@ -105,24 +105,6 @@
       "protocol": {
         "type": "ProtoHls"
       }
-    },
-    "hls-sample-aes": {
-      "drm": {
-        "enc_scheme_name": "cbcs",
-        "type": "DrmSampleAes"
-      },
-      "protocol": {
-        "type": "ProtoHls"
-      }
-    },
-    "hls-aes128": {
-      "drm": {
-        "enc_scheme_name": "aes-128",
-        "type": "DrmAes128"
-      },
-      "protocol": {
-        "type": "ProtoHls"
-      }
     }
   },
   "segment_specs": {

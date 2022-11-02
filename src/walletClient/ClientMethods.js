@@ -425,6 +425,28 @@ exports.TenantConfiguration = async function({tenantId, contractAddress}) {
 };
 
 
+/**
+ * Retrieve the current exchange rate for the specified currency to USD
+ *
+ * @methodGroup Tenants
+ * @namedParams
+ * @param {string} currency - The currency for which to retrieve the USD exchange rate
+ */
+exports.ExchangeRate = async function({currency}) {
+  if(!currency) {
+    throw Error("Eluvio Wallet Client: Invalid or missing currency in ExchangeRate");
+  }
+
+  return await Utils.ResponseToJson(
+    this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "xr", "ebanx", currency),
+      method: "GET"
+    })
+  );
+};
+
+
+
 /* MARKETPLACE */
 
 /**
@@ -978,6 +1000,32 @@ exports.RemoveListing = async function({listingId}) {
 };
 
 /**
+ * Retrieve all valid names for filtering listing sales names. Full item names are required for filtering sales results by name.
+ *
+ * Specify marketplace information to filter the results to only items offered in that marketplace.
+ *
+ * @methodGroup Listings
+ * @namedParams
+ * @param {Object} marketplaceParams - Parameters of a marketplace to filter results by
+ *
+ * @returns {Promise<Array<String>>} - A list of item names
+ */
+exports.SalesNames = async function({marketplaceParams}) {
+  let tenantId;
+  if(marketplaceParams) {
+    tenantId = (await this.MarketplaceInfo({marketplaceParams})).tenantId;
+  }
+
+  return await Utils.ResponseToJson(
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "mkt", "names", "hst"),
+      method: "GET",
+      queryParams: tenantId ? { filter: `tenant:eq:${tenantId}` } : {}
+    })
+  );
+};
+
+/**
  * Retrieve all valid names for filtering listings. Full item names are required for filtering listing results by name.
  *
  * Specify marketplace information to filter the results to only items offered in that marketplace.
@@ -1075,9 +1123,10 @@ exports.ListingAttributes = async function({marketplaceParams, displayName}={}) 
  * @methodGroup Purchase
  * @namedParams
  * @param {Object} marketplaceParams - Parameters of the marketplace
- * @param {string} sku - The SKU of the item to claime
+ * @param {string} sku - The SKU of the item to claim
+ * @param {string=} email - Email address of the user. If specified, this will bind the user to the tenant of the specified marketplace
  */
-exports.ClaimItem = async function({marketplaceParams, sku}) {
+exports.ClaimItem = async function({marketplaceParams, sku, email}) {
   const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
 
   await this.client.authClient.MakeAuthServiceRequest({
@@ -1086,7 +1135,8 @@ exports.ClaimItem = async function({marketplaceParams, sku}) {
     body: {
       op: "nft-claim",
       sid: marketplaceInfo.marketplaceId,
-      sku
+      sku,
+      email
     },
     headers: {
       Authorization: `Bearer ${this.AuthToken()}`

@@ -77,6 +77,8 @@ const FormatNFTDetails = function(entry) {
       Price: entry.price,
       Fee: entry.fee
     };
+  } else {
+    details.Offers = info.offers || [];
   }
 
   return {

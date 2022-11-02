@@ -9,6 +9,13 @@ const Ethers = require("ethers");
 const inBrowser = typeof window !== "undefined";
 const embedded = inBrowser && window.top !== window.self;
 
+let localStorageAvailable = false;
+try {
+  typeof localStorage !== "undefined" && localStorage.getItem("test");
+  localStorageAvailable = true;
+// eslint-disable-next-line no-empty
+} catch(error) {}
+
 /**
  * Use the <a href="#.Initialize">Initialize</a> method to initialize a new client.
  *
@@ -76,10 +83,12 @@ class ElvWalletClient {
    * @param {string} mode=production - Environment to use (`production`, `staging`)
    * @param {Object=} marketplaceParams - Marketplace parameters
    * @param {boolean=} storeAuthToken=true - If specified, auth tokens will be stored in localstorage (if available)
+   * @param {Object=} client - Existing instance of ElvClient to use instead of initializing a new one
    *
    * @returns {Promise<ElvWalletClient>}
    */
   static async Initialize({
+    client,
     appId="general",
     network="main",
     mode="production",
@@ -95,7 +104,9 @@ class ElvWalletClient {
       throw Error(`ElvWalletClient: Invalid mode ${mode}`);
     }
 
-    const client = await ElvClient.FromNetworkName({networkName: network, assumeV3: true});
+    if(!client) {
+      client = await ElvClient.FromNetworkName({networkName: network, assumeV3: true});
+    }
 
     let previewMarketplaceHash = previewMarketplaceId;
     if(previewMarketplaceHash && !previewMarketplaceHash.startsWith("hq__")) {
@@ -125,7 +136,7 @@ class ElvWalletClient {
         url.searchParams.delete("elvToken");
 
         window.history.replaceState("", "", url);
-      } else if(storeAuthToken && typeof localStorage !== "undefined") {
+      } else if(storeAuthToken && localStorageAvailable) {
         try {
           // Load saved auth token
           let savedToken = localStorage.getItem(`__elv-token-${network}`);
@@ -338,7 +349,7 @@ class ElvWalletClient {
     this.cachedMarketplaces = {};
 
     // Delete saved auth token
-    if(typeof localStorage !== "undefined") {
+    if(localStorageAvailable) {
       try {
         localStorage.removeItem(`__elv-token-${this.network}`);
       // eslint-disable-next-line no-empty
@@ -528,7 +539,7 @@ class ElvWalletClient {
 
     const token = this.ClientAuthToken();
 
-    if(this.storeAuthToken && typeof localStorage !== "undefined") {
+    if(this.storeAuthToken && localStorageAvailable) {
       try {
         localStorage.setItem(`__elv-token-${this.network}`, token);
       // eslint-disable-next-line no-empty
@@ -595,7 +606,9 @@ class ElvWalletClient {
         "*/marketplaces/*/.",
         "*/marketplaces/*/info/tenant_id",
         "*/marketplaces/*/info/tenant_name",
-        "*/marketplaces/*/info/branding"
+        "*/marketplaces/*/info/branding",
+        "*/marketplaces/*/info/storefront/background",
+        "*/marketplaces/*/info/storefront/background_mobile"
       ],
       remove: [
         "*/marketplaces/*/info/branding/custom_css"
@@ -753,19 +766,23 @@ class ElvWalletClient {
       marketplace.items = await Promise.all(
         marketplace.items.map(async (item, index) => {
           if(item.requires_permissions) {
+            let authorizationToken;
             if(!this.loggedIn) {
-              item.authorized = false;
-            } else {
-              try {
-                await this.client.ContentObjectMetadata({
-                  versionHash: LinkTargetHash(item.nft_template),
-                  metadataSubtree: "permissioned"
-                });
+              // If not logged in, generated a dummy signed token
+              // Authorization may be based on geo-restriction, which doesn't require login
+              authorizationToken = await this.client.CreateFabricToken({});
+            }
 
-                item.authorized = true;
-              } catch(error) {
-                item.authorized = false;
-              }
+            try {
+              await this.client.ContentObjectMetadata({
+                versionHash: LinkTargetHash(item.nft_template),
+                metadataSubtree: "permissioned",
+                authorizationToken
+              });
+
+              item.authorized = true;
+            } catch(error) {
+              item.authorized = false;
             }
           }
 
@@ -785,6 +802,7 @@ class ElvWalletClient {
       marketplace.retrievedAt = Date.now();
       marketplace.marketplaceId = marketplaceId;
       marketplace.versionHash = marketplaceHash;
+      marketplace.marketplaceHash = marketplaceHash;
 
       if(this.previewMarketplaceId && marketplaceId === this.previewMarketplaceId) {
         marketplace.branding.preview = true;

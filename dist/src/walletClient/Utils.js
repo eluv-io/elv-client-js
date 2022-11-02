@@ -99,6 +99,8 @@ var FormatNFTDetails = function FormatNFTDetails(entry) {
       Price: entry.price,
       Fee: entry.fee
     });
+  } else {
+    details.Offers = info.offers || [];
   }
 
   return {
