@@ -1326,7 +1326,7 @@ exports.UpdateContentObjectGraph = async function({libraryId, objectId, versionH
       type: string ("file", "meta" | "metadata", "rep" - default "metadata")
       targetHash: string (optional, for cross-object links),
       autoUpdate: boolean (if specified, link will be automatically updated to latest version by UpdateContentObjectGraph method),
-      container: string (optional, object id of container object if creating a signed link)
+      authContainer: string (optional, object id of container object if creating a signed link)
     }
  ]
 
@@ -1350,53 +1350,49 @@ exports.CreateLinks = async function({
     10,
     links,
     async info => {
-      let path = info.path.replace(/^(\/|\.)+/, "");
+      const path = info.path.replace(/^(\/|\.)+/, "");
 
-      let link;
       let type = (info.type || "file") === "file" ? "files" : info.type;
       if(type === "metadata") { type = "meta"; }
-      let target = info.target.replace(/^(\/|\.)+/, "");
 
-      if(info.container) {
-        const linksMetadata = await this.ContentObjectMetadata({
+      let target;
+      let authTarget;
+      target = authTarget = info.target.replace(/^(\/|\.)+/, "");
+      if(info.targetHash) {
+        target = `/qfab/${info.targetHash}/${type}/${target}`;
+      } else {
+        target = `./${type}/${target}`;
+      }
+
+      let link = {
+        "/": target
+      };
+
+      if(info.autoUpdate) {
+        link["."] = { auto_update: { tag: "latest"} };
+      }
+
+      // Sign link
+      if(info.authContainer) {
+        const linkMetadata = await this.ContentObjectMetadata({
           libraryId,
           objectId,
           metadataSubtree: path
-        }) || {};
+        });
 
-        let index = 0;
-        for(let key of Object.values(linksMetadata)) {
-          const title = Object.keys(key)[0];
-
-          if(key[title]["/"].includes(info.targetHash)) {
-            link = key[title];
-            path = `${path}/${index}/${title}`;
-          }
-          index++;
+        if(linkMetadata) {
+          link["/"] = linkMetadata["/"];
+          link["."] = linkMetadata["."];
         }
 
         if(!link["."]) link["."] = {};
 
-        link["."]["authorization"] = await this.authClient.GenerateSignedLinkToken({
-          containerId: info.container,
-          versionHash: info.targetHash,
-          link: `./${type}/${target}`
-        });
-      }
-
-      if(!link["/"]) {
-        if(info.targetHash) {
-          target = `/qfab/${info.targetHash}/${type}/${target}`;
-        } else {
-          target = `./${type}/${target}`;
-        }
-
-        link = {
-          "/": target
-        };
-
-        if(info.autoUpdate) {
-          link["."] = { auto_update: { tag: "latest"} };
+        if(!linkMetadata["."]["authorization"]) {
+          link["."]["authorization"] = await this.authClient.GenerateSignedLinkToken({
+            containerId: info.authContainer,
+            versionHash: info.targetHash,
+            link: `./${type}/${authTarget}`
+          });
         }
       }
 
