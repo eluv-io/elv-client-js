@@ -379,7 +379,7 @@ exports.CreateABRMezzanine = async function({
   }
 
   if(!storeClear) {
-    // If files are encrypted, generate encryption conks
+    // If mez parts are to be encrypted, generate encryption conks
     await this.EncryptionConk({
       libraryId,
       objectId: id,

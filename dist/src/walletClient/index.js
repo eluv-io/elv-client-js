@@ -1026,7 +1026,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   produceLinkUrls: true,
                   authorizationToken: this.publicStaticToken,
                   noAuth: true,
-                  select: ["*/.", "*/marketplaces/*/.", "*/marketplaces/*/info/tenant_id", "*/marketplaces/*/info/tenant_name", "*/marketplaces/*/info/branding"],
+                  select: ["*/.", "*/marketplaces/*/.", "*/marketplaces/*/info/tenant_id", "*/marketplaces/*/info/tenant_name", "*/marketplaces/*/info/branding", "*/marketplaces/*/info/storefront/background", "*/marketplaces/*/info/storefront/background_mobile"],
                   remove: ["*/marketplaces/*/info/branding/custom_css"]
                 });
 

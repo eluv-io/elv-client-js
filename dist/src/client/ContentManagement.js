@@ -1173,7 +1173,7 @@ exports.CopyContentObject = /*#__PURE__*/function () {
   var _ref23 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee13(_ref22) {
     var _this2 = this;
 
-    var libraryId, originalVersionHash, _ref22$options, options, _yield$this$CreateCon, objectId, writeToken, originalObjectId, metadata, permission, userCapKey, isOwner, userConkKey;
+    var libraryId, originalVersionHash, _ref22$options, options, _yield$this$CreateCon, objectId, writeToken, originalObjectId, metadata, permission, userCapKey, userConkKey;
 
     return _regeneratorRuntime.wrap(function _callee13$(_context13) {
       while (1) {
@@ -1212,57 +1212,38 @@ exports.CopyContentObject = /*#__PURE__*/function () {
             userCapKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(this.signer.address));
 
             if (!metadata[userCapKey]) {
-              _context13.next = 40;
+              _context13.next = 33;
               break;
             }
 
-            _context13.t0 = this.utils;
-            _context13.t1 = this.signer.address;
-            _context13.next = 22;
-            return this.ContentObjectOwner({
-              objectId: originalObjectId
-            });
-
-          case 22:
-            _context13.t2 = _context13.sent;
-            isOwner = _context13.t0.EqualAddress.call(_context13.t0, _context13.t1, _context13.t2);
-
-            if (isOwner) {
-              _context13.next = 26;
-              break;
-            }
-
-            throw Error("Current user is not owner of object ".concat(metadata));
-
-          case 26:
-            _context13.next = 28;
+            _context13.next = 20;
             return this.Crypto.DecryptCap(metadata[userCapKey], this.signer.signingKey.privateKey);
 
-          case 28:
+          case 20:
             userConkKey = _context13.sent;
             userConkKey.qid = objectId;
-            _context13.t3 = this;
-            _context13.t4 = libraryId;
-            _context13.t5 = objectId;
-            _context13.t6 = writeToken;
-            _context13.t7 = userCapKey;
-            _context13.next = 37;
+            _context13.t0 = this;
+            _context13.t1 = libraryId;
+            _context13.t2 = objectId;
+            _context13.t3 = writeToken;
+            _context13.t4 = userCapKey;
+            _context13.next = 29;
             return this.Crypto.EncryptConk(userConkKey, this.signer.signingKey.publicKey);
 
-          case 37:
-            _context13.t8 = _context13.sent;
-            _context13.t9 = {
-              libraryId: _context13.t4,
-              objectId: _context13.t5,
-              writeToken: _context13.t6,
-              metadataSubtree: _context13.t7,
-              metadata: _context13.t8
+          case 29:
+            _context13.t5 = _context13.sent;
+            _context13.t6 = {
+              libraryId: _context13.t1,
+              objectId: _context13.t2,
+              writeToken: _context13.t3,
+              metadataSubtree: _context13.t4,
+              metadata: _context13.t5
             };
+            _context13.next = 33;
+            return _context13.t0.ReplaceMetadata.call(_context13.t0, _context13.t6);
 
-            _context13.t3.ReplaceMetadata.call(_context13.t3, _context13.t9);
-
-          case 40:
-            _context13.next = 42;
+          case 33:
+            _context13.next = 35;
             return Promise.all(Object.keys(metadata).filter(function (key) {
               return key.startsWith("eluv.caps.ikms");
             }).map( /*#__PURE__*/function () {
@@ -1295,31 +1276,31 @@ exports.CopyContentObject = /*#__PURE__*/function () {
               };
             }()));
 
-          case 42:
+          case 35:
             if (!(permission !== "owner")) {
-              _context13.next = 45;
+              _context13.next = 38;
               break;
             }
 
-            _context13.next = 45;
+            _context13.next = 38;
             return this.SetPermission({
               objectId: objectId,
               permission: permission,
               writeToken: writeToken
             });
 
-          case 45:
-            _context13.next = 47;
+          case 38:
+            _context13.next = 40;
             return this.FinalizeContentObject({
               libraryId: libraryId,
               objectId: objectId,
               writeToken: writeToken
             });
 
-          case 47:
+          case 40:
             return _context13.abrupt("return", _context13.sent);
 
-          case 48:
+          case 41:
           case "end":
             return _context13.stop();
         }
