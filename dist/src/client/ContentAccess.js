@@ -84,14 +84,18 @@ exports.Visibility = /*#__PURE__*/function () {
   var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(_ref) {
     var _this = this;
 
-    var id, address;
+    var id, clearCache, address;
     return _regeneratorRuntime.wrap(function _callee2$(_context2) {
       while (1) {
         switch (_context2.prev = _context2.next) {
           case 0:
-            id = _ref.id;
+            id = _ref.id, clearCache = _ref.clearCache;
             _context2.prev = 1;
             address = this.utils.HashToAddress(id);
+
+            if (clearCache) {
+              delete this.visibilityInfo[address];
+            }
 
             if (!this.visibilityInfo[address]) {
               this.visibilityInfo[address] = new Promise( /*#__PURE__*/function () {
@@ -152,43 +156,43 @@ exports.Visibility = /*#__PURE__*/function () {
               }());
             }
 
-            _context2.prev = 4;
-            _context2.next = 7;
+            _context2.prev = 5;
+            _context2.next = 8;
             return this.visibilityInfo[address];
 
-          case 7:
+          case 8:
             return _context2.abrupt("return", _context2.sent);
 
-          case 10:
-            _context2.prev = 10;
-            _context2.t0 = _context2["catch"](4);
+          case 11:
+            _context2.prev = 11;
+            _context2.t0 = _context2["catch"](5);
             delete this.visibilityInfo[address];
             throw _context2.t0;
 
-          case 14:
-            _context2.next = 21;
+          case 15:
+            _context2.next = 22;
             break;
 
-          case 16:
-            _context2.prev = 16;
+          case 17:
+            _context2.prev = 17;
             _context2.t1 = _context2["catch"](1);
 
             if (!(_context2.t1.code === "CALL_EXCEPTION")) {
-              _context2.next = 20;
+              _context2.next = 21;
               break;
             }
 
             return _context2.abrupt("return", 0);
 
-          case 20:
+          case 21:
             throw _context2.t1;
 
-          case 21:
+          case 22:
           case "end":
             return _context2.stop();
         }
       }
-    }, _callee2, this, [[1, 16], [4, 10]]);
+    }, _callee2, this, [[1, 17], [5, 11]]);
   }));
 
   return function (_x) {
@@ -211,12 +215,12 @@ exports.Permission = /*#__PURE__*/function () {
   var _ref5 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(_ref4) {
     var _this2 = this;
 
-    var objectId, visibility, kmsAddress, kmsId, hasKmsConk, statusCode, permission;
+    var objectId, clearCache, visibility, kmsAddress, kmsId, hasKmsConk, statusCode, permission;
     return _regeneratorRuntime.wrap(function _callee3$(_context3) {
       while (1) {
         switch (_context3.prev = _context3.next) {
           case 0:
-            objectId = _ref4.objectId;
+            objectId = _ref4.objectId, clearCache = _ref4.clearCache;
             ValidateObject(objectId);
             _context3.next = 4;
             return this.AccessType({
@@ -237,7 +241,8 @@ exports.Permission = /*#__PURE__*/function () {
           case 8:
             _context3.next = 10;
             return this.Visibility({
-              id: objectId
+              id: objectId,
+              clearCache: clearCache
             });
 
           case 10:
