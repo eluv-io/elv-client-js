@@ -664,8 +664,6 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
       metadataSubtree: userCapKey,
       metadata: await this.Crypto.EncryptConk(userConkKey, this.signer.signingKey.publicKey)
     });
-  } else {
-    throw Error(`Current user does not have a user cap for object ${metadata.name}`);
   }
 
   // KMS CAP
