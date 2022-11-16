@@ -31,6 +31,7 @@ let WalletConfiguration = {
     "dolly-marketplace",
     "eluvio-live-marketplace-sonark",
     "cirkay-marketplace",
+    "eluvio-live-marketplace-fuudge",
     "oc-marketplace",
     "emp-marketplace",
     "microsoft",
