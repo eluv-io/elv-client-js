@@ -654,16 +654,10 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
   const userCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
 
   if(metadata[userCapKey]) {
-    const isOwner = this.utils.EqualAddress(this.signer.address, await this.ContentObjectOwner({objectId: originalObjectId}));
-
-    if(!isOwner) {
-      throw Error(`Current user is not owner of object ${metadata}`);
-    }
-
     const userConkKey = await this.Crypto.DecryptCap(metadata[userCapKey], this.signer.signingKey.privateKey);
     userConkKey.qid = objectId;
 
-    this.ReplaceMetadata({
+    await this.ReplaceMetadata({
       libraryId,
       objectId,
       writeToken,
