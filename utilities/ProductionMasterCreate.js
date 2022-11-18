@@ -25,7 +25,7 @@ class ProductionMasterCreate extends Utility {
         ModOpt("metadata", {ofX: "production master object"}),
         ModOpt("title", {demand: true}),
         ModOpt("files", {forX: "for new production master"}),
-        StdOpt("encrypt", {descTemplate: "DEPRECATED: uploaded/copied files will always be store encrypted unless --unencrypted is specified."}),
+        StdOpt("encrypt", {descTemplate: "DEPRECATED: uploaded/copied files will always be stored encrypted unless --unencrypted is specified."}),
         NewOpt("unencrypted", {
           descTemplate: "Store uploaded/copied files unencrypted",
           type: "boolean"
@@ -41,6 +41,10 @@ class ProductionMasterCreate extends Utility {
   async body() {
     const logger = this.logger;
     const J = this.concerns.JSON;
+
+    const {encrypt, unencrypted} = this.args;
+
+    if(encrypt && unencrypted) throw new Error("Cannot specify both --encrypt and --unencrypted");
 
     let access;
     if(this.args.s3Reference || this.args.s3Copy) {
@@ -73,9 +77,8 @@ class ProductionMasterCreate extends Utility {
     const client = await this.concerns.Client.get();
 
     const type = await await this.concerns.ArgType.typVersionHash();
-    const {libraryId, encrypt, unencrypted, s3Copy, s3Reference} = this.args;
+    const {libraryId, s3Copy, s3Reference} = this.args;
 
-    if(encrypt && unencrypted) throw new Error("Cannot specify both --encrypt and --unencrypted");
 
     const createResponse = await client.CreateProductionMaster({
       libraryId,
