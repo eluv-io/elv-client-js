@@ -542,16 +542,18 @@ An **ABR Profile** contains information on what formats, resolutions and bitrate
 
 There are JSON files containing commonly used profiles in elv-client-js/testScripts/
 
-* `abr_profile_4k_clear.json`
+* `abr_profile_4k_clear_store_encrypted.json`
+* `abr_profile_4k_clear_store_unencrypted.json`
 * `abr_profile_4k_drm.json`
-* `abr_profile_clear.json`
+* `abr_profile_clear_store_encrypted.json`
+* `abr_profile_clear_store_unencrypted.json`
 * `abr_profile_drm.json`
 
 The 4k files are specifically for offering 16:9 material at 3840x2160 resolution.
 
 For most content we recommend using the `abr_profile_drm.json` file, which contains resolution ladders for a variety of aspect ratios. (For material with 16:9 aspect ratio, this file's top ladder rung is 1920x1080 @ 9.5 mbps)
 
-The `*_clear` files are for publishing without DRM.
+The `*_clear_*` files are for publishing without DRM. For items that are intended to be publicly accessible, use the profiles that end in `_store_unencrypted.json`. If there is a chance that you might want to change the mezzanine later to have DRM, use the profiles that end in `_store_encrypted.json` (however, these offerings will not be playable to users without a Fabric private key that has been granted access to it).
 
 <a id="create-the-mezzanine-object"></a>
 ### Create the Mezzanine object&nbsp;[&#8673;](#contents)

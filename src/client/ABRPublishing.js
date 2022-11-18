@@ -31,7 +31,7 @@ const {
  * @param {string} contentTypeName - Name of the content type to use
  * @param {Object=} metadata - Additional metadata for the content object
  * @param {Array<Object>=} fileInfo - Files to upload (See UploadFiles/UploadFilesFromS3 method)
- * @param {boolean=} encrypt=false - (Local files only) - If specified, files will be encrypted
+ * @param {boolean=} encrypt=true - (Local or copied files only) - Unless `false` is passed in explicitly, any uploaded/copied files will be stored encrypted
  * @param {boolean=} copy=false - (S3) If specified, files will be copied from S3
  * @param {function=} callback - Progress callback for file upload (See UploadFiles/UploadFilesFromS3 method)
  * @param {Array<Object>=} access=[] - Array of cloud credentials, along with path matching regex strings - Required if any files in the masters are cloud references (currently only AWS S3 is supported)
@@ -73,7 +73,7 @@ exports.CreateProductionMaster = async function({
   description,
   metadata={},
   fileInfo,
-  encrypt=false,
+  encrypt=true,
   access=[],
   copy=false,
   callback

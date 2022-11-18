@@ -41,7 +41,11 @@ const argv = yargs
   })
   .option("encrypt", {
     type: "boolean",
-    description: "If specified, files will be encrypted (local files only)"
+    description: "DEPRECATED, HAS NO EFFECT: uploaded/copied files will always be stored encrypted unless --unencrypted specified."
+  })
+  .option("unencrypted", {
+    type: "boolean",
+    description: "Store uploaded/copied files unencrypted on server"
   })
   .option("s3-copy", {
     type: "boolean",
@@ -85,12 +89,18 @@ const Create = async ({
   slug,
   metadata,
   files,
-  encrypt = false,
+  encrypt,
+  unencrypted,
   s3Reference,
   s3Copy,
   credentials,
   debug
 }) => {
+
+  if(encrypt && unencrypted) {
+    console.error("Cannot specify both --encrypted and --unencrypted");
+    return;
+  }
 
   // force ipTitleId to be a string, if present
   if(ipTitleId) {
@@ -220,9 +230,7 @@ const Create = async ({
       type = await client.ContentType({name: type});
     }
 
-    if(!type) {
-      throw Error(`Unable to find content type "${originalType}"`);
-    }
+    if(!type) throw Error(`Unable to find content type "${originalType}"`);
 
     type = type.hash;
 
@@ -234,7 +242,7 @@ const Create = async ({
         description: "Production Master for " + title,
         metadata,
         fileInfo,
-        encrypt,
+        encrypt: !unencrypted,
         access,
         copy: s3Copy && !s3Reference,
         callback: progress => {
