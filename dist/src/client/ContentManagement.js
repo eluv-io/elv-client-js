@@ -2646,7 +2646,8 @@ exports.UpdateContentObjectGraph = /*#__PURE__*/function () {
       target: string (path to link target),
       type: string ("file", "meta" | "metadata", "rep" - default "metadata")
       targetHash: string (optional, for cross-object links),
-      autoUpdate: boolean (if specified, link will be automatically updated to latest version by UpdateContentObjectGraph method)
+      autoUpdate: boolean (if specified, link will be automatically updated to latest version by UpdateContentObjectGraph method),
+      authContainer: string (optional, object id of container object if creating a signed link)
     }
  ]
 
@@ -2678,7 +2679,7 @@ exports.CreateLinks = /*#__PURE__*/function () {
             _context33.next = 5;
             return this.utils.LimitedMap(10, links, /*#__PURE__*/function () {
               var _ref57 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee31(info) {
-                var path, type, target, link;
+                var path, type, target, authTarget, link, linkMetadata;
                 return _regeneratorRuntime.wrap(function _callee31$(_context32) {
                   while (1) {
                     switch (_context32.prev = _context32.next) {
@@ -2690,7 +2691,7 @@ exports.CreateLinks = /*#__PURE__*/function () {
                           type = "meta";
                         }
 
-                        target = info.target.replace(/^(\/|\.)+/, "");
+                        target = authTarget = info.target.replace(/^(\/|\.)+/, "");
 
                         if (info.targetHash) {
                           target = "/qfab/".concat(info.targetHash, "/").concat(type, "/").concat(target);
@@ -2708,9 +2709,48 @@ exports.CreateLinks = /*#__PURE__*/function () {
                               tag: "latest"
                             }
                           };
+                        } // Sign link
+
+
+                        if (!info.authContainer) {
+                          _context32.next = 17;
+                          break;
                         }
 
-                        _context32.next = 9;
+                        _context32.next = 10;
+                        return _this6.ContentObjectMetadata({
+                          libraryId: libraryId,
+                          objectId: objectId,
+                          metadataSubtree: path
+                        });
+
+                      case 10:
+                        linkMetadata = _context32.sent;
+
+                        if (linkMetadata) {
+                          link["/"] = linkMetadata["/"];
+                          link["."] = linkMetadata["."];
+                        }
+
+                        if (!link["."]) link["."] = {};
+
+                        if (linkMetadata["."]["authorization"]) {
+                          _context32.next = 17;
+                          break;
+                        }
+
+                        _context32.next = 16;
+                        return _this6.authClient.GenerateSignedLinkToken({
+                          containerId: info.authContainer,
+                          versionHash: info.targetHash,
+                          link: "./".concat(type, "/").concat(authTarget)
+                        });
+
+                      case 16:
+                        link["."]["authorization"] = _context32.sent;
+
+                      case 17:
+                        _context32.next = 19;
                         return _this6.ReplaceMetadata({
                           libraryId: libraryId,
                           objectId: objectId,
@@ -2719,7 +2759,7 @@ exports.CreateLinks = /*#__PURE__*/function () {
                           metadata: link
                         });
 
-                      case 9:
+                      case 19:
                       case "end":
                         return _context32.stop();
                     }
