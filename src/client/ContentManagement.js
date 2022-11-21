@@ -1319,7 +1319,8 @@ exports.UpdateContentObjectGraph = async function({libraryId, objectId, versionH
       target: string (path to link target),
       type: string ("file", "meta" | "metadata", "rep" - default "metadata")
       targetHash: string (optional, for cross-object links),
-      autoUpdate: boolean (if specified, link will be automatically updated to latest version by UpdateContentObjectGraph method)
+      autoUpdate: boolean (if specified, link will be automatically updated to latest version by UpdateContentObjectGraph method),
+      authContainer: string (optional, object id of container object if creating a signed link)
     }
  ]
 
@@ -1348,7 +1349,9 @@ exports.CreateLinks = async function({
       let type = (info.type || "file") === "file" ? "files" : info.type;
       if(type === "metadata") { type = "meta"; }
 
-      let target = info.target.replace(/^(\/|\.)+/, "");
+      let target;
+      let authTarget;
+      target = authTarget = info.target.replace(/^(\/|\.)+/, "");
       if(info.targetHash) {
         target = `/qfab/${info.targetHash}/${type}/${target}`;
       } else {
@@ -1361,6 +1364,30 @@ exports.CreateLinks = async function({
 
       if(info.autoUpdate) {
         link["."] = { auto_update: { tag: "latest"} };
+      }
+
+      // Sign link
+      if(info.authContainer) {
+        const linkMetadata = await this.ContentObjectMetadata({
+          libraryId,
+          objectId,
+          metadataSubtree: path
+        });
+
+        if(linkMetadata) {
+          link["/"] = linkMetadata["/"];
+          link["."] = linkMetadata["."];
+        }
+
+        if(!link["."]) link["."] = {};
+
+        if(!linkMetadata["."]["authorization"]) {
+          link["."]["authorization"] = await this.authClient.GenerateSignedLinkToken({
+            containerId: info.authContainer,
+            versionHash: info.targetHash,
+            link: `./${type}/${authTarget}`
+          });
+        }
       }
 
       await this.ReplaceMetadata({
