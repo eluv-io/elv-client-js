@@ -466,7 +466,8 @@ var Utils = {
     return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
   },
   B64: function B64(str) {
-    return Buffer.from(str, "utf-8").toString("base64");
+    var encoding = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "utf-8";
+    return Buffer.from(str, encoding).toString("base64");
   },
   FromB64: function FromB64(str) {
     return Buffer.from(str, "base64").toString("utf-8");
