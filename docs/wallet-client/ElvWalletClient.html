@@ -38,37 +38,37 @@
     <div class="main">
       <div class="header"></div>
       <div class="main-content">
-
+        
         <h1 class="page-title">
           ElvWalletClient
         </h1>
+        
 
-
-
+        
 
 <section>
   <header>
+    
 
 
-
-
+      
         <div class="class-description">
           <p>Use the <a href="#.Initialize">Initialize</a> method to initialize a new client.</p>
 <p>See the Modules section on the sidebar for all client methods unrelated to login and authorization</p>
         </div>
-
-
+      
+    
   </header>
 
   <article>
     <div class="container-overview">
+      
+        
 
 
-
-
-
+  
     <h2>Constructor</h2>
-
+  
 
   <span class='name-container'>
     <a class="link-icon" href="#ElvWalletClient">
@@ -79,7 +79,7 @@
     </h4>
   </span>
 
-
+  
 
 
 
@@ -110,31 +110,31 @@
 
 <dl class="details">
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source">
       <ul class="dummy">
@@ -143,37 +143,37 @@
         </li>
       </ul>
     </dd>
+  
 
+  
 
-
-
-
+  
 </dl>
 
 
-
+      
     </div>
 
+    
 
+    
 
+    
 
+     
 
+    
 
+    
 
-
-
-
-
-
-
-
+    
       <h3 class="subsection-title">Methods</h3>
 
+      
+        
 
 
-
-
-
+  
 
   <span class='name-container'>
     <a class="link-icon" href="#.Initialize">
@@ -184,7 +184,7 @@
     </h4>
   </span>
 
-
+  
 
 
 
@@ -204,289 +204,289 @@
 
 
   <h5>Parameters:</h5>
-
+  
 
 <table class="params">
   <thead>
     <tr>
-
+      
         <th>Name</th>
-
+      
 
       <th>Type</th>
 
-
+      
         <th>Attributes</th>
+      
 
-
-
+      
         <th>Default</th>
-
+      
 
       <th class="last">Description</th>
     </tr>
   </thead>
 
   <tbody>
-
+    
       <tr>
-
+        
           <td class="name"><code>appId</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       string
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>A string identifying your app. This is used for namespacing user profile data.</p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>network</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       string
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
               main
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>Name of the Fabric network to use (<code>main</code>, <code>demo</code>)</p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>mode</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       string
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
               production
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>Environment to use (<code>production</code>, <code>staging</code>)</p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>marketplaceParams</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       Object
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>Marketplace parameters</p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>storeAuthToken</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       boolean
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
               true
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>If specified, auth tokens will be stored in localstorage (if available)</p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>client</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       Object
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>Existing instance of ElvClient to use instead of initializing a new one</p>
-
+          
         </td>
       </tr>
 
-
+    
   </tbody>
 </table>
 
@@ -508,31 +508,31 @@
 
 <dl class="details">
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source">
       <ul class="dummy">
@@ -541,19 +541,19 @@
         </li>
       </ul>
     </dd>
+  
 
+  
 
-
-
-
+  
 </dl>
 
 
+      
+        
 
 
-
-
-
+  
 
   <span class='name-container'>
     <a class="link-icon" href="#Authenticate">
@@ -564,7 +564,7 @@
     </h4>
   </span>
 
-
+  
 
 
 
@@ -583,56 +583,56 @@
 
 
   <h5>Parameters:</h5>
-
+  
 
 <table class="params">
   <thead>
     <tr>
-
+      
         <th>Name</th>
-
+      
 
       <th>Type</th>
 
+      
 
-
-
+      
 
       <th class="last">Description</th>
     </tr>
   </thead>
 
   <tbody>
-
+    
       <tr>
-
+        
           <td class="name"><code>token</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       string
     </span>
 
+    
 
 
-
-
+          
         </td>
 
+        
 
-
-
+        
 
         <td class="description last">
           <p>A previously generated ElvWalletClient authorization token;</p>
-
+          
         </td>
       </tr>
 
-
+    
   </tbody>
 </table>
 
@@ -654,31 +654,31 @@
 
 <dl class="details">
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source">
       <ul class="dummy">
@@ -687,19 +687,19 @@
         </li>
       </ul>
     </dd>
+  
 
+  
 
-
-
-
+  
 </dl>
 
 
+      
+        
 
 
-
-
-
+  
 
   <span class='name-container'>
     <a class="link-icon" href="#AuthenticateExternalWallet">
@@ -710,7 +710,7 @@
     </h4>
   </span>
 
-
+  
 
 
 
@@ -720,7 +720,7 @@
 
 
 
-
+  
 
 
   <div class="return-description-block">
@@ -737,205 +737,205 @@ Save this token to avoid having to reauthenticate. This token expires after 24 h
 
 
   <h5>Parameters:</h5>
-
+  
 
 <table class="params">
   <thead>
     <tr>
-
+      
         <th>Name</th>
-
+      
 
       <th>Type</th>
 
-
+      
         <th>Attributes</th>
+      
 
-
-
+      
         <th>Default</th>
-
+      
 
       <th class="last">Description</th>
     </tr>
   </thead>
 
   <tbody>
-
+    
       <tr>
-
+        
           <td class="name"><code>address</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       string
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>The address of the wallet</p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>tokenDuration</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       number
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
               24
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>Number of hours the generated authorization token will last before expiring</p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>walletName</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       string
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
               Metamask
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>Name of the external wallet</p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>Sign</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       function
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>The method used for signing by the wallet. If not specified, will attempt to sign with Metamask.</p>
-
+          
         </td>
       </tr>
 
-
+    
   </tbody>
 </table>
 
@@ -957,31 +957,31 @@ Save this token to avoid having to reauthenticate. This token expires after 24 h
 
 <dl class="details">
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source">
       <ul class="dummy">
@@ -990,19 +990,19 @@ Save this token to avoid having to reauthenticate. This token expires after 24 h
         </li>
       </ul>
     </dd>
+  
 
+  
 
-
-
-
+  
 </dl>
 
 
+      
+        
 
 
-
-
-
+  
 
   <span class='name-container'>
     <a class="link-icon" href="#AuthenticateOAuth">
@@ -1013,7 +1013,7 @@ Save this token to avoid having to reauthenticate. This token expires after 24 h
     </h4>
   </span>
 
-
+  
 
 
 
@@ -1023,7 +1023,7 @@ Save this token to avoid having to reauthenticate. This token expires after 24 h
 
 
 
-
+  
 
 
   <div class="return-description-block">
@@ -1046,246 +1046,246 @@ shared with third parties.</li>
 
 
   <h5>Parameters:</h5>
-
+  
 
 <table class="params">
   <thead>
     <tr>
-
+      
         <th>Name</th>
-
+      
 
       <th>Type</th>
 
-
+      
         <th>Attributes</th>
+      
 
-
-
+      
         <th>Default</th>
-
+      
 
       <th class="last">Description</th>
     </tr>
   </thead>
 
   <tbody>
-
+    
       <tr>
-
+        
           <td class="name"><code>idToken</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       string
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>An OAuth ID token</p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>tenantId</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       string
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>ID of tenant with which to associate the user. If marketplace info was set upon initialization, this will be determined automatically.</p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>email</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       string
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>Email address of the user. If not specified, this method will attempt to extract the email from the ID token.</p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>signerURIs</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       Array.&lt;string>
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>(Only if using custom OAuth) - URIs corresponding to the key server(s) to use</p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>shareEmail</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       boolean
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
               false
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>Whether or not the user consents to sharing their email</p>
-
+          
         </td>
       </tr>
 
-
+    
   </tbody>
 </table>
 
@@ -1307,31 +1307,31 @@ shared with third parties.</li>
 
 <dl class="details">
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source">
       <ul class="dummy">
@@ -1340,19 +1340,19 @@ shared with third parties.</li>
         </li>
       </ul>
     </dd>
+  
 
+  
 
-
-
-
+  
 </dl>
 
 
+      
+        
 
 
-
-
-
+  
 
   <span class='name-container'>
     <a class="link-icon" href="#CanSign">
@@ -1363,7 +1363,7 @@ shared with third parties.</li>
     </h4>
   </span>
 
-
+  
 
 
 
@@ -1374,7 +1374,7 @@ shared with third parties.</li>
 
 
 
-
+  
 
 
   <div class="return-description-block">
@@ -1406,31 +1406,31 @@ shared with third parties.</li>
 
 <dl class="details">
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source">
       <ul class="dummy">
@@ -1439,19 +1439,19 @@ shared with third parties.</li>
         </li>
       </ul>
     </dd>
+  
 
+  
 
-
-
-
+  
 </dl>
 
 
+      
+        
 
 
-
-
-
+  
 
   <span class='name-container'>
     <a class="link-icon" href="#ClientAuthToken">
@@ -1462,7 +1462,7 @@ shared with third parties.</li>
     </h4>
   </span>
 
-
+  
 
 
 
@@ -1473,7 +1473,7 @@ shared with third parties.</li>
 
 
 
-
+  
 
 
   <div class="return-description-block">
@@ -1505,31 +1505,31 @@ shared with third parties.</li>
 
 <dl class="details">
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source">
       <ul class="dummy">
@@ -1538,19 +1538,19 @@ shared with third parties.</li>
         </li>
       </ul>
     </dd>
+  
 
+  
 
-
-
-
+  
 </dl>
 
 
+      
+        
 
 
-
-
-
+  
 
   <span class='name-container'>
     <a class="link-icon" href="#LogIn">
@@ -1561,7 +1561,7 @@ shared with third parties.</li>
     </h4>
   </span>
 
-
+  
 
 
 
@@ -1583,68 +1583,68 @@ or you can retrieve the parameter (<code>elvToken</code>) yourself and use it in
 
 
   <h5>Parameters:</h5>
-
+  
 
 <table class="params">
   <thead>
     <tr>
-
+      
         <th>Name</th>
-
+      
 
       <th>Type</th>
 
-
+      
         <th>Attributes</th>
+      
 
-
-
+      
         <th>Default</th>
-
+      
 
       <th class="last">Description</th>
     </tr>
   </thead>
 
   <tbody>
-
+    
       <tr>
-
+        
           <td class="name"><code>method</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       string
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
               redirect
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>How to present the login page.</p>
@@ -1652,228 +1652,228 @@ or you can retrieve the parameter (<code>elvToken</code>) yourself and use it in
 <li><code>redirect</code> - Redirect to the wallet login page. Upon login, the page will be redirected back to the specified <code>redirectUrl</code> with the authorization token.</li>
 <li><code>popup</code> - Open the wallet login page in a new tab. Upon login, authorization information will be sent back to the client via message and the tab will be closed.</li>
 </ul>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>provider</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       string
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>If logging in via a specific method, specify the provider and mode. Options: <code>oauth</code>, <code>metamask</code></p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>mode</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       string
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>If logging in via a specific method, specify the mode. Options <code>login</code> (Log In), <code>create</code> (Sign Up)</p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>callbackUrl</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       string
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>If using the redirect flow, the URL to redirect back to after login.</p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>marketplaceParams</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       Object
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>Parameters of a marketplace to associate the login with. If not specified, the marketplace parameters used upon client initialization will be used. A marketplace is required when using the redirect flow.</p>
-
+          
         </td>
       </tr>
 
-
+    
       <tr>
-
+        
           <td class="name"><code>clearLogin</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       boolean
     </span>
 
+    
 
 
-
-
+          
         </td>
 
-
+        
           <td class="attributes">
-
+            
               &lt;optional><br>
+            
 
+            
 
-
-
-
+            
           </td>
+        
 
-
-
+        
           <td class="default">
-
+            
               false
-
+            
           </td>
-
+        
 
         <td class="description last">
           <p>If specified, the user will be prompted to log in anew even if they are already logged in on the Eluvio Media Wallet app</p>
-
+          
         </td>
       </tr>
 
-
+    
   </tbody>
 </table>
 
@@ -1889,19 +1889,19 @@ or you can retrieve the parameter (<code>elvToken</code>) yourself and use it in
 
 
   <h5>Throws:</h5>
-
-
+  
+      
 
   <div class="param-desc">
-
+    
       <ul>
 <li>If using the popup flow and the user closes the popup, this method will throw an error.</li>
 </ul>
-
+    
   </div>
 
 
-
+    
 
 
 
@@ -1909,31 +1909,31 @@ or you can retrieve the parameter (<code>elvToken</code>) yourself and use it in
 
 <dl class="details">
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source">
       <ul class="dummy">
@@ -1942,19 +1942,19 @@ or you can retrieve the parameter (<code>elvToken</code>) yourself and use it in
         </li>
       </ul>
     </dd>
+  
 
+  
 
-
-
-
+  
 </dl>
 
 
+      
+        
 
 
-
-
-
+  
 
   <span class='name-container'>
     <a class="link-icon" href="#LogOut">
@@ -1965,7 +1965,7 @@ or you can retrieve the parameter (<code>elvToken</code>) yourself and use it in
     </h4>
   </span>
 
-
+  
 
 
 
@@ -2000,31 +2000,31 @@ or you can retrieve the parameter (<code>elvToken</code>) yourself and use it in
 
 <dl class="details">
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source">
       <ul class="dummy">
@@ -2033,19 +2033,19 @@ or you can retrieve the parameter (<code>elvToken</code>) yourself and use it in
         </li>
       </ul>
     </dd>
+  
 
+  
 
-
-
-
+  
 </dl>
 
 
+      
+        
 
 
-
-
-
+  
 
   <span class='name-container'>
     <a class="link-icon" href="#PersonalSign">
@@ -2056,7 +2056,7 @@ or you can retrieve the parameter (<code>elvToken</code>) yourself and use it in
     </h4>
   </span>
 
-
+  
 
 
 
@@ -2069,7 +2069,7 @@ or you can retrieve the parameter (<code>elvToken</code>) yourself and use it in
 
 
 
-
+  
 
 
   <div class="return-description-block">
@@ -2085,56 +2085,56 @@ or you can retrieve the parameter (<code>elvToken</code>) yourself and use it in
 
 
   <h5>Parameters:</h5>
-
+  
 
 <table class="params">
   <thead>
     <tr>
-
+      
         <th>Name</th>
-
+      
 
       <th>Type</th>
 
+      
 
-
-
+      
 
       <th class="last">Description</th>
     </tr>
   </thead>
 
   <tbody>
-
+    
       <tr>
-
+        
           <td class="name"><code>message</code></td>
-
+        
 
         <td class="type">
-
-
+          
+            
     <span class="param-type">
       string
     </span>
 
+    
 
 
-
-
+          
         </td>
 
+        
 
-
-
+        
 
         <td class="description last">
           <p>The message to sign</p>
-
+          
         </td>
       </tr>
 
-
+    
   </tbody>
 </table>
 
@@ -2150,19 +2150,19 @@ or you can retrieve the parameter (<code>elvToken</code>) yourself and use it in
 
 
   <h5>Throws:</h5>
-
-
+  
+      
 
   <div class="param-desc">
-
+    
       <ul>
 <li>If the user rejects the signature or closes the popup, an error will be thrown.</li>
 </ul>
-
+    
   </div>
 
 
-
+    
 
 
 
@@ -2170,31 +2170,31 @@ or you can retrieve the parameter (<code>elvToken</code>) yourself and use it in
 
 <dl class="details">
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
+  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source">
       <ul class="dummy">
@@ -2203,20 +2203,20 @@ or you can retrieve the parameter (<code>elvToken</code>) yourself and use it in
         </li>
       </ul>
     </dd>
+  
 
+  
 
-
-
-
+  
 </dl>
 
 
+      
+    
 
+    
 
-
-
-
-
+    
   </article>
 </section>
 
