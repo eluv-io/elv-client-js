@@ -3,6 +3,8 @@ const Ethers = require("ethers");
 const Utils = require("./Utils");
 const UrlJoin = require("url-join");
 const {LogMessage} = require("./LogMessage");
+const {ValidateObject} = require("./Validation");
+const Pako = require("pako");
 
 /*
 // -- Contract javascript files built using build/BuildContracts.js
@@ -238,6 +240,47 @@ class AuthorizationClient {
     const multiSig = Utils.FormatSignature(signature);
 
     return `${token}.${Utils.B64(multiSig)}`;
+  }
+
+  async GenerateSignedLinkToken({containerId, versionHash, link}) {
+    ValidateObject(containerId);
+    const canEdit = await this.client.CallContractMethod({
+      contractAddress: Utils.HashToAddress(containerId),
+      methodName: "canEdit"
+    });
+
+    const { objectId } = Utils.DecodeVersionHash(versionHash);
+
+    if(!canEdit) {
+      throw Error(`Current user does not have permission to edit content object ${objectId}`);
+    }
+
+    const signerAddress = this.client.CurrentAccountAddress();
+
+    let token = {
+      adr: Utils.B64(signerAddress.replace("0x", ""), "hex"),
+      spc: await this.client.ContentSpaceId(),
+      lib: await this.client.ContentObjectLibraryId({objectId}),
+      qid: objectId,
+      sub: Utils.FormatAddress(signerAddress),
+      gra: "read",
+      iat: Date.now(),
+      exp: Date.now() + 3600000,
+      ctx: {
+        elv: {
+          lnk: link,
+          src: containerId
+        }
+      }
+    };
+
+    const compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
+    const signature = await this.Sign(Ethers.utils.keccak256(compressedToken));
+
+    return `aslsjc${Utils.B58(Buffer.concat([
+      Buffer.from(signature.replace(/^0x/, ""), "hex"),
+      Buffer.from(compressedToken)
+    ]))}`;
   }
 
   async MakeAccessRequest({
