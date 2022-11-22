@@ -279,14 +279,6 @@ class SimpleIngest extends Utility {
   }
 }
 
-const originalEmit = process.emit;
-process.emit = function (name, data, ...args) {
-  if(name === `warning` && typeof data === `object` && data.name === `ExperimentalWarning`) {
-    return false;
-  }
-  return originalEmit.apply(process, arguments);
-};
-
 if(require.main === module) {
   Utility.cmdLineInvoke(SimpleIngest);
 } else {
