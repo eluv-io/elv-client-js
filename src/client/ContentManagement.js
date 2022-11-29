@@ -1375,8 +1375,7 @@ exports.CreateLinks = async function({
         });
 
         if(linkMetadata) {
-          link["/"] = linkMetadata["/"];
-          link["."] = linkMetadata["."];
+          link = linkMetadata;
         }
 
         if(!link["."]) link["."] = {};
