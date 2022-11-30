@@ -279,6 +279,7 @@ class SimpleIngest extends Utility {
   }
 }
 
+// avoid fetch ExperimentalWarnings
 const originalEmit = process.emit;
 process.emit = function (name, data, ...args) {
   if(name === `warning` && typeof data === `object` && data.name === `ExperimentalWarning`) {

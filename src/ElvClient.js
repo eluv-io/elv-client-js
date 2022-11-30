@@ -646,7 +646,7 @@ class ElvClient {
     ethProvider.pollingInterval = 250;
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
-    await this.SetSignDigestFromWeb3Provider({provider});
+    await this.SetSignDigest({provider});
     await this.InitializeClients();
   }
 
@@ -658,7 +658,7 @@ class ElvClient {
    * @namedParams
    * @param {object} provider - The web3 provider object
    */
-  async SetSignDigestFromWeb3Provider({provider}) {
+  async SetSignDigest({provider}) {
     const userAddress = await this.signer.getAddress();
     let signDigest;
     if(provider && provider.request) {
