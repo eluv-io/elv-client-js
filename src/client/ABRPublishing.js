@@ -215,20 +215,23 @@ exports.CreateProductionMaster = async function({
 };
 
 /**
- * Create a mezzanine of the given master content object
+ * Create (or edit) a mezzanine offering based on the a given master content object version and variant key
  *
  * @methodGroup ABR Publishing
  * @namedParams
- * @param {string} libraryId - ID of the mezzanine library
- * @param {string=} objectId - ID of existing object (if not specified, new object will be created)
- * @param {string=} type - ID or version hash of the content type for the mezzanine
- * @param {string} name - Name for mezzanine content object
- * @param {string=} description - Description for mezzanine content object
- * @param {Object=} metadata - Additional metadata for mezzanine content object
- * @param {string} masterVersionHash - The version hash of the production master content object
- * @param {string=} variant=default - What variant of the master content object to use
- * @param {string=} offeringKey=default - The key of the offering to create
  * @param {Object=} abrProfile - Custom ABR profile. If not specified, the profile of the mezzanine library will be used
+ * @param {Object=} addlOfferingSpecs - Specs for additional offerings to create by patching the offering being created/edited
+ * @param {string=} description - Description for mezzanine content object
+ * @param {boolean=} keepOtherOfferings=false - If objectId is specified, whether to preserve existing offerings with keys other than offeringKey
+ * @param {boolean=} keepOtherStreams=false - If objectId is specified, whether to preserve existing streams with keys other than the ones specified in production master
+ * @param {string} libraryId - ID of the mezzanine library
+ * @param {string} masterVersionHash - The version hash of the production master content object
+ * @param {Object=} metadata - Additional metadata for mezzanine content object
+ * @param {string} name - Name for mezzanine content object
+ * @param {string=} objectId - ID of existing object (if not specified, new object will be created)
+ * @param {string=} offeringKey=default - The key of the offering to create
+ * @param {string=} type - ID or version hash of the content type for the mezzanine
+ * @param {string=} variant=default - What variant of the master content object to use
  *
  * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the mezzanine initialization
  */
@@ -241,14 +244,25 @@ exports.CreateABRMezzanine = async function({
   metadata,
   masterVersionHash,
   abrProfile,
+  addlOfferingSpecs,
   variant="default",
-  offeringKey="default"
+  offeringKey="default",
+  keepOtherOfferings = false,
+  keepOtherStreams= false
 }) {
   ValidateLibrary(libraryId);
   ValidateVersion(masterVersionHash);
 
   if(!masterVersionHash) {
     throw Error("Master version hash not specified");
+  }
+
+  if(!objectId && (keepOtherStreams || keepOtherOfferings)) {
+    throw Error("Existing mezzanine object ID required in order to use 'keepOtherOfferings' or 'keepOtherStreams");
+  }
+
+  if(addlOfferingSpecs && !abrProfile) {
+    throw Error("abrProfile required when using addlOfferingSpecs");
   }
 
   const existingMez = !!objectId;
@@ -295,9 +309,12 @@ exports.CreateABRMezzanine = async function({
   };
 
   const body = {
+    additional_offering_specs: addlOfferingSpecs,
     offering_key: offeringKey,
-    variant_key: variant,
-    prod_master_hash: masterVersionHash
+    keep_other_offerings: keepOtherOfferings,
+    keep_other_streams: keepOtherStreams,
+    prod_master_hash: masterVersionHash,
+    variant_key: variant
   };
 
   let storeClear = false;
@@ -582,10 +599,12 @@ exports.LROStatus = async function({libraryId, objectId, offeringKey="default"})
  * @param {string} objectId - ID of the mezzanine object
  * @param {string} writeToken - Write token for the mezzanine object
  * @param {string=} offeringKey=default - The offering to process
+ * @param {function=} preFinalizeFn - A function to call before finalizing changes, to allow further modifications to offering. The function will be invoked with {configUrl, writeToken} to allow access to the draft and MUST NOT finalize the draft.
+ * @param {boolean=} preFinalizeThrow - If set to `true` then any error thrown by preFinalizeFn will not be caught. Otherwise, any exception will be appended to the `warnings` array returned after finalization.
  *
  * @return {Promise<Object>} - The finalize response for the mezzanine object, as well as any logs, warnings and errors from the finalization
  */
-exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey="default"}) {
+exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey="default", preFinalizeFn, preFinalizeThrow}) {
   ValidateParameters({libraryId, objectId});
 
   const lroDraft = await this.ContentObjectMetadata({
@@ -632,6 +651,21 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey=
       constant: false
     });
 
+    let preFinalizeWarnings = [];
+    if(preFinalizeFn) {
+      const params = {
+        configUrl: `${lroDraft.node}config?self&qspace=${this.networkName}`,
+        writeToken: lroDraft.write_token
+      };
+      if(preFinalizeThrow){
+        await preFinalizeFn(params);
+      } else try {
+        await preFinalizeFn(params);
+      } catch(e) {
+        preFinalizeWarnings = `Error trying to set video stream codec descriptors: ${e}`;
+      }
+    }
+
     const finalizeResponse = await this.FinalizeContentObject({
       libraryId,
       objectId: objectId,
@@ -643,7 +677,7 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey=
     result = {
       data,
       logs: logs || [],
-      warnings: warnings || [],
+      warnings: (warnings || []).concat(preFinalizeWarnings),
       errors: errors || [],
       ...finalizeResponse
     };

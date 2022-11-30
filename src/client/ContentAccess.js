@@ -5,6 +5,7 @@
  */
 
 const UrlJoin = require("url-join");
+const objectPath = require("object-path");
 
 const HttpClient = require("../HttpClient");
 
@@ -926,8 +927,15 @@ exports.ContentObjectMetadata = async function({
     if(error.status !== 404) {
       throw error;
     }
+    // For a 404 error, check if error was something other than subtree not found
+    const errOp = objectPath.get(error.body, "errors.0.cause.op");
+    const errKind = objectPath.get(error.body, "errors.0.cause.kind");
 
-    metadata = metadataSubtree === "/" ? {} : undefined;
+    if(errOp === "link_resolver.resolve" && errKind === "item does not exist") {
+      metadata = metadataSubtree === "/" ? {} : undefined;
+    } else {
+      throw error;
+    }
   }
 
   if(!produceLinkUrls) { return metadata; }
