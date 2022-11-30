@@ -1,4 +1,4 @@
-// Retrieve part list from object
+// Output decoded write token
 const Utility = require("./lib/Utility");
 
 const Draft = require("./lib/concerns/Draft");
@@ -20,8 +20,7 @@ class WriteTokenDecode extends Utility {
 
   async body() {
     const {writeToken} = this.args;
-    // eslint-disable-next-line no-console
-    console.log(JSON.stringify(this.concerns.Draft.decode({writeToken}), null, 2));
+    this.logger.logObject(this.concerns.Draft.decode({writeToken}));
   }
 
   header() {
