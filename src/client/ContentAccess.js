@@ -927,14 +927,16 @@ exports.ContentObjectMetadata = async function({
     if(error.status !== 404) {
       throw error;
     }
-    // For a 404 error, check if error was something other than subtree not found
-    const errOp = objectPath.get(error.body, "errors.0.cause.op");
-    const errKind = objectPath.get(error.body, "errors.0.cause.kind");
-
-    if(errOp === "link_resolver.resolve" && errKind === "item does not exist") {
-      metadata = metadataSubtree === "/" ? {} : undefined;
-    } else {
+    // For a 404 error, check if error was due to write token not found
+    const errQwtoken = objectPath.get(error.body, "errors[0].cause.cause.cause.qwtoken");
+    if(errQwtoken) {
+      // if so, re-throw rather than suppress error
       throw error;
+    } else {
+      // For all other 404 errors (not just 'subtree not found'), suppress error and
+      // return an empty value. (there are function call chains that depend on this behavior,
+      //  e.g. CreateABRMezzanine -> CreateEncryptionConk -> ContentObjectMetadata)
+      metadata = metadataSubtree === "/" ? {} : undefined;
     }
   }
 
