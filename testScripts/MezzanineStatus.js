@@ -2,6 +2,8 @@
 const ScriptBase = require("./parentClasses/ScriptBase");
 ScriptBase.deprecationNotice("MezzanineJobStatus.js");
 
+const preFinalizeFn = require("../utilities/lib/misc/codecDescPrefinalizeFn");
+
 const moment = require("moment");
 // amount of time allowed to elapse since last LRO update before raising 'stalled' error
 const MAX_REPORTED_DURATION_TOLERANCE = 15 * 60; // 15 minutes
@@ -100,8 +102,12 @@ const Status = async (objectId, offeringKey="default", finalize, noWait, force, 
 
     const libraryId = await client.ContentObjectLibraryId({objectId});
 
-    const status = await client.LROStatus({libraryId, objectId, offeringKey: offeringKey});
-    
+    const status = await client.LROStatus({
+      libraryId,
+      objectId,
+      offeringKey
+    });
+
     let warningsAdded = false;
 
     for(const lroKey in status) {
@@ -141,7 +147,7 @@ const Status = async (objectId, offeringKey="default", finalize, noWait, force, 
       process.exitCode = 1;
       return;
     }
-    
+
     if(finalize) {
       if(!Object.values(status).every(job => job.run_state === "finished")) {
         console.error("\nError finalizing mezzanine: Not all jobs not finished\n");
@@ -151,7 +157,12 @@ const Status = async (objectId, offeringKey="default", finalize, noWait, force, 
         return;
       }
 
-      const finalizeResponse = await client.FinalizeABRMezzanine({libraryId, objectId, offeringKey});
+      const finalizeResponse = await client.FinalizeABRMezzanine({
+        libraryId,
+        objectId,
+        offeringKey,
+        preFinalizeFn // Before object is finalized, try to set codec descriptors
+      });
 
       console.log("\nABR mezzanine object finalized:");
       console.log("\tObject ID:", objectId);

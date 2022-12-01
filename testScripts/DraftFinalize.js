@@ -1,6 +1,10 @@
 /* eslint-disable no-console */
 
+const URI = require("urijs");
+
 const ScriptBase = require("./parentClasses/ScriptBase");
+
+const WriteTokenNode = require("../utilities/WriteTokenNode");
 
 class DraftFinalize extends ScriptBase {
 
@@ -11,7 +15,31 @@ class DraftFinalize extends ScriptBase {
     const objectId = this.args.objectId;
     const writeToken = this.args.writeToken;
 
-    console.log("Finalizing object...");
+    const nodeResolver = new WriteTokenNode({
+      argList: [
+        "--writeToken", writeToken,
+        "--json", "--silent"
+      ],
+      env: {
+        "FABRIC_CONFIG_URL": client.ConfigUrl()
+      }
+    });
+
+    const result = await nodeResolver.run();
+    if(result.exit_code !== 0) throw Error("Failed to determine node for write token");
+    if(!result.node_info) throw Error("Null node_info returned for write token");
+
+    const fabricInfo = result.node_info.fab[0];
+    const url = new URL("https://dummy");
+    url.protocol = fabricInfo.scheme;
+    url.hostname = fabricInfo.host;
+    if(fabricInfo.port !== "") {
+      url.port = parseInt(fabricInfo.port);
+    }
+    const nodeUrl = url.href;
+
+    client.HttpClient.RecordWriteToken(writeToken,new URI(nodeUrl));
+    console.log("Finalizing draft...");
     const finalizeResponse = await client.FinalizeContentObject({
       libraryId,
       objectId,

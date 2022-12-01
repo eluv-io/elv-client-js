@@ -5,6 +5,9 @@ const {seconds} = require("./lib/helpers");
 const {ModOpt, NewOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
+const preFinalizeFn = require("./lib/misc/codecDescPrefinalizeFn");
+
+const ArgAddlOfferingSpecs = require("./lib/concerns/ArgAddlOfferingSpecs");
 const ArgAssetMetadata = require("./lib/concerns/ArgAssetMetadata");
 const ArgMetadata = require("./lib/concerns/ArgMetadata");
 const ArgObjectId = require("./lib/concerns/ArgObjectId");
@@ -15,7 +18,7 @@ const ContentType = require("./lib/concerns/ContentType");
 const FabricObject = require("./lib/concerns/FabricObject");
 const Finalize = require("./lib/concerns/Finalize");
 const JSON = require("./lib/concerns/JSON");
-const LRO =  require("./lib/concerns/LRO");
+const LRO = require("./lib/concerns/LRO");
 
 const chkLibraryPresent = (argv) => {
   if(!argv.existingMezId && !argv.libraryId) {
@@ -42,6 +45,7 @@ class MezzanineCreate extends Utility {
   blueprint() {
     return {
       concerns: [
+        ArgAddlOfferingSpecs,
         ArgAssetMetadata,
         ArgMetadata,
         ArgObjectId,
@@ -57,9 +61,19 @@ class MezzanineCreate extends Utility {
       options: [
         ModOpt("libraryId", {forX: "mezzanine"}),
         ModOpt("objectId", {
-          alias: ["existingMezId","existing-mez-id"],
+          alias: ["existingMezId", "existing-mez-id"],
           demand: false,
           descTemplate: "Create the offering in existing mezzanine object with specified ID",
+        }),
+        NewOpt("keepOtherOfferings", {
+          descTemplate: "Preserve existing offerings stored under keys different than the current one (when using a pre-existing object for mezzanine)",
+          implies: "existingMezId",
+          type: "boolean"
+        }),
+        NewOpt("keepOtherStreams", {
+          descTemplate: "Preserve existing streams other than the ones currently being generated (when using a pre-existing object for mezzanine, and the offering key already exists)",
+          implies: "existingMezId",
+          type: "boolean"
         }),
         ModOpt("type", {forX: "mezzanine"}),
         ModOpt("metadata", {ofX: "mezzanine object"}),
@@ -96,7 +110,13 @@ class MezzanineCreate extends Utility {
   async body() {
     const logger = this.logger;
 
-    const {existingMezId, offeringKey, masterHash} = this.args;
+    const {
+      existingMezId,
+      keepOtherOfferings,
+      keepOtherStreams,
+      masterHash,
+      offeringKey
+    } = this.args;
 
     // do steps that don't require network access first
     // ----------------------------------------------------
@@ -104,7 +124,9 @@ class MezzanineCreate extends Utility {
       ? this.concerns.JSON.parseFile({path: this.args.abrProfile})
       : undefined;
 
-    const metadataFromArg =  this.concerns.ArgMetadata.asObject() || {};
+    const metadataFromArg = this.concerns.ArgMetadata.asObject() || {};
+
+    const addlOfferingSpecsFromArg = this.concerns.ArgAddlOfferingSpecs.asObject() || undefined;
 
     let access = this.concerns.CloudAccess.credentialSet(false);
 
@@ -160,7 +182,10 @@ class MezzanineCreate extends Utility {
       variant: this.args.variantKey,
       offeringKey,
       metadata,
-      abrProfile
+      addlOfferingSpecs: addlOfferingSpecsFromArg,
+      abrProfile,
+      keepOtherOfferings,
+      keepOtherStreams
     });
 
     logger.errorsAndWarnings(createResponse);
@@ -205,8 +230,12 @@ class MezzanineCreate extends Utility {
     let done = false;
     let lastStatus;
     while(!done) {
-      const statusMap = await lro.status({libraryId, objectId}); // TODO: check how offering key is used, if at all
-      const statusSummary =  lro.statusSummary(statusMap);
+      const statusMap = await lro.status({
+        libraryId,
+        objectId,
+        offeringKey
+      });
+      const statusSummary = lro.statusSummary(statusMap);
       lastStatus = statusSummary.run_state;
       if(lastStatus !== LRO.STATE_RUNNING) done = true;
       logger.log(`run_state: ${lastStatus}`);
@@ -218,7 +247,8 @@ class MezzanineCreate extends Utility {
     const finalizeAbrResponse = await client.FinalizeABRMezzanine({
       libraryId,
       objectId,
-      offeringKey
+      offeringKey,
+      preFinalizeFn, // Before object is finalized, try to set codec descriptors
     });
     const latestHash = finalizeAbrResponse.hash;
 

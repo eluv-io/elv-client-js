@@ -69,9 +69,6 @@ const validTargetPath = ({metadata, targetPath}) => {
 
 const valueAtPath = ({metadata, path}) => objectPath.get(metadata, pathPieces({path}));
 
-
-
-
 const blueprint = {
   name: "Metadata",
   concerns: [Logger, Client, Edit]
@@ -110,6 +107,7 @@ const New = context => {
   const get = async ({libraryId, subtree, objectId, versionHash, writeToken}) => {
     const client = await context.concerns.Client.get();
     logger.log(`Retrieving metadata ${pathDesc(subtree)}from ${fabricItemDesc({objectId, versionHash, writeToken})}...`);
+
     return await client.ContentObjectMetadata({
       libraryId,
       metadataSubtree: subtree,
@@ -119,17 +117,23 @@ const New = context => {
     });
   };
 
-  const write = async ({libraryId, metadata, noWait, objectId, writeToken}) => {
+  const write = async ({libraryId, metadata, noWait, objectId, subtree, writeToken}) => {
     return await context.concerns.Edit.writeMetadata({
       libraryId,
       metadata,
       noWait,
       objectId,
+      metadataSubtree: subtree,
       writeToken,
     });
   };
 
-  return {checkTargetPath, commitInfo, get, write};
+  return {
+    checkTargetPath,
+    commitInfo,
+    get,
+    write
+  };
 };
 
 module.exports = {

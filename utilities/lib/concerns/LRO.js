@@ -1,3 +1,5 @@
+// TODO: replace everything except singleLroStatus with calls to https://www.npmjs.com/package/@eluvio/elv-lro-status
+
 const kindOf = require("kind-of");
 const moment = require("moment");
 const R = require("ramda");
@@ -73,9 +75,27 @@ const New = context => {
     statusEntry.run_state = state;
   };
 
-  const status = async ({libraryId, objectId}) => {
+  const singleLroStatus = async ({objectId, libraryId, lroId, writeToken}) => {
     const client = await context.concerns.Client.get();
-    const statusMap = await client.LROStatus({libraryId, objectId}); // TODO: check how offering key is used, if at all
+
+    return await client.CallBitcodeMethod({
+      objectId,
+      libraryId,
+      method: "/media/lro/status",
+      writeToken,
+      constant: true,
+      queryParams: {lro: lroId}
+    });
+  };
+
+  // get LRO status(es) for a mez offering add/edit operation
+  const status = async ({libraryId, objectId, offeringKey}) => {
+    const client = await context.concerns.Client.get();
+    const statusMap = await client.LROStatus({
+      libraryId,
+      objectId,
+      offeringKey
+    });
 
     if(kindOf(statusMap)==="undefined") throw Error("Received no job status information from server - object already finalized?");
     return statusMapProcess(statusMap);
@@ -135,6 +155,7 @@ const New = context => {
   };
 
   return {
+    singleLroStatus,
     status,
     statusMapProcess,
     statusSummary,

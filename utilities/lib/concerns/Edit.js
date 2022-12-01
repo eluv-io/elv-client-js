@@ -61,7 +61,11 @@ const New = context => {
 
   };
 
-  return {finalize, getWriteToken, writeMetadata};
+  return {
+    finalize,
+    getWriteToken,
+    writeMetadata
+  };
 };
 
 module.exports = {

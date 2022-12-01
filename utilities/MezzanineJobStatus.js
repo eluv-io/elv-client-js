@@ -3,16 +3,19 @@
 const {NewOpt, ModOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
+const preFinalizeFn = require("./lib/misc/codecDescPrefinalizeFn");
+
 const Client = require("./lib/concerns/Client");
 const ArgNoWait = require("./lib/concerns/ArgNoWait");
 const ArgObjectId = require("./lib/concerns/ArgObjectId");
 const Logger = require("./lib/concerns/Logger");
 const LRO = require("./lib/concerns/LRO");
+const OfferingCodecDesc = require("./lib/concerns/OfferingCodecDesc");
 
 class MezzanineJobStatus extends Utility {
   blueprint() {
     return {
-      concerns: [Logger, ArgObjectId, Client, LRO, ArgNoWait],
+      concerns: [Logger, ArgObjectId, Client, LRO, ArgNoWait, OfferingCodecDesc],
       options: [
         ModOpt("objectId", {ofX: "mezzanine", demand: true}),
         ModOpt("libraryId", {forX: "mezzanine"}),
@@ -25,7 +28,12 @@ class MezzanineJobStatus extends Utility {
           implies: "finalize",
           type: "boolean"
         }),
-        ModOpt("noWait", {implies: "finalize"})
+        ModOpt("noWait", {implies: "finalize"}),
+        NewOpt("offeringKey", {
+          default: "default",
+          descTemplate: "Offering key (in object metadata /offerings/).",
+          type: "string"
+        })
       ]
     };
   }
@@ -36,11 +44,15 @@ class MezzanineJobStatus extends Utility {
     const lro = this.concerns.LRO;
 
     const {finalize, libraryId, objectId, force} = await this.concerns.ArgObjectId.argsProc();
-    //const offeringKey = this.args.offeringKey;
+    const offeringKey = this.args.offeringKey;
 
     let statusMap;
     try {
-      statusMap = await lro.status({libraryId, objectId}); // TODO: modify client LRO code to not use offering key as part of lro_draft key
+      statusMap = await lro.status({
+        libraryId,
+        objectId,
+        offeringKey
+      }); // TODO: modify client LRO code to not use offering key as part of lro_draft key
     } catch(e) {
       if(finalize && force && e.message === "Received no job status information from server - object already finalized?") {
         logger.warn(e.message);
@@ -84,8 +96,15 @@ class MezzanineJobStatus extends Utility {
         logger.log("Finalizing mezzanine...");
       }
 
-      const finalizeResponse = await client.FinalizeABRMezzanine({libraryId, objectId});
+      const finalizeResponse = await client.FinalizeABRMezzanine({
+        libraryId,
+        objectId,
+        offeringKey,
+        preFinalizeFn // Before object is finalized, try to set codec descriptors
+      });
       const latestHash = finalizeResponse.hash;
+
+      logger.errorsAndWarnings(finalizeResponse);
       logger.logList(
         "",
         "ABR mezzanine object finalized:",

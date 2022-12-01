@@ -2,6 +2,7 @@
 const ScriptBase = require("./parentClasses/ScriptBase");
 ScriptBase.deprecationNotice("MezzanineCreate.js");
 
+const preFinalizeFn = require("../utilities/lib/misc/codecDescPrefinalizeFn");
 
 const {ElvClient} = require("../src/ElvClient");
 const readline = require("readline");
@@ -42,6 +43,9 @@ const argv = yargs
     description: "Asset type for the mezzanine",
     default: "primary"
   })
+  .option("addlOfferingSpecs", {
+    description: "Additional offerings to create via patching - JSON string (or file path if prefixed with '@')"
+  })
   .option("metadata", {
     description: "Metadata JSON string (or file path if prefixed with '@') to include in the object metadata"
   })
@@ -54,7 +58,18 @@ const argv = yargs
     default: "default"
   })
   .option("existingMezzId", {
-    description: "If re-running the mezzanine process, the ID of an existing mezzanine object"
+    description: "If using an existing object to store mezzanine offering, the ID of that object",
+    type: "string"
+  })
+  .option("keep-other-offerings", {
+    description: "If using an existing object to store mezzanine offering, whether to preserve other offerings",
+    default: false,
+    type: "boolean",
+  })
+  .option("keep-other-streams", {
+    description: "If using an existing object to store mezzanine offering, and offering already exists,whether to preserve other streams",
+    default: false,
+    type: "boolean",
   })
   .option("abr-profile", {
     description: "Path to JSON file containing alternative ABR profile"
@@ -81,7 +96,7 @@ const argv = yargs
   })
   .demandOption(
     ["library", "masterHash", "type"],
-    "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --type <type> </type>--masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--elv-geo eu-west)\n"
+    "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --type <type> </type>--masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--addlOfferingSpecs '<specs-json>') (--existingMezzId <object-id>) (--elv-geo eu-west)\n"
   )
   .strict().argv;
 
@@ -116,13 +131,24 @@ const Create = async ({
   titleType,
   assetType,
   metadata,
+  addlOfferingSpecs,
   existingMezzId,
   abrProfile,
   elvGeo,
   credentials,
   debug,
-  wait = false
+  wait = false,
+  keepOtherStreams,
+  keepOtherOfferings
 }) => {
+
+  if(!existingMezzId && (keepStreams || keepOfferings)) {
+    throw Error("--existingMezzId required when using --keepStreams or --keepOfferings");
+  }
+
+  if(addlOfferingSpecs && !abrProfile) {
+    throw Error("--abrProfile required when using --addlOfferingSpecs");
+  }
 
   // force ipTitleId to be a string, if present
   if(ipTitleId) {
@@ -144,6 +170,7 @@ const Create = async ({
       configUrl: ClientConfiguration["config-url"],
       region: elvGeo
     });
+
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
       privateKey: process.env.PRIVATE_KEY
@@ -155,6 +182,7 @@ const Create = async ({
       client.ToggleLogging(true);
     }
 
+    // construct metadata
     if(metadata) {
       try {
         if(metadata.startsWith("@")) {
@@ -202,6 +230,20 @@ const Create = async ({
 
     if(abrProfile) {
       abrProfile = JSON.parse(fs.readFileSync(abrProfile));
+    }
+
+    if(addlOfferingSpecs) {
+      try {
+        if(addlOfferingSpecs.startsWith("@")) {
+          addlOfferingSpecs = fs.readFileSync(addlOfferingSpecs.substring(1));
+        }
+
+        addlOfferingSpecs = JSON.parse(addlOfferingSpecs) || undefined;
+      } catch(error) {
+        console.error("Error parsing addlOfferingSpecs:");
+        console.error(error);
+        return;
+      }
     }
 
     metadata.public.asset_metadata = {
@@ -264,7 +306,10 @@ const Create = async ({
       variant,
       offeringKey: offeringKey,
       metadata,
-      abrProfile
+      addlOfferingSpecs,
+      abrProfile,
+      keepOtherOfferings,
+      keepOtherStreams
     });
 
     Report(createResponse);
@@ -327,7 +372,8 @@ const Create = async ({
     const finalizeResponse = await client.FinalizeABRMezzanine({
       libraryId: library,
       objectId,
-      offeringKey: offeringKey
+      offeringKey: offeringKey,
+      preFinalizeFn // Before object is finalized, try to set codec descriptors
     });
 
     Report(finalizeResponse);

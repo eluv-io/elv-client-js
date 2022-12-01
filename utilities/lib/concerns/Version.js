@@ -1,8 +1,6 @@
 // Code relating to working with a specific fabric object version
 const R = require("ramda");
 
-const {fabricItemDesc} = require("../helpers");
-
 const Utils = require("../../../src/Utils");
 
 const Client = require("./Client");
@@ -44,7 +42,6 @@ const New = context => {
 
   const metadata = async ({libraryId, objectId, subtree, versionHash}) => {
     if(!versionHash) throw Error("Version.metadata() - missing versionHash");
-    logger.log(`Reading metadata from ${fabricItemDesc({versionHash})}...`);
     return await context.concerns.Metadata.get({
       libraryId,
       objectId,
