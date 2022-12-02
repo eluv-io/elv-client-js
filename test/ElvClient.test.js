@@ -1786,6 +1786,7 @@ describe("Test ElvClient", () => {
       });
 
       expect(metadata).toBeDefined();
+      expect(metadata.abr_mezzanine).toBeDefined();
       expect(metadata.test).toEqual("mezzanine");
       expect(metadata.public.name).toEqual("Mezzanine Test");
       expect(metadata.public.description).toEqual("Mezzanine Test Description");
@@ -1850,6 +1851,7 @@ describe("Test ElvClient", () => {
       } catch(error) {
         console.log("\n\nERROR:");
         console.log(JSON.stringify(error, null, 2));
+        console.log(error);
         console.log();
       }
     });
