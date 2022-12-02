@@ -49,9 +49,13 @@ exports.permissionLevels = {
   }
 };
 
-exports.Visibility = async function({id}) {
+exports.Visibility = async function({id, clearCache}) {
   try {
     const address = this.utils.HashToAddress(id);
+
+    if(clearCache) {
+      delete this.visibilityInfo[address];
+    }
 
     if(!this.visibilityInfo[address]) {
       this.visibilityInfo[address] = new Promise(async (resolve, reject) => {
@@ -103,14 +107,14 @@ exports.Visibility = async function({id}) {
  *
  * @return {string} - Key for the permission of the object - Use this to retrieve more details from client.permissionLevels
  */
-exports.Permission = async function({objectId}) {
+exports.Permission = async function({objectId, clearCache}) {
   ValidateObject(objectId);
 
   if((await this.AccessType({id: objectId})) !== this.authClient.ACCESS_TYPES.OBJECT) {
     throw Error("Permission only valid for normal content objects: " + objectId);
   }
 
-  const visibility = await this.Visibility({id: objectId});
+  const visibility = await this.Visibility({id: objectId, clearCache});
 
   const kmsAddress = await this.CallContractMethod({
     contractAddress: this.utils.HashToAddress(objectId),
@@ -2332,6 +2336,10 @@ exports.LinkData = async function({libraryId, objectId, versionHash, writeToken,
 /* Encryption */
 
 exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash, writeToken, createKMSConk=true}) {
+  if(this.signer.remoteSigner) {
+    return;
+  }
+
   ValidateParameters({libraryId, objectId, versionHash});
   ValidateWriteToken(writeToken);
 

@@ -24,6 +24,11 @@ var Utils = require("./Utils");
 
 var permissionLevels = require("./client/ContentAccess").permissionLevels;
 
+var _require = require("./LogMessage"),
+    LogMessage = _require.LogMessage;
+
+var Crypto = require("./Crypto");
+
 var FrameClient = /*#__PURE__*/function () {
   "use strict";
 
@@ -75,7 +80,9 @@ var FrameClient = /*#__PURE__*/function () {
 
     this.target = target;
     this.timeout = timeout;
-    this.utils = Utils; // Dynamically defined methods defined in AllowedMethods
+    this.utils = Utils;
+    this.Crypto = Crypto;
+    this.Crypto.ElvCrypto(); // Dynamically defined methods defined in AllowedMethods
 
     var _iterator = _createForOfIteratorHelper(this.AllowedMethods()),
         _step;
@@ -202,6 +209,12 @@ var FrameClient = /*#__PURE__*/function () {
 
 
   _createClass(FrameClient, [{
+    key: "Log",
+    value: function Log(message) {
+      var error = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      LogMessage(this, message, error);
+    }
+  }, {
     key: "PassRequest",
     value: function () {
       var _PassRequest = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(_ref4) {
@@ -476,7 +489,10 @@ var FrameClient = /*#__PURE__*/function () {
      * @returns {Array<string>} - List of ElvClient methods available to a FrameClient
      */
     function AllowedMethods() {
-      return ["AccessGroupManagers", "AccessGroupMembers", "AccessGroupOwner", "AccessInfo", "AccessRequest", "AccessType", "AddAccessGroupManager", "AddAccessGroupMember", "AddContentLibraryGroup", "AddContentObjectGroupPermission", "AddLibraryContentType", "AssetMetadata", "AvailableDRMs", "AvailableOfferings", "AwaitPending", "BitmovinPlayoutOptions", "BlockNumber", "CallBitcodeMethod", "CallContractMethod", "CallContractMethodAndWait", "ClearCache", "ClearStaticToken", "Collection", "CollectionTransactions", "ConfigUrl", "ContentLibraries", "ContentLibrary", "ContentLibraryGroupPermissions", "ContentLibraryOwner", "ContentObject", "ContentObjectAccessComplete", "ContentObjectGraph", "ContentObjectGroupPermissions", "ContentObjectImageUrl", "ContentObjectLibraryId", "ContentObjectMetadata", "ContentObjectOwner", "ContentObjectTenantId", "ContentObjectVersions", "ContentObjects", "ContentPart", "ContentParts", "ContentSpaceId", "ContentType", "ContentTypeOwner", "ContentTypes", "ContractAbi", "ContractEvents", "ContractMetadata", "ContractName", "CopyContentObject", "CreateABRMezzanine", "CreateAccessGroup", "CreateAndFinalizeContentObject", "CreateContentLibrary", "CreateContentObject", "CreateContentType", "CreateEncryptionConk", "CreateFileDirectories", "CreateFileUploadJob", "CreateLinks", "CreateNTPInstance", "CreateNonOwnerCap", "CreatePart", "CreateProductionMaster", "CreateSignedToken", "CurrentAccountAddress", "CustomContractAddress", "Decrypt", "DecryptECIES", "DefaultKMSAddress", "DeleteAccessGroup", "DeleteContentLibrary", "DeleteContentObject", "DeleteContentVersion", "DeleteFiles", "DeleteMetadata", "DeleteNTPInstance", "DeletePart", "DeployContract", "Download", "DownloadEncrypted", "DownloadFile", "DownloadPart", "EditAndFinalizeContentObject", "EditContentObject", "Encrypt", "EncryptECIES", "EncryptionConk", "Events", "ExtractEventFromLogs", "ExtractValueFromEvent", "FabricUrl", "FileUrl", "FinalizeABRMezzanine", "FinalizeContentObject", "FinalizePart", "FinalizeStateChannelAccess", "FinalizeUploadJob", "FormatContractArguments", "GenerateStateChannelToken", "GetBalance", "InitializeAuthPolicy", "IssueNTPCode", "IssueSignedNTPCode", "LatestVersionHash", "LibraryContentTypes", "LinkAccessGroupToOauth", "LinkData", "LinkTarget", "LinkUrl", "ListAccessGroups", "ListFiles", "ListNTPInstances", "LROStatus", "MergeContractMetadata", "MergeMetadata", "MetadataAuth", "MintNFT", "NetworkInfo", "NodeId", "Nodes", "NTPInstance", "Permission", "PlayoutOptions", "PlayoutPathResolution", "ProduceMetadataLinks", "Proofs", "PublicRep", "PublishContentVersion", "QParts", "RedeemCode", "RemoveAccessGroupManager", "RemoveAccessGroupMember", "RemoveContentObjectGroupPermission", "RemoveContentLibraryGroup", "RemoveLibraryContentType", "Rep", "ReplaceContractMetadata", "ReplaceMetadata", "Request", "ResetRegion", "SendFunds", "SetAccessCharge", "SetAuth", "SetAuthContext", "SetAuthPolicy", "SetContentLibraryImage", "SetContentObjectImage", "SetCustomContentContract", "SetGroupPermission", "SetNodes", "SetOauthToken", "SetPolicyAuthorization", "SetSignerFromOauthToken", "SetStaticToken", "SetVisibility", "SetPermission", "StartABRMezzanineJobs", "SuspendNTPInstance", "UnlinkAccessGroupFromOauth", "UpdateContentObjectGraph", "UpdateNTPInstance", "UploadFileData", "UploadFiles", "UploadFilesFromS3", "UploadJobStatus", "UploadPart", "UploadPartChunk", "UploadStatus", "UseRegion", "VerifyContentObject", "Visibility"];
+      return ["AccessGroupManagers", "AccessGroupMembers", "AccessGroupOwner", "AccessInfo", "AccessRequest", "AccessType", "AddAccessGroupManager", "AddAccessGroupMember", "AddContentLibraryGroup", "AddContentObjectGroupPermission", "AddLibraryContentType", "AssetMetadata", "AvailableDRMs", "AvailableOfferings", "AwaitPending", "BitmovinPlayoutOptions", "BlockNumber", "CallBitcodeMethod", "CallContractMethod", "CallContractMethodAndWait", "ClearCache", "ClearStaticToken", "Collection", "CollectionTransactions", "ConfigUrl", "ContentLibraries", "ContentLibrary", "ContentLibraryGroupPermissions", "ContentLibraryOwner", "ContentObject", "ContentObjectAccessComplete", "ContentObjectGraph", "ContentObjectGroupPermissions", "ContentObjectImageUrl", "ContentObjectLibraryId", "ContentObjectMetadata", "ContentObjectOwner", "ContentObjectTenantId", "ContentObjectVersions", "ContentObjects", "ContentPart", "ContentParts", "ContentSpaceId", "ContentType", "ContentTypeOwner", "ContentTypes", "ContractAbi", "ContractEvents", "ContractMetadata", "ContractName", "CopyContentObject", "CreateABRMezzanine", "CreateAccessGroup", "CreateAndFinalizeContentObject", "CreateContentLibrary", "CreateContentObject", "CreateContentType", "CreateEncryptionConk", "CreateFileDirectories", "CreateFileUploadJob", "CreateLinks", "CreateNTPInstance", "CreateNonOwnerCap", "CreatePart", "CreateProductionMaster", "CreateSignedToken", "CurrentAccountAddress", "CustomContractAddress", "Decrypt", "DecryptECIES", "DefaultKMSAddress", "DeleteAccessGroup", "DeleteContentLibrary", "DeleteContentObject", "DeleteContentVersion", "DeleteFiles", "DeleteMetadata", "DeleteNTPInstance", "DeletePart", "DeployContract", "Download", "DownloadEncrypted", "DownloadFile", "DownloadPart", "EditAndFinalizeContentObject", "EditContentObject", "Encrypt", "EncryptECIES", "EncryptionConk", "Events", "ExtractEventFromLogs", "ExtractValueFromEvent", "FabricUrl", "FileUrl", "FinalizeABRMezzanine", "FinalizeContentObject", "FinalizePart", "FinalizeStateChannelAccess", "FinalizeUploadJob", "FormatContractArguments", "GenerateStateChannelToken", "GetBalance", "InitializeAuthPolicy", "IssueNTPCode", "IssueSignedNTPCode", "LatestVersionHash", "LibraryContentTypes", "LinkAccessGroupToOauth", "LinkData", "LinkTarget", "LinkUrl", "ListAccessGroups", "ListFiles", "ListNTPInstances", "LROStatus", "MergeContractMetadata", "MergeMetadata", "MetadataAuth", "MintNFT", "NetworkInfo", "NodeId", "Nodes", "NTPInstance", "Permission", "PlayoutOptions", "PlayoutPathResolution", "ProduceMetadataLinks", "Proofs", "PublicRep", "PublishContentVersion", "QParts", "RedeemCode", "RemoveAccessGroupManager", "RemoveAccessGroupMember", "RemoveContentObjectGroupPermission", "RemoveContentLibraryGroup", "RemoveLibraryContentType", "Rep", "ReplaceContractMetadata", "ReplaceMetadata", "Request", "ResetRegion", "SendFunds", "SetAccessCharge", "SetAuth", "SetAuthContext", "SetAuthPolicy", "SetContentLibraryImage", "SetContentObjectImage", "SetCustomContentContract", "SetGroupPermission", "SetNodes", "SetOauthToken", "SetPolicyAuthorization", "SetSignerFromOauthToken", "SetStaticToken", "SetVisibility", "SetPermission", "StartABRMezzanineJobs", "SuspendNTPInstance", "UnlinkAccessGroupFromOauth", "UpdateContentObjectGraph", "UpdateNTPInstance", "UploadFileData",
+      /*"UploadFiles",*/
+      //Override
+      "UploadFilesFromS3", "UploadJobStatus", "UploadPart", "UploadPartChunk", "UploadStatus", "UseRegion", "VerifyContentObject", "Visibility"];
     }
   }, {
     key: "AllowedUserProfileMethods",
@@ -503,4 +519,8 @@ var FrameClient = /*#__PURE__*/function () {
   return FrameClient;
 }();
 
+var _require2 = require("./client/Files"),
+    UploadFiles = _require2.UploadFiles;
+
+FrameClient.prototype.UploadFiles = UploadFiles;
 exports.FrameClient = FrameClient;

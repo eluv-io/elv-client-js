@@ -353,7 +353,7 @@ var AuthorizationClient = /*#__PURE__*/function () {
                   addr: Utils.FormatAddress(this.client.signer && this.client.signer.address || "")
                 };
 
-                if (!(!(this.noAuth || noAuth) && !this.client.signer.remoteSigner)) {
+                if (this.noAuth || noAuth) {
                   _context3.next = 29;
                   break;
                 }

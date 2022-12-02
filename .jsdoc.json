@@ -5,6 +5,7 @@
   },
   "source": {
     "include": ["src"],
+    "exclude": ["src/walletClient"],
     "includePattern": ".js$",
     "excludePattern": "(node_modules/|docs)"
   },
