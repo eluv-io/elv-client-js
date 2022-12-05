@@ -1,3 +1,5 @@
+// used by unit tests for /utilities
+
 const R = require("ramda");
 
 const testEnv = {
@@ -25,4 +27,8 @@ const removeElvEnvVars = () => {
   delete process.env.PRIVATE_KEY;
 };
 
-module.exports = {argList2Params, params, removeElvEnvVars};
+module.exports = {
+  argList2Params,
+  params,
+  removeElvEnvVars
+};
