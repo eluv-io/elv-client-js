@@ -34,6 +34,8 @@ const {
  * @param {boolean=} encrypt=true - (Local or copied files only) - Unless `false` is passed in explicitly, any uploaded/copied files will be stored encrypted
  * @param {boolean=} copy=false - (S3) If specified, files will be copied from S3
  * @param {function=} callback - Progress callback for file upload (See UploadFiles/UploadFilesFromS3 method)
+ * @param {("warn"|"info"|"debug")=} respLogLevel=warn - The level of logging to return in http response
+ * @param {("none"|"error"|"warn"|"info"|"debug")=} structLogLevel=none - The level of logging to save to object metadata
  * @param {Array<Object>=} access=[] - Array of cloud credentials, along with path matching regex strings - Required if any files in the masters are cloud references (currently only AWS S3 is supported)
  * - If this parameter is non-empty, all items in fileInfo are assumed to be items in cloud storage
  * - Format: [
@@ -76,7 +78,9 @@ exports.CreateProductionMaster = async function({
   encrypt=true,
   access=[],
   copy=false,
-  callback
+  callback,
+  respLogLevel = "warn",
+  structLogLevel="none"
 }) {
   ValidateLibrary(libraryId);
 
@@ -174,6 +178,10 @@ exports.CreateProductionMaster = async function({
     objectId: id,
     writeToken: write_token,
     method: UrlJoin("media", "production_master", "init"),
+    queryParams: {
+      response_log_level: respLogLevel,
+      struct_log_level: structLogLevel
+    },
     body: {
       access
     },
@@ -230,6 +238,8 @@ exports.CreateProductionMaster = async function({
  * @param {string} name - Name for mezzanine content object
  * @param {string=} objectId - ID of existing object (if not specified, new object will be created)
  * @param {string=} offeringKey=default - The key of the offering to create
+ * @param {("warn"|"info"|"debug")=} respLogLevel=warn - The level of logging to return in http response
+ * @param {("none"|"error"|"warn"|"info"|"debug")=} structLogLevel=none - The level of logging to save to object metadata
  * @param {string=} type - ID or version hash of the content type for the mezzanine
  * @param {string=} variant=default - What variant of the master content object to use
  *
@@ -248,7 +258,9 @@ exports.CreateABRMezzanine = async function({
   variant="default",
   offeringKey="default",
   keepOtherOfferings = false,
-  keepOtherStreams= false
+  keepOtherStreams= false,
+  respLogLevel = "warn",
+  structLogLevel="none"
 }) {
   ValidateLibrary(libraryId);
   ValidateVersion(masterVersionHash);
@@ -344,6 +356,10 @@ exports.CreateABRMezzanine = async function({
     objectId: id,
     writeToken: write_token,
     method: UrlJoin("media", "abr_mezzanine", "init"),
+    queryParams: {
+      response_log_level: respLogLevel,
+      struct_log_level: structLogLevel
+    },
     headers,
     body,
     constant: false
