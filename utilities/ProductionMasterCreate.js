@@ -14,11 +14,12 @@ const Client = require("./lib/concerns/Client");
 const CloudFile = require("./lib/concerns/CloudFile");
 const ContentType = require("./lib/concerns/ContentType");
 const LocalFile = require("./lib/concerns/LocalFile");
+const MediaAPI = require("./lib/concerns/MediaAPI");
 
 class ProductionMasterCreate extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
-      concerns: [Client, CloudFile, LocalFile, ArgAssetMetadata, ArgMetadata, ContentType, ArgType],
+      concerns: [Client, CloudFile, LocalFile, ArgAssetMetadata, ArgMetadata, ContentType, ArgType, MediaAPI],
       options: [
         StdOpt("libraryId", {demand: true, forX: "new production master"}),
         ModOpt("type", {demand: true, forX: "new production master"}),
@@ -77,7 +78,7 @@ class ProductionMasterCreate extends Utility {
     const client = await this.concerns.Client.get();
 
     const type = await await this.concerns.ArgType.typVersionHash();
-    const {libraryId, s3Copy, s3Reference} = this.args;
+    const {libraryId, s3Copy, s3Reference, respLogLevel, structLogLevel} = this.args;
 
 
     const createResponse = await client.CreateProductionMaster({
@@ -90,10 +91,12 @@ class ProductionMasterCreate extends Utility {
       encrypt: !unencrypted,
       access,
       copy: s3Copy && !s3Reference,
-      callback: (access ? this.concerns.CloudFile : this.concerns.LocalFile).callback
+      callback: (access ? this.concerns.CloudFile : this.concerns.LocalFile).callback,
+      respLogLevel,
+      structLogLevel
     });
 
-    const {errors, warnings, id} = createResponse;
+    const {errors, warnings, logs, id} = createResponse;
     // Log object id immediately, in case of error later in script
     // Don't log hash yet, it will change if --streams was provided (or any other revision to object is needed)
     logger.data("object_id", id);
@@ -105,6 +108,11 @@ class ProductionMasterCreate extends Utility {
 
     await client.SetVisibility({id, visibility: 0});
 
+    if(respLogLevel && logs.length > 0) {
+      logger.log("\nLog messages from server:\n");
+      logger.logList(...logs);
+      logger.log();
+    }
     logger.errorsAndWarnings({errors, warnings});
 
     // was stream info supplied at command line?

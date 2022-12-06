@@ -6,7 +6,7 @@ const Library = require("./lib/concerns/Library");
 const Logger = require("./lib/concerns/Logger");
 
 class ListLibraries extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [Logger, Library]
     };

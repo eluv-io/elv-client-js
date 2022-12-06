@@ -14,7 +14,7 @@ const ArgLibraryId = require("./lib/concerns/ArgLibraryId");
 const {seconds} = require("./lib/helpers");
 
 class SimpleIngest extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [Client, Finalize, LocalFile, ArgLibraryId, LRO],
       options: [

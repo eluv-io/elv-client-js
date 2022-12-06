@@ -15,7 +15,7 @@ const Metadata = require("./lib/concerns/Metadata");
 const Edit = require("./lib/concerns/Edit");
 
 class MasterInit extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [ArgObjectId, CloudAccess, Client, Edit, Metadata],
       options: [

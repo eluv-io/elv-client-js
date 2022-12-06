@@ -9,7 +9,7 @@ const Logger = require("./lib/concerns/Logger");
 const ArgOutfile = require("./lib/concerns/ArgOutfile");
 
 class LibraryInfo extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [Logger, ArgLibraryId, ArgOutfile],
       options: [

@@ -10,7 +10,7 @@ const Metadata = require("./lib/concerns/Metadata");
 
 
 class OfferingStartAsVaL extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [
         ExistObj, Metadata

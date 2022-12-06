@@ -53,7 +53,7 @@ const withoutEncryptionSchemes = poStream => {
 
 
 class ChannelCreate extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [ArgLibraryId, ArgType, FabricObject, Version],
       options: [

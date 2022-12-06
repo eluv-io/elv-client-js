@@ -5,7 +5,7 @@ const ExistObjOrVer = require("./lib/concerns/ExistObjOrVer");
 const ArgOutfile = require("./lib/concerns/ArgOutfile");
 
 class ListParts extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [ExistObjOrVer, ArgOutfile]
     };

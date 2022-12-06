@@ -10,7 +10,7 @@ const Logger = require("./lib/concerns/Logger");
 const permissionTypes = ["owner", "editable", "viewable", "listable", "public"];
 
 class ObjectSetPermission extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [Logger, ArgObjectId, Client],
       options: [

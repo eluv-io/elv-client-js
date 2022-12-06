@@ -10,7 +10,7 @@ const Logger = require("./lib/concerns/Logger");
 const permissionTypes = ["see","access","manage"];
 
 class ObjectAddGroupPerms extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [Logger, ArgObjectId, Client],
       options: [

@@ -16,7 +16,7 @@ const chkKeepNewOrKeepOld = (argv) => {
 };
 
 class ObjectPruneVersions extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [ExistObj, Version],
       options: [

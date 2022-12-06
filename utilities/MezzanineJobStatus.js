@@ -13,7 +13,7 @@ const LRO = require("./lib/concerns/LRO");
 const OfferingCodecDesc = require("./lib/concerns/OfferingCodecDesc");
 
 class MezzanineJobStatus extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [Logger, ArgObjectId, Client, LRO, ArgNoWait, OfferingCodecDesc],
       options: [

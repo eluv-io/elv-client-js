@@ -1,0 +1,7 @@
+# Currently packaged ESLint version (5.15.0) does not support class static properties, which are used by
+# integration tests for /utilities
+/utilities/tests/integration/*.test.js
+/utilities/tests/helpers/IntegrationTest.js
+
+# ignore files specifically marked not to commit to repo
+**.ignore.js

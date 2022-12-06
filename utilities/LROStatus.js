@@ -9,7 +9,7 @@ const ArgWriteToken = require("./lib/concerns/ArgWriteToken");
 const LRO = require("./lib/concerns/LRO");
 
 class LROStatus extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [ArgLroId, ArgNodeUrl, ArgWriteToken, LRO],
       options: [

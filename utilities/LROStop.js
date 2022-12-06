@@ -9,7 +9,7 @@ const ArgNodeUrl = require("./lib/concerns/ArgNodeUrl");
 const ArgWriteToken = require("./lib/concerns/ArgWriteToken");
 
 class LROStop extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [ArgLroId, ArgNodeUrl, ArgWriteToken, Client],
       options: [

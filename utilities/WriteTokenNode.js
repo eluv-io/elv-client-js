@@ -5,7 +5,7 @@ const Draft = require("./lib/concerns/Draft");
 const {NewOpt} = require("./lib/options");
 
 class WriteTokenNode extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [Draft],
       options: [

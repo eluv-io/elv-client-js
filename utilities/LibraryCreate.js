@@ -5,7 +5,7 @@ const Client = require("./lib/concerns/Client");
 const Library = require("./lib/concerns/Library");
 
 class LibraryCreate extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [Client],
       options: [

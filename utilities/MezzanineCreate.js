@@ -19,6 +19,7 @@ const FabricObject = require("./lib/concerns/FabricObject");
 const Finalize = require("./lib/concerns/Finalize");
 const JSON = require("./lib/concerns/JSON");
 const LRO = require("./lib/concerns/LRO");
+const MediaAPI = require("./lib/concerns/MediaAPI");
 
 const chkLibraryPresent = (argv) => {
   if(!argv.existingMezId && !argv.libraryId) {
@@ -42,7 +43,7 @@ const chkTitlePresent = (argv) => {
 };
 
 class MezzanineCreate extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [
         ArgAddlOfferingSpecs,
@@ -56,7 +57,8 @@ class MezzanineCreate extends Utility {
         FabricObject,
         Finalize,
         JSON,
-        LRO
+        LRO,
+        MediaAPI
       ],
       options: [
         ModOpt("libraryId", {forX: "mezzanine"}),
@@ -115,7 +117,9 @@ class MezzanineCreate extends Utility {
       keepOtherOfferings,
       keepOtherStreams,
       masterHash,
-      offeringKey
+      offeringKey,
+      respLogLevel,
+      structLogLevel
     } = this.args;
 
     // do steps that don't require network access first
@@ -185,7 +189,9 @@ class MezzanineCreate extends Utility {
       addlOfferingSpecs: addlOfferingSpecsFromArg,
       abrProfile,
       keepOtherOfferings,
-      keepOtherStreams
+      keepOtherStreams,
+      respLogLevel,
+      structLogLevel
     });
 
     logger.errorsAndWarnings(createResponse);

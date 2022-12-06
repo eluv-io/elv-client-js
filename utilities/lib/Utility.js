@@ -6,8 +6,7 @@ const yargsTerminalWidth = require("yargs").terminalWidth;
 
 const {loadConcerns} = require("./concerns");
 const {callContext, cmdLineContext} = require("./context");
-const {trimSlashes} = require("./helpers");
-const {ChainOutArgModel} = require("./models/ChainOutArg");
+
 const {BuildWidget} = require("./options");
 
 const Logger = require("./concerns/Logger");
@@ -19,26 +18,6 @@ const addNameAndLogger = (blueprint) => {
     name: "Utility",
     options: blueprint.options ? R.clone(blueprint.options) : []
   };
-};
-
-const chainOutArgValidate = arg => {
-  if(arg === undefined) return;
-  try {
-    ChainOutArgModel(arg);
-  } catch(e) {
-    throw Error(`--chainOut value(s) invalid: ${e.message}`);
-  }
-  return arg;
-};
-
-const chainOutString = ({chainOutArg, data}) => {
-  const obj = {};
-  const pairs = R.splitEvery(2, chainOutArg);
-  for(const [argName, dataPath] of pairs) {
-    obj[argName] = R.path(trimSlashes(dataPath).split("/"),data);
-  }
-  return obj;
-  // return shellEscape([JSON.stringify(obj)]);
 };
 
 const checkFunctionFactory = checksMap => {
@@ -71,10 +50,24 @@ module.exports = class Utility {
     }
   }
 
-  constructor(params) {
-    const blueprintPlus = addNameAndLogger(this.blueprint());
+  static argMap() {
+    return this.buildWidget(this.blueprintWithNameAndLogger()).data().yargsOptMap;
+  }
 
-    this.widget = BuildWidget(blueprintPlus);
+  static blueprint() {
+    throw Error("call to abstract base class method blueprint()");
+  }
+
+  static blueprintWithNameAndLogger() {
+    return addNameAndLogger(this.blueprint());
+  }
+
+  static buildWidget(blueprint) {
+    return BuildWidget(blueprint);
+  }
+  constructor(params) {
+    const blueprintPlus = this.constructor.blueprintWithNameAndLogger();
+    this.widget = this.constructor.buildWidget(blueprintPlus);
 
     this.context = params === undefined
       ? cmdLineContext() // assume invoked at command line
@@ -82,13 +75,6 @@ module.exports = class Utility {
 
     let yargsParser = yargs()
       .option("debugArgs", {hidden: true, type: "boolean"})
-      .option("chainOut", {
-        coerce: chainOutArgValidate,
-        hidden: true,
-        requiresArg: true,
-        string: true,
-        type: "array"
-      })
       .option("help", {
         desc: "Show help for command line options",
         group: "General",
@@ -106,11 +92,6 @@ module.exports = class Utility {
         if(!this.context.env.ELV_SUPPRESS_USAGE) console.error(yargs.help());
         throw Error(msg);
       });
-
-    if(this.context.env.ELV_CHAIN_IN) {
-
-      yargsParser = yargsParser.config(JSON.parse(this.context.env.ELV_CHAIN_IN));
-    }
 
     this.context.args = yargsParser.parse(this.context.argList);
 
@@ -131,7 +112,7 @@ module.exports = class Utility {
   }
 
   blueprint() {
-    throw Error("call to abstract base class method blueprint()");
+    return this.constructor.blueprint();
   }
 
   // actual work specific to individual script
@@ -160,12 +141,6 @@ module.exports = class Utility {
         this.footer(),
         ""
       );
-      if(this.args.chainOut) {
-        this.logger.data("chain_out",chainOutString({
-          chainOutArg: this.args.chainOut,
-          data: this.logger.dataGet()
-        }));
-      }
       // this.logger.data("successValue", successValue);
       this.logger.data("exit_code", 0);
       this.logger.data("success_value", successValue);

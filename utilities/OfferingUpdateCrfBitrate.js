@@ -10,7 +10,7 @@ const Metadata = require("./lib/concerns/Metadata");
 
 
 class OfferingUpdateCrfBitrate extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [
         ExistObj, Metadata

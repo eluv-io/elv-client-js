@@ -11,7 +11,7 @@ const ExistObjOrVerOrDft = require("./lib/concerns/ExistObjOrVerOrDft");
 const ArgOutfile = require("./lib/concerns/ArgOutfile");
 
 class ObjectGetMetadata extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [JPath, ExistObjOrVerOrDft, ArgOutfile],
       options: [

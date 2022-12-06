@@ -43,14 +43,12 @@ const New = (context) => {
   // closures
   // -------------------------------------
   const {json, silent, timestamps, verbose} = context.args;
-  const output = json
-    ? {
-      data: {},
-      errors: [],
-      log: [],
-      warnings: []
-    }
-    : undefined;
+  const output = {
+    data: {},
+    errors: [],
+    log: [],
+    warnings: []
+  };
 
   // -------------------------------------
   // private utility methods
@@ -77,7 +75,7 @@ const New = (context) => {
       if(verbose) {
         details.push(prefix + JSON.stringify(item.body, null, 2));
       } else {
-        details.push((prefix + JSON.stringify(item.body, null, 2)).split("\n").slice(0,4));
+        details.push((prefix + JSON.stringify(item.body, null, 2)).split("\n").slice(0, 4));
       }
 
     }
@@ -139,20 +137,14 @@ const New = (context) => {
   // -------------------------------------
 
   // set/replace data for a a key in JSON output @ /data/(key)/
-  const data = (key, obj) => {
-    if(json) {
-      output.data[key] = obj;
-    }
-  };
+  const data = (key, obj) => output.data[key] = obj;
 
   // set/concat data for a a key in JSON output @ /data/(key)/
   const dataConcat = (key, obj) => {
-    if(json) {
-      if(output.data[key]) {
-        output.data[key] = output.data[key].concat(obj);
-      } else {
-        output.data[key] = obj;
-      }
+    if(output.data[key]) {
+      output.data[key] = output.data[key].concat(obj);
+    } else {
+      output.data[key] = obj;
     }
   };
 
@@ -197,7 +189,7 @@ const New = (context) => {
     }
   };
 
-  const warnList  = (...args) => R.map(warn, args);
+  const warnList = (...args) => R.map(warn, args);
 
   // instance interface
   return {
@@ -217,4 +209,7 @@ const New = (context) => {
   };
 };
 
-module.exports = {blueprint, New};
+module.exports = {
+  blueprint,
+  New
+};

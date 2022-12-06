@@ -12,7 +12,8 @@ const blueprint = {
 };
 
 const New = context => {
-  return context.args.lroId;
+  // instance interface
+  return {};
 };
 
 module.exports = {

@@ -9,7 +9,7 @@ const ArgNoWait = require("./lib/concerns/ArgNoWait");
 const Metadata = require("./lib/concerns/Metadata");
 
 class LibraryAddDrmCert extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [Library, ArgLibraryId, ArgNoWait, Metadata],
       options: [

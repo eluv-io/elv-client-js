@@ -10,7 +10,7 @@ const ExistObjOrDft = require("./lib/concerns/ExistObjOrDft");
 const OfferingCodecDesc = require("./lib/concerns/OfferingCodecDesc");
 
 class MezSetCodecDescs extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [
         ExistObjOrDft, OfferingCodecDesc

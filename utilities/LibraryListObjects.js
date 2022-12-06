@@ -14,7 +14,7 @@ const Metadata = require("./lib/concerns/Metadata");
 const FabricObject = require("./lib/concerns/FabricObject");
 
 class LibraryListObjects extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [JSON, ArgLibraryId, Metadata, FabricObject],
       options: [

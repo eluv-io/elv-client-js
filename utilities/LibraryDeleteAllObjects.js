@@ -6,7 +6,7 @@ const Client = require("./lib/concerns/Client");
 const ArgLibraryId = require("./lib/concerns/ArgLibraryId");
 
 class LibraryDeleteAllObjects extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [Client, ArgLibraryId],
       options: [
@@ -41,7 +41,7 @@ class LibraryDeleteAllObjects extends Utility {
   }
 
   header() {
-    return `Delete all objects from library ${this.args.libraryId}`;
+    return `Deleting all objects from library ${this.args.libraryId}...`;
   }
 }
 

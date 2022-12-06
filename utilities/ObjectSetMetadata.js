@@ -10,7 +10,7 @@ const Metadata = require("./lib/concerns/Metadata");
 const ArgMetadata = require("./lib/concerns/ArgMetadata");
 
 class ObjectSetMetadata extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [
         ExistObj,

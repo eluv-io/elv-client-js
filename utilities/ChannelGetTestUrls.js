@@ -11,7 +11,7 @@ const R = require("ramda");
 
 
 class ChannelGetTestUrls extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [Client, ExistObjOrVer],
       options: [

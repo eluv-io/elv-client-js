@@ -9,7 +9,7 @@ const ArgNoWait = require("./lib/concerns/ArgNoWait");
 const ArgType = require("./lib/concerns/ArgType");
 
 class ObjectCreate extends Utility {
-  blueprint() {
+  static blueprint() {
     return {
       concerns: [ArgLibraryId, ArgType, ArgNoWait, ArgMetadata],
       options: [
