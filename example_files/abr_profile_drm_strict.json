@@ -1,6 +1,6 @@
 {
-  "drm_optional": true,
-  "store_clear": true,
+  "drm_optional": false,
+  "store_clear": false,
   "ladder_specs": {
     "{\"media_type\":\"audio\",\"channels\":1}": {
       "rung_specs": [
@@ -1869,18 +1869,73 @@
           "width": 640
         }
       ]
+    },
+    "{\"media_type\":\"video\",\"aspect_ratio_height\":1,\"aspect_ratio_width\":1}": {
+      "rung_specs": [
+        {
+          "bit_rate": 9500000,
+          "height": 1080,
+          "media_type": "video",
+          "pregenerate": true,
+          "width": 1080
+        },
+        {
+          "bit_rate": 4500000,
+          "height": 720,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 720
+        },
+        {
+          "bit_rate": 2000000,
+          "height": 540,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 540
+        },
+        {
+          "bit_rate": 1100000,
+          "height": 432,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 432
+        },
+        {
+          "bit_rate": 810000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 360
+        },
+        {
+          "bit_rate": 520000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 360
+        }
+      ]
     }
   },
   "playout_formats": {
-    "dash-clear": {
-      "drm": null,
+    "dash-widevine": {
+      "drm": {
+        "content_id": "",
+        "enc_scheme_name": "cenc",
+        "license_servers": [],
+        "type": "DrmWidevine"
+      },
       "protocol": {
         "min_buffer_length": 2,
         "type": "ProtoDash"
       }
     },
-    "hls-clear": {
-      "drm": null,
+    "hls-fairplay": {
+      "drm": {
+        "enc_scheme_name": "cbcs",
+        "license_servers": [],
+        "type": "DrmFairplay"
+      },
       "protocol": {
         "type": "ProtoHls"
       }
