@@ -615,7 +615,7 @@ exports.LROStatus = async function({libraryId, objectId, offeringKey="default"})
  * @param {string} objectId - ID of the mezzanine object
  * @param {string} writeToken - Write token for the mezzanine object
  * @param {string=} offeringKey=default - The offering to process
- * @param {function=} preFinalizeFn - A function to call before finalizing changes, to allow further modifications to offering. The function will be invoked with {configUrl, writeToken} to allow access to the draft and MUST NOT finalize the draft.
+ * @param {function=} preFinalizeFn - A function to call before finalizing changes, to allow further modifications to offering. The function will be invoked with {elvClient, nodeUrl, writeToken} to allow access to the draft and MUST NOT finalize the draft.
  * @param {boolean=} preFinalizeThrow - If set to `true` then any error thrown by preFinalizeFn will not be caught. Otherwise, any exception will be appended to the `warnings` array returned after finalization.
  *
  * @return {Promise<Object>} - The finalize response for the mezzanine object, as well as any logs, warnings and errors from the finalization
@@ -670,7 +670,8 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey=
     let preFinalizeWarnings = [];
     if(preFinalizeFn) {
       const params = {
-        configUrl: `${lroDraft.node}config?self&qspace=${this.networkName}`,
+        elvClient: this,
+        nodeUrl: lroDraft.node,
         writeToken: lroDraft.write_token
       };
       if(preFinalizeThrow){

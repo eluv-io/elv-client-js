@@ -583,17 +583,18 @@ exports.ContentObjects = async function({libraryId, filterOptions={}}) {
  * @param {string=} libraryId - ID of the library
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
+ * @param {string=} writeToken - Write token for an object draft -- if supplied, versionHash will be ignored
  *
  * @returns {Promise<Object>} - Description of content object
  */
-exports.ContentObject = async function({libraryId, objectId, versionHash}) {
+exports.ContentObject = async function({libraryId, objectId, versionHash, writeToken}) {
   ValidateParameters({libraryId, objectId, versionHash});
 
-  this.Log(`Retrieving content object: ${libraryId || ""} ${objectId || versionHash}`);
+  this.Log(`Retrieving content object: ${libraryId || ""} ${writeToken || versionHash || objectId}`);
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-  let path = UrlJoin("q", versionHash || objectId);
+  let path = UrlJoin("q", writeToken || versionHash || objectId);
 
   return await this.utils.ResponseToJson(
     this.HttpClient.Request({
