@@ -670,16 +670,18 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
   await Promise.all(
     Object.keys(metadata)
       .filter(key => key.startsWith("eluv.caps.ikms"))
-      .map(async kmsCapKey => await this.DeleteMetadata({
-        libraryId,
-        objectId,
-        writeToken,
-        metadataSubtree: kmsCapKey
-      }))
+      .map(async kmsCapKey =>
+        await this.DeleteMetadata({
+          libraryId,
+          objectId,
+          writeToken,
+          metadataSubtree: kmsCapKey
+        })
+      )
   );
 
   if(permission !== "owner") {
-    await this.SetPermission({objectId, permission, writeToken});
+    await this.CreateEncryptionConk({libraryId, objectId, writeToken, createKMSConk: true});
   }
 
   return await this.FinalizeContentObject({libraryId, objectId, writeToken});
@@ -1381,7 +1383,7 @@ exports.CreateLinks = async function({
         if(!link["."]) link["."] = {};
 
         if(!linkMetadata["."]["authorization"]) {
-          link["."]["authorization"] = await this.authClient.GenerateSignedLinkToken({
+          link["."]["authorization"] = await this.GenerateSignedLinkToken({
             containerId: info.authContainer,
             versionHash: info.targetHash,
             link: `./${type}/${authTarget}`
