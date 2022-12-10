@@ -1,4 +1,5 @@
 // Create new production master from specified file(s)
+const path = require("path");
 
 const {ModOpt, StdOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
@@ -65,7 +66,8 @@ class ObjectAddFiles extends Utility {
       libraryId,
       noWait,
       objectId,
-      writeToken
+      writeToken,
+      commitMessage: `Add file(s)${this.args.s3Reference ? " as S3 references" : ""}: ${fileInfo.map(f=>path.basename(f).join(", "))}`
     });
 
     logger.logList(
@@ -75,7 +77,7 @@ class ObjectAddFiles extends Utility {
       ""
     );
 
-    logger.data("version_hash", hash);
+    logger.data("versionHash", hash);
   }
 
   header() {

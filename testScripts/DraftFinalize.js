@@ -26,10 +26,10 @@ class DraftFinalize extends ScriptBase {
     });
 
     const result = await nodeResolver.run();
-    if(result.exit_code !== 0) throw Error("Failed to determine node for write token");
-    if(!result.node_info) throw Error("Null node_info returned for write token");
+    if(result.exitCode !== 0) throw Error("Failed to determine node for write token");
+    if(!result.data.nodeInfo) throw Error("Null node_info returned for write token");
 
-    const fabricInfo = result.node_info.fab[0];
+    const fabricInfo = result.data.nodeInfo.fab[0];
     const url = new URL("https://dummy");
     url.protocol = fabricInfo.scheme;
     url.hostname = fabricInfo.host;

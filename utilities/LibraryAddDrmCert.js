@@ -42,10 +42,11 @@ class LibraryAddDrmCert extends Utility {
       libraryId: libraryContainerLibId,
       metadata: revisedMetadata,
       noWait,
-      objectId
+      objectId,
+      commitMessage: "Add DRM cert to library metadata"
     });
 
-    logger.data("version_hash", latestHash);
+    logger.data("versionHash", latestHash);
     logger.log(`Library new version hash ${latestHash}`);
   }
 

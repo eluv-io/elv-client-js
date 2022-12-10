@@ -108,7 +108,7 @@ module.exports = class Utility {
     this.args = this.context.args;
     this.env = this.context.env;
     this.logger = this.concerns.Logger;
-    this.logger.data("args", this.args);
+    this.logger.args(this.args);
   }
 
   blueprint() {
@@ -141,22 +141,21 @@ module.exports = class Utility {
         this.footer(),
         ""
       );
-      // this.logger.data("successValue", successValue);
-      this.logger.data("exit_code", 0);
-      this.logger.data("success_value", successValue);
+      this.logger.exitCode(0);
+      this.logger.successValue(successValue);
       this.logger.outputJSON();
-      return this.logger.dataGet();
+      return this.logger.allInfoGet();
     }, failureReason => {
       this.logger.error(failureReason);
       this.logger.log();
       if(this.env.ELV_THROW_ON_ERROR) throw Error(failureReason);
       if(!process.exitCode) process.exitCode = 1;
-      this.logger.data("exit_code", process.exitCode);
-      this.logger.data("failure_reason", failureReason);
+      this.logger.exitCode(process.exitCode);
+      this.logger.failureReason(failureReason);
       this.logger.outputJSON();
       this.logger.error("FAILED!");
       this.logger.log("");
-      return this.logger.dataGet();
+      return this.logger.allInfoGet();
     });
   }
 };

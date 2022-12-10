@@ -21,7 +21,7 @@ class WriteTokenNode extends Utility {
   async body() {
     const {writeToken} = this.args;
     const nodeInfo = await this.concerns.Draft.nodeInfo({writeToken});
-    this.logger.data("node_info", nodeInfo);
+    this.logger.data("nodeInfo", nodeInfo);
     this.logger.logObject(nodeInfo);
   }
 

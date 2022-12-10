@@ -46,7 +46,7 @@ class ObjectSetPermission extends Utility {
       logger.log("Previous version hash: " + prevHash );
       logger.log("New version hash: " + newHash );
     }
-    logger.data("version_hash", newHash);
+    logger.data("versionHash", newHash);
   }
 
   header() {

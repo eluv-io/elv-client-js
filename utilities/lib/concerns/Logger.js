@@ -136,6 +136,10 @@ const New = (context) => {
   // interface: Logger
   // -------------------------------------
 
+  const allInfoGet = () => output;
+
+  const args = (obj) => output.args = obj;
+
   // set/replace data for a a key in JSON output @ /data/(key)/
   const data = (key, obj) => output.data[key] = obj;
 
@@ -165,6 +169,10 @@ const New = (context) => {
     }
   };
 
+  const exitCode = (code) => output.exitCode = code;
+
+  const failureReason = val => output.failureReason = val;
+
   const logList = (...args) => R.map(log, args);
 
   const logObject = obj => logList(...(JSON.stringify(obj, null, 2).split("\n")));
@@ -189,21 +197,28 @@ const New = (context) => {
     }
   };
 
+  const successValue = val => output.successValue = val;
+
   const warnList = (...args) => R.map(warn, args);
 
   // instance interface
   return {
+    allInfoGet,
+    args,
     data,
     dataConcat,
     dataGet,
     error,
     errorList,
     errorsAndWarnings,
+    exitCode,
+    failureReason,
     log,
     logList,
     logObject,
     logTable,
     outputJSON,
+    successValue,
     warn,
     warnList
   };

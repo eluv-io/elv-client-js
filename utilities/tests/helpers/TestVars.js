@@ -13,11 +13,33 @@ const {
 
 const {cloneMerge} = require("./immutable");
 const {ELV_CLIENT_DIR} = require("./paths");
+const redact = require("./redact");
+
+const FORBIDDEN_KEYS = [
+  "defaults",
+  "ELV_CLIENT_DIR",
+  "presets"
+];
+
+const FORBIDDEN_PRESET_NAMES = [
+  "defaults",
+  "ELV_CLIENT_DIR",
+  "include_presets",
+  "presets"
+];
+
+const FORBIDDEN_SUBST_VAR_NAMES = [
+  "defaults",
+  "ELV_CLIENT_DIR",
+  "include_presets",
+  "presets"
+];
+
 
 // Regex to substitute $ELV_CLIENT_DIR
 // (but not e.g. $ELV_CLIENT_DIR_2, $ELV_CLIENT_DIR-alternate etc.)
 // 2 dollar signs in a row indicate escaped $ to include in final output
-const ELV_CLIENT_DIR_RE = /(?:[^$]|(\$\$)+|^)(\$ELV_CLIENT_DIR)(?=[^A-Za-z0-9_-]|-+([^A-Za-z0-9_-]|$)|$)/g;
+// const ELV_CLIENT_DIR_RE = /(?:[^$]|(\$\$)+|^)(\$ELV_CLIENT_DIR)(?=[^A-Za-z0-9_-]|-+([^A-Za-z0-9_-]|$)|$)/gm;
 
 // Return a copy of .presets from test-vars file with the named preset resolved (e.g. 'include_presets' converted
 // to variables, which in turn may be overridden if the named preset also defines variables with the same name(s))
@@ -59,7 +81,7 @@ const resolveNamedPreset = ({presetName, presets, visited = []}) => {
   // copy other entries besides 'include_presets'
   presetResolvedValues = cloneMerge(
     presetResolvedValues,
-    substituteElvClientDir(R.dissoc("include_presets", presetDef))
+    R.dissoc("include_presets", presetDef)
   );
 
   return cloneMerge(results, {[presetName]: presetResolvedValues});
@@ -107,19 +129,13 @@ const resolveIncludes = (itemDef, resolvedPresets) => {
   return resolvedItemDef;
 };
 
-const substituteElvClientDir = R.map(
-  val => kindOf(val) === "string"
-    ? val.replaceAll(ELV_CLIENT_DIR_RE, ELV_CLIENT_DIR)
-    : val
-);
-
 const substituteDollars = R.map(
   val => kindOf(val) === "string"
     ? val.replaceAll("$$", "$")
     : val
 );
 
-const substituteOneVarXrefs = ({varName, finalVars, visited = []}) => {
+const substituteOneValueXrefs = ({varName, oneValue, finalVars, visited, debugLogger})=> {
   // Regex to match substitution variables:
   //   must start with "$"
   //   the rest must be either letters, digits, dash ("-") or underscore ("_")
@@ -136,13 +152,77 @@ const substituteOneVarXrefs = ({varName, finalVars, visited = []}) => {
   // note also that "$defaults", "$presets", and "$include_presets" are illegal, but those are enforced outside of regex
   //
   // 2 dollar signs in a row indicate escaped dollar sign to include in final output, ignore these
-  const SUBST_VAR_RE = /(?:[^$]|(\$\$)+|^)\$[A-Z0-9_]+([A-Z0-9_-]*[A-Z0-9_]+)*/gi;
+  const SUBST_VAR_RE = /(?<=[^$]|(\$\$)+|^)\$[A-Z0-9_]+([A-Z0-9_-]*[A-Z0-9_]+)*/gmi;
+
+  const dl = debugLogger;
+
+  let workingCopy = R.clone(finalVars);
+  dl && dl.debug(`searching for $ expressions in value from ${varName}`);
+  let finalValPieces = [oneValue];
+  let done = false;
+  while(!done) {
+    const match = SUBST_VAR_RE.exec(oneValue);
+    if(match === null) {
+      done = true;
+    } else {
+      const foundVarExpression = match[0];
+      dl && dl.debug(`found ${foundVarExpression}`);
+
+      // remove dollar sign to get key
+      const foundVarName = foundVarExpression.slice(1);
+
+      if(!/^[a-z0-9_-]+$/i.test(foundVarName)) throw Error(`Internal error processing substitution variables - bad match '${foundVarExpression}'`);
+
+      const matchIndex = SUBST_VAR_RE.lastIndex;
+      const matchStart = matchIndex - foundVarExpression.length;
+      // process any substitution variables contained in finalVars[foundVarName] if needed
+      workingCopy = substituteOneVarXrefs({
+        varName: foundVarName,
+        finalVars: workingCopy,
+        visited,
+        debugLogger
+      });
+      // chop up the last element of finalValPieces to substitute in the value
+      const foundVarValue = workingCopy[foundVarName];
+      if(kindOf(foundVarValue) === "null") throw Error(`substitution variable ${foundVarExpression} contains a null value (used in variable: ${varName})`);
+
+      const lastPiece = finalValPieces.pop();
+      const charsAlreadyProcessed = oneValue.length - lastPiece.length;
+      // push remaining unprocessed chars in varVal that are before the found substitution variable (unless empty string)
+      const precedingChars = lastPiece.slice(
+        0,
+        matchStart - charsAlreadyProcessed
+      );
+      if(precedingChars.length > 0) finalValPieces.push(precedingChars);
+      // push substituted value (might be an array)
+      finalValPieces.push(foundVarValue);
+      // push remaining chars in varVal after the found substitution variable
+      const succeedingChars = lastPiece.slice(
+        foundVarName.length + 1 + matchStart - charsAlreadyProcessed,
+        oneValue.length
+      );
+      if(succeedingChars.length > 0) finalValPieces.push(succeedingChars);
+    }
+  }
+  // done matching
+  dl && dl.debug(`finished processing $ expressions for value from ${varName}`);
+  // check if we have mix of strings an arrays
+  const kinds = R.uniq(finalValPieces.map(kindOf));
+  if(kinds.length > 1) throw Error(`variable ${varName} contains a mix of strings and arrays after processing $ substitutions`);
+
+  if(kinds[0]==="array") return [finalValPieces.flat(), workingCopy];
+
+  return [finalValPieces.join(""), workingCopy];
+};
+
+const substituteOneVarXrefs = ({varName, finalVars, visited = [], debugLogger}) => {
+
+  const dl = debugLogger;
 
   assertString("variable name", varName);
   if(["defaults", "include_presets", "presets"].includes(varName)) throw Error(`Illegal variable name '${varName}'.`);
 
   assertObject("vars", finalVars);
-  if(!finalVars.hasOwnProperty(varName)) throw Error(`Variable not found: ${varName}`);
 
   assertArray("visited", visited);
 
@@ -150,53 +230,56 @@ const substituteOneVarXrefs = ({varName, finalVars, visited = []}) => {
   let results = R.clone(finalVars);
 
   if(visited.includes(varName)) throw Error(`substituteOneVarXrefs(): circular reference: ${[visited, varName].flat().join(",")}`);
-  const varVal = results[varName];
-  if(kindOf(varVal) === "null") return results;
 
-  let finalValPieces = [varVal];
-  let done = false;
-  while(!done) {
-    const match = SUBST_VAR_RE.exec(varVal);
-    if(match === null) {
-      done = true;
-    } else {
-      const foundVarExpression = match[0];
-      // remove dollar sign to get key
-      const foundVarName = foundVarExpression.slice(1);
-      const matchIndex = SUBST_VAR_RE.lastIndex;
-      const matchStart = matchIndex - foundVarExpression.length;
-      // process any substitution variables contained in finalVars[foundVarName] if needed
-      results = substituteOneVarXrefs({
-        varName: foundVarName,
+  if(!results.hasOwnProperty(varName) && varName !== "ELV_CLIENT_DIR") throw Error(`Variable not found: ${varName}`);
+
+  const varVal = varName === "ELV_CLIENT_DIR"
+    ? ELV_CLIENT_DIR.replaceAll("$", "$$")
+    : results[varName];
+
+  if(dl){
+    const redacted = redact({[varName]: varVal});
+    dl.debug(`variable value: ${JSON.stringify(redacted[varName])}`);
+  }
+
+  if(kindOf(varVal) === "null") {
+    dl && dl.debug("value is null, no substitution needed");
+    return results;
+  }
+
+  if(kindOf(varVal)==="array"){
+    dl && dl.debug("value is an array, processing each element...");
+    let newVal = [];
+    let newElem = null;
+    for(const elem of varVal){
+      dl && dl.debug(`processing array item '${elem}'`);
+      [newElem, results] = substituteOneValueXrefs({
+        varName,
+        oneValue: elem,
         finalVars: results,
-        visited: [visited, varName].flat()
+        debugLogger
       });
-      // chop up the last element of finalValPieces to substitute in the value
-      const foundVarValue = results[foundVarName];
-      if(kindOf(foundVarValue) === "null") throw Error(`substitution variable ${foundVarExpression} contains a null value (used in variable: ${varName})`);
-
-      const lastPiece = finalValPieces.pop();
-      const charsAlreadyProcessed = varVal.length - lastPiece.length;
-      // push remaining unprocessed chars in varVal that are before the found substitution variable (might be empty string)
-      finalValPieces.push(
-        lastPiece.slice(
-          0,
-          matchStart - charsAlreadyProcessed
-        )
-      );
-      // push substituted value
-      finalValPieces.push(foundVarValue);
-      // push remaining chars in varVal after the found substitution variable
-      finalValPieces.push(
-        lastPiece.slice(
-          foundVarName.length + 1 + matchStart - charsAlreadyProcessed,
-          varVal.length
-        )
-      );
+      dl && dl.debug(`array item after substitutions: '${newElem}'`);
+      newVal.push(newElem);
+    }
+    results[varName] = newVal;
+    dl && dl.debug(`array after substitutions: '${JSON.stringify(newVal)}'`);
+  } else {
+    let newVal = null;
+    [newVal, results] = substituteOneValueXrefs({
+      varName,
+      oneValue: varVal,
+      finalVars: results,
+      debugLogger
+    });
+    results[varName] = newVal;
+    if(dl){
+      const redacted = redact({[varName]: newVal});
+      dl.debug(`variable value after substitutions: ${JSON.stringify(redacted[varName])}`);
     }
   }
-  // done processing
-  results[varName] = finalValPieces.join("");
+
+
   return R.clone(results);
 };
 
@@ -205,15 +288,29 @@ const substituteOneVarXrefs = ({varName, finalVars, visited = []}) => {
 // Recursive.
 // Returns a clone of object with $var_name references within values replaced by corresponding entry under that key (without the leading '$').
 // e.g. "libraryId" : "$mez_lib_id" will be converted to "libraryId": finalVars.mez_lib_id
-const substituteVarXrefs = finalVars => {
+const substituteVarXrefs = (finalVars, debugLogger = null) => {
+  const dl = debugLogger;
+  dl && dl.group("SUBSTITUTE VARIABLE CROSS-REFERENCES");
   let workingCopy = R.clone(finalVars);
+  dl && dl.debug("validating variable set");
   validateItemDef(workingCopy);
   for(const varName of Object.keys(workingCopy)) {
+    if(dl){
+      dl.debug(`processing ${varName}`);
+      const redacted = redact({[varName]:workingCopy[varName]});
+      dl.debug(`initial value ${JSON.stringify(redacted[varName])}`);
+    }
     workingCopy = substituteOneVarXrefs({
       varName,
-      finalVars: workingCopy
+      finalVars: workingCopy,
+      debugLogger
     });
+    if(dl){
+      const redacted = redact({[varName]:workingCopy[varName]});
+      dl.debug(`final value for ${varName}: ${JSON.stringify(redacted[varName])}`);
+    }
   }
+  dl && dl.groupEnd();
   return substituteDollars(workingCopy);
 };
 
@@ -221,7 +318,12 @@ const validateItemDef = resolvedItemDef => {
   for(const [varName, varVal] in resolvedItemDef) {
     assertString("variable name", varName);
     if(["defaults", "presets", "include_presets"].includes(varName)) throw Error(`Illegal variable name: ${varName}`);
-    if(!["null", "string"].includes(kindOf(varVal))) throw Error(`Variable values can only be strings or null, found: ${kindOf(varVal)} (variable: ${varName}, value: ${varVal})`);
+    if(!["null", "string", "array"].includes(kindOf(varVal))) throw Error(`Variable values can only be strings, arrays of strings, or null, found: ${kindOf(varVal)} (variable: ${varName}, value: ${varVal})`);
+    if(kindOf(varVal)==="array"){
+      for(const elem of varVal){
+        if(kindOf(elem) !== "string") throw Error(`Variable values that are arrays can only contain strings, found: ${kindOf(elem)} (variable: ${varName}, array item: ${elem})`);
+      }
+    }
   }
 };
 
@@ -248,7 +350,7 @@ const varsFromFile = (varFilePath, debugLogger = null) => {
 
   if(dl){
     dl.group(`VARIABLE DEFINITIONS FROM ${varFileFullPath}`);
-    dl.debug(JSON.stringify(varFile,null,2));
+    dl.debugJson(varFile);
     dl.groupEnd();
   }
 
@@ -262,7 +364,7 @@ const varsFromFile = (varFilePath, debugLogger = null) => {
 
   if(dl){
     dl.group("PRESETS AFTER RESOLVING ALL 'include_presets' ENTRIES");
-    dl.debug(JSON.stringify(presets,null,2));
+    dl.debugJson(presets);
     dl.groupEnd();
   }
 
@@ -270,11 +372,11 @@ const varsFromFile = (varFilePath, debugLogger = null) => {
   assertObject("defaults", varFile.defaults);
 
   // Process '/defaults/include_presets' and also replace "$ELV_CLIENT_DIR" with ELV_CLIENT_DIR
-  const defaults = substituteElvClientDir(resolveIncludes(varFile.defaults, presets));
+  const defaults = resolveIncludes(varFile.defaults, presets);
 
   if(dl){
     dl.group("DEFAULTS AFTER RESOLVING 'include_presets'");
-    dl.debug(JSON.stringify(defaults,null,2));
+    dl.debugJson(defaults);
     dl.groupEnd();
 
     dl.groupEnd();
@@ -285,7 +387,6 @@ const varsFromFile = (varFilePath, debugLogger = null) => {
 
 module.exports = {
   resolveIncludes,
-  substituteElvClientDir,
   substituteVarXrefs,
   validateItemDef,
   varsFromFile

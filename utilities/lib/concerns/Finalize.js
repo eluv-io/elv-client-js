@@ -11,13 +11,14 @@ const blueprint = {
 const New = context => {
   const logger = context.concerns.Logger;
 
-  const finalize = async ({libraryId, noWait, objectId, writeToken}) => {
+  const finalize = async ({libraryId, noWait, objectId, writeToken, commitMessage}) => {
     const client = await context.concerns.Client.get();
     logger.log("Finalizing object...");
     const finalizeResponse = await client.FinalizeContentObject({
       libraryId,
       objectId,
-      writeToken
+      writeToken,
+      commitMessage
     });
     const latestHash = finalizeResponse.hash;
     logger.log(`Finalized, new version hash: ${latestHash}`);
@@ -37,7 +38,7 @@ const New = context => {
     while(!publishFinished) {
       latestObjectData = await client.ContentObject({libraryId, objectId});
       if(latestObjectData.hash === latestHash) {
-        logger.log("New object version now available");
+        logger.log(`New object version now available: ${latestHash}`);
         publishFinished = true;
       } else {
         logger.log("  new version not available yet, waiting 15 seconds...");

@@ -69,9 +69,10 @@ class OfferingUpdateCrfBitrate extends Utility {
     const newHash = await this.concerns.Metadata.write({
       libraryId,
       metadata: revisedMetadata,
-      objectId
+      objectId,
+      commitMessage: `Update CRF bitrate for video stream(s) in offering '${offeringKey}'`
     });
-    logger.data("version_hash", newHash);
+    logger.data("versionHash", newHash);
     logger.log("New version hash: " + newHash);
   }
 

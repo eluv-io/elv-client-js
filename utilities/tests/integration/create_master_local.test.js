@@ -9,23 +9,22 @@ module.exports = class Test extends IntegrationTest {
     const vars = this.vars;
     const resultCreate = await this.runUtility("ProductionMasterCreate", vars);
 
-    assert.isString(resultCreate.version_hash);
-    assert.isNotEmpty(resultCreate.version_hash);
+    const masterHash = resultCreate.data.versionHash;
+    assert.isString(masterHash);
+    assert.isNotEmpty(masterHash);
 
     // get metadata from the newly created production master
-    const resultMeta = await this.runUtility(
-      "ObjectGetMetadata",
-      vars,
-      {
-        outfile: "/dev/null", // send metadata output to /dev/null to avoid spamming screen
-        overwrite: "true",
-        subtree: "/production_master",
-        versionHash: resultCreate.version_hash
+    const resultMeta = await this.runTest({
+        testPath: "get_metadata_silent.test.js",
+        addlVars: {
+          subtree: "/production_master",
+          versionHash: masterHash
+        }
       }
     );
 
     // verify that default variant exists
-    const defaultVariant = resultMeta.metadata.variants.default;
+    const defaultVariant = resultMeta.data.metadata.variants.default;
     assert.isObject(defaultVariant);
     assert.isNotEmpty(defaultVariant);
 

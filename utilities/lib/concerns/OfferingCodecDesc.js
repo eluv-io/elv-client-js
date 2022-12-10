@@ -94,7 +94,10 @@ const New = context => {
       metadata,
       objectId,
       subtree,
-      writeToken
+      writeToken,
+      commitMessage: "Set codec descriptor strings for video stream(s) " + (offeringKey
+        ? `in offering '${offeringKey}'`
+        : "in all offerings")
     });
   };
 

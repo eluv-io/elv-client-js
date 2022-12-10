@@ -150,7 +150,7 @@ const Status = async (objectId, offeringKey="default", finalize, noWait, force, 
 
     if(finalize) {
       if(!Object.values(status).every(job => job.run_state === "finished")) {
-        console.error("\nError finalizing mezzanine: Not all jobs not finished\n");
+        console.error("\nError finalizing mezzanine: Not all jobs marked 'finished'\n");
         console.error("Current Status:");
         console.error(JSON.stringify(status, null, 2));
         process.exitCode = 1;

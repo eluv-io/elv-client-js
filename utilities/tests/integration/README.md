@@ -100,6 +100,11 @@ Variable values must be either strings or null. Even numeric and boolean values 
 A `null` value indicates that the variable should not be used, and this
 allows overriding defaults or selectively removing some items from a preset after including it.
 
+NOTE: values used as command line options are not subject to shell expansion - e.g. an entry like `files: "~/myFile.mp4"` will not have the tilde
+converted to your home directory. On the other hand, you do not need to escape spaces or special characters like the pipe symbol `(|)`. 
+You will, however, need to escape quotes `(")` and dollar signs `($)`. For quotes, use backslash + quote `\"`, and for dollar
+signs use two dollar signs `$$`. (See the **VARIABLE SUBSTITUTIONS** section below for more information on how dollar signs are used.)
+
 #### THE include_presets "VARIABLE"
 
 Any **preset** can include other presets by listing them in an array under the special name `"include_presets"`. For example,
@@ -181,7 +186,7 @@ The simplest test just executes a single script in `/elv-client-js/utilities` to
 below imports the `"ingest_master_local"` preset, which will get merged into the items defined by the `"defaults"` 
 section of the test-vars file.
 
-This provides all the information needed to run `/elv-client-js/utilities/ProductionMasterCreate.js`:
+This provides all the information needed to run `/elv-client-js/utilities/ProductionMasterCreate.js`. If you feed
 
 ```js
 const IntegrationTest = require("../helpers/IntegrationTest");
@@ -212,4 +217,6 @@ node RunTest.js \
 
 _(to write)_
 
+
+### USING VARIABLES IN TESTS
 

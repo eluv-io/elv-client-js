@@ -98,7 +98,7 @@ class LibraryListObjects extends Utility {
       formattedObjList.push(formattedObj);
     }
 
-    logger.data("object_list", formattedObjList);
+    logger.data("objectList", formattedObjList);
 
     logger.logTable({list: formattedObjList});
     if(formattedObjList.length === 0) logger.warn("No visible objects found using supplied private key.");

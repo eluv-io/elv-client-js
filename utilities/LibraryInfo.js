@@ -21,7 +21,7 @@ class LibraryInfo extends Utility {
   async body() {
     const logger = this.logger;
     const obj = await this.concerns.ArgLibraryId.libInfo();
-    logger.data("library_info", obj);
+    logger.data("libraryInfo", obj);
     if(this.args.outfile) {
       this.concerns.ArgOutfile.writeJson({obj});
     } else {

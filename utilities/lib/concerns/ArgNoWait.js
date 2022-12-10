@@ -19,13 +19,14 @@ const New = context => {
   const logger = context.concerns.Logger;
   const {noWait} = context.args;
 
-  const finalize = async ({libraryId, objectId, writeToken}) => {
+  const finalize = async ({libraryId, objectId, writeToken, commitMessage}) => {
     if(noWait) logger.log("Finalize object (--no-wait)");
     return await context.concerns.Finalize.finalize({
       libraryId,
       noWait,
       objectId,
       writeToken,
+      commitMessage
     });
   };
 

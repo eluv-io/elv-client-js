@@ -150,7 +150,7 @@ const tapJson = R.tap(dumpJson);
 
 // logging for type: Result
 
-const formattedInspect = (result) => result.inspect().split("\n").map((x) => x.trim()).join(" ");
+const formattedInspect = result => result.inspect().split("\n").map((x) => x.trim()).join(" ");
 // eslint-disable-next-line no-console
 const dumpResult = R.pipe(formattedInspect, console.log);
 

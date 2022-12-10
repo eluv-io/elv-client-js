@@ -13,12 +13,13 @@ const blueprint = {
 const New = context => {
   const logger = context.concerns.Logger;
 
-  const finalize = async ({libraryId, noWait, objectId, writeToken}) => {
+  const finalize = async ({libraryId, noWait, objectId, writeToken, commitMessage}) => {
     return await context.concerns.Finalize.finalize({
       libraryId,
       noWait,
       objectId,
-      writeToken
+      writeToken,
+      commitMessage
     });
   };
 
@@ -35,7 +36,7 @@ const New = context => {
 
   // if writeToken passed in, don't finalize
   // if writeToken not passed in, get one and finalize after
-  const writeMetadata =  async ({libraryId, metadata, metadataSubtree, noWait, objectId, writeToken}) => {
+  const writeMetadata =  async ({libraryId, metadata, metadataSubtree, noWait, objectId, writeToken, commitMessage = `write metadata to ${metadataSubtree || "/"}`}) => {
     const writeTokenSupplied = kindOf(writeToken) === "string";
     if(!writeTokenSupplied ) writeToken = await getWriteToken({libraryId, objectId});
 
@@ -55,7 +56,8 @@ const New = context => {
         libraryId,
         noWait,
         objectId,
-        writeToken
+        writeToken,
+        commitMessage
       });
     }
 

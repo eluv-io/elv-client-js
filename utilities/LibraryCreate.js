@@ -49,7 +49,7 @@ class LibraryCreate extends Utility {
     });
 
     logger.log(`New library ID: ${response}`);
-    logger.data("library_id", response);
+    logger.data("libraryId", response);
   }
 
   header() {

@@ -188,9 +188,9 @@ class ChannelCreate extends Utility {
 
     logger.log("");
     logger.log(`New object ID: ${objectId}`);
-    logger.data("object_id", objectId);
+    logger.data("objectId", objectId);
     logger.log("New version hash: " + versionHash);
-    logger.data("version_hash", versionHash);
+    logger.data("versionHash", versionHash);
   }
 
   header() {

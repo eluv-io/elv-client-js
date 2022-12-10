@@ -165,8 +165,8 @@ class ChannelVaLOfferingSetStart extends Utility {
       rep: "channel/options.json"
     });
 
-    logger.data("version_hash", versionHash);
-    logger.data("options_url", url);
+    logger.data("versionHash", versionHash);
+    logger.data("optionsUrl", url);
 
     logger.log();
     logger.log(`Version hash: ${versionHash}`);

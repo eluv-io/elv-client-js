@@ -43,15 +43,15 @@ class ObjectPruneVersions extends Utility {
 
     const versionList = await this.concerns.ExistObj.versionList();
     const versionCount = versionList.length;
-    this.logger.data("original_version_count", versionCount);
+    this.logger.data("originalVersionCount", versionCount);
 
     if(versionCount < keep) throw Error(`--keep ${keep} specified but only ${versionCount} version(s) found.`);
 
-    this.logger.data("deleted_version_count", 0);
-    this.logger.data("deleted_version_hashes", []);
+    this.logger.data("deletedVersionCount", 0);
+    this.logger.data("deletedVersionHashes", []);
     if(versionCount === keep) {
       this.logger.warn(`Object current version count (${versionCount}) same as --keep, no versions deleted.`);
-      this.logger.data("deleted_version_count", 0);
+      this.logger.data("deletedVersionCount", 0);
     } else {
       const numberToDelete = versionCount - keep;
       this.logger.log(`Object current version count = ${versionCount}, deleting ${numberToDelete} ${keepOld ? "newest" : "oldest"} version(s)...`);
@@ -64,8 +64,8 @@ class ObjectPruneVersions extends Utility {
       for(const versionHash of hashesToDelete) {
         await this.concerns.Version.del({versionHash});
         deleteCount++;
-        this.logger.data("deleted_version_count", deleteCount);
-        this.logger.dataConcat("deleted_version_hashes", versionHash);
+        this.logger.data("deletedVersionCount", deleteCount);
+        this.logger.dataConcat("deletedVersionHashes", versionHash);
       }
     }
   }

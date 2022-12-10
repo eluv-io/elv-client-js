@@ -71,9 +71,10 @@ class ObjectMoveMetadata extends Utility {
     const newHash = await this.concerns.Metadata.write({
       libraryId,
       metadata: revisedMetadata,
-      objectId
+      objectId,
+      commitMessage: `Move metadata from ${oldPath} to ${newPath}`
     });
-    this.logger.data("version_hash", newHash);
+    this.logger.data("versionHash", newHash);
   }
 
   header() {

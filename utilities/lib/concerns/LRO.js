@@ -22,6 +22,7 @@ const STATE_FINISHED = "finished";
 const STATE_RUNNING = "running";
 const STATE_STALLED = "stalled";
 const STATE_BAD_PCT = "bad_percentage";
+const STATE_CANCELLED = "cancelled by user";
 const STATE_ERROR = "error";
 
 const New = context => {
@@ -33,7 +34,8 @@ const New = context => {
     [STATE_RUNNING]: 2,
     [STATE_STALLED]: 3,
     [STATE_BAD_PCT]: 4,
-    [STATE_ERROR]: 5
+    [STATE_CANCELLED]: 5,
+    [STATE_ERROR]: 6
   };
 
   const estJobTotalSeconds = (duration_ms, progress_pct) => duration_ms / (10 * progress_pct); // === (duration_ms/1000) / (progress_pct/100)
@@ -77,6 +79,19 @@ const New = context => {
 
   const singleLroStatus = async ({objectId, libraryId, lroId, writeToken}) => {
     const client = await context.concerns.Client.get();
+
+    logger.log("Checking that write token exists...");
+
+    // verify that write token can be found
+    try {
+      await client.ContentObject({
+        objectId,
+        libraryId,
+        writeToken
+      });
+    } catch(e) {
+      throw Error(`Failed to find write token ${writeToken}, has draft already been finalized? (${kindOf(e)})`);
+    }
 
     return await client.CallBitcodeMethod({
       objectId,

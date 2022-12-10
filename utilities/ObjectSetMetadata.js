@@ -7,6 +7,7 @@ const Utility = require("./lib/Utility");
 
 const ExistObj = require("./lib/concerns/ExistObj");
 const Metadata = require("./lib/concerns/Metadata");
+const ArgCommitMsg = require("./lib/concerns/ArgCommitMsg");
 const ArgMetadata = require("./lib/concerns/ArgMetadata");
 
 class ObjectSetMetadata extends Utility {
@@ -15,7 +16,8 @@ class ObjectSetMetadata extends Utility {
       concerns: [
         ExistObj,
         Metadata,
-        ArgMetadata
+        ArgMetadata,
+        ArgCommitMsg
       ],
       options: [
         NewOpt("path", {
@@ -33,7 +35,7 @@ class ObjectSetMetadata extends Utility {
 
   async body() {
     const logger = this.logger;
-    const {path} = this.args;
+    const {path, commitMsg} = this.args;
 
     // Check that path is a valid path string
     Metadata.validatePathFormat({path});
@@ -61,9 +63,10 @@ class ObjectSetMetadata extends Utility {
     const newHash = await this.concerns.Metadata.write({
       libraryId,
       metadata: revisedMetadata,
-      objectId
+      objectId,
+      commitMessage: commitMsg
     });
-    this.logger.data("version_hash", newHash);
+    this.logger.data("versionHash", newHash);
   }
 
   header() {

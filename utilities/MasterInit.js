@@ -84,7 +84,7 @@ class MasterInit extends Utility {
       }
     }
 
-    this.logger.data("version_hash", versionHash);
+    this.logger.data("versionHash", versionHash);
     this.logger.logList(
       "",
       "New version hash: " + versionHash,

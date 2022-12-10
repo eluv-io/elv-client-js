@@ -72,7 +72,7 @@ class MezzanineJobStatus extends Utility {
 
       status_summary = lro.statusSummary(statusMap);
 
-      logger.data("status_summary", status_summary);
+      logger.data("statusSummary", status_summary);
 
       logger.logList(
         "",
@@ -112,7 +112,7 @@ class MezzanineJobStatus extends Utility {
         `  Version Hash: ${latestHash}`,
         ""
       );
-      logger.data("version_hash", latestHash);
+      logger.data("versionHash", latestHash);
       logger.data("finalized", true);
 
       await this.concerns.ArgNoWait.waitUnlessNo({libraryId, objectId, latestHash});

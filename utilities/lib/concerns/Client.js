@@ -42,52 +42,80 @@ const New = (context) => {
   let configUrl = context.args.configUrl || context.env.FABRIC_CONFIG_URL;
   // strip beginning/end quotes if included
   if(/^".+"$/.test(configUrl)) {
-    configUrl = configUrl.slice(1,-1);
+    configUrl = configUrl.slice(1, -1);
   }
   const {debug, ethContractTimeout} = context.args;
   const region = context.args.elvGeo;
   const logger = context.concerns.Logger;
   const privateKey = context.env.PRIVATE_KEY;
-  let elvClient = null;
+  let elvClient = null; // cache for default client
+  let altElvClients = {}; // cache for clients requested with specific node url
 
   // -------------------------------------
   // interface: client
   // -------------------------------------
 
-  const get = async () => {
-    // get client if we have not already
-    if(!elvClient) {
-      if(!privateKey) {
-        throw Error("Please set environment variable PRIVATE_KEY");
-      }
-      if(!configUrl) {
-        throw Error("Please either supply --configUrl or set environment variable FABRIC_CONFIG_URL");
-      }
+  const altConfigUrl = nodeUrl => {
+    if(!elvClient) throw Error("cannot request alternate ElvClient without first initializing the main ElvClient instance");
 
-      logger.log(`Initializing elv-client-js... (config URL: ${configUrl})`);
-      elvClient = await ElvClient.FromConfigurationUrl({
-        configUrl,
-        region,
-        ethereumContractTimeout: ethContractTimeout
-      });
+    let url = new URL(nodeUrl);
+    url.pathname = "/config";
+    url.search = `?self&qspace=${elvClient.networkName}`;
+    return url.href;
+  };
 
-      let wallet = elvClient.GenerateWallet();
-      let signer = wallet.AddAccount({privateKey});
-      await elvClient.SetSigner({signer});
+  const get = async (nodeUrl = null) => {
+    let cachedClient = nodeUrl
+      ? altElvClients[nodeUrl]
+      : elvClient;
 
-      elvClient.ToggleLogging(
-        debug,
-        {
-          log: logger.log,
-          error: logger.error,
-        }
-      );
+    if(cachedClient) return cachedClient;
+
+
+    // not found in cache, init new client
+    if(!privateKey) {
+      throw Error("Please set environment variable PRIVATE_KEY");
     }
-    return elvClient;
+    if(!nodeUrl && !configUrl) {
+      throw Error("Please either supply --configUrl or set environment variable FABRIC_CONFIG_URL");
+    }
+
+    const url = nodeUrl
+      ? altConfigUrl(nodeUrl)
+      : configUrl;
+
+    logger.log(`Initializing elv-client-js... (config URL: ${url})`);
+    let client = await ElvClient.FromConfigurationUrl({
+      configUrl: url,
+      region,
+      ethereumContractTimeout: ethContractTimeout
+    });
+
+    let wallet = client.GenerateWallet();
+    let signer = wallet.AddAccount({privateKey});
+    await client.SetSigner({signer});
+
+    client.ToggleLogging(
+      debug,
+      {
+        log: logger.log,
+        error: logger.error,
+      }
+    );
+
+    if(nodeUrl) {
+      altElvClients[nodeUrl] = client;
+    } else {
+      elvClient = client;
+    }
+    return client;
   };
 
   // instance interface
-  return {get};
+  return {
+    altConfigUrl,
+    get
+  };
 };
 
 module.exports = {

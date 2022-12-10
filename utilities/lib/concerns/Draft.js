@@ -115,11 +115,9 @@ const New = context => {
     const tokenInfo = decode({writeToken});
     const client = await context.concerns.Client.get();
 
-    let testUrl = new URL(nodeUrl);
-    testUrl.pathname = "/config";
-    testUrl.search=`?self&qspace=${client.networkName}`;
+    const nodeConfigUrl = context.concerns.Client.altConfigUrl(nodeUrl);
 
-    const response = await fetch(testUrl.href);
+    const response = await fetch(nodeConfigUrl);
     if(!response.ok) throw Error(`Check that nodeUrl '${nodeUrl}' is for network '${client.networkName}'. Node config response: '${response.statusText}'`);
     const body = await response.json();
 

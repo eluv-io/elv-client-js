@@ -51,9 +51,10 @@ class MezUnifyAudioDrmKeys extends Utility {
     const newHash = await this.concerns.Metadata.write({
       libraryId,
       metadata,
-      objectId
+      objectId,
+      commitMessage: "Unify audio DRM keys per offering"
     });
-    this.logger.data("version_hash", newHash);
+    this.logger.data("versionHash", newHash);
     this.logger.log("New version hash: " + newHash);
   }
 

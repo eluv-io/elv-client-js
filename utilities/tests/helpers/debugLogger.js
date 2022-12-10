@@ -1,6 +1,10 @@
 /* eslint-disable no-console */
 
+const redact = require("./redact");
+
 const debug = console.debug;
+
+const debugJson = x => console.debug(JSON.stringify(redact(x),null,2));
 
 const group = (...args) => {
   const combined = args.join(" ");
@@ -17,6 +21,7 @@ const groupEnd = console.groupEnd;
 
 module.exports = {
   debug,
+  debugJson,
   group,
   groupEnd
 };

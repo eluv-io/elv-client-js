@@ -117,7 +117,7 @@ const New = context => {
     });
   };
 
-  const write = async ({libraryId, metadata, noWait, objectId, subtree, writeToken}) => {
+  const write = async ({libraryId, metadata, noWait, objectId, subtree, writeToken, commitMessage}) => {
     return await context.concerns.Edit.writeMetadata({
       libraryId,
       metadata,
@@ -125,6 +125,7 @@ const New = context => {
       objectId,
       metadataSubtree: subtree,
       writeToken,
+      commitMessage
     });
   };
 

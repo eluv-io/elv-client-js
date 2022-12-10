@@ -212,11 +212,11 @@ class MezzanineCreate extends Utility {
     const lroWriteToken = R.path(["lro_draft", "write_token"], startResponse);
     const lroNode = R.path(["lro_draft", "node"], startResponse);
 
-    logger.data("library_id", libraryId);
-    logger.data("object_id", objectId);
-    logger.data("offering_key", offeringKey);
-    logger.data("write_token", lroWriteToken);
-    logger.data("write_node", lroNode);
+    logger.data("libraryId", libraryId);
+    logger.data("objectId", objectId);
+    logger.data("offeringKey", offeringKey);
+    logger.data("writeToken", lroWriteToken);
+    logger.data("writeNode", lroNode);
 
     logger.logList(
       "",
@@ -266,7 +266,7 @@ class MezzanineCreate extends Utility {
       `  Version Hash: ${latestHash}`,
       ""
     );
-    logger.data("version_hash", latestHash);
+    logger.data("versionHash", latestHash);
     await this.concerns.Finalize.waitForPublish({
       latestHash,
       libraryId,

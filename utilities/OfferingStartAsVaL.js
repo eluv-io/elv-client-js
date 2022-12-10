@@ -56,7 +56,7 @@ class OfferingStartAsVaL extends Utility {
       metadata,
       objectId
     });
-    this.logger.data("version_hash", newHash);
+    this.logger.data("versionHash", newHash);
   }
 
   header() {

@@ -41,9 +41,6 @@ class LROStop extends Utility {
 
     this.logger.errorsAndWarnings({errors, warnings});
     if(logs && logs.length > 0) this.logger.logList("Log:", ...logs);
-
-    this.logger.data("data", data);
-    this.logger.log(data);
   }
 
   header() {

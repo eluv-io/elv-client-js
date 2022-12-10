@@ -27,6 +27,7 @@ const cmdLineIntTest = ({debug = false}) => {
     },
     failureReason => {
       console.log(`❌ FAILED: ${formatError(failureReason)}`);
+      if(debug) throw failureReason;
       process.exit(1);
     }
   );

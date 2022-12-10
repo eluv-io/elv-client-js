@@ -15,14 +15,15 @@ const New = context => {
   //
   // };
 
-  const finalize = async ({libraryId, objectId, writeToken}) => {
+  const finalize = async ({libraryId, objectId, writeToken, commitMessage}) => {
     objectId = objectId || context.args.objectId;
     libraryId = libraryId || await context.concerns.FabricObject.libraryId({objectId});
 
     return await context.concerns.FinalizeAndWait.finalize({
       libraryId,
       objectId,
-      writeToken
+      writeToken,
+      commitMessage
     });
   };
 
@@ -40,7 +41,7 @@ const New = context => {
 
   const libraryIdArgPopulate = context.concerns.FabricObject. libraryIdArgPopulate;
 
-  const writeMetadata =  async ({libraryId, metadata, metadataSubtree, objectId, writeToken}) => {
+  const writeMetadata =  async ({libraryId, metadata, metadataSubtree, objectId, writeToken, commitMessage = `write metadata to ${metadataSubtree || "/"}`}) => {
     objectId = objectId || context.args.objectId;
     libraryId = libraryId || await context.concerns.FabricObject.libraryId({objectId});
     writeToken = writeToken || await getWriteToken({libraryId, objectId});
@@ -58,7 +59,8 @@ const New = context => {
     return await finalize({
       libraryId,
       objectId,
-      writeToken
+      writeToken,
+      commitMessage
     });
   };
 

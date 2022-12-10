@@ -21,11 +21,11 @@ class LibraryDeleteAllObjects extends Utility {
 
     const list = await this.concerns.ArgLibraryId.libObjectList();
     logger.log(`Objects found: ${list.length}`);
-    logger.data("objects_found_count", list.length);
+    logger.data("objectsFoundCount", list.length);
 
     let objects_deleted_count = 0;
     const deletedIds = [];
-    logger.data("deleted_object_ids", deletedIds);
+    logger.data("deletedObjectIds", deletedIds);
     const client = await this.concerns.Client.get();
     for(const {objectId} of list) {
       logger.log(`  Deleting ${objectId}...`);
@@ -34,8 +34,8 @@ class LibraryDeleteAllObjects extends Utility {
         objectId
       });
       objects_deleted_count += 1;
-      logger.data("objects_deleted_count", objects_deleted_count);
-      logger.dataConcat("deleted_object_ids", objectId);
+      logger.data("objectsDeletedCount", objects_deleted_count);
+      logger.dataConcat("deletedObjectIds", objectId);
       deletedIds.push(objectId);
     }
   }

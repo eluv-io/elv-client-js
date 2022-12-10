@@ -6,7 +6,6 @@ const kindOf = require("kind-of");
 const R = require("ramda");
 
 const {
-  substituteElvClientDir,
   substituteVarXrefs,
   varsFromFile
 } = require("./TestVars");
@@ -37,11 +36,11 @@ module.exports = class IntegrationTest {
       },
       {},
       this.constructor.testVarPresets
-    );
+    ) || {};
 
     if(this.debug) {
       this.dl.group("MERGED PRESETS INCLUDED BY TEST");
-      this.dl.debug(JSON.stringify(this.varsFromPresets, null, 2));
+      this.dl.debugJson(this.varsFromPresets);
       this.dl.groupEnd();
     }
 
@@ -49,7 +48,7 @@ module.exports = class IntegrationTest {
 
     if(this.debug) {
       this.dl.group("DEFAULTS + MERGED PRESETS");
-      this.dl.debug(JSON.stringify(this.origTestVars, null, 2));
+      this.dl.debugJson(this.origTestVars);
       this.dl.groupEnd();
     }
 
@@ -57,7 +56,7 @@ module.exports = class IntegrationTest {
 
     if(this.debug) {
       this.dl.group("ADDITIONAL VARS PASSED IN TO TEST");
-      this.dl.debug(JSON.stringify(this.addlVars, null, 2));
+      this.dl.debugJson(this.addlVars);
       this.dl.groupEnd();
     }
 
@@ -68,7 +67,7 @@ module.exports = class IntegrationTest {
 
     if(this.debug) {
       this.dl.group("DEFAULTS + MERGED PRESETS + ADDITIONAL VARS");
-      this.dl.debug(JSON.stringify(this.finalTestVars, null, 2));
+      this.dl.debugJson(this.finalTestVars);
       this.dl.groupEnd();
     }
 
@@ -119,11 +118,11 @@ module.exports = class IntegrationTest {
 
     if(this.debug) {
       this.dl.group("VARIABLES FOR UTILITY");
-      this.dl.debug(JSON.stringify(modifiedVars, null, 2));
+      this.dl.debugJson(modifiedVars);
       this.dl.groupEnd();
 
       this.dl.group("ADDITIONAL VARIABLE OVERRIDES PASSED IN TO runUtility()");
-      this.dl.debug(JSON.stringify(addlVarOverrides, null, 2));
+      this.dl.debugJson(addlVarOverrides);
       this.dl.groupEnd();
     }
 
@@ -131,16 +130,16 @@ module.exports = class IntegrationTest {
 
     if(this.debug) {
       this.dl.group("VARIABLES + OVERRIDES");
-      this.dl.debug(JSON.stringify(varsAfterOverrides, null, 2));
+      this.dl.debugJson(varsAfterOverrides);
       this.dl.groupEnd();
     }
 
     // process final variable cross-reference substitutions
-    const varsAfterSubs = substituteVarXrefs(substituteElvClientDir(varsAfterOverrides));
+    const varsAfterSubs = substituteVarXrefs(varsAfterOverrides, this.dl);
 
     if(this.debug) {
       this.dl.group("AFTER PROCESSING $ VARIABLE SUBSTITUTIONS (VARIABLES + OVERRIDES)");
-      this.dl.debug(JSON.stringify(varsAfterOverrides, null, 2));
+      this.dl.debugJson(varsAfterOverrides);
       this.dl.groupEnd();
     }
 
@@ -152,7 +151,7 @@ module.exports = class IntegrationTest {
 
     if(this.debug) {
       this.dl.group("FINAL ENV VARS");
-      this.dl.debug(JSON.stringify(env, null, 2));
+      this.dl.debugJson(env);
       this.dl.groupEnd();
     }
 
@@ -169,7 +168,7 @@ module.exports = class IntegrationTest {
 
     if(this.debug) {
       this.dl.group(`COMMAND LINE OPTIONS FOR ${utilityName}`);
-      this.dl.debug(JSON.stringify(utilityArgNames.map(x => `--${x}`), null, 2));
+      this.dl.debugJson(utilityArgNames.map(x => `--${x}`));
       this.dl.groupEnd();
     }
 
@@ -181,7 +180,7 @@ module.exports = class IntegrationTest {
 
     if(this.debug) {
       this.dl.group("VARIABLES WITH NAMES MATCHING COMMAND LINE OPTIONS");
-      this.dl.debug(JSON.stringify(argsFromVars, null, 2));
+      this.dl.debugJson(argsFromVars);
       this.dl.groupEnd();
     }
 
@@ -189,7 +188,7 @@ module.exports = class IntegrationTest {
 
     if(this.debug) {
       this.dl.group(`FINAL COMMAND LINE OPTIONS TO PASS TO ${utilityName}`);
-      this.dl.debug(JSON.stringify(argList, null, 2));
+      this.dl.debugJson(argList);
       this.dl.groupEnd();
     }
 
@@ -209,7 +208,10 @@ module.exports = class IntegrationTest {
     }
 
     const result = await utilityInstance.run();
-    if(result.exit_code !== 0) throw result.failure_reason;
+
+    if(this.debug) {this.dl.debugJson(result)}
+
+    if(result.exitCode !== 0) throw result.failureReason;
     return result;
   }
 
