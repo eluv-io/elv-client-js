@@ -2728,8 +2728,7 @@ exports.CreateLinks = /*#__PURE__*/function () {
                         linkMetadata = _context32.sent;
 
                         if (linkMetadata) {
-                          link["/"] = linkMetadata["/"];
-                          link["."] = linkMetadata["."];
+                          link = linkMetadata;
                         }
 
                         if (!link["."]) link["."] = {};

@@ -6,7 +6,7 @@
   <link rel="shortcut icon" href="images/favicon.png" >
 
   <title>
-    ProfileMethods - Documentation
+    Notifications - Documentation
   </title>
 
   <script src="scripts/prettify/prettify.js"></script>
@@ -41,7 +41,7 @@
       <div class="main-content">
         
         <h1 class="page-title">
-          ProfileMethods
+          Notifications
         </h1>
         
 
@@ -59,7 +59,7 @@
       
         
           <div class="description">
-            <p>Methods related to getting and setting user profile data.</p>
+            <p>Methods related to notifications for the current user.</p>
           </div>
         
 
@@ -125,7 +125,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="Profile.js.html">Profile.js</a>, <a href="Profile.js.html#line12">line 12</a>
+          <a href="Notifications.js.html">Notifications.js</a>, <a href="Notifications.js.html#line1">line 1</a>
         </li>
       </ul>
     </dd>
@@ -163,11 +163,11 @@
   
 
   <span class='name-container'>
-    <a class="link-icon" href="#.Profile">
+    <a class="link-icon" href="#.AddNotificationListener">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
-    <h4 class="name" id=".Profile">
-      <span class="type-signature">static </span>Profile<span class="signature">(<div class="block-param">userAddress<span class="signature-attributes">optional</span>,</div><div class="block-param">userName<span class="signature-attributes">optional</span></div>)</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
+    <h4 class="name" id=".AddNotificationListener">
+      <span class="type-signature">static </span>AddNotificationListener<span class="signature">(<span class="inline-param">onMessage</span>)</span><span class="type-signature"> &rarr;  Promise.&lt;EventSource></span>
     </h4>
   </span>
 
@@ -176,7 +176,7 @@
 
 
   <div class="description">
-    <p>Retrieve profile info for the specified user, including address, username and profile image (if set)</p>
+    <p>Add a listener to receive new notifications.</p>
   </div>
 
 
@@ -185,7 +185,7 @@
 
 
   <div class="return-description-block">
-    Returns: <span class="return-description">Profile info of the specified user</span>
+    Returns: <span class="return-description">An EventSource instance listening for notifications. Use source.close() to close the listener.</span>
   </div>
 
 
@@ -209,8 +209,6 @@
       <th>Type</th>
 
       
-        <th>Attributes</th>
-      
 
       
 
@@ -222,14 +220,14 @@
     
       <tr>
         
-          <td class="name"><code>userAddress</code></td>
+          <td class="name"><code>onMessage</code></td>
         
 
         <td class="type">
           
             
     <span class="param-type">
-      string
+      function
     </span>
 
     
@@ -239,60 +237,11 @@
         </td>
 
         
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
 
         
 
         <td class="description last">
-          <p>Address of the user</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>userName</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Username of the user</p>
+          <p>Callback invoked when a new notification is received</p>
           
         </td>
       </tr>
@@ -348,7 +297,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="Profile.js.html">Profile.js</a>, <a href="Profile.js.html#line127">line 127</a>
+          <a href="Notifications.js.html">Notifications.js</a>, <a href="Notifications.js.html#line42">line 42</a>
         </li>
       </ul>
     </dd>
@@ -367,11 +316,11 @@
   
 
   <span class='name-container'>
-    <a class="link-icon" href="#.ProfileMetadata">
+    <a class="link-icon" href="#.Notifications">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
-    <h4 class="name" id=".ProfileMetadata">
-      <span class="type-signature">static </span>ProfileMetadata<span class="signature">({<div class="block-param">type<span class="signature-attributes">optional</span>,</div><div class="block-param">mode<span class="signature-attributes">optional</span>,</div><div class="block-param">appId<span class="signature-attributes">optional</span>,</div><div class="block-param">userAddress<span class="signature-attributes">optional</span>,</div><div class="block-param">key<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;(Object|String)></span>
+    <h4 class="name" id=".Notifications">
+      <span class="type-signature">static </span>Notifications<span class="signature">(<div class="block-param">limit<span class="signature-attributes">optional</span>,</div><div class="block-param">tenantId<span class="signature-attributes">optional</span>,</div><div class="block-param">types<span class="signature-attributes">optional</span>,</div><div class="block-param">offsetId<span class="signature-attributes">optional</span></div>)</span><span class="type-signature"> &rarr;  Promise.&lt;Array.&lt;Object>></span>
     </h4>
   </span>
 
@@ -380,7 +329,7 @@
 
 
   <div class="description">
-    <p>Retrieve user profile metadata for the specified user</p>
+    <p>Retrieve notifications for the current user.</p>
   </div>
 
 
@@ -389,7 +338,7 @@
 
 
   <div class="return-description-block">
-    Returns: <span class="return-description">Returns the specified metadata</span>
+    Returns: <span class="return-description">A list of notifications for the specified parameters</span>
   </div>
 
 
@@ -428,14 +377,14 @@
     
       <tr>
         
-          <td class="name"><code>type</code></td>
+          <td class="name"><code>limit</code></td>
         
 
         <td class="type">
           
             
     <span class="param-type">
-      string
+      integer
     </span>
 
     
@@ -459,13 +408,13 @@
         
           <td class="default">
             
-              "app"
+              10
             
           </td>
         
 
         <td class="description last">
-          <p>Specify <code>app</code> or <code>user</code> metadata.</p>
+          <p>The maximum number of notifications to return</p>
           
         </td>
       </tr>
@@ -473,7 +422,7 @@
     
       <tr>
         
-          <td class="name"><code>mode</code></td>
+          <td class="name"><code>tenantId</code></td>
         
 
         <td class="type">
@@ -504,13 +453,11 @@
         
           <td class="default">
             
-              "public"
-            
           </td>
         
 
         <td class="description last">
-          <p>Specify <code>public</code> or <code>private</code> metadata. If private is specified, you may only retrieve metadata for the current user.</p>
+          <p>Filter notifications to only those related to the specified tenant</p>
           
         </td>
       </tr>
@@ -518,14 +465,14 @@
     
       <tr>
         
-          <td class="name"><code>appId</code></td>
+          <td class="name"><code>types</code></td>
         
 
         <td class="type">
           
             
     <span class="param-type">
-      string
+      Array.&lt;string>
     </span>
 
     
@@ -553,7 +500,7 @@
         
 
         <td class="description last">
-          <p>Namespace to use for the metadata, if retrieving app metadata. Uses the app ID specified on client initialization by default.</p>
+          <p>Filter notifications to only the specified types</p>
           
         </td>
       </tr>
@@ -561,7 +508,7 @@
     
       <tr>
         
-          <td class="name"><code>userAddress</code></td>
+          <td class="name"><code>offsetId</code></td>
         
 
         <td class="type">
@@ -596,50 +543,7 @@
         
 
         <td class="description last">
-          <p>User to retrieve metadata for. If not specified, will retrieve metadata for the current user</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>key</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-          <td class="default">
-            
-          </td>
-        
-
-        <td class="description last">
-          <p>The metadata key to retrieve</p>
+          <p>Return notifications older than the specified ID</p>
           
         </td>
       </tr>
@@ -695,7 +599,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="Profile.js.html">Profile.js</a>, <a href="Profile.js.html#line31">line 31</a>
+          <a href="Notifications.js.html">Notifications.js</a>, <a href="Notifications.js.html#line75">line 75</a>
         </li>
       </ul>
     </dd>
@@ -714,11 +618,11 @@
   
 
   <span class='name-container'>
-    <a class="link-icon" href="#.RemoveProfileMetadata">
+    <a class="link-icon" href="#.PushNotification">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
-    <h4 class="name" id=".RemoveProfileMetadata">
-      <span class="type-signature">static </span>RemoveProfileMetadata<span class="signature">({<div class="block-param">type<span class="signature-attributes">optional</span>,</div><div class="block-param">mode<span class="signature-attributes">optional</span>,</div><div class="block-param">appId<span class="signature-attributes">optional</span>,</div><div class="block-param">key</div>})</span><span class="type-signature"></span>
+    <h4 class="name" id=".PushNotification">
+      <span class="type-signature">static </span>PushNotification<span class="signature">(<div class="block-param">tenantId,</div><div class="block-param">eventType,</div><div class="block-param">data<span class="signature-attributes">optional</span></div>)</span><span class="type-signature"></span>
     </h4>
   </span>
 
@@ -727,7 +631,7 @@
 
 
   <div class="description">
-    <p>Remove user profile metadata for the current user</p>
+    <p>Push a notification to the current user</p>
   </div>
 
 
@@ -757,8 +661,6 @@
       
 
       
-        <th>Default</th>
-      
 
       <th class="last">Description</th>
     </tr>
@@ -768,12 +670,92 @@
     
       <tr>
         
-          <td class="name"><code>type</code></td>
+          <td class="name"><code>tenantId</code></td>
         
 
         <td class="type">
           
             
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>The tenant associated with this notification</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>eventType</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>The type of the notification</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>data</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      Object
+    </span>
+
+    |
+
     <span class="param-type">
       string
     </span>
@@ -797,144 +779,9 @@
         
 
         
-          <td class="default">
-            
-              "app"
-            
-          </td>
-        
 
         <td class="description last">
-          <p>Specify <code>app</code> or <code>user</code> metadata.</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>mode</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-          <td class="default">
-            
-              "public"
-            
-          </td>
-        
-
-        <td class="description last">
-          <p>Specify <code>public</code> or <code>private</code> metadata.</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>appId</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-          <td class="default">
-            
-          </td>
-        
-
-        <td class="description last">
-          <p>Namespace to use for the metadata, if retrieving app metadata.. Uses the app ID specified on client initialization by default.</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>key</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-          <td class="default">
-            
-          </td>
-        
-
-        <td class="description last">
-          <p>The metadata key to set</p>
+          <p>Data associated with this notification</p>
           
         </td>
       </tr>
@@ -990,343 +837,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="Profile.js.html">Profile.js</a>, <a href="Profile.js.html#line101">line 101</a>
-        </li>
-      </ul>
-    </dd>
-  
-
-  
-
-  
-</dl>
-
-
-      
-        
-
-
-  
-
-  <span class='name-container'>
-    <a class="link-icon" href="#.SetProfileMetadata">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-    </a>
-    <h4 class="name" id=".SetProfileMetadata">
-      <span class="type-signature">static </span>SetProfileMetadata<span class="signature">({<div class="block-param">type<span class="signature-attributes">optional</span>,</div><div class="block-param">mode<span class="signature-attributes">optional</span>,</div><div class="block-param">appId<span class="signature-attributes">optional</span>,</div><div class="block-param">key,</div><div class="block-param">value</div>})</span><span class="type-signature"></span>
-    </h4>
-  </span>
-
-  
-
-
-
-  <div class="description">
-    <p>Set user profile metadata for the current user</p>
-  </div>
-
-
-
-
-
-
-
-
-
-
-
-  <h5>Parameters:</h5>
-  
-
-<table class="params">
-  <thead>
-    <tr>
-      
-        <th>Name</th>
-      
-
-      <th>Type</th>
-
-      
-        <th>Attributes</th>
-      
-
-      
-        <th>Default</th>
-      
-
-      <th class="last">Description</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    
-      <tr>
-        
-          <td class="name"><code>type</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-          <td class="default">
-            
-              "app"
-            
-          </td>
-        
-
-        <td class="description last">
-          <p>Specify <code>app</code> or <code>user</code> metadata.</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>mode</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-          <td class="default">
-            
-              "public"
-            
-          </td>
-        
-
-        <td class="description last">
-          <p>Specify <code>public</code> or <code>private</code> metadata.</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>appId</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-          <td class="default">
-            
-          </td>
-        
-
-        <td class="description last">
-          <p>Namespace to use for the metadata, if retrieving app metadata. Uses the app ID specified on client initialization by default.</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>key</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-          <td class="default">
-            
-          </td>
-        
-
-        <td class="description last">
-          <p>The metadata key to set</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>value</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-          <td class="default">
-            
-          </td>
-        
-
-        <td class="description last">
-          <p>The metadata value to set</p>
-          
-        </td>
-      </tr>
-
-    
-  </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source">
-      <ul class="dummy">
-        <li>
-          <a href="Profile.js.html">Profile.js</a>, <a href="Profile.js.html#line71">line 71</a>
+          <a href="Notifications.js.html">Notifications.js</a>, <a href="Notifications.js.html#line23">line 23</a>
         </li>
       </ul>
     </dd>

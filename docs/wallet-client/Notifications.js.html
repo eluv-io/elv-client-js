@@ -8,7 +8,7 @@
   <link rel="shortcut icon" href="images/favicon.png" >
 
   <title>
-    Profile.js - Documentation
+    Notifications.js - Documentation
   </title>
 
   <script src="scripts/prettify/prettify.js"></script>
@@ -43,126 +43,42 @@
       <div class="main-content">
         
         <h1 class="page-title">
-          Profile.js
+          Notifications.js
         </h1>
         
 
         
       
 
-<a class="button" href="Profile.html">Back</a>
+<a class="button" href="Notifications.html">Back</a>
 <div class="source-container">
-  <pre class="prettyprint source linenums"><code>const Utils = require("../Utils");
+  <pre class="prettyprint source linenums"><code>/**
+ * Methods related to notifications for the current user.
+ *
+ * @module Notifications
+ */
+
+
+const Utils = require("../Utils");
 const UrlJoin = require("url-join");
 
-const StateStorePath = ({network, path}) => {
-  return UrlJoin(network === "main" ? "/main" : "/dv3", path);
-};
-
-const UserProfilePath = ({network, appId, userAddress, key, type, mode}) => {
-  return StateStorePath({network, path: UrlJoin(type === "app" ? "app" : "usr", type === "app" ? appId : "", userAddress, mode === "public" ? "pub" : "pri", key || "")});
+const NotificationPath = ({network, path}) => {
+  return UrlJoin("/push", network === "main" ? "/main" : "/dv3", path);
 };
 
 /**
- * Methods related to getting and setting user profile data.
+ * Push a notification to the current user
  *
- * @module ProfileMethods
+ * @methodGroup Notifications
+ * @param {string} tenantId - The tenant associated with this notification
+ * @param {string} eventType - The type of the notification
+ * @param {(Object | string)=} data - Data associated with this notification
  */
-
-/**
- * Retrieve user profile metadata for the specified user
- *
- * @methodGroup ProfileMetadata
- * @namedParams
- * @param {string=} type="app" - Specify `app` or `user` metadata.
- * @param {string=} mode="public" - Specify `public` or `private` metadata. If private is specified, you may only retrieve metadata for the current user.
- * @param {string=} appId - Namespace to use for the metadata, if retrieving app metadata. Uses the app ID specified on client initialization by default.
- * @param {string=} userAddress - User to retrieve metadata for. If not specified, will retrieve metadata for the current user
- * @param {string=} key - The metadata key to retrieve
- *
- * @returns {Promise&lt;Object|String>} - Returns the specified metadata
- */
-exports.ProfileMetadata = async function({type="app", mode="public", appId, userAddress, key}) {
-  try {
-    const response = await this.stateStoreClient.Request({
-      path: UserProfilePath({
-        network: this.network,
-        appId: appId || this.appId,
-        userAddress: userAddress || this.UserAddress(),
-        type,
-        mode,
-        key
-      }),
-      headers: mode === "private" ?
-        {Authorization: `Bearer ${this.AuthToken()}`} : undefined
-    });
-
-    if(!response.ok) {
-      throw response;
-    }
-
-    return (await Utils.ResponseToJson(response))[key];
-  } catch(error) {
-    if(error.status === 404) {
-      return undefined;
-    }
-
-    throw error;
-  }
-};
-
-/**
- * Set user profile metadata for the current user
- *
- * @methodGroup ProfileMetadata
- * @namedParams
- * @param {string=} type="app" - Specify `app` or `user` metadata.
- * @param {string=} mode="public" - Specify `public` or `private` metadata.
- * @param {string=} appId - Namespace to use for the metadata, if retrieving app metadata. Uses the app ID specified on client initialization by default.
- * @param {string} key - The metadata key to set
- * @param {string} value - The metadata value to set
- */
-exports.SetProfileMetadata = async function({type="app", mode="public", appId, key, value}) {
+exports.PushNotification = async function({tenantId, eventType, data}) {
   await this.stateStoreClient.Request({
     method: "POST",
-    path: UserProfilePath({
-      network: this.network,
-      appId: appId || this.appId,
-      userAddress: this.UserAddress(),
-      type,
-      mode,
-      key
-    }),
-    body: value,
-    bodyType: typeof value === "object" ? "JSON" : "string",
-    headers: {
-      Authorization: `Bearer ${this.AuthToken()}`
-    }
-  });
-};
-
-
-/**
- * Remove user profile metadata for the current user
- *
- * @methodGroup ProfileMetadata
- * @namedParams
- * @param {string=} type="app" - Specify `app` or `user` metadata.
- * @param {string=} mode="public" - Specify `public` or `private` metadata.
- * @param {string=} appId - Namespace to use for the metadata, if retrieving app metadata.. Uses the app ID specified on client initialization by default.
- * @param {string} key - The metadata key to set
- */
-exports.RemoveProfileMetadata = async function({type="app", mode="public", appId, key}) {
-  await this.stateStoreClient.Request({
-    method: "DELETE",
-    path: UserProfilePath({
-      network: this.network,
-      appId: appId || this.appId,
-      userAddress: this.UserAddress(),
-      type,
-      mode,
-      key
-    }),
+    path: NotificationPath({network: this.network, path: UrlJoin("notify_user", this.UserAddress(), tenantId, eventType)}),
+    body: data,
     headers: {
       Authorization: `Bearer ${this.AuthToken()}`
     }
@@ -170,68 +86,81 @@ exports.RemoveProfileMetadata = async function({type="app", mode="public", appId
 };
 
 /**
- * Retrieve profile info for the specified user, including address, username and profile image (if set)
+ * Add a listener to receive new notifications.
  *
- * @methodGroup Profile
- * @param {string=} userAddress - Address of the user
- * @param {string=} userName - Username of the user
+ * @methodGroup Notifications
+ * @param {function} onMessage - Callback invoked when a new notification is received
  *
- * @returns {Promise&lt;Object>} - Profile info of the specified user
+ * @returns {Promise&lt;EventSource>} - An EventSource instance listening for notifications. Use source.close() to close the listener.
  */
-exports.Profile = async function({userAddress, userName}) {
-  if(userName) {
-    userAddress = await this.UserNameToAddress({userName});
+exports.AddNotificationListener = async function({onMessage}) {
+  if(!onMessage) {
+    throw Error("Eluvio Wallet Client: No onMessage callback provided to AddNotificationListener");
   }
 
-  if(!userAddress) {
-    throw Error("Eluvio Wallet Client: Unable to determine profile - user address not specified");
-  }
+  const url = new URL(this.stateStoreClient.BaseURI().toString());
+  url.pathname = NotificationPath({network: this.network, path: UrlJoin("register", this.UserAddress(), this.AuthToken())});
+  const source = new EventSource(url);
+  source.onmessage = event => {
+    let parsedMessage = JSON.parse(event.data);
 
-  if(!userName) {
-    userName = await this.ProfileMetadata({type: "user", userAddress, key: "username"});
-  }
+    try {
+      parsedMessage.data = JSON.parse(parsedMessage.data);
+    // eslint-disable-next-line no-empty
+    } catch(error) {}
 
-  const imageUrl = await this.ProfileMetadata({type: "user", userAddress, key: "icon_url"});
-
-  return {
-    userAddress: Utils.FormatAddress(userAddress),
-    userName,
-    imageUrl
+    onMessage(parsedMessage);
   };
+
+  return source;
 };
 
-exports.UserNameToAddress = async function({userName}) {
-  try {
-    const response = await this.stateStoreClient.Request({
-      method: "GET",
-      path: StateStorePath({network: this.network, path: UrlJoin("usr", "profile_for_username", userName)}),
-    });
+/**
+ * Retrieve notifications for the current user.
+ *
+ * @methodGroup Notifications
+ * @param {integer=} limit=10 - The maximum number of notifications to return
+ * @param {string=} tenantId - Filter notifications to only those related to the specified tenant
+ * @param {Array&lt;string>=} types - Filter notifications to only the specified types
+ * @param {string=} offsetId - Return notifications older than the specified ID
+ *
+ * @returns {Promise&lt;Array&lt;Object>>} - A list of notifications for the specified parameters
+ */
+exports.Notifications = async function({tenantId, types, offsetId, limit=10}={}) {
+  let queryParams = { limit };
 
-    if(!response.ok) {
-      throw response;
-    }
-
-    return (await Utils.ResponseToJson(response)).address;
-  } catch(error) {
-    if(error.status !== 404) {
-      throw error;
-    }
+  if(tenantId) {
+    queryParams.tenant_id = tenantId;
   }
 
-  return undefined;
+  if(types) {
+    queryParams.types = Array.isArray(types) ? types.join(",") : types;
+  }
+
+  if(offsetId) {
+    queryParams.offset_by = offsetId;
+  }
+
+  const {records} = await Utils.ResponseToJson(
+    this.stateStoreClient.Request({
+      method: "GET",
+      path: NotificationPath({network: this.network, path: UrlJoin("history", this.UserAddress())}),
+      queryParams,
+      headers: {
+        Authorization: `Bearer ${this.AuthToken()}`
+      }
+    })
+  );
+
+  return records.map(record => {
+    try {
+      record.data = JSON.parse(record.data);
+    // eslint-disable-next-line no-empty
+    } catch(error) {}
+
+    return record;
+  });
 };
-
-
-
-
-
-
-
-
-
-
-
-
 </code></pre>
 </div>
 

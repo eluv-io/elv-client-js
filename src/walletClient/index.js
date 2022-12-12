@@ -1146,5 +1146,6 @@ class ElvWalletClient {
 
 Object.assign(ElvWalletClient.prototype, require("./ClientMethods"));
 Object.assign(ElvWalletClient.prototype, require("./Profile"));
+Object.assign(ElvWalletClient.prototype, require("./Notifications"));
 
 exports.ElvWalletClient = ElvWalletClient;

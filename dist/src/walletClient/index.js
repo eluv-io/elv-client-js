@@ -1971,4 +1971,5 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
 Object.assign(ElvWalletClient.prototype, require("./ClientMethods"));
 Object.assign(ElvWalletClient.prototype, require("./Profile"));
+Object.assign(ElvWalletClient.prototype, require("./Notifications"));
 exports.ElvWalletClient = ElvWalletClient;
