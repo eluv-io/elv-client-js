@@ -103,7 +103,7 @@ const resolveAllPresets = presets => {
       presets: results
     });
     const resolvedPreset = results[presetName];
-    validateItemDef(resolvedPreset);
+    validateVarMap(resolvedPreset);
   }
   return results;
 };
@@ -125,7 +125,7 @@ const resolveIncludes = (itemDef, resolvedPresets) => {
     result,
     ownVars
   );
-  validateItemDef(resolvedItemDef);
+  validateVarMap(resolvedItemDef);
   return resolvedItemDef;
 };
 
@@ -293,7 +293,7 @@ const substituteVarXrefs = (finalVars, debugLogger = null) => {
   dl && dl.group("SUBSTITUTE VARIABLE CROSS-REFERENCES");
   let workingCopy = R.clone(finalVars);
   dl && dl.debug("validating variable set");
-  validateItemDef(workingCopy);
+  validateVarMap(workingCopy);
   for(const varName of Object.keys(workingCopy)) {
     if(dl){
       dl.debug(`processing ${varName}`);
@@ -314,8 +314,10 @@ const substituteVarXrefs = (finalVars, debugLogger = null) => {
   return substituteDollars(workingCopy);
 };
 
-const validateItemDef = resolvedItemDef => {
-  for(const [varName, varVal] in resolvedItemDef) {
+// performs basic validation on a set of k/v pairs defining some variables
+const validateVarMap = resolvedItemDef => {
+  assertObject("resolvedItemDef", resolvedItemDef);
+  for(const [varName, varVal] of Object.entries(resolvedItemDef)) {
     assertString("variable name", varName);
     if(["defaults", "presets", "include_presets"].includes(varName)) throw Error(`Illegal variable name: ${varName}`);
     if(!["null", "string", "array"].includes(kindOf(varVal))) throw Error(`Variable values can only be strings, arrays of strings, or null, found: ${kindOf(varVal)} (variable: ${varName}, value: ${varVal})`);
@@ -388,6 +390,6 @@ const varsFromFile = (varFilePath, debugLogger = null) => {
 module.exports = {
   resolveIncludes,
   substituteVarXrefs,
-  validateItemDef,
+  validateVarMap,
   varsFromFile
 };

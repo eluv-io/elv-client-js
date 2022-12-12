@@ -9,6 +9,7 @@ const preFinalizeFn = require("./lib/misc/codecDescPrefinalizeFn");
 
 const ArgAddlOfferingSpecs = require("./lib/concerns/ArgAddlOfferingSpecs");
 const ArgAssetMetadata = require("./lib/concerns/ArgAssetMetadata");
+const ArgMasterHash = require("./lib/concerns/ArgMasterHash");
 const ArgMetadata = require("./lib/concerns/ArgMetadata");
 const ArgObjectId = require("./lib/concerns/ArgObjectId");
 const ArgType = require("./lib/concerns/ArgType");
@@ -48,6 +49,7 @@ class MezzanineCreate extends Utility {
       concerns: [
         ArgAddlOfferingSpecs,
         ArgAssetMetadata,
+        ArgMasterHash,
         ArgMetadata,
         ArgObjectId,
         ArgType,
@@ -80,11 +82,6 @@ class MezzanineCreate extends Utility {
         ModOpt("type", {forX: "mezzanine"}),
         ModOpt("metadata", {ofX: "mezzanine object"}),
         ModOpt("name", {ofX: "mezzanine object (set to title + ' MEZ' if not supplied and --existingMezId and --metadata not specified)"}),
-        NewOpt("masterHash", {
-          demand: true,
-          descTemplate: "Version hash of the master object",
-          type: "string"
-        }),
         NewOpt("offeringKey", {
           default: "default",
           descTemplate: "Key to assign to new offering",

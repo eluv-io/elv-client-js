@@ -2,15 +2,15 @@ const IntegrationTest = require("../helpers/IntegrationTest");
 
 module.exports = class Test extends IntegrationTest {
 
+  static desc = `Creates a master from local file, then creates a mez from default variant, using --wait to finalize 
+  when done.`;
+
   static testVarPresets = ["abr_profiles"];
 
   async testBody() {
-    // const assert = this.assert;
-    // const vars = this.vars;
 
     const resultMaster = await this.runTest({
-      testPath: "create_master_local.test.js",
-      addlVars: {abr_profile_filename: null}
+      testPath: "create_master_local.test.js"
     });
 
     const masterHash = resultMaster.data.versionHash;
@@ -19,7 +19,7 @@ module.exports = class Test extends IntegrationTest {
       testPath: "create_mez.test.js",
       addlVars: {
         masterHash,
-        wait: true
+        wait: "true"
       }
     });
   }

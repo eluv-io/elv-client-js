@@ -2,6 +2,8 @@ const IntegrationTest = require("../helpers/IntegrationTest");
 
 module.exports = class Test extends IntegrationTest {
 
+  static desc = `Creates a production master from a local file`;
+
   static testVarPresets = ["ingest_master_local"];
 
   async testBody() {

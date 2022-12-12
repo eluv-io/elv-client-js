@@ -13,7 +13,7 @@ const Logger = require("./Logger");
 
 const s3BucketRegex = /^s3:\/\/([^/]+)\//i; // for matching and extracting bucket name when full s3:// path is specified
 
-const chkCredsButNoS3 = (argv) => {
+const chkCredsButNoS3 = argv => {
   if(argv.credentials) {
     if(!argv.s3Copy && !argv.s3Reference) {
       throw Error("--credentials supplied but neither --s3Copy nor --s3Reference specified");

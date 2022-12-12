@@ -38,7 +38,7 @@ const vars = {
 
     abr_profiles: {
       abr_profile_directory: "$example_files_dir",
-      abrp_both: "$abr_profile_directory/abr_profile_clear.json",
+      abrp_both: "$abr_profile_directory/abr_profile_both.json",
       abrp_clear_store_encrypted: "$abr_profile_directory/abr_profile_clear_store_encrypted.json",
       abrp_clear_store_unencrypted: "$abr_profile_directory/abr_profile_clear_store_unencrypted.json",
       abrp_drm_all: "$abr_profile_directory/abr_profile_drm.json",
@@ -66,12 +66,12 @@ const vars = {
     ingest_master_s3_reference: {
       include_presets: ["ingest_master", "s3"],
       s3Reference: "true",
-      files: "s3://eluvio-mez-test/test/Camindas.mp4"
+      files: "s3://$AWS_BUCKET/Video.mp4"
     },
 
     ingest_mez: {
       include_presets: ["ingest", "use_mez_lib", "use_mez_type"],
-      abrProfile: "$abrp_drm_strict"
+      abrProfile: "$abrp_both"
     },
 
     // when master is created with --s3Reference, creating mezzanine requires S3 credentials

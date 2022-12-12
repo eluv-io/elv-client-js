@@ -7,6 +7,7 @@ const R = require("ramda");
 
 const {
   substituteVarXrefs,
+  validateVarMap,
   varsFromFile
 } = require("./TestVars");
 
@@ -20,6 +21,8 @@ module.exports = class IntegrationTest {
   static testVarPresets = [];
 
   constructor({varFilePath, addlVars = {}, debug = false}) {
+    validateVarMap(addlVars);
+
     this.debug = debug;
     if(this.debug) this.dl = debugLogger;
 
@@ -100,6 +103,8 @@ module.exports = class IntegrationTest {
   }
 
   async runTest({testPath, addlVars = {}, debug = this.debug, includeParentAddlVars = true}) {
+    validateVarMap(addlVars)
+
     const testClass = require(path.resolve(process.cwd(), testPath));
     const mergedAddlVars = includeParentAddlVars
       ? cloneMerge(this.addlVars, addlVars)
@@ -113,6 +118,7 @@ module.exports = class IntegrationTest {
   }
 
   async runUtility(utilityName, modifiedVars, addlVarOverrides = {}) {
+    validateVarMap(addlVarOverrides)
 
     this.debug && this.dl.group(`RUN UTILITY: ${utilityName}`);
 

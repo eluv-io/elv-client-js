@@ -2,6 +2,10 @@ const IntegrationTest = require("../helpers/IntegrationTest");
 
 module.exports = class Test extends IntegrationTest {
 
+  static desc = `Creates a production master from a local file, then creates a mezzanine from the master and uses --wait
+  to finalize it. After finalization finishes, gets mezzanine metadata and then asks for detailed status of each LRO 
+  listed under /lro_status. This is expected to fail with 'Failed to find write token'`;
+
   static testVarPresets = [];
 
   async testBody() {
@@ -9,7 +13,7 @@ module.exports = class Test extends IntegrationTest {
     const vars = this.vars;
 
     const resultMaster = await this.runTest({testPath: "create_master_local.test.js"});
-    const masterHash = resultMaster.version_hash;
+    const masterHash = resultMaster.data.versionHash;
 
     const resultMez = await this.runTest({
       testPath: "create_mez.test.js",

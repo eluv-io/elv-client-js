@@ -2,6 +2,10 @@ const IntegrationTest = require("../helpers/IntegrationTest");
 
 module.exports = class Test extends IntegrationTest {
 
+  static desc = `Creates a production master from a local file, then creates a mezzanine from the master but does not
+  finalize it. Immediately after kicking off transcoding, requests status of mezzanine job and then gets detailed status
+  of each LRO`;
+
   static testVarPresets = [];
 
   async testBody() {
