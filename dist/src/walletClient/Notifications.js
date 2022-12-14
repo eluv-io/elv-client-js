@@ -2,6 +2,11 @@ var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
 var _asyncToGenerator = require("@babel/runtime/helpers/asyncToGenerator");
 
+/**
+ * Methods related to notifications for the current user.
+ *
+ * @module Notifications
+ */
 var Utils = require("../Utils");
 
 var UrlJoin = require("url-join");

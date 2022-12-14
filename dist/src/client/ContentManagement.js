@@ -20,6 +20,8 @@ var UrlJoin = require("url-join");
 var ImageType = require("image-type");
 
 var Ethers = require("ethers");
+
+var Pako = require("pako");
 /*
 const LibraryContract = require("../contracts/BaseLibrary");
 const ContentContract = require("../contracts/BaseContent");
@@ -1283,10 +1285,11 @@ exports.CopyContentObject = /*#__PURE__*/function () {
             }
 
             _context13.next = 38;
-            return this.SetPermission({
+            return this.CreateEncryptionConk({
+              libraryId: libraryId,
               objectId: objectId,
-              permission: permission,
-              writeToken: writeToken
+              writeToken: writeToken,
+              createKMSConk: true
             });
 
           case 38:
@@ -2634,6 +2637,103 @@ exports.UpdateContentObjectGraph = /*#__PURE__*/function () {
   };
 }();
 /**
+ * Generate a signed link token.
+ *
+ * @methodGroup Access Requests
+ * @namedParams
+ * @param {string=} containerId - ID of the container object
+ * @param {string=} versionHash - Version hash of the object
+ * @param {string=} link - Path
+ * @param {string=} duration - How long the link should last in milliseconds
+ *
+ * @return {Promise<string>} - The state channel token
+ */
+
+
+exports.GenerateSignedLinkToken = /*#__PURE__*/function () {
+  var _ref56 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee31(_ref55) {
+    var containerId, versionHash, link, duration, canEdit, _this$utils$DecodeVer2, objectId, signerAddress, token, compressedToken, signature;
+
+    return _regeneratorRuntime.wrap(function _callee31$(_context32) {
+      while (1) {
+        switch (_context32.prev = _context32.next) {
+          case 0:
+            containerId = _ref55.containerId, versionHash = _ref55.versionHash, link = _ref55.link, duration = _ref55.duration;
+            ValidateObject(containerId);
+            _context32.next = 4;
+            return this.CallContractMethod({
+              contractAddress: this.utils.HashToAddress(containerId),
+              methodName: "canEdit"
+            });
+
+          case 4:
+            canEdit = _context32.sent;
+            _this$utils$DecodeVer2 = this.utils.DecodeVersionHash(versionHash), objectId = _this$utils$DecodeVer2.objectId;
+
+            if (canEdit) {
+              _context32.next = 8;
+              break;
+            }
+
+            throw Error("Current user does not have permission to edit content object ".concat(objectId));
+
+          case 8:
+            signerAddress = this.CurrentAccountAddress();
+            _context32.t0 = this.utils.B64(signerAddress.replace("0x", ""), "hex");
+            _context32.next = 12;
+            return this.ContentSpaceId();
+
+          case 12:
+            _context32.t1 = _context32.sent;
+            _context32.next = 15;
+            return this.ContentObjectLibraryId({
+              objectId: objectId
+            });
+
+          case 15:
+            _context32.t2 = _context32.sent;
+            _context32.t3 = objectId;
+            _context32.t4 = "iusr".concat(this.utils.AddressToHash(signerAddress));
+            _context32.t5 = Date.now();
+            _context32.t6 = duration ? Date.now() + duration : "";
+            _context32.t7 = {
+              elv: {
+                lnk: link,
+                src: containerId
+              }
+            };
+            token = {
+              adr: _context32.t0,
+              spc: _context32.t1,
+              lib: _context32.t2,
+              qid: _context32.t3,
+              sub: _context32.t4,
+              gra: "read",
+              iat: _context32.t5,
+              exp: _context32.t6,
+              ctx: _context32.t7
+            };
+            compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
+            _context32.next = 25;
+            return this.authClient.Sign(Ethers.utils.keccak256(compressedToken));
+
+          case 25:
+            signature = _context32.sent;
+            return _context32.abrupt("return", "aslsjc".concat(this.utils.B58(Buffer.concat([Buffer.from(signature.replace(/^0x/, ""), "hex"), Buffer.from(compressedToken)]))));
+
+          case 27:
+          case "end":
+            return _context32.stop();
+        }
+      }
+    }, _callee31, this);
+  }));
+
+  return function (_x29) {
+    return _ref56.apply(this, arguments);
+  };
+}();
+/**
  * Create links to files, metadata and/or representations of this or or other
  * content objects.
  *
@@ -2661,28 +2761,28 @@ exports.UpdateContentObjectGraph = /*#__PURE__*/function () {
 
 
 exports.CreateLinks = /*#__PURE__*/function () {
-  var _ref56 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee32(_ref55) {
+  var _ref58 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee33(_ref57) {
     var _this6 = this;
 
-    var libraryId, objectId, writeToken, _ref55$links, links;
+    var libraryId, objectId, writeToken, _ref57$links, links;
 
-    return _regeneratorRuntime.wrap(function _callee32$(_context33) {
+    return _regeneratorRuntime.wrap(function _callee33$(_context34) {
       while (1) {
-        switch (_context33.prev = _context33.next) {
+        switch (_context34.prev = _context34.next) {
           case 0:
-            libraryId = _ref55.libraryId, objectId = _ref55.objectId, writeToken = _ref55.writeToken, _ref55$links = _ref55.links, links = _ref55$links === void 0 ? [] : _ref55$links;
+            libraryId = _ref57.libraryId, objectId = _ref57.objectId, writeToken = _ref57.writeToken, _ref57$links = _ref57.links, links = _ref57$links === void 0 ? [] : _ref57$links;
             ValidateParameters({
               libraryId: libraryId,
               objectId: objectId
             });
             ValidateWriteToken(writeToken);
-            _context33.next = 5;
+            _context34.next = 5;
             return this.utils.LimitedMap(10, links, /*#__PURE__*/function () {
-              var _ref57 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee31(info) {
+              var _ref59 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee32(info) {
                 var path, type, target, authTarget, link, linkMetadata;
-                return _regeneratorRuntime.wrap(function _callee31$(_context32) {
+                return _regeneratorRuntime.wrap(function _callee32$(_context33) {
                   while (1) {
-                    switch (_context32.prev = _context32.next) {
+                    switch (_context33.prev = _context33.next) {
                       case 0:
                         path = info.path.replace(/^(\/|\.)+/, "");
                         type = (info.type || "file") === "file" ? "files" : info.type;
@@ -2713,11 +2813,11 @@ exports.CreateLinks = /*#__PURE__*/function () {
 
 
                         if (!info.authContainer) {
-                          _context32.next = 17;
+                          _context33.next = 17;
                           break;
                         }
 
-                        _context32.next = 10;
+                        _context33.next = 10;
                         return _this6.ContentObjectMetadata({
                           libraryId: libraryId,
                           objectId: objectId,
@@ -2725,7 +2825,7 @@ exports.CreateLinks = /*#__PURE__*/function () {
                         });
 
                       case 10:
-                        linkMetadata = _context32.sent;
+                        linkMetadata = _context33.sent;
 
                         if (linkMetadata) {
                           link = linkMetadata;
@@ -2734,22 +2834,22 @@ exports.CreateLinks = /*#__PURE__*/function () {
                         if (!link["."]) link["."] = {};
 
                         if (linkMetadata["."]["authorization"]) {
-                          _context32.next = 17;
+                          _context33.next = 17;
                           break;
                         }
 
-                        _context32.next = 16;
-                        return _this6.authClient.GenerateSignedLinkToken({
+                        _context33.next = 16;
+                        return _this6.GenerateSignedLinkToken({
                           containerId: info.authContainer,
                           versionHash: info.targetHash,
                           link: "./".concat(type, "/").concat(authTarget)
                         });
 
                       case 16:
-                        link["."]["authorization"] = _context32.sent;
+                        link["."]["authorization"] = _context33.sent;
 
                       case 17:
-                        _context32.next = 19;
+                        _context33.next = 19;
                         return _this6.ReplaceMetadata({
                           libraryId: libraryId,
                           objectId: objectId,
@@ -2760,27 +2860,27 @@ exports.CreateLinks = /*#__PURE__*/function () {
 
                       case 19:
                       case "end":
-                        return _context32.stop();
+                        return _context33.stop();
                     }
                   }
-                }, _callee31);
+                }, _callee32);
               }));
 
-              return function (_x30) {
-                return _ref57.apply(this, arguments);
+              return function (_x31) {
+                return _ref59.apply(this, arguments);
               };
             }());
 
           case 5:
           case "end":
-            return _context33.stop();
+            return _context34.stop();
         }
       }
-    }, _callee32, this);
+    }, _callee33, this);
   }));
 
-  return function (_x29) {
-    return _ref56.apply(this, arguments);
+  return function (_x30) {
+    return _ref58.apply(this, arguments);
   };
 }();
 /**
@@ -2800,14 +2900,14 @@ exports.CreateLinks = /*#__PURE__*/function () {
 
 
 exports.InitializeAuthPolicy = /*#__PURE__*/function () {
-  var _ref59 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee33(_ref58) {
-    var libraryId, objectId, writeToken, _ref58$target, target, body, version, description, id, authPolicy, string;
+  var _ref61 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee34(_ref60) {
+    var libraryId, objectId, writeToken, _ref60$target, target, body, version, description, id, authPolicy, string;
 
-    return _regeneratorRuntime.wrap(function _callee33$(_context34) {
+    return _regeneratorRuntime.wrap(function _callee34$(_context35) {
       while (1) {
-        switch (_context34.prev = _context34.next) {
+        switch (_context35.prev = _context35.next) {
           case 0:
-            libraryId = _ref58.libraryId, objectId = _ref58.objectId, writeToken = _ref58.writeToken, _ref58$target = _ref58.target, target = _ref58$target === void 0 ? "auth_policy_spec" : _ref58$target, body = _ref58.body, version = _ref58.version, description = _ref58.description, id = _ref58.id;
+            libraryId = _ref60.libraryId, objectId = _ref60.objectId, writeToken = _ref60.writeToken, _ref60$target = _ref60.target, target = _ref60$target === void 0 ? "auth_policy_spec" : _ref60$target, body = _ref60.body, version = _ref60.version, description = _ref60.description, id = _ref60.id;
             authPolicy = {
               type: "epl-ast",
               version: version,
@@ -2820,14 +2920,14 @@ exports.InitializeAuthPolicy = /*#__PURE__*/function () {
               id: id || ""
             };
             string = "".concat(authPolicy.type, "|").concat(authPolicy.version, "|").concat(authPolicy.body, "|").concat(authPolicy.data["/"]);
-            _context34.t0 = this.utils;
-            _context34.next = 6;
+            _context35.t0 = this.utils;
+            _context35.next = 6;
             return this.authClient.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(string)));
 
           case 6:
-            _context34.t1 = _context34.sent;
-            authPolicy.signature = _context34.t0.FormatSignature.call(_context34.t0, _context34.t1);
-            _context34.next = 10;
+            _context35.t1 = _context35.sent;
+            authPolicy.signature = _context35.t0.FormatSignature.call(_context35.t0, _context35.t1);
+            _context35.next = 10;
             return this.ReplaceMetadata({
               libraryId: libraryId,
               objectId: objectId,
@@ -2837,7 +2937,7 @@ exports.InitializeAuthPolicy = /*#__PURE__*/function () {
             });
 
           case 10:
-            _context34.next = 12;
+            _context35.next = 12;
             return this.SetAuthPolicy({
               objectId: objectId,
               policyId: objectId
@@ -2845,14 +2945,14 @@ exports.InitializeAuthPolicy = /*#__PURE__*/function () {
 
           case 12:
           case "end":
-            return _context34.stop();
+            return _context35.stop();
         }
       }
-    }, _callee33, this);
+    }, _callee34, this);
   }));
 
-  return function (_x31) {
-    return _ref59.apply(this, arguments);
+  return function (_x32) {
+    return _ref61.apply(this, arguments);
   };
 }();
 /**
@@ -2866,14 +2966,14 @@ exports.InitializeAuthPolicy = /*#__PURE__*/function () {
 
 
 exports.SetAuthPolicy = /*#__PURE__*/function () {
-  var _ref61 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee34(_ref60) {
+  var _ref63 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee35(_ref62) {
     var objectId, policyId;
-    return _regeneratorRuntime.wrap(function _callee34$(_context35) {
+    return _regeneratorRuntime.wrap(function _callee35$(_context36) {
       while (1) {
-        switch (_context35.prev = _context35.next) {
+        switch (_context36.prev = _context36.next) {
           case 0:
-            objectId = _ref60.objectId, policyId = _ref60.policyId;
-            _context35.next = 3;
+            objectId = _ref62.objectId, policyId = _ref62.policyId;
+            _context36.next = 3;
             return this.MergeContractMetadata({
               contractAddress: this.utils.HashToAddress(objectId),
               metadataKey: "_AUTH_CONTEXT",
@@ -2884,13 +2984,13 @@ exports.SetAuthPolicy = /*#__PURE__*/function () {
 
           case 3:
           case "end":
-            return _context35.stop();
+            return _context36.stop();
         }
       }
-    }, _callee34, this);
+    }, _callee35, this);
   }));
 
-  return function (_x32) {
-    return _ref61.apply(this, arguments);
+  return function (_x33) {
+    return _ref63.apply(this, arguments);
   };
 }();
