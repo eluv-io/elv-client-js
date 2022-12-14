@@ -18,9 +18,6 @@ const {
 } = require("../Validation");
 
 const MergeWith = require("lodash/mergeWith");
-const Pako = require("pako");
-const Ethers = require("ethers");
-
 
 // Note: Keep these ordered by most-restrictive to least-restrictive
 exports.permissionLevels = {
@@ -2619,63 +2616,6 @@ exports.AccessRequest = async function({libraryId, objectId, versionHash, args=[
     skipCache: true,
     noCache
   });
-};
-/**
- * Generate a signed link token.
- *
- * @methodGroup Access Requests
- * @namedParams
- * @param {string=} containerId - ID of the container object
- * @param {string=} versionHash - Version hash of the object
- * @param {string=} link - Path
- * @param {string=} duration - How long the link should last in milliseconds
- *
- * @return {Promise<string>} - The state channel token
- */
-exports.GenerateSignedLinkToken = async function({
-  containerId,
-  versionHash,
-  link,
-  duration
-}) {
-  ValidateObject(containerId);
-  const canEdit = await this.CallContractMethod({
-    contractAddress: this.utils.HashToAddress(containerId),
-    methodName: "canEdit"
-  });
-
-  const { objectId } = this.utils.DecodeVersionHash(versionHash);
-
-  if(!canEdit) {
-    throw Error(`Current user does not have permission to edit content object ${objectId}`);
-  }
-
-  const signerAddress = this.CurrentAccountAddress();
-
-  let token = {
-    adr: this.utils.B64(signerAddress.replace("0x", ""), "hex"),
-    spc: await this.ContentSpaceId(),
-    lib: await this.ContentObjectLibraryId({objectId}),
-    qid: objectId,
-    sub: `iusr${this.utils.AddressToHash(signerAddress)}`,
-    gra: "read",
-    iat: Date.now(),
-    exp: duration ? (Date.now() + duration) : "",
-    ctx: {
-      elv: {
-        lnk: link,
-        src: containerId
-      }
-    }
-  };
-
-  const compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
-  const signature = await this.authClient.Sign(Ethers.utils.keccak256(compressedToken));
-
-  return `aslsjc${this.utils.B58(Buffer.concat([
-    Buffer.from(signature.replace(/^0x/, ""), "hex"),
-    Buffer.from(compressedToken)
-  ]))}`;
 };
 
 /**
