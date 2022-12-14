@@ -24,11 +24,6 @@ var UrlJoin = require("url-join");
 
 var _require = require("./LogMessage"),
     LogMessage = _require.LogMessage;
-
-var _require2 = require("./Validation"),
-    ValidateObject = _require2.ValidateObject;
-
-var Pako = require("pako");
 /*
 // -- Contract javascript files built using build/BuildContracts.js
 const SpaceContract = require("./contracts/BaseContentSpace");
@@ -419,137 +414,50 @@ var AuthorizationClient = /*#__PURE__*/function () {
       return GenerateAuthorizationToken;
     }()
   }, {
-    key: "GenerateSignedLinkToken",
+    key: "MakeAccessRequest",
     value: function () {
-      var _GenerateSignedLinkToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(_ref5) {
-        var containerId, versionHash, link, canEdit, _Utils$DecodeVersionH, objectId, signerAddress, token, compressedToken, signature;
+      var _MakeAccessRequest = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(_ref5) {
+        var _this = this;
+
+        var libraryId, objectId, versionHash, _ref5$args, args, _ref5$publicKey, publicKey, _ref5$update, update, _ref5$skipCache, skipCache, _ref5$noCache, noCache, cacheOnly, walletContractAddress, walletCreated, id, _yield$this$ContractI, isV3, accessType, abi, _yield$this$AccessInf, accessArgs, checkAccessCharge, address, elapsed, _cache, accessRequest, cache;
 
         return _regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
             switch (_context4.prev = _context4.next) {
               case 0:
-                containerId = _ref5.containerId, versionHash = _ref5.versionHash, link = _ref5.link;
-                ValidateObject(containerId);
-                _context4.next = 4;
-                return this.client.CallContractMethod({
-                  contractAddress: Utils.HashToAddress(containerId),
-                  methodName: "canEdit"
-                });
-
-              case 4:
-                canEdit = _context4.sent;
-                _Utils$DecodeVersionH = Utils.DecodeVersionHash(versionHash), objectId = _Utils$DecodeVersionH.objectId;
-
-                if (canEdit) {
-                  _context4.next = 8;
-                  break;
-                }
-
-                throw Error("Current user does not have permission to edit content object ".concat(objectId));
-
-              case 8:
-                signerAddress = this.client.CurrentAccountAddress();
-                _context4.t0 = Utils.B64(signerAddress.replace("0x", ""), "hex");
-                _context4.next = 12;
-                return this.client.ContentSpaceId();
-
-              case 12:
-                _context4.t1 = _context4.sent;
-                _context4.next = 15;
-                return this.client.ContentObjectLibraryId({
-                  objectId: objectId
-                });
-
-              case 15:
-                _context4.t2 = _context4.sent;
-                _context4.t3 = objectId;
-                _context4.t4 = Utils.FormatAddress(signerAddress);
-                _context4.t5 = Date.now();
-                _context4.t6 = Date.now() + 3600000;
-                _context4.t7 = {
-                  elv: {
-                    lnk: link,
-                    src: containerId
-                  }
-                };
-                token = {
-                  adr: _context4.t0,
-                  spc: _context4.t1,
-                  lib: _context4.t2,
-                  qid: _context4.t3,
-                  sub: _context4.t4,
-                  gra: "read",
-                  iat: _context4.t5,
-                  exp: _context4.t6,
-                  ctx: _context4.t7
-                };
-                compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
-                _context4.next = 25;
-                return this.Sign(Ethers.utils.keccak256(compressedToken));
-
-              case 25:
-                signature = _context4.sent;
-                return _context4.abrupt("return", "aslsjc".concat(Utils.B58(Buffer.concat([Buffer.from(signature.replace(/^0x/, ""), "hex"), Buffer.from(compressedToken)]))));
-
-              case 27:
-              case "end":
-                return _context4.stop();
-            }
-          }
-        }, _callee4, this);
-      }));
-
-      function GenerateSignedLinkToken(_x4) {
-        return _GenerateSignedLinkToken.apply(this, arguments);
-      }
-
-      return GenerateSignedLinkToken;
-    }()
-  }, {
-    key: "MakeAccessRequest",
-    value: function () {
-      var _MakeAccessRequest = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee5(_ref6) {
-        var _this = this;
-
-        var libraryId, objectId, versionHash, _ref6$args, args, _ref6$publicKey, publicKey, _ref6$update, update, _ref6$skipCache, skipCache, _ref6$noCache, noCache, cacheOnly, walletContractAddress, walletCreated, id, _yield$this$ContractI, isV3, accessType, abi, _yield$this$AccessInf, accessArgs, checkAccessCharge, address, elapsed, _cache, accessRequest, cache;
-
-        return _regeneratorRuntime.wrap(function _callee5$(_context5) {
-          while (1) {
-            switch (_context5.prev = _context5.next) {
-              case 0:
-                libraryId = _ref6.libraryId, objectId = _ref6.objectId, versionHash = _ref6.versionHash, _ref6$args = _ref6.args, args = _ref6$args === void 0 ? [] : _ref6$args, _ref6$publicKey = _ref6.publicKey, publicKey = _ref6$publicKey === void 0 ? "" : _ref6$publicKey, _ref6$update = _ref6.update, update = _ref6$update === void 0 ? false : _ref6$update, _ref6$skipCache = _ref6.skipCache, skipCache = _ref6$skipCache === void 0 ? false : _ref6$skipCache, _ref6$noCache = _ref6.noCache, noCache = _ref6$noCache === void 0 ? false : _ref6$noCache, cacheOnly = _ref6.cacheOnly;
+                libraryId = _ref5.libraryId, objectId = _ref5.objectId, versionHash = _ref5.versionHash, _ref5$args = _ref5.args, args = _ref5$args === void 0 ? [] : _ref5$args, _ref5$publicKey = _ref5.publicKey, publicKey = _ref5$publicKey === void 0 ? "" : _ref5$publicKey, _ref5$update = _ref5.update, update = _ref5$update === void 0 ? false : _ref5$update, _ref5$skipCache = _ref5.skipCache, skipCache = _ref5$skipCache === void 0 ? false : _ref5$skipCache, _ref5$noCache = _ref5.noCache, noCache = _ref5$noCache === void 0 ? false : _ref5$noCache, cacheOnly = _ref5.cacheOnly;
 
                 if (this.client.signer) {
-                  _context5.next = 3;
+                  _context4.next = 3;
                   break;
                 }
 
-                return _context5.abrupt("return", {
+                return _context4.abrupt("return", {
                   transactionHash: ""
                 });
 
               case 3:
-                _context5.next = 5;
+                _context4.next = 5;
                 return this.client.userProfileClient.UserWalletAddress({
                   address: this.client.signer.address
                 });
 
               case 5:
-                walletContractAddress = _context5.sent;
+                walletContractAddress = _context4.sent;
 
                 if (walletContractAddress) {
-                  _context5.next = 12;
+                  _context4.next = 12;
                   break;
                 }
 
-                _context5.next = 9;
+                _context4.next = 9;
                 return this.client.userProfileClient.WalletAddress();
 
               case 9:
-                walletCreated = _context5.sent;
+                walletCreated = _context4.sent;
 
                 if (walletCreated) {
-                  _context5.next = 12;
+                  _context4.next = 12;
                   break;
                 }
 
@@ -561,26 +469,26 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 }
 
                 id = objectId || libraryId || this.contentSpaceId;
-                _context5.next = 16;
+                _context4.next = 16;
                 return this.ContractInfo({
                   id: id
                 });
 
               case 16:
-                _yield$this$ContractI = _context5.sent;
+                _yield$this$ContractI = _context4.sent;
                 isV3 = _yield$this$ContractI.isV3;
                 accessType = _yield$this$ContractI.accessType;
                 abi = _yield$this$ContractI.abi;
 
                 if (!(typeof accessType === "undefined")) {
-                  _context5.next = 22;
+                  _context4.next = 22;
                   break;
                 }
 
                 throw Error("Unable to determine contract info for ".concat(id, " (").concat(this.client.utils.HashToAddress(id), ") - Wrong network?"));
 
               case 22:
-                _context5.next = 24;
+                _context4.next = 24;
                 return this.AccessInfo({
                   accessType: accessType,
                   publicKey: publicKey,
@@ -590,7 +498,7 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 24:
-                _yield$this$AccessInf = _context5.sent;
+                _yield$this$AccessInf = _context4.sent;
                 accessArgs = _yield$this$AccessInf.accessArgs;
                 checkAccessCharge = _yield$this$AccessInf.checkAccessCharge;
                 address = Utils.HashToAddress(id);
@@ -598,11 +506,11 @@ var AuthorizationClient = /*#__PURE__*/function () {
 
               case 29:
                 if (!this.transactionLocks[id]) {
-                  _context5.next = 36;
+                  _context4.next = 36;
                   break;
                 }
 
-                _context5.next = 32;
+                _context4.next = 32;
                 return new Promise(function (resolve) {
                   return setTimeout(resolve, 100);
                 });
@@ -615,31 +523,31 @@ var AuthorizationClient = /*#__PURE__*/function () {
                   delete this.transactionLocks[id];
                 }
 
-                _context5.next = 29;
+                _context4.next = 29;
                 break;
 
               case 36:
-                _context5.prev = 36;
+                _context4.prev = 36;
                 this.transactionLocks[id] = true; // Check cache for existing transaction
 
                 if (!(!noCache && !skipCache)) {
-                  _context5.next = 46;
+                  _context4.next = 46;
                   break;
                 }
 
                 _cache = update ? this.modifyTransactions : this.accessTransactions;
 
                 if (!_cache[address]) {
-                  _context5.next = 46;
+                  _context4.next = 46;
                   break;
                 }
 
                 if (!(_cache[address].issuedAt > Date.now() - 12 * 60 * 60 * 1000)) {
-                  _context5.next = 45;
+                  _context4.next = 45;
                   break;
                 }
 
-                return _context5.abrupt("return", _cache[address]);
+                return _context4.abrupt("return", _cache[address]);
 
               case 45:
                 // Token expired
@@ -647,33 +555,33 @@ var AuthorizationClient = /*#__PURE__*/function () {
 
               case 46:
                 if (!cacheOnly) {
-                  _context5.next = 48;
+                  _context4.next = 48;
                   break;
                 }
 
-                return _context5.abrupt("return");
+                return _context4.abrupt("return");
 
               case 48:
                 if (!update) {
-                  _context5.next = 55;
+                  _context4.next = 55;
                   break;
                 }
 
                 this.Log("Making update request on ".concat(accessType, " ").concat(id));
-                _context5.next = 52;
+                _context4.next = 52;
                 return this.UpdateRequest({
                   id: id,
                   abi: abi
                 });
 
               case 52:
-                accessRequest = _context5.sent;
-                _context5.next = 59;
+                accessRequest = _context4.sent;
+                _context4.next = 59;
                 break;
 
               case 55:
                 this.Log("Making access request on ".concat(accessType, " ").concat(id));
-                _context5.next = 58;
+                _context4.next = 58;
                 return this.AccessRequest({
                   id: id,
                   args: accessArgs,
@@ -681,11 +589,11 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 58:
-                accessRequest = _context5.sent;
+                accessRequest = _context4.sent;
 
               case 59:
                 cache = update ? this.modifyTransactions : this.accessTransactions;
-                _context5.prev = 60;
+                _context4.prev = 60;
 
                 if (!noCache) {
                   cache[address] = {
@@ -701,32 +609,32 @@ var AuthorizationClient = /*#__PURE__*/function () {
                   });
                 }
 
-                return _context5.abrupt("return", accessRequest);
+                return _context4.abrupt("return", accessRequest);
 
               case 65:
-                _context5.prev = 65;
-                _context5.t0 = _context5["catch"](60);
+                _context4.prev = 65;
+                _context4.t0 = _context4["catch"](60);
 
                 if (!noCache) {
                   delete cache[address];
                 }
 
-                throw _context5.t0;
+                throw _context4.t0;
 
               case 69:
-                _context5.prev = 69;
+                _context4.prev = 69;
                 delete this.transactionLocks[id];
-                return _context5.finish(69);
+                return _context4.finish(69);
 
               case 72:
               case "end":
-                return _context5.stop();
+                return _context4.stop();
             }
           }
-        }, _callee5, this, [[36,, 69, 72], [60, 65]]);
+        }, _callee4, this, [[36,, 69, 72], [60, 65]]);
       }));
 
-      function MakeAccessRequest(_x5) {
+      function MakeAccessRequest(_x4) {
         return _MakeAccessRequest.apply(this, arguments);
       }
 
@@ -735,21 +643,21 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "AccessRequest",
     value: function () {
-      var _AccessRequest = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee6(_ref7) {
-        var id, _ref7$args, args, _ref7$checkAccessChar, checkAccessCharge, _yield$this$ContractI2, isV3, accessType, abi, accessCharge, owner, accessChargeArgs, event, methodName, contractAddress;
+      var _AccessRequest = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee5(_ref6) {
+        var id, _ref6$args, args, _ref6$checkAccessChar, checkAccessCharge, _yield$this$ContractI2, isV3, accessType, abi, accessCharge, owner, accessChargeArgs, event, methodName, contractAddress;
 
-        return _regeneratorRuntime.wrap(function _callee6$(_context6) {
+        return _regeneratorRuntime.wrap(function _callee5$(_context5) {
           while (1) {
-            switch (_context6.prev = _context6.next) {
+            switch (_context5.prev = _context5.next) {
               case 0:
-                id = _ref7.id, _ref7$args = _ref7.args, args = _ref7$args === void 0 ? [] : _ref7$args, _ref7$checkAccessChar = _ref7.checkAccessCharge, checkAccessCharge = _ref7$checkAccessChar === void 0 ? false : _ref7$checkAccessChar;
-                _context6.next = 3;
+                id = _ref6.id, _ref6$args = _ref6.args, args = _ref6$args === void 0 ? [] : _ref6$args, _ref6$checkAccessChar = _ref6.checkAccessCharge, checkAccessCharge = _ref6$checkAccessChar === void 0 ? false : _ref6$checkAccessChar;
+                _context5.next = 3;
                 return this.ContractInfo({
                   id: id
                 });
 
               case 3:
-                _yield$this$ContractI2 = _context6.sent;
+                _yield$this$ContractI2 = _context5.sent;
                 isV3 = _yield$this$ContractI2.isV3;
                 accessType = _yield$this$ContractI2.accessType;
                 abi = _yield$this$ContractI2.abi;
@@ -757,46 +665,46 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 accessCharge = 0;
 
                 if (!(checkAccessCharge && accessType === ACCESS_TYPES.OBJECT)) {
-                  _context6.next = 26;
+                  _context5.next = 26;
                   break;
                 }
 
-                _context6.next = 11;
+                _context5.next = 11;
                 return this.Owner({
                   id: id,
                   abi: abi
                 });
 
               case 11:
-                owner = _context6.sent;
+                owner = _context5.sent;
 
                 if (Utils.EqualAddress(this.client.signer.address, owner)) {
-                  _context6.next = 26;
+                  _context5.next = 26;
                   break;
                 }
 
-                _context6.prev = 13;
+                _context5.prev = 13;
                 // Extract level, custom values and stakeholders from accessRequest arguments
                 accessChargeArgs = isV3 ? [0, [], []] : [args[0], args[3], args[4]]; // Access charge is in wei, but methods take ether - convert to charge to ether
 
-                _context6.t0 = Utils;
-                _context6.next = 18;
+                _context5.t0 = Utils;
+                _context5.next = 18;
                 return this.GetAccessCharge({
                   objectId: id,
                   args: accessChargeArgs
                 });
 
               case 18:
-                _context6.t1 = _context6.sent;
-                accessCharge = _context6.t0.WeiToEther.call(_context6.t0, _context6.t1);
-                _context6.next = 26;
+                _context5.t1 = _context5.sent;
+                accessCharge = _context5.t0.WeiToEther.call(_context5.t0, _context5.t1);
+                _context5.next = 26;
                 break;
 
               case 22:
-                _context6.prev = 22;
-                _context6.t2 = _context6["catch"](13);
+                _context5.prev = 22;
+                _context5.t2 = _context5["catch"](13);
                 this.Log("Failed to get access charge for", id);
-                this.Log(_context6.t2);
+                this.Log(_context5.t2);
 
               case 26:
                 if (accessCharge > 0) {
@@ -811,7 +719,7 @@ var AuthorizationClient = /*#__PURE__*/function () {
                   methodName = "accessRequest";
                 }
 
-                _context6.next = 31;
+                _context5.next = 31;
                 return this.ContractHasMethod({
                   contractAddress: contractAddress,
                   abi: abi,
@@ -819,19 +727,19 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 31:
-                if (_context6.sent) {
-                  _context6.next = 34;
+                if (_context5.sent) {
+                  _context5.next = 34;
                   break;
                 }
 
                 this.Log("".concat(accessType, " ").concat(id, " has no ").concat(methodName, " method. Skipping"));
-                return _context6.abrupt("return", {
+                return _context5.abrupt("return", {
                   transactionHash: "",
                   logs: []
                 });
 
               case 34:
-                _context6.next = 36;
+                _context5.next = 36;
                 return this.client.CallContractMethodAndWait({
                   contractAddress: contractAddress,
                   abi: abi,
@@ -841,27 +749,27 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 36:
-                event = _context6.sent;
+                event = _context5.sent;
 
                 if (!(event.logs.length === 0)) {
-                  _context6.next = 39;
+                  _context5.next = 39;
                   break;
                 }
 
                 throw Error("Access denied (".concat(id, ")"));
 
               case 39:
-                return _context6.abrupt("return", event);
+                return _context5.abrupt("return", event);
 
               case 40:
               case "end":
-                return _context6.stop();
+                return _context5.stop();
             }
           }
-        }, _callee6, this, [[13, 22]]);
+        }, _callee5, this, [[13, 22]]);
       }));
 
-      function AccessRequest(_x6) {
+      function AccessRequest(_x5) {
         return _AccessRequest.apply(this, arguments);
       }
 
@@ -870,14 +778,14 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "UpdateRequest",
     value: function () {
-      var _UpdateRequest = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee7(_ref8) {
+      var _UpdateRequest = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee6(_ref7) {
         var id, abi, event, updateRequestEvent;
-        return _regeneratorRuntime.wrap(function _callee7$(_context7) {
+        return _regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
-            switch (_context7.prev = _context7.next) {
+            switch (_context6.prev = _context6.next) {
               case 0:
-                id = _ref8.id, abi = _ref8.abi;
-                _context7.next = 3;
+                id = _ref7.id, abi = _ref7.abi;
+                _context6.next = 3;
                 return this.client.CallContractMethodAndWait({
                   contractAddress: Utils.HashToAddress(id),
                   abi: abi,
@@ -886,7 +794,7 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 3:
-                event = _context7.sent;
+                event = _context6.sent;
                 updateRequestEvent = this.client.ExtractEventFromLogs({
                   abi: abi,
                   event: event,
@@ -894,24 +802,24 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
                 if (!(event.logs.length === 0 || !updateRequestEvent)) {
-                  _context7.next = 7;
+                  _context6.next = 7;
                   break;
                 }
 
                 throw Error("Update request denied for ".concat(id));
 
               case 7:
-                return _context7.abrupt("return", event);
+                return _context6.abrupt("return", event);
 
               case 8:
               case "end":
-                return _context7.stop();
+                return _context6.stop();
             }
           }
-        }, _callee7, this);
+        }, _callee6, this);
       }));
 
-      function UpdateRequest(_x7) {
+      function UpdateRequest(_x6) {
         return _UpdateRequest.apply(this, arguments);
       }
 
@@ -919,14 +827,14 @@ var AuthorizationClient = /*#__PURE__*/function () {
     }()
   }, {
     key: "AudienceData",
-    value: function AudienceData(_ref9) {
-      var objectId = _ref9.objectId,
-          versionHash = _ref9.versionHash,
-          _ref9$protocols = _ref9.protocols,
-          protocols = _ref9$protocols === void 0 ? [] : _ref9$protocols,
-          _ref9$drms = _ref9.drms,
-          drms = _ref9$drms === void 0 ? [] : _ref9$drms,
-          context = _ref9.context;
+    value: function AudienceData(_ref8) {
+      var objectId = _ref8.objectId,
+          versionHash = _ref8.versionHash,
+          _ref8$protocols = _ref8.protocols,
+          protocols = _ref8$protocols === void 0 ? [] : _ref8$protocols,
+          _ref8$drms = _ref8.drms,
+          drms = _ref8$drms === void 0 ? [] : _ref8$drms,
+          context = _ref8.context;
       this.Log("Retrieving audience data: ".concat(objectId));
       context = context || this.client.authContext || {};
 
@@ -957,41 +865,41 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "GenerateChannelContentToken",
     value: function () {
-      var _GenerateChannelContentToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee8(_ref10) {
-        var objectId, versionHash, issuer, code, email, audienceData, context, oauthToken, _ref10$value, value, token, tenantId, kmsAddress, stateChannelApi, additionalParams, payload, signature, multiSig;
+      var _GenerateChannelContentToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee7(_ref9) {
+        var objectId, versionHash, issuer, code, email, audienceData, context, oauthToken, _ref9$value, value, token, tenantId, kmsAddress, stateChannelApi, additionalParams, payload, signature, multiSig;
 
-        return _regeneratorRuntime.wrap(function _callee8$(_context8) {
+        return _regeneratorRuntime.wrap(function _callee7$(_context7) {
           while (1) {
-            switch (_context8.prev = _context8.next) {
+            switch (_context7.prev = _context7.next) {
               case 0:
-                objectId = _ref10.objectId, versionHash = _ref10.versionHash, issuer = _ref10.issuer, code = _ref10.code, email = _ref10.email, audienceData = _ref10.audienceData, context = _ref10.context, oauthToken = _ref10.oauthToken, _ref10$value = _ref10.value, value = _ref10$value === void 0 ? 0 : _ref10$value;
+                objectId = _ref9.objectId, versionHash = _ref9.versionHash, issuer = _ref9.issuer, code = _ref9.code, email = _ref9.email, audienceData = _ref9.audienceData, context = _ref9.context, oauthToken = _ref9.oauthToken, _ref9$value = _ref9.value, value = _ref9$value === void 0 ? 0 : _ref9$value;
 
                 if (!oauthToken) {
-                  _context8.next = 5;
+                  _context7.next = 5;
                   break;
                 }
 
-                _context8.next = 4;
+                _context7.next = 4;
                 return this.GenerateOauthChannelToken({
                   objectId: objectId,
                   token: oauthToken
                 });
 
               case 4:
-                return _context8.abrupt("return", _context8.sent);
+                return _context7.abrupt("return", _context7.sent);
 
               case 5:
                 if (!(!this.noCache && this.channelContentTokens[objectId])) {
-                  _context8.next = 11;
+                  _context7.next = 11;
                   break;
                 }
 
                 if (!(this.channelContentTokens[objectId].issuedAt > Date.now() - 12 * 60 * 60 * 1000)) {
-                  _context8.next = 10;
+                  _context7.next = 10;
                   break;
                 }
 
-                return _context8.abrupt("return", this.channelContentTokens[objectId].token);
+                return _context7.abrupt("return", this.channelContentTokens[objectId].token);
 
               case 10:
                 // Token expired
@@ -1001,45 +909,45 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 this.Log("Making state channel access request: ".concat(objectId));
 
                 if (!issuer) {
-                  _context8.next = 43;
+                  _context7.next = 43;
                   break;
                 }
 
                 // Ticket API
                 tenantId = issuer.replace(/^\//, "").split("/")[2];
-                _context8.prev = 14;
-                _context8.next = 17;
+                _context7.prev = 14;
+                _context7.next = 17;
                 return this.client.CallContractMethod({
                   contractAddress: Utils.HashToAddress(tenantId),
                   methodName: "addressKMS"
                 });
 
               case 17:
-                kmsAddress = _context8.sent;
+                kmsAddress = _context7.sent;
 
                 if (kmsAddress) {
-                  _context8.next = 20;
+                  _context7.next = 20;
                   break;
                 }
 
                 throw "";
 
               case 20:
-                _context8.next = 27;
+                _context7.next = 27;
                 break;
 
               case 22:
-                _context8.prev = 22;
-                _context8.t0 = _context8["catch"](14);
-                _context8.next = 26;
+                _context7.prev = 22;
+                _context7.t0 = _context7["catch"](14);
+                _context7.next = 26;
                 return this.client.DefaultKMSAddress();
 
               case 26:
-                kmsAddress = _context8.sent;
+                kmsAddress = _context7.sent;
 
               case 27:
-                _context8.prev = 27;
-                _context8.next = 30;
+                _context7.prev = 27;
+                _context7.next = 30;
                 return Utils.ResponseToFormat("text", this.MakeAuthServiceRequest({
                   kmsId: "ikms" + Utils.AddressToHash(kmsAddress),
                   method: "POST",
@@ -1051,16 +959,16 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 }));
 
               case 30:
-                token = _context8.sent;
-                _context8.next = 40;
+                token = _context7.sent;
+                _context7.next = 40;
                 break;
 
               case 33:
-                _context8.prev = 33;
-                _context8.t1 = _context8["catch"](27);
+                _context7.prev = 33;
+                _context7.t1 = _context7["catch"](27);
                 this.Log("/as token redemption failed:", true);
-                this.Log(_context8.t1, true);
-                _context8.next = 39;
+                this.Log(_context7.t1, true);
+                _context7.next = 39;
                 return Utils.ResponseToFormat("text", this.MakeKMSRequest({
                   kmsId: "ikms" + Utils.AddressToHash(kmsAddress),
                   method: "POST",
@@ -1072,12 +980,12 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 }));
 
               case 39:
-                token = _context8.sent;
+                token = _context7.sent;
 
               case 40:
                 // Pull target object from token so token can be cached
                 objectId = JSON.parse(Utils.FromB64(token)).qid;
-                _context8.next = 54;
+                _context7.next = 54;
                 break;
 
               case 43:
@@ -1092,7 +1000,7 @@ var AuthorizationClient = /*#__PURE__*/function () {
 
                 stateChannelApi = "elv_channelContentRequestContext";
                 additionalParams = [JSON.stringify(audienceData)];
-                _context8.next = 48;
+                _context7.next = 48;
                 return this.MakeKMSCall({
                   objectId: objectId,
                   methodName: stateChannelApi,
@@ -1102,12 +1010,12 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 48:
-                payload = _context8.sent;
-                _context8.next = 51;
+                payload = _context7.sent;
+                _context7.next = 51;
                 return this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
 
               case 51:
-                signature = _context8.sent;
+                signature = _context7.sent;
                 multiSig = Utils.FormatSignature(signature);
                 token = "".concat(payload, ".").concat(Utils.B64(multiSig));
 
@@ -1119,17 +1027,17 @@ var AuthorizationClient = /*#__PURE__*/function () {
                   };
                 }
 
-                return _context8.abrupt("return", token);
+                return _context7.abrupt("return", token);
 
               case 56:
               case "end":
-                return _context8.stop();
+                return _context7.stop();
             }
           }
-        }, _callee8, this, [[14, 22], [27, 33]]);
+        }, _callee7, this, [[14, 22], [27, 33]]);
       }));
 
-      function GenerateChannelContentToken(_x8) {
+      function GenerateChannelContentToken(_x7) {
         return _GenerateChannelContentToken.apply(this, arguments);
       }
 
@@ -1138,16 +1046,16 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "ChannelContentFinalize",
     value: function () {
-      var _ChannelContentFinalize = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee9(_ref11) {
-        var objectId, versionHash, _ref11$percent, percent, result;
+      var _ChannelContentFinalize = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee8(_ref10) {
+        var objectId, versionHash, _ref10$percent, percent, result;
 
-        return _regeneratorRuntime.wrap(function _callee9$(_context9) {
+        return _regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
-            switch (_context9.prev = _context9.next) {
+            switch (_context8.prev = _context8.next) {
               case 0:
-                objectId = _ref11.objectId, versionHash = _ref11.versionHash, _ref11$percent = _ref11.percent, percent = _ref11$percent === void 0 ? 0 : _ref11$percent;
+                objectId = _ref10.objectId, versionHash = _ref10.versionHash, _ref10$percent = _ref10.percent, percent = _ref10$percent === void 0 ? 0 : _ref10$percent;
                 this.Log("Making state channel finalize request: ".concat(objectId));
-                _context9.next = 4;
+                _context8.next = 4;
                 return this.MakeKMSCall({
                   objectId: objectId,
                   methodName: "elv_channelContentFinalizeContext",
@@ -1160,19 +1068,19 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 4:
-                result = _context9.sent;
+                result = _context8.sent;
                 this.channelContentTokens[objectId] = undefined;
-                return _context9.abrupt("return", result);
+                return _context8.abrupt("return", result);
 
               case 7:
               case "end":
-                return _context9.stop();
+                return _context8.stop();
             }
           }
-        }, _callee9, this);
+        }, _callee8, this);
       }));
 
-      function ChannelContentFinalize(_x9) {
+      function ChannelContentFinalize(_x8) {
         return _ChannelContentFinalize.apply(this, arguments);
       }
 
@@ -1181,36 +1089,36 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "GenerateOauthChannelToken",
     value: function () {
-      var _GenerateOauthChannelToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee10(_ref12) {
+      var _GenerateOauthChannelToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee9(_ref11) {
         var objectId, versionHash, token, fabricToken;
-        return _regeneratorRuntime.wrap(function _callee10$(_context10) {
+        return _regeneratorRuntime.wrap(function _callee9$(_context9) {
           while (1) {
-            switch (_context10.prev = _context10.next) {
+            switch (_context9.prev = _context9.next) {
               case 0:
-                objectId = _ref12.objectId, versionHash = _ref12.versionHash, token = _ref12.token;
+                objectId = _ref11.objectId, versionHash = _ref11.versionHash, token = _ref11.token;
 
                 if (versionHash) {
                   objectId = Utils.DecodeVersionHash(versionHash).objectId;
                 }
 
                 if (!(!this.noCache && this.channelContentTokens[objectId])) {
-                  _context10.next = 6;
+                  _context9.next = 6;
                   break;
                 }
 
                 if (!(this.channelContentTokens[objectId].issuedAt > Date.now() - 12 * 60 * 60 * 1000)) {
-                  _context10.next = 5;
+                  _context9.next = 5;
                   break;
                 }
 
-                return _context10.abrupt("return", this.channelContentTokens[objectId].token);
+                return _context9.abrupt("return", this.channelContentTokens[objectId].token);
 
               case 5:
                 // Token expired
                 this.channelContentTokens[objectId] = undefined;
 
               case 6:
-                _context10.next = 8;
+                _context9.next = 8;
                 return this.MakeKMSRequest({
                   objectId: objectId,
                   versionHash: versionHash,
@@ -1223,11 +1131,11 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 8:
-                _context10.next = 10;
-                return _context10.sent.text();
+                _context9.next = 10;
+                return _context9.sent.text();
 
               case 10:
-                fabricToken = _context10.sent;
+                fabricToken = _context9.sent;
 
                 if (!this.noCache) {
                   this.channelContentTokens[objectId] = {
@@ -1236,17 +1144,17 @@ var AuthorizationClient = /*#__PURE__*/function () {
                   };
                 }
 
-                return _context10.abrupt("return", fabricToken);
+                return _context9.abrupt("return", fabricToken);
 
               case 13:
               case "end":
-                return _context10.stop();
+                return _context9.stop();
             }
           }
-        }, _callee10, this);
+        }, _callee9, this);
       }));
 
-      function GenerateOauthChannelToken(_x10) {
+      function GenerateOauthChannelToken(_x9) {
         return _GenerateOauthChannelToken.apply(this, arguments);
       }
 
@@ -1255,27 +1163,27 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "IsV3",
     value: function () {
-      var _IsV = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee11(_ref13) {
+      var _IsV = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee10(_ref12) {
         var id, contractName;
-        return _regeneratorRuntime.wrap(function _callee11$(_context11) {
+        return _regeneratorRuntime.wrap(function _callee10$(_context10) {
           while (1) {
-            switch (_context11.prev = _context11.next) {
+            switch (_context10.prev = _context10.next) {
               case 0:
-                id = _ref13.id;
+                id = _ref12.id;
 
                 if (!this.client.assumeV3) {
-                  _context11.next = 3;
+                  _context10.next = 3;
                   break;
                 }
 
-                return _context11.abrupt("return", true);
+                return _context10.abrupt("return", true);
 
               case 3:
-                _context11.next = 5;
+                _context10.next = 5;
                 return this.client.ethClient.ContractName(Utils.HashToAddress(id), true);
 
               case 5:
-                contractName = _context11.sent;
+                contractName = _context10.sent;
 
                 if (!this.accessVersions[contractName]) {
                   this.accessVersions[contractName] = this.ContractHasMethod({
@@ -1285,21 +1193,21 @@ var AuthorizationClient = /*#__PURE__*/function () {
                   });
                 }
 
-                _context11.next = 9;
+                _context10.next = 9;
                 return this.accessVersions[contractName];
 
               case 9:
-                return _context11.abrupt("return", _context11.sent);
+                return _context10.abrupt("return", _context10.sent);
 
               case 10:
               case "end":
-                return _context11.stop();
+                return _context10.stop();
             }
           }
-        }, _callee11, this);
+        }, _callee10, this);
       }));
 
-      function IsV3(_x11) {
+      function IsV3(_x10) {
         return _IsV.apply(this, arguments);
       }
 
@@ -1308,13 +1216,13 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "AccessInfo",
     value: function () {
-      var _AccessInfo = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee12(_ref14) {
+      var _AccessInfo = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee11(_ref13) {
         var accessType, publicKey, args, isV3, checkAccessCharge;
-        return _regeneratorRuntime.wrap(function _callee12$(_context12) {
+        return _regeneratorRuntime.wrap(function _callee11$(_context11) {
           while (1) {
-            switch (_context12.prev = _context12.next) {
+            switch (_context11.prev = _context11.next) {
               case 0:
-                accessType = _ref14.accessType, publicKey = _ref14.publicKey, args = _ref14.args, isV3 = _ref14.isV3;
+                accessType = _ref13.accessType, publicKey = _ref13.publicKey, args = _ref13.args, isV3 = _ref13.isV3;
                 checkAccessCharge = false;
 
                 if (accessType === ACCESS_TYPES.OBJECT) {
@@ -1342,20 +1250,20 @@ var AuthorizationClient = /*#__PURE__*/function () {
                   ];
                 }
 
-                return _context12.abrupt("return", {
+                return _context11.abrupt("return", {
                   accessArgs: args,
                   checkAccessCharge: checkAccessCharge
                 });
 
               case 5:
               case "end":
-                return _context12.stop();
+                return _context11.stop();
             }
           }
-        }, _callee12, this);
+        }, _callee11, this);
       }));
 
-      function AccessInfo(_x12) {
+      function AccessInfo(_x11) {
         return _AccessInfo.apply(this, arguments);
       }
 
@@ -1365,54 +1273,54 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "AccessType",
     value: function () {
-      var _AccessType = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee13(id) {
+      var _AccessType = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee12(id) {
         var contractName, accessType;
-        return _regeneratorRuntime.wrap(function _callee13$(_context13) {
+        return _regeneratorRuntime.wrap(function _callee12$(_context12) {
           while (1) {
-            switch (_context13.prev = _context13.next) {
+            switch (_context12.prev = _context12.next) {
               case 0:
-                _context13.next = 2;
+                _context12.next = 2;
                 return this.client.ethClient.ContractName(Utils.HashToAddress(id));
 
               case 2:
-                contractName = _context13.sent;
+                contractName = _context12.sent;
 
                 if (this.accessTypes[id]) {
-                  _context13.next = 23;
+                  _context12.next = 23;
                   break;
                 }
 
-                _context13.t0 = contractName;
-                _context13.next = _context13.t0 === "BaseContentSpace" ? 7 : _context13.t0 === "BaseLibrary" ? 9 : _context13.t0 === "BaseContentType" ? 11 : _context13.t0 === "BsAccessWallet" ? 13 : _context13.t0 === "BsAccessCtrlGrp" ? 15 : _context13.t0 === "BaseContent" ? 17 : _context13.t0 === "BaseTenantSpace" ? 19 : 21;
+                _context12.t0 = contractName;
+                _context12.next = _context12.t0 === "BaseContentSpace" ? 7 : _context12.t0 === "BaseLibrary" ? 9 : _context12.t0 === "BaseContentType" ? 11 : _context12.t0 === "BsAccessWallet" ? 13 : _context12.t0 === "BsAccessCtrlGrp" ? 15 : _context12.t0 === "BaseContent" ? 17 : _context12.t0 === "BaseTenantSpace" ? 19 : 21;
                 break;
 
               case 7:
                 accessType = ACCESS_TYPES.SPACE;
-                return _context13.abrupt("break", 22);
+                return _context12.abrupt("break", 22);
 
               case 9:
                 accessType = ACCESS_TYPES.LIBRARY;
-                return _context13.abrupt("break", 22);
+                return _context12.abrupt("break", 22);
 
               case 11:
                 accessType = ACCESS_TYPES.TYPE;
-                return _context13.abrupt("break", 22);
+                return _context12.abrupt("break", 22);
 
               case 13:
                 accessType = ACCESS_TYPES.WALLET;
-                return _context13.abrupt("break", 22);
+                return _context12.abrupt("break", 22);
 
               case 15:
                 accessType = ACCESS_TYPES.GROUP;
-                return _context13.abrupt("break", 22);
+                return _context12.abrupt("break", 22);
 
               case 17:
                 accessType = ACCESS_TYPES.OBJECT;
-                return _context13.abrupt("break", 22);
+                return _context12.abrupt("break", 22);
 
               case 19:
                 accessType = ACCESS_TYPES.TENANT;
-                return _context13.abrupt("break", 22);
+                return _context12.abrupt("break", 22);
 
               case 21:
                 accessType = ACCESS_TYPES.OTHER;
@@ -1421,17 +1329,17 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 this.accessTypes[id] = accessType;
 
               case 23:
-                return _context13.abrupt("return", this.accessTypes[id]);
+                return _context12.abrupt("return", this.accessTypes[id]);
 
               case 24:
               case "end":
-                return _context13.stop();
+                return _context12.stop();
             }
           }
-        }, _callee13, this);
+        }, _callee12, this);
       }));
 
-      function AccessType(_x13) {
+      function AccessType(_x12) {
         return _AccessType.apply(this, arguments);
       }
 
@@ -1440,29 +1348,29 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "AccessComplete",
     value: function () {
-      var _AccessComplete = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee14(_ref15) {
+      var _AccessComplete = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee13(_ref14) {
         var id, score, _yield$this$ContractI3, abi, isV3, address, requestId, event;
 
-        return _regeneratorRuntime.wrap(function _callee14$(_context14) {
+        return _regeneratorRuntime.wrap(function _callee13$(_context13) {
           while (1) {
-            switch (_context14.prev = _context14.next) {
+            switch (_context13.prev = _context13.next) {
               case 0:
-                id = _ref15.id, score = _ref15.score;
+                id = _ref14.id, score = _ref14.score;
                 this.Log("Calling access complete on ".concat(id, " with score ").concat(score));
-                _context14.next = 4;
+                _context13.next = 4;
                 return this.ContractInfo({
                   id: id
                 });
 
               case 4:
-                _yield$this$ContractI3 = _context14.sent;
+                _yield$this$ContractI3 = _context13.sent;
                 abi = _yield$this$ContractI3.abi;
                 isV3 = _yield$this$ContractI3.isV3;
                 address = Utils.HashToAddress(id);
                 requestId = this.requestIds[address];
 
                 if (requestId) {
-                  _context14.next = 11;
+                  _context13.next = 11;
                   break;
                 }
 
@@ -1470,11 +1378,11 @@ var AuthorizationClient = /*#__PURE__*/function () {
 
               case 11:
                 if (!isV3) {
-                  _context14.next = 17;
+                  _context13.next = 17;
                   break;
                 }
 
-                _context14.next = 14;
+                _context13.next = 14;
                 return this.client.CallContractMethodAndWait({
                   contractAddress: address,
                   abi: abi,
@@ -1483,12 +1391,12 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 14:
-                event = _context14.sent;
-                _context14.next = 20;
+                event = _context13.sent;
+                _context13.next = 20;
                 break;
 
               case 17:
-                _context14.next = 19;
+                _context13.next = 19;
                 return this.client.CallContractMethodAndWait({
                   contractAddress: address,
                   abi: abi,
@@ -1497,22 +1405,22 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 19:
-                event = _context14.sent;
+                event = _context13.sent;
 
               case 20:
                 delete this.requestIds[address];
                 delete this.accessTransactions[address];
-                return _context14.abrupt("return", event);
+                return _context13.abrupt("return", event);
 
               case 23:
               case "end":
-                return _context14.stop();
+                return _context13.stop();
             }
           }
-        }, _callee14, this);
+        }, _callee13, this);
       }));
 
-      function AccessComplete(_x14) {
+      function AccessComplete(_x13) {
         return _AccessComplete.apply(this, arguments);
       }
 
@@ -1523,13 +1431,13 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "ContractInfo",
     value: function () {
-      var _ContractInfo = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee15(_ref16) {
+      var _ContractInfo = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee14(_ref15) {
         var id, address, isV3, version, accessType;
-        return _regeneratorRuntime.wrap(function _callee15$(_context15) {
+        return _regeneratorRuntime.wrap(function _callee14$(_context14) {
           while (1) {
-            switch (_context15.prev = _context15.next) {
+            switch (_context14.prev = _context14.next) {
               case 0:
-                id = _ref16.id, address = _ref16.address;
+                id = _ref15.id, address = _ref15.address;
 
                 if (!address) {
                   address = Utils.HashToAddress(id);
@@ -1539,29 +1447,29 @@ var AuthorizationClient = /*#__PURE__*/function () {
                   id = Utils.AddressToObjectId(address);
                 }
 
-                _context15.next = 5;
+                _context14.next = 5;
                 return this.IsV3({
                   id: id
                 });
 
               case 5:
-                isV3 = _context15.sent;
+                isV3 = _context14.sent;
                 version = isV3 ? "v3" : "v2";
-                _context15.next = 9;
+                _context14.next = 9;
                 return this.AccessType(id);
 
               case 9:
-                accessType = _context15.sent;
+                accessType = _context14.sent;
 
                 if (!(accessType === this.ACCESS_TYPES.OTHER)) {
-                  _context15.next = 12;
+                  _context14.next = 12;
                   break;
                 }
 
-                return _context15.abrupt("return", {});
+                return _context14.abrupt("return", {});
 
               case 12:
-                return _context15.abrupt("return", {
+                return _context14.abrupt("return", {
                   isV3: isV3,
                   accessType: accessType,
                   abi: this.CONTRACTS[version][accessType].abi
@@ -1569,13 +1477,13 @@ var AuthorizationClient = /*#__PURE__*/function () {
 
               case 13:
               case "end":
-                return _context15.stop();
+                return _context14.stop();
             }
           }
-        }, _callee15, this);
+        }, _callee14, this);
       }));
 
-      function ContractInfo(_x15) {
+      function ContractInfo(_x14) {
         return _ContractInfo.apply(this, arguments);
       }
 
@@ -1584,23 +1492,23 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "GetAccessCharge",
     value: function () {
-      var _GetAccessCharge = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee16(_ref17) {
+      var _GetAccessCharge = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee15(_ref16) {
         var objectId, args, _yield$this$ContractI4, abi, info;
 
-        return _regeneratorRuntime.wrap(function _callee16$(_context16) {
+        return _regeneratorRuntime.wrap(function _callee15$(_context15) {
           while (1) {
-            switch (_context16.prev = _context16.next) {
+            switch (_context15.prev = _context15.next) {
               case 0:
-                objectId = _ref17.objectId, args = _ref17.args;
-                _context16.next = 3;
+                objectId = _ref16.objectId, args = _ref16.args;
+                _context15.next = 3;
                 return this.ContractInfo({
                   id: objectId
                 });
 
               case 3:
-                _yield$this$ContractI4 = _context16.sent;
+                _yield$this$ContractI4 = _context15.sent;
                 abi = _yield$this$ContractI4.abi;
-                _context16.next = 7;
+                _context15.next = 7;
                 return this.client.CallContractMethod({
                   contractAddress: Utils.HashToAddress(objectId),
                   abi: abi,
@@ -1609,18 +1517,18 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 7:
-                info = _context16.sent;
-                return _context16.abrupt("return", info[1] === 0 ? 0 : info[2]);
+                info = _context15.sent;
+                return _context15.abrupt("return", info[1] === 0 ? 0 : info[2]);
 
               case 9:
               case "end":
-                return _context16.stop();
+                return _context15.stop();
             }
           }
-        }, _callee16, this);
+        }, _callee15, this);
       }));
 
-      function GetAccessCharge(_x16) {
+      function GetAccessCharge(_x15) {
         return _GetAccessCharge.apply(this, arguments);
       }
 
@@ -1629,27 +1537,27 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "Owner",
     value: function () {
-      var _Owner = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee17(_ref18) {
+      var _Owner = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee16(_ref17) {
         var id, address, ownerAddress;
-        return _regeneratorRuntime.wrap(function _callee17$(_context17) {
+        return _regeneratorRuntime.wrap(function _callee16$(_context16) {
           while (1) {
-            switch (_context17.prev = _context17.next) {
+            switch (_context16.prev = _context16.next) {
               case 0:
-                id = _ref18.id, address = _ref18.address;
+                id = _ref17.id, address = _ref17.address;
 
                 if (this.client.signer) {
-                  _context17.next = 3;
+                  _context16.next = 3;
                   break;
                 }
 
-                return _context17.abrupt("return", false);
+                return _context16.abrupt("return", false);
 
               case 3:
                 if (id) {
                   address = Utils.HashToAddress(id);
                 }
 
-                _context17.next = 6;
+                _context16.next = 6;
                 return this.client.CallContractMethod({
                   contractAddress: address,
                   methodName: "owner",
@@ -1657,18 +1565,18 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 6:
-                ownerAddress = _context17.sent;
-                return _context17.abrupt("return", Utils.FormatAddress(ownerAddress));
+                ownerAddress = _context16.sent;
+                return _context16.abrupt("return", Utils.FormatAddress(ownerAddress));
 
               case 8:
               case "end":
-                return _context17.stop();
+                return _context16.stop();
             }
           }
-        }, _callee17, this);
+        }, _callee16, this);
       }));
 
-      function Owner(_x17) {
+      function Owner(_x16) {
         return _Owner.apply(this, arguments);
       }
 
@@ -1677,50 +1585,50 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "Sign",
     value: function () {
-      var _Sign = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18(message) {
-        return _regeneratorRuntime.wrap(function _callee18$(_context18) {
+      var _Sign = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee17(message) {
+        return _regeneratorRuntime.wrap(function _callee17$(_context17) {
           while (1) {
-            switch (_context18.prev = _context18.next) {
+            switch (_context17.prev = _context17.next) {
               case 0:
-                _context18.t0 = Ethers.utils;
+                _context17.t0 = Ethers.utils;
 
                 if (!this.client.signer.signDigest) {
-                  _context18.next = 7;
+                  _context17.next = 7;
                   break;
                 }
 
-                _context18.next = 4;
+                _context17.next = 4;
                 return this.client.signer.signDigest(message);
 
               case 4:
-                _context18.t1 = _context18.sent;
-                _context18.next = 10;
+                _context17.t1 = _context17.sent;
+                _context17.next = 10;
                 break;
 
               case 7:
-                _context18.next = 9;
+                _context17.next = 9;
                 return this.client.signer.signingKey.signDigest(message);
 
               case 9:
-                _context18.t1 = _context18.sent;
+                _context17.t1 = _context17.sent;
 
               case 10:
-                _context18.t2 = _context18.t1;
-                _context18.next = 13;
-                return _context18.t0.joinSignature.call(_context18.t0, _context18.t2);
+                _context17.t2 = _context17.t1;
+                _context17.next = 13;
+                return _context17.t0.joinSignature.call(_context17.t0, _context17.t2);
 
               case 13:
-                return _context18.abrupt("return", _context18.sent);
+                return _context17.abrupt("return", _context17.sent);
 
               case 14:
               case "end":
-                return _context18.stop();
+                return _context17.stop();
             }
           }
-        }, _callee18, this);
+        }, _callee17, this);
       }));
 
-      function Sign(_x18) {
+      function Sign(_x17) {
         return _Sign.apply(this, arguments);
       }
 
@@ -1729,37 +1637,37 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "KMSAddress",
     value: function () {
-      var _KMSAddress = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee19(_ref19) {
+      var _KMSAddress = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18(_ref18) {
         var objectId, versionHash, _yield$this$ContractI5, abi;
 
-        return _regeneratorRuntime.wrap(function _callee19$(_context19) {
+        return _regeneratorRuntime.wrap(function _callee18$(_context18) {
           while (1) {
-            switch (_context19.prev = _context19.next) {
+            switch (_context18.prev = _context18.next) {
               case 0:
-                objectId = _ref19.objectId, versionHash = _ref19.versionHash;
+                objectId = _ref18.objectId, versionHash = _ref18.versionHash;
 
                 if (versionHash) {
                   objectId = Utils.DecodeVersionHash(versionHash).objectId;
                 }
 
-                _context19.next = 4;
+                _context18.next = 4;
                 return this.ContractInfo({
                   id: objectId
                 });
 
               case 4:
-                _yield$this$ContractI5 = _context19.sent;
+                _yield$this$ContractI5 = _context18.sent;
                 abi = _yield$this$ContractI5.abi;
 
                 if (abi) {
-                  _context19.next = 8;
+                  _context18.next = 8;
                   break;
                 }
 
                 throw Error("Unable to determine contract info for ".concat(objectId, " - wrong network?"));
 
               case 8:
-                _context19.next = 10;
+                _context18.next = 10;
                 return this.client.CallContractMethod({
                   contractAddress: Utils.HashToAddress(objectId),
                   abi: abi,
@@ -1767,17 +1675,17 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 10:
-                return _context19.abrupt("return", _context19.sent);
+                return _context18.abrupt("return", _context18.sent);
 
               case 11:
               case "end":
-                return _context19.stop();
+                return _context18.stop();
             }
           }
-        }, _callee19, this);
+        }, _callee18, this);
       }));
 
-      function KMSAddress(_x19) {
+      function KMSAddress(_x18) {
         return _KMSAddress.apply(this, arguments);
       }
 
@@ -1786,29 +1694,29 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "KMSInfo",
     value: function () {
-      var _KMSInfo = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee20(_ref20) {
+      var _KMSInfo = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee19(_ref19) {
         var objectId, versionHash, kmsId, KMSInfo, _yield$this$ContractI6, abi, _yield$this$ContractI7, _abi, publicKey;
 
-        return _regeneratorRuntime.wrap(function _callee20$(_context20) {
+        return _regeneratorRuntime.wrap(function _callee19$(_context19) {
           while (1) {
-            switch (_context20.prev = _context20.next) {
+            switch (_context19.prev = _context19.next) {
               case 0:
-                objectId = _ref20.objectId, versionHash = _ref20.versionHash, kmsId = _ref20.kmsId;
+                objectId = _ref19.objectId, versionHash = _ref19.versionHash, kmsId = _ref19.kmsId;
 
                 if (!kmsId) {
-                  _context20.next = 11;
+                  _context19.next = 11;
                   break;
                 }
 
-                _context20.next = 4;
+                _context19.next = 4;
                 return this.ContractInfo({
                   address: this.client.contentSpaceAddress
                 });
 
               case 4:
-                _yield$this$ContractI6 = _context20.sent;
+                _yield$this$ContractI6 = _context19.sent;
                 abi = _yield$this$ContractI6.abi;
-                _context20.next = 8;
+                _context19.next = 8;
                 return this.client.CallContractMethod({
                   contractAddress: this.client.contentSpaceAddress,
                   abi: abi,
@@ -1818,8 +1726,8 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 8:
-                KMSInfo = _context20.sent;
-                _context20.next = 19;
+                KMSInfo = _context19.sent;
+                _context19.next = 19;
                 break;
 
               case 11:
@@ -1827,15 +1735,15 @@ var AuthorizationClient = /*#__PURE__*/function () {
                   objectId = Utils.DecodeVersionHash(versionHash).objectId;
                 }
 
-                _context20.next = 14;
+                _context19.next = 14;
                 return this.ContractInfo({
                   id: objectId
                 });
 
               case 14:
-                _yield$this$ContractI7 = _context20.sent;
+                _yield$this$ContractI7 = _context19.sent;
                 _abi = _yield$this$ContractI7.abi;
-                _context20.next = 18;
+                _context19.next = 18;
                 return this.client.CallContractMethod({
                   contractAddress: Utils.HashToAddress(objectId),
                   abi: _abi,
@@ -1845,25 +1753,25 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 18:
-                KMSInfo = _context20.sent;
+                KMSInfo = _context19.sent;
 
               case 19:
                 // Public key is compressed and hashed
                 publicKey = Ethers.utils.computePublicKey(Utils.HashToAddress(KMSInfo[1]), false);
-                return _context20.abrupt("return", {
+                return _context19.abrupt("return", {
                   urls: KMSInfo[0].split(","),
                   publicKey: publicKey
                 });
 
               case 21:
               case "end":
-                return _context20.stop();
+                return _context19.stop();
             }
           }
-        }, _callee20, this);
+        }, _callee19, this);
       }));
 
-      function KMSInfo(_x20) {
+      function KMSInfo(_x19) {
         return _KMSInfo.apply(this, arguments);
       }
 
@@ -1873,8 +1781,86 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "RetrieveConk",
     value: function () {
-      var _RetrieveConk = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee21(_ref21) {
+      var _RetrieveConk = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee20(_ref20) {
         var libraryId, objectId, kmsAddress, kmsCapId, kmsCap, cap;
+        return _regeneratorRuntime.wrap(function _callee20$(_context20) {
+          while (1) {
+            switch (_context20.prev = _context20.next) {
+              case 0:
+                libraryId = _ref20.libraryId, objectId = _ref20.objectId;
+
+                if (libraryId) {
+                  _context20.next = 5;
+                  break;
+                }
+
+                _context20.next = 4;
+                return this.client.ContentObjectLibraryId({
+                  objectId: objectId
+                });
+
+              case 4:
+                libraryId = _context20.sent;
+
+              case 5:
+                _context20.next = 7;
+                return this.KMSAddress({
+                  objectId: objectId
+                });
+
+              case 7:
+                kmsAddress = _context20.sent;
+                kmsCapId = "eluv.caps.ikms".concat(Utils.AddressToHash(kmsAddress));
+                _context20.next = 11;
+                return this.client.ContentObjectMetadata({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  metadataSubtree: kmsCapId
+                });
+
+              case 11:
+                kmsCap = _context20.sent;
+
+                if (kmsCap) {
+                  _context20.next = 14;
+                  break;
+                }
+
+                throw Error("No KMS key set for this object");
+
+              case 14:
+                _context20.next = 16;
+                return this.MakeKMSCall({
+                  objectId: objectId,
+                  methodName: "elv_getEncryptionKey",
+                  paramTypes: ["string", "string", "string", "string", "string"],
+                  params: [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""]
+                });
+
+              case 16:
+                cap = _context20.sent;
+                return _context20.abrupt("return", JSON.parse(Utils.FromB58(cap.replace(/^kp__/, "")).toString("utf-8")));
+
+              case 18:
+              case "end":
+                return _context20.stop();
+            }
+          }
+        }, _callee20, this);
+      }));
+
+      function RetrieveConk(_x20) {
+        return _RetrieveConk.apply(this, arguments);
+      }
+
+      return RetrieveConk;
+    }() // Retrieve symmetric key for object
+
+  }, {
+    key: "RetrieveReencryptionSymmetricKey",
+    value: function () {
+      var _RetrieveReencryptionSymmetricKey = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee21(_ref21) {
+        var libraryId, objectId, kmsAddress, kmsCapId, kmsCap;
         return _regeneratorRuntime.wrap(function _callee21$(_context21) {
           while (1) {
             switch (_context21.prev = _context21.next) {
@@ -1924,16 +1910,15 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 _context21.next = 16;
                 return this.MakeKMSCall({
                   objectId: objectId,
-                  methodName: "elv_getEncryptionKey",
+                  methodName: "elv_getSymmetricKeyAuth",
                   paramTypes: ["string", "string", "string", "string", "string"],
                   params: [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""]
                 });
 
               case 16:
-                cap = _context21.sent;
-                return _context21.abrupt("return", JSON.parse(Utils.FromB58(cap.replace(/^kp__/, "")).toString("utf-8")));
+                return _context21.abrupt("return", _context21.sent);
 
-              case 18:
+              case 17:
               case "end":
                 return _context21.stop();
             }
@@ -1941,84 +1926,7 @@ var AuthorizationClient = /*#__PURE__*/function () {
         }, _callee21, this);
       }));
 
-      function RetrieveConk(_x21) {
-        return _RetrieveConk.apply(this, arguments);
-      }
-
-      return RetrieveConk;
-    }() // Retrieve symmetric key for object
-
-  }, {
-    key: "RetrieveReencryptionSymmetricKey",
-    value: function () {
-      var _RetrieveReencryptionSymmetricKey = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee22(_ref22) {
-        var libraryId, objectId, kmsAddress, kmsCapId, kmsCap;
-        return _regeneratorRuntime.wrap(function _callee22$(_context22) {
-          while (1) {
-            switch (_context22.prev = _context22.next) {
-              case 0:
-                libraryId = _ref22.libraryId, objectId = _ref22.objectId;
-
-                if (libraryId) {
-                  _context22.next = 5;
-                  break;
-                }
-
-                _context22.next = 4;
-                return this.client.ContentObjectLibraryId({
-                  objectId: objectId
-                });
-
-              case 4:
-                libraryId = _context22.sent;
-
-              case 5:
-                _context22.next = 7;
-                return this.KMSAddress({
-                  objectId: objectId
-                });
-
-              case 7:
-                kmsAddress = _context22.sent;
-                kmsCapId = "eluv.caps.ikms".concat(Utils.AddressToHash(kmsAddress));
-                _context22.next = 11;
-                return this.client.ContentObjectMetadata({
-                  libraryId: libraryId,
-                  objectId: objectId,
-                  metadataSubtree: kmsCapId
-                });
-
-              case 11:
-                kmsCap = _context22.sent;
-
-                if (kmsCap) {
-                  _context22.next = 14;
-                  break;
-                }
-
-                throw Error("No KMS key set for this object");
-
-              case 14:
-                _context22.next = 16;
-                return this.MakeKMSCall({
-                  objectId: objectId,
-                  methodName: "elv_getSymmetricKeyAuth",
-                  paramTypes: ["string", "string", "string", "string", "string"],
-                  params: [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""]
-                });
-
-              case 16:
-                return _context22.abrupt("return", _context22.sent);
-
-              case 17:
-              case "end":
-                return _context22.stop();
-            }
-          }
-        }, _callee22, this);
-      }));
-
-      function RetrieveReencryptionSymmetricKey(_x22) {
+      function RetrieveReencryptionSymmetricKey(_x21) {
         return _RetrieveReencryptionSymmetricKey.apply(this, arguments);
       }
 
@@ -2028,55 +1936,55 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "MakeKMSCall",
     value: function () {
-      var _MakeKMSCall = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee23(_ref23) {
-        var kmsId, tenantId, objectId, versionHash, methodName, params, paramTypes, _ref23$additionalPara, additionalParams, _ref23$signature, signature, packedHash, KMSUrls, i, kmsUrl;
+      var _MakeKMSCall = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee22(_ref22) {
+        var kmsId, tenantId, objectId, versionHash, methodName, params, paramTypes, _ref22$additionalPara, additionalParams, _ref22$signature, signature, packedHash, KMSUrls, i, kmsUrl;
 
-        return _regeneratorRuntime.wrap(function _callee23$(_context23) {
+        return _regeneratorRuntime.wrap(function _callee22$(_context22) {
           while (1) {
-            switch (_context23.prev = _context23.next) {
+            switch (_context22.prev = _context22.next) {
               case 0:
-                kmsId = _ref23.kmsId, tenantId = _ref23.tenantId, objectId = _ref23.objectId, versionHash = _ref23.versionHash, methodName = _ref23.methodName, params = _ref23.params, paramTypes = _ref23.paramTypes, _ref23$additionalPara = _ref23.additionalParams, additionalParams = _ref23$additionalPara === void 0 ? [] : _ref23$additionalPara, _ref23$signature = _ref23.signature, signature = _ref23$signature === void 0 ? true : _ref23$signature;
+                kmsId = _ref22.kmsId, tenantId = _ref22.tenantId, objectId = _ref22.objectId, versionHash = _ref22.versionHash, methodName = _ref22.methodName, params = _ref22.params, paramTypes = _ref22.paramTypes, _ref22$additionalPara = _ref22.additionalParams, additionalParams = _ref22$additionalPara === void 0 ? [] : _ref22$additionalPara, _ref22$signature = _ref22.signature, signature = _ref22$signature === void 0 ? true : _ref22$signature;
 
                 if (versionHash) {
                   objectId = Utils.DecodeVersionHash(versionHash).objectId;
                 }
 
                 if (objectId) {
-                  _context23.next = 10;
+                  _context22.next = 10;
                   break;
                 }
 
-                _context23.t0 = "ikms";
-                _context23.t1 = Utils;
-                _context23.next = 7;
+                _context22.t0 = "ikms";
+                _context22.t1 = Utils;
+                _context22.next = 7;
                 return this.client.DefaultKMSAddress({
                   tenantId: tenantId
                 });
 
               case 7:
-                _context23.t2 = _context23.sent;
-                _context23.t3 = _context23.t1.AddressToHash.call(_context23.t1, _context23.t2);
-                kmsId = _context23.t0.concat.call(_context23.t0, _context23.t3);
+                _context22.t2 = _context22.sent;
+                _context22.t3 = _context22.t1.AddressToHash.call(_context22.t1, _context22.t2);
+                kmsId = _context22.t0.concat.call(_context22.t0, _context22.t3);
 
               case 10:
                 if (!signature) {
-                  _context23.next = 17;
+                  _context22.next = 17;
                   break;
                 }
 
                 packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
-                _context23.t4 = params;
-                _context23.next = 15;
+                _context22.t4 = params;
+                _context22.next = 15;
                 return this.Sign(packedHash);
 
               case 15:
-                _context23.t5 = _context23.sent;
+                _context22.t5 = _context22.sent;
 
-                _context23.t4.push.call(_context23.t4, _context23.t5);
+                _context22.t4.push.call(_context22.t4, _context22.t5);
 
               case 17:
                 params = params.concat(additionalParams);
-                _context23.next = 20;
+                _context22.next = 20;
                 return this.KMSInfo({
                   kmsId: kmsId,
                   objectId: objectId,
@@ -2084,16 +1992,16 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 20:
-                KMSUrls = _context23.sent.urls;
+                KMSUrls = _context22.sent.urls;
                 i = 0;
 
               case 22:
                 if (!(i < KMSUrls.length)) {
-                  _context23.next = 40;
+                  _context22.next = 40;
                   break;
                 }
 
-                _context23.prev = 23;
+                _context22.prev = 23;
                 this.Log("Making KMS request:\n          URL: ".concat(KMSUrls[i], "\n          Method: ").concat(methodName, "\n          Params: ").concat(params.join(", ")));
                 kmsUrl = KMSUrls[i];
 
@@ -2101,38 +2009,38 @@ var AuthorizationClient = /*#__PURE__*/function () {
                   this.providers[kmsUrl] = new Ethers.providers.JsonRpcProvider(kmsUrl, this.client.networkId);
                 }
 
-                _context23.next = 29;
+                _context22.next = 29;
                 return this.providers[kmsUrl].send(methodName, params);
 
               case 29:
-                return _context23.abrupt("return", _context23.sent);
+                return _context22.abrupt("return", _context22.sent);
 
               case 32:
-                _context23.prev = 32;
-                _context23.t6 = _context23["catch"](23);
-                this.Log("KMS Call Error: ".concat(_context23.t6), true); // If the request has been attempted on all KMS urls, throw the error
+                _context22.prev = 32;
+                _context22.t6 = _context22["catch"](23);
+                this.Log("KMS Call Error: ".concat(_context22.t6), true); // If the request has been attempted on all KMS urls, throw the error
 
                 if (!(i === KMSUrls.length - 1)) {
-                  _context23.next = 37;
+                  _context22.next = 37;
                   break;
                 }
 
-                throw _context23.t6;
+                throw _context22.t6;
 
               case 37:
                 i++;
-                _context23.next = 22;
+                _context22.next = 22;
                 break;
 
               case 40:
               case "end":
-                return _context23.stop();
+                return _context22.stop();
             }
           }
-        }, _callee23, this, [[23, 32]]);
+        }, _callee22, this, [[23, 32]]);
       }));
 
-      function MakeKMSCall(_x23) {
+      function MakeKMSCall(_x22) {
         return _MakeKMSCall.apply(this, arguments);
       }
 
@@ -2142,21 +2050,21 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "MakeAuthServiceRequest",
     value: function () {
-      var _MakeAuthServiceRequest = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee24(_ref24) {
-        var kmsId, objectId, versionHash, _ref24$method, method, path, bodyType, _ref24$body, body, _ref24$queryParams, queryParams, headers;
+      var _MakeAuthServiceRequest = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee23(_ref23) {
+        var kmsId, objectId, versionHash, _ref23$method, method, path, bodyType, _ref23$body, body, _ref23$queryParams, queryParams, headers;
 
-        return _regeneratorRuntime.wrap(function _callee24$(_context24) {
+        return _regeneratorRuntime.wrap(function _callee23$(_context23) {
           while (1) {
-            switch (_context24.prev = _context24.next) {
+            switch (_context23.prev = _context23.next) {
               case 0:
-                kmsId = _ref24.kmsId, objectId = _ref24.objectId, versionHash = _ref24.versionHash, _ref24$method = _ref24.method, method = _ref24$method === void 0 ? "GET" : _ref24$method, path = _ref24.path, bodyType = _ref24.bodyType, _ref24$body = _ref24.body, body = _ref24$body === void 0 ? {} : _ref24$body, _ref24$queryParams = _ref24.queryParams, queryParams = _ref24$queryParams === void 0 ? {} : _ref24$queryParams, headers = _ref24.headers;
+                kmsId = _ref23.kmsId, objectId = _ref23.objectId, versionHash = _ref23.versionHash, _ref23$method = _ref23.method, method = _ref23$method === void 0 ? "GET" : _ref23$method, path = _ref23.path, bodyType = _ref23.bodyType, _ref23$body = _ref23.body, body = _ref23$body === void 0 ? {} : _ref23$body, _ref23$queryParams = _ref23.queryParams, queryParams = _ref23$queryParams === void 0 ? {} : _ref23$queryParams, headers = _ref23.headers;
 
                 if (!(this.client.authServiceURIs.length === 0)) {
-                  _context24.next = 5;
+                  _context23.next = 5;
                   break;
                 }
 
-                _context24.next = 4;
+                _context23.next = 4;
                 return this.MakeKMSRequest({
                   kmsId: kmsId,
                   objectId: objectId,
@@ -2170,10 +2078,10 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 4:
-                return _context24.abrupt("return", _context24.sent);
+                return _context23.abrupt("return", _context23.sent);
 
               case 5:
-                _context24.next = 7;
+                _context23.next = 7;
                 return this.client.AuthHttpClient.Request({
                   method: method,
                   path: path,
@@ -2184,17 +2092,17 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 7:
-                return _context24.abrupt("return", _context24.sent);
+                return _context23.abrupt("return", _context23.sent);
 
               case 8:
               case "end":
-                return _context24.stop();
+                return _context23.stop();
             }
           }
-        }, _callee24, this);
+        }, _callee23, this);
       }));
 
-      function MakeAuthServiceRequest(_x24) {
+      function MakeAuthServiceRequest(_x23) {
         return _MakeAuthServiceRequest.apply(this, arguments);
       }
 
@@ -2204,36 +2112,36 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "MakeKMSRequest",
     value: function () {
-      var _MakeKMSRequest = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee25(_ref25) {
-        var kmsId, objectId, versionHash, _ref25$method, method, path, bodyType, _ref25$body, body, _ref25$queryParams, queryParams, headers, kmsUrls, kmsHttpClient;
+      var _MakeKMSRequest = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee24(_ref24) {
+        var kmsId, objectId, versionHash, _ref24$method, method, path, bodyType, _ref24$body, body, _ref24$queryParams, queryParams, headers, kmsUrls, kmsHttpClient;
 
-        return _regeneratorRuntime.wrap(function _callee25$(_context25) {
+        return _regeneratorRuntime.wrap(function _callee24$(_context24) {
           while (1) {
-            switch (_context25.prev = _context25.next) {
+            switch (_context24.prev = _context24.next) {
               case 0:
-                kmsId = _ref25.kmsId, objectId = _ref25.objectId, versionHash = _ref25.versionHash, _ref25$method = _ref25.method, method = _ref25$method === void 0 ? "GET" : _ref25$method, path = _ref25.path, bodyType = _ref25.bodyType, _ref25$body = _ref25.body, body = _ref25$body === void 0 ? {} : _ref25$body, _ref25$queryParams = _ref25.queryParams, queryParams = _ref25$queryParams === void 0 ? {} : _ref25$queryParams, headers = _ref25.headers;
+                kmsId = _ref24.kmsId, objectId = _ref24.objectId, versionHash = _ref24.versionHash, _ref24$method = _ref24.method, method = _ref24$method === void 0 ? "GET" : _ref24$method, path = _ref24.path, bodyType = _ref24.bodyType, _ref24$body = _ref24.body, body = _ref24$body === void 0 ? {} : _ref24$body, _ref24$queryParams = _ref24.queryParams, queryParams = _ref24$queryParams === void 0 ? {} : _ref24$queryParams, headers = _ref24.headers;
 
                 if (versionHash) {
                   objectId = Utils.DecodeVersionHash(versionHash).objectId;
                 }
 
                 if (!(!objectId && !kmsId)) {
-                  _context25.next = 10;
+                  _context24.next = 10;
                   break;
                 }
 
-                _context25.t0 = "ikms";
-                _context25.t1 = Utils;
-                _context25.next = 7;
+                _context24.t0 = "ikms";
+                _context24.t1 = Utils;
+                _context24.next = 7;
                 return this.client.DefaultKMSAddress();
 
               case 7:
-                _context25.t2 = _context25.sent;
-                _context25.t3 = _context25.t1.AddressToHash.call(_context25.t1, _context25.t2);
-                kmsId = _context25.t0.concat.call(_context25.t0, _context25.t3);
+                _context24.t2 = _context24.sent;
+                _context24.t3 = _context24.t1.AddressToHash.call(_context24.t1, _context24.t2);
+                kmsId = _context24.t0.concat.call(_context24.t0, _context24.t3);
 
               case 10:
-                _context25.next = 12;
+                _context24.next = 12;
                 return this.KMSInfo({
                   kmsId: kmsId,
                   objectId: objectId,
@@ -2241,10 +2149,10 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 12:
-                kmsUrls = _context25.sent.urls;
+                kmsUrls = _context24.sent.urls;
 
                 if (!(!kmsUrls || !kmsUrls[0])) {
-                  _context25.next = 15;
+                  _context24.next = 15;
                   break;
                 }
 
@@ -2254,7 +2162,7 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 kmsHttpClient = new HttpClient({
                   uris: kmsUrls
                 });
-                _context25.next = 18;
+                _context24.next = 18;
                 return kmsHttpClient.Request({
                   method: method,
                   path: path,
@@ -2265,17 +2173,17 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 18:
-                return _context25.abrupt("return", _context25.sent);
+                return _context24.abrupt("return", _context24.sent);
 
               case 19:
               case "end":
-                return _context25.stop();
+                return _context24.stop();
             }
           }
-        }, _callee25, this);
+        }, _callee24, this);
       }));
 
-      function MakeKMSRequest(_x25) {
+      function MakeKMSRequest(_x24) {
         return _MakeKMSRequest.apply(this, arguments);
       }
 
@@ -2284,39 +2192,39 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "ContractHasMethod",
     value: function () {
-      var _ContractHasMethod = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee26(_ref26) {
+      var _ContractHasMethod = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee25(_ref25) {
         var contractAddress, abi, methodName, key, method, methodSignature, methodId;
-        return _regeneratorRuntime.wrap(function _callee26$(_context26) {
+        return _regeneratorRuntime.wrap(function _callee25$(_context25) {
           while (1) {
-            switch (_context26.prev = _context26.next) {
+            switch (_context25.prev = _context25.next) {
               case 0:
-                contractAddress = _ref26.contractAddress, abi = _ref26.abi, methodName = _ref26.methodName;
+                contractAddress = _ref25.contractAddress, abi = _ref25.abi, methodName = _ref25.methodName;
                 contractAddress = Utils.FormatAddress(contractAddress);
                 key = "".concat(contractAddress, "-").concat(methodName);
 
                 if (!(this.methodAvailability[key] === undefined)) {
-                  _context26.next = 19;
+                  _context25.next = 19;
                   break;
                 }
 
                 this.Log("Checking method availability: ".concat(contractAddress, " ").concat(methodName));
 
                 if (abi) {
-                  _context26.next = 9;
+                  _context25.next = 9;
                   break;
                 }
 
-                _context26.next = 8;
+                _context25.next = 8;
                 return this.ContractInfo({
                   address: contractAddress
                 });
 
               case 8:
-                abi = _context26.sent.abi;
+                abi = _context25.sent.abi;
 
               case 9:
                 if (abi) {
-                  _context26.next = 11;
+                  _context25.next = 11;
                   break;
                 }
 
@@ -2328,38 +2236,38 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
                 if (method) {
-                  _context26.next = 14;
+                  _context25.next = 14;
                   break;
                 }
 
-                return _context26.abrupt("return", false);
+                return _context25.abrupt("return", false);
 
               case 14:
                 methodSignature = "".concat(method.name, "(").concat(method.inputs.map(function (i) {
                   return i.type;
                 }).join(","), ")");
                 methodId = Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(methodSignature)).replace("0x", "").slice(0, 8);
-                _context26.next = 18;
+                _context25.next = 18;
                 return this.MakeElvMasterCall({
                   methodName: "elv_deployedContractHasMethod",
                   params: [contractAddress, methodId]
                 });
 
               case 18:
-                this.methodAvailability[key] = _context26.sent;
+                this.methodAvailability[key] = _context25.sent;
 
               case 19:
-                return _context26.abrupt("return", this.methodAvailability[key]);
+                return _context25.abrupt("return", this.methodAvailability[key]);
 
               case 20:
               case "end":
-                return _context26.stop();
+                return _context25.stop();
             }
           }
-        }, _callee26, this);
+        }, _callee25, this);
       }));
 
-      function ContractHasMethod(_x26) {
+      function ContractHasMethod(_x25) {
         return _ContractHasMethod.apply(this, arguments);
       }
 
@@ -2368,31 +2276,31 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "MakeElvMasterCall",
     value: function () {
-      var _MakeElvMasterCall = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee27(_ref27) {
+      var _MakeElvMasterCall = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee26(_ref26) {
         var methodName, params;
-        return _regeneratorRuntime.wrap(function _callee27$(_context27) {
+        return _regeneratorRuntime.wrap(function _callee26$(_context26) {
           while (1) {
-            switch (_context27.prev = _context27.next) {
+            switch (_context26.prev = _context26.next) {
               case 0:
-                methodName = _ref27.methodName, params = _ref27.params;
-                _context27.next = 3;
+                methodName = _ref26.methodName, params = _ref26.params;
+                _context26.next = 3;
                 return this.client.ethClient.MakeProviderCall({
                   methodName: "send",
                   args: [methodName, params]
                 });
 
               case 3:
-                return _context27.abrupt("return", _context27.sent);
+                return _context26.abrupt("return", _context26.sent);
 
               case 4:
               case "end":
-                return _context27.stop();
+                return _context26.stop();
             }
           }
-        }, _callee27, this);
+        }, _callee26, this);
       }));
 
-      function MakeElvMasterCall(_x27) {
+      function MakeElvMasterCall(_x26) {
         return _MakeElvMasterCall.apply(this, arguments);
       }
 
@@ -2401,8 +2309,61 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "ReEncryptionConk",
     value: function () {
-      var _ReEncryptionConk = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee28(_ref28) {
+      var _ReEncryptionConk = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee27(_ref27) {
         var libraryId, objectId, versionHash, cap;
+        return _regeneratorRuntime.wrap(function _callee27$(_context27) {
+          while (1) {
+            switch (_context27.prev = _context27.next) {
+              case 0:
+                libraryId = _ref27.libraryId, objectId = _ref27.objectId, versionHash = _ref27.versionHash;
+
+                if (versionHash) {
+                  objectId = Utils.DecodeVersionHash(versionHash).objectId;
+                }
+
+                if (this.reencryptionKeys[objectId]) {
+                  _context27.next = 10;
+                  break;
+                }
+
+                _context27.next = 5;
+                return this.client.Crypto.GenerateTargetConk();
+
+              case 5:
+                cap = _context27.sent;
+                _context27.next = 8;
+                return this.RetrieveReencryptionSymmetricKey({
+                  libraryId: libraryId,
+                  objectId: objectId
+                });
+
+              case 8:
+                cap.symm_key = _context27.sent;
+                this.reencryptionKeys[objectId] = cap;
+
+              case 10:
+                return _context27.abrupt("return", this.reencryptionKeys[objectId]);
+
+              case 11:
+              case "end":
+                return _context27.stop();
+            }
+          }
+        }, _callee27, this);
+      }));
+
+      function ReEncryptionConk(_x27) {
+        return _ReEncryptionConk.apply(this, arguments);
+      }
+
+      return ReEncryptionConk;
+    }()
+  }, {
+    key: "EncryptionConk",
+    value: function () {
+      var _EncryptionConk = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee28(_ref28) {
+        var libraryId, objectId, versionHash, conk, _yield$this$client$Cr, secret_key;
+
         return _regeneratorRuntime.wrap(function _callee28$(_context28) {
           while (1) {
             switch (_context28.prev = _context28.next) {
@@ -2413,30 +2374,49 @@ var AuthorizationClient = /*#__PURE__*/function () {
                   objectId = Utils.DecodeVersionHash(versionHash).objectId;
                 }
 
-                if (this.reencryptionKeys[objectId]) {
-                  _context28.next = 10;
+                if (libraryId) {
+                  _context28.next = 6;
                   break;
                 }
 
                 _context28.next = 5;
-                return this.client.Crypto.GenerateTargetConk();
+                return this.client.ContentObjectLibraryId({
+                  objectId: objectId
+                });
 
               case 5:
-                cap = _context28.sent;
-                _context28.next = 8;
-                return this.RetrieveReencryptionSymmetricKey({
+                libraryId = _context28.sent;
+
+              case 6:
+                if (this.encryptionKeys[objectId]) {
+                  _context28.next = 16;
+                  break;
+                }
+
+                _context28.next = 9;
+                return this.RetrieveConk({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
-              case 8:
-                cap.symm_key = _context28.sent;
-                this.reencryptionKeys[objectId] = cap;
+              case 9:
+                conk = _context28.sent;
+                _context28.next = 12;
+                return this.client.Crypto.GeneratePrimaryConk({
+                  objectId: objectId
+                });
 
-              case 10:
-                return _context28.abrupt("return", this.reencryptionKeys[objectId]);
+              case 12:
+                _yield$this$client$Cr = _context28.sent;
+                secret_key = _yield$this$client$Cr.secret_key;
+                conk.secret_key = secret_key; // { secret_key, public_key, symm_key, block_size }
 
-              case 11:
+                this.encryptionKeys[objectId] = conk;
+
+              case 16:
+                return _context28.abrupt("return", this.encryptionKeys[objectId]);
+
+              case 17:
               case "end":
                 return _context28.stop();
             }
@@ -2444,79 +2424,7 @@ var AuthorizationClient = /*#__PURE__*/function () {
         }, _callee28, this);
       }));
 
-      function ReEncryptionConk(_x28) {
-        return _ReEncryptionConk.apply(this, arguments);
-      }
-
-      return ReEncryptionConk;
-    }()
-  }, {
-    key: "EncryptionConk",
-    value: function () {
-      var _EncryptionConk = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee29(_ref29) {
-        var libraryId, objectId, versionHash, conk, _yield$this$client$Cr, secret_key;
-
-        return _regeneratorRuntime.wrap(function _callee29$(_context29) {
-          while (1) {
-            switch (_context29.prev = _context29.next) {
-              case 0:
-                libraryId = _ref29.libraryId, objectId = _ref29.objectId, versionHash = _ref29.versionHash;
-
-                if (versionHash) {
-                  objectId = Utils.DecodeVersionHash(versionHash).objectId;
-                }
-
-                if (libraryId) {
-                  _context29.next = 6;
-                  break;
-                }
-
-                _context29.next = 5;
-                return this.client.ContentObjectLibraryId({
-                  objectId: objectId
-                });
-
-              case 5:
-                libraryId = _context29.sent;
-
-              case 6:
-                if (this.encryptionKeys[objectId]) {
-                  _context29.next = 16;
-                  break;
-                }
-
-                _context29.next = 9;
-                return this.RetrieveConk({
-                  libraryId: libraryId,
-                  objectId: objectId
-                });
-
-              case 9:
-                conk = _context29.sent;
-                _context29.next = 12;
-                return this.client.Crypto.GeneratePrimaryConk({
-                  objectId: objectId
-                });
-
-              case 12:
-                _yield$this$client$Cr = _context29.sent;
-                secret_key = _yield$this$client$Cr.secret_key;
-                conk.secret_key = secret_key; // { secret_key, public_key, symm_key, block_size }
-
-                this.encryptionKeys[objectId] = conk;
-
-              case 16:
-                return _context29.abrupt("return", this.encryptionKeys[objectId]);
-
-              case 17:
-              case "end":
-                return _context29.stop();
-            }
-          }
-        }, _callee29, this);
-      }));
-
-      function EncryptionConk(_x29) {
+      function EncryptionConk(_x28) {
         return _EncryptionConk.apply(this, arguments);
       }
 
@@ -2525,46 +2433,46 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "RecordTags",
     value: function () {
-      var _RecordTags = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee30(_ref30) {
+      var _RecordTags = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee29(_ref29) {
         var accessType, libraryId, objectId, versionHash, _yield$this$ContractI8, abi, owner;
 
-        return _regeneratorRuntime.wrap(function _callee30$(_context30) {
+        return _regeneratorRuntime.wrap(function _callee29$(_context29) {
           while (1) {
-            switch (_context30.prev = _context30.next) {
+            switch (_context29.prev = _context29.next) {
               case 0:
-                accessType = _ref30.accessType, libraryId = _ref30.libraryId, objectId = _ref30.objectId, versionHash = _ref30.versionHash;
+                accessType = _ref29.accessType, libraryId = _ref29.libraryId, objectId = _ref29.objectId, versionHash = _ref29.versionHash;
 
                 if (!(accessType !== ACCESS_TYPES.OBJECT)) {
-                  _context30.next = 3;
+                  _context29.next = 3;
                   break;
                 }
 
-                return _context30.abrupt("return");
+                return _context29.abrupt("return");
 
               case 3:
-                _context30.next = 5;
+                _context29.next = 5;
                 return this.ContractInfo({
                   id: objectId
                 });
 
               case 5:
-                _yield$this$ContractI8 = _context30.sent;
+                _yield$this$ContractI8 = _context29.sent;
                 abi = _yield$this$ContractI8.abi;
-                _context30.next = 9;
+                _context29.next = 9;
                 return this.Owner({
                   id: objectId,
                   abi: abi
                 });
 
               case 9:
-                owner = _context30.sent;
+                owner = _context29.sent;
 
                 if (Utils.EqualAddress(owner, this.client.signer.address)) {
-                  _context30.next = 13;
+                  _context29.next = 13;
                   break;
                 }
 
-                _context30.next = 13;
+                _context29.next = 13;
                 return this.client.userProfileClient.RecordTags({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -2573,13 +2481,13 @@ var AuthorizationClient = /*#__PURE__*/function () {
 
               case 13:
               case "end":
-                return _context30.stop();
+                return _context29.stop();
             }
           }
-        }, _callee30, this);
+        }, _callee29, this);
       }));
 
-      function RecordTags(_x30) {
+      function RecordTags(_x29) {
         return _RecordTags.apply(this, arguments);
       }
 
@@ -2590,23 +2498,62 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "CreateAccessGroup",
     value: function () {
-      var _CreateAccessGroup = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee31() {
+      var _CreateAccessGroup = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee30() {
         var _yield$this$client$et, contractAddress, transactionHash;
 
-        return _regeneratorRuntime.wrap(function _callee31$(_context31) {
+        return _regeneratorRuntime.wrap(function _callee30$(_context30) {
           while (1) {
-            switch (_context31.prev = _context31.next) {
+            switch (_context30.prev = _context30.next) {
               case 0:
-                _context31.next = 2;
+                _context30.next = 2;
                 return this.client.ethClient.DeployAccessGroupContract({
                   contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
                   signer: this.client.signer
                 });
 
               case 2:
-                _yield$this$client$et = _context31.sent;
+                _yield$this$client$et = _context30.sent;
                 contractAddress = _yield$this$client$et.contractAddress;
                 transactionHash = _yield$this$client$et.transactionHash;
+                return _context30.abrupt("return", {
+                  contractAddress: contractAddress,
+                  transactionHash: transactionHash
+                });
+
+              case 6:
+              case "end":
+                return _context30.stop();
+            }
+          }
+        }, _callee30, this);
+      }));
+
+      function CreateAccessGroup() {
+        return _CreateAccessGroup.apply(this, arguments);
+      }
+
+      return CreateAccessGroup;
+    }()
+  }, {
+    key: "CreateContentType",
+    value: function () {
+      var _CreateContentType = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee31() {
+        var _yield$this$client$et2, contractAddress, transactionHash;
+
+        return _regeneratorRuntime.wrap(function _callee31$(_context31) {
+          while (1) {
+            switch (_context31.prev = _context31.next) {
+              case 0:
+                _context31.next = 2;
+                return this.client.ethClient.DeployTypeContract({
+                  contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
+                  signer: this.client.signer
+                });
+
+              case 2:
+                _yield$this$client$et2 = _context31.sent;
+                contractAddress = _yield$this$client$et2.contractAddress;
+                transactionHash = _yield$this$client$et2.transactionHash;
                 return _context31.abrupt("return", {
                   contractAddress: contractAddress,
                   transactionHash: transactionHash
@@ -2620,45 +2567,6 @@ var AuthorizationClient = /*#__PURE__*/function () {
         }, _callee31, this);
       }));
 
-      function CreateAccessGroup() {
-        return _CreateAccessGroup.apply(this, arguments);
-      }
-
-      return CreateAccessGroup;
-    }()
-  }, {
-    key: "CreateContentType",
-    value: function () {
-      var _CreateContentType = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee32() {
-        var _yield$this$client$et2, contractAddress, transactionHash;
-
-        return _regeneratorRuntime.wrap(function _callee32$(_context32) {
-          while (1) {
-            switch (_context32.prev = _context32.next) {
-              case 0:
-                _context32.next = 2;
-                return this.client.ethClient.DeployTypeContract({
-                  contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
-                  signer: this.client.signer
-                });
-
-              case 2:
-                _yield$this$client$et2 = _context32.sent;
-                contractAddress = _yield$this$client$et2.contractAddress;
-                transactionHash = _yield$this$client$et2.transactionHash;
-                return _context32.abrupt("return", {
-                  contractAddress: contractAddress,
-                  transactionHash: transactionHash
-                });
-
-              case 6:
-              case "end":
-                return _context32.stop();
-            }
-          }
-        }, _callee32, this);
-      }));
-
       function CreateContentType() {
         return _CreateContentType.apply(this, arguments);
       }
@@ -2668,15 +2576,15 @@ var AuthorizationClient = /*#__PURE__*/function () {
   }, {
     key: "CreateContentLibrary",
     value: function () {
-      var _CreateContentLibrary = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee33(_ref31) {
+      var _CreateContentLibrary = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee32(_ref30) {
         var kmsId, _yield$this$client$et3, contractAddress, transactionHash;
 
-        return _regeneratorRuntime.wrap(function _callee33$(_context33) {
+        return _regeneratorRuntime.wrap(function _callee32$(_context32) {
           while (1) {
-            switch (_context33.prev = _context33.next) {
+            switch (_context32.prev = _context32.next) {
               case 0:
-                kmsId = _ref31.kmsId;
-                _context33.next = 3;
+                kmsId = _ref30.kmsId;
+                _context32.next = 3;
                 return this.client.ethClient.DeployLibraryContract({
                   contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
                   kmsId: kmsId,
@@ -2684,9 +2592,50 @@ var AuthorizationClient = /*#__PURE__*/function () {
                 });
 
               case 3:
-                _yield$this$client$et3 = _context33.sent;
+                _yield$this$client$et3 = _context32.sent;
                 contractAddress = _yield$this$client$et3.contractAddress;
                 transactionHash = _yield$this$client$et3.transactionHash;
+                return _context32.abrupt("return", {
+                  contractAddress: contractAddress,
+                  transactionHash: transactionHash
+                });
+
+              case 7:
+              case "end":
+                return _context32.stop();
+            }
+          }
+        }, _callee32, this);
+      }));
+
+      function CreateContentLibrary(_x30) {
+        return _CreateContentLibrary.apply(this, arguments);
+      }
+
+      return CreateContentLibrary;
+    }()
+  }, {
+    key: "CreateContentObject",
+    value: function () {
+      var _CreateContentObject = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee33(_ref31) {
+        var libraryId, typeId, _yield$this$client$et4, contractAddress, transactionHash;
+
+        return _regeneratorRuntime.wrap(function _callee33$(_context33) {
+          while (1) {
+            switch (_context33.prev = _context33.next) {
+              case 0:
+                libraryId = _ref31.libraryId, typeId = _ref31.typeId;
+                _context33.next = 3;
+                return this.client.ethClient.DeployContentContract({
+                  contentLibraryAddress: Utils.HashToAddress(libraryId),
+                  typeAddress: typeId ? Utils.HashToAddress(typeId) : Utils.nullAddress,
+                  signer: this.client.signer
+                });
+
+              case 3:
+                _yield$this$client$et4 = _context33.sent;
+                contractAddress = _yield$this$client$et4.contractAddress;
+                transactionHash = _yield$this$client$et4.transactionHash;
                 return _context33.abrupt("return", {
                   contractAddress: contractAddress,
                   transactionHash: transactionHash
@@ -2700,48 +2649,7 @@ var AuthorizationClient = /*#__PURE__*/function () {
         }, _callee33, this);
       }));
 
-      function CreateContentLibrary(_x31) {
-        return _CreateContentLibrary.apply(this, arguments);
-      }
-
-      return CreateContentLibrary;
-    }()
-  }, {
-    key: "CreateContentObject",
-    value: function () {
-      var _CreateContentObject = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee34(_ref32) {
-        var libraryId, typeId, _yield$this$client$et4, contractAddress, transactionHash;
-
-        return _regeneratorRuntime.wrap(function _callee34$(_context34) {
-          while (1) {
-            switch (_context34.prev = _context34.next) {
-              case 0:
-                libraryId = _ref32.libraryId, typeId = _ref32.typeId;
-                _context34.next = 3;
-                return this.client.ethClient.DeployContentContract({
-                  contentLibraryAddress: Utils.HashToAddress(libraryId),
-                  typeAddress: typeId ? Utils.HashToAddress(typeId) : Utils.nullAddress,
-                  signer: this.client.signer
-                });
-
-              case 3:
-                _yield$this$client$et4 = _context34.sent;
-                contractAddress = _yield$this$client$et4.contractAddress;
-                transactionHash = _yield$this$client$et4.transactionHash;
-                return _context34.abrupt("return", {
-                  contractAddress: contractAddress,
-                  transactionHash: transactionHash
-                });
-
-              case 7:
-              case "end":
-                return _context34.stop();
-            }
-          }
-        }, _callee34, this);
-      }));
-
-      function CreateContentObject(_x32) {
+      function CreateContentObject(_x31) {
         return _CreateContentObject.apply(this, arguments);
       }
 
