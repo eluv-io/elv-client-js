@@ -1144,6 +1144,19 @@ class ElvClient {
       }));
     }
   }
+
+  async WithSpecificNode({nodeUrl, callback}) {
+    const httpClient = this.HttpClient;
+
+    try {
+      this.HttpClient = new HttpClient({uris: [nodeUrl]});
+      return await callback();
+    } catch(error) {
+      throw error;
+    } finally {
+      this.HttpClient = httpClient;
+    }
+  }
 }
 
 Object.assign(ElvClient.prototype, require("./client/AccessGroups"));

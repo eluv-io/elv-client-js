@@ -448,7 +448,8 @@ class FrameClient {
       "UploadStatus",
       "UseRegion",
       "VerifyContentObject",
-      "Visibility"
+      "Visibility",
+      "WithSpecificNode"
     ];
   }
 
