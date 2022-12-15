@@ -755,7 +755,7 @@ class ElvWalletClient {
       let marketplace = await this.client.ContentObjectMetadata({
         versionHash: marketplaceHash,
         metadataSubtree: "public/asset_metadata/info",
-        linkDepthLimit: 2,
+        linkDepthLimit: 1,
         resolveLinks: true,
         resolveIgnoreErrors: true,
         resolveIncludeSource: true,
