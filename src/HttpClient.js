@@ -49,9 +49,10 @@ class HttpClient {
     headers={},
     attempts=0,
     failover=true,
-    forceFailover=false
+    forceFailover=false,
+    nodeUrl
   }) {
-    let baseURI = this.BaseURI();
+    let baseURI = nodeUrl ? new URI(nodeUrl) : this.BaseURI();
 
     // If URL contains a write token, it must go to the correct server and can not fail over
     const writeTokenMatch = path.replace(/^\//, "").match(/(qlibs\/ilib[a-zA-Z0-9]+|q|qid)\/(tqw_[a-zA-Z0-9]+)/);

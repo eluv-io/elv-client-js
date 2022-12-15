@@ -1750,7 +1750,8 @@ exports.CallBitcodeMethod = async function({
   body={},
   headers={},
   constant=true,
-  format="json"
+  format="json",
+  nodeUrl
 }) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(!method) { throw "Bitcode method not specified"; }
@@ -1788,6 +1789,7 @@ exports.CallBitcodeMethod = async function({
   return this.utils.ResponseToFormat(
     format,
     await this.HttpClient.Request({
+      nodeUrl,
       body,
       headers,
       method: constant ? "GET" : "POST",

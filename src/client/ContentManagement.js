@@ -752,7 +752,7 @@ exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, writ
  *
  * @returns {Promise<object>} - Response containing the object ID and write token of the draft
  */
-exports.EditContentObject = async function({libraryId, objectId, options={}}) {
+exports.EditContentObject = async function({libraryId, objectId, options={}, nodeUrl}) {
   ValidateParameters({libraryId, objectId});
 
   this.Log(`Opening content draft: ${libraryId} ${objectId}`);
@@ -779,7 +779,8 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "POST",
       path: path,
-      body: options
+      body: options,
+      nodeUrl
     })
   );
 
