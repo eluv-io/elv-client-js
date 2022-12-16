@@ -750,7 +750,7 @@ exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, writ
  * meta: New metadata for the object - will be merged into existing metadata if specified
  * type: New type for the object - Object ID, version hash or name of type
  *
- * @returns {Promise<object>} - Response containing the object ID and write token of the draft
+ * @returns {Promise<object>} - Response containing the object ID and write token of the draft, as well as URL of node handling the draft
  */
 exports.EditContentObject = async function({libraryId, objectId, options={}}) {
   ValidateParameters({libraryId, objectId});
@@ -774,20 +774,27 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
 
   let path = UrlJoin("qid", objectId);
 
-  let editResponse = await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-      method: "POST",
-      path: path,
-      body: options
-    })
-  );
+  const rawEditResponse = await this.HttpClient.Request({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "POST",
+    path: path,
+    body: options
+  });
+
+  const actualUrl = new URL(rawEditResponse.url);
+  actualUrl.pathname = "";
+  actualUrl.search = "";
+  actualUrl.hash = "";
+  const nodeUrl = actualUrl.href;
+
+  let editResponse = await this.utils.ResponseToJson(rawEditResponse);
 
   // Record the node used in creating this write token
-  this.HttpClient.RecordWriteToken(editResponse.write_token);
+  this.HttpClient.RecordWriteToken(editResponse.write_token, nodeUrl);
 
   editResponse.writeToken = editResponse.write_token;
   editResponse.objectId = editResponse.id;
+  editResponse.nodeUrl = nodeUrl;
 
   return editResponse;
 };
