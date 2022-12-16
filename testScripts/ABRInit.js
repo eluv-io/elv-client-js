@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-// initialize abr mezzaninewithout uploading any files
+// initialize abr mezzanine without uploading any files
 // - use to turn a manually created object into an abr mezzanine
 
 // still need to pass in cloud credentials if files are remote

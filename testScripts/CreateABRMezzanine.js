@@ -138,8 +138,7 @@ const Create = async ({
   credentials,
   debug,
   wait = false,
-  keepOtherStreams,
-  keepOtherOfferings
+  keepOtherStreams
 }) => {
 
   if(!existingMezzId && (keepStreams || keepOfferings)) {
@@ -308,7 +307,6 @@ const Create = async ({
       metadata,
       addlOfferingSpecs,
       abrProfile,
-      keepOtherOfferings,
       keepOtherStreams
     });
 
