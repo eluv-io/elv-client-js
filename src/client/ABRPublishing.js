@@ -230,7 +230,6 @@ exports.CreateProductionMaster = async function({
  * @param {Object=} abrProfile - Custom ABR profile. If not specified, the profile of the mezzanine library will be used
  * @param {Object=} addlOfferingSpecs - Specs for additional offerings to create by patching the offering being created/edited
  * @param {string=} description - Description for mezzanine content object
- * @param {boolean=} keepOtherOfferings=false - If objectId is specified, whether to preserve existing offerings with keys other than offeringKey
  * @param {boolean=} keepOtherStreams=false - If objectId is specified, whether to preserve existing streams with keys other than the ones specified in production master
  * @param {string} libraryId - ID of the mezzanine library
  * @param {string} masterVersionHash - The version hash of the production master content object
@@ -240,6 +239,7 @@ exports.CreateProductionMaster = async function({
  * @param {string=} offeringKey=default - The key of the offering to create
  * @param {("warn"|"info"|"debug")=} respLogLevel=warn - The level of logging to return in http response
  * @param {("none"|"error"|"warn"|"info"|"debug")=} structLogLevel=none - The level of logging to save to object metadata
+ * @param {Array<string>} streamKeys - List of stream keys from variant to include. If not supplied all streams will be included.
  * @param {string=} type - ID or version hash of the content type for the mezzanine
  * @param {string=} variant=default - What variant of the master content object to use
  *
@@ -257,10 +257,10 @@ exports.CreateABRMezzanine = async function({
   addlOfferingSpecs,
   variant="default",
   offeringKey="default",
-  keepOtherOfferings = false,
   keepOtherStreams= false,
   respLogLevel = "warn",
-  structLogLevel="none"
+  structLogLevel="none",
+  streamKeys
 }) {
   ValidateLibrary(libraryId);
   ValidateVersion(masterVersionHash);
@@ -269,8 +269,8 @@ exports.CreateABRMezzanine = async function({
     throw Error("Master version hash not specified");
   }
 
-  if(!objectId && (keepOtherStreams || keepOtherOfferings)) {
-    throw Error("Existing mezzanine object ID required in order to use 'keepOtherOfferings' or 'keepOtherStreams");
+  if(!objectId && (keepOtherStreams)) {
+    throw Error("Existing mezzanine object ID required in order to use 'keepOtherStreams'");
   }
 
   if(addlOfferingSpecs && !abrProfile) {
@@ -323,9 +323,9 @@ exports.CreateABRMezzanine = async function({
   const body = {
     additional_offering_specs: addlOfferingSpecs,
     offering_key: offeringKey,
-    keep_other_offerings: keepOtherOfferings,
     keep_other_streams: keepOtherStreams,
     prod_master_hash: masterVersionHash,
+    stream_keys: streamKeys,
     variant_key: variant
   };
 
@@ -584,26 +584,14 @@ exports.LROStatus = async function({libraryId, objectId, offeringKey="default"})
     }
   }
 
-  let error, result;
-  const fabricURIs = this.fabricURIs;
-  try {
-    this.SetNodes({fabricURIs: [lroDraft.node, ...fabricURIs]});
+  this.HttpClient.RecordWriteToken(lroDraft.write_token, lroDraft.node);
 
-    result = await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      writeToken: lroDraft.write_token,
-      metadataSubtree: "lro_status"
-    });
-  } catch(err) {
-    error = err;
-  } finally {
-    this.SetNodes({fabricURIs});
-  }
-
-  if(error) { throw error; }
-
-  return result;
+  return await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    writeToken: lroDraft.write_token,
+    metadataSubtree: "lro_status"
+  });
 };
 
 /**
