@@ -22,8 +22,8 @@ class HttpClient {
     return Fetch(url, params);
   }
 
-  RecordWriteToken(writeToken, uri = this.BaseURI()) {
-    this.draftURIs[writeToken] = uri;
+  RecordWriteToken(writeToken, nodeUrlStr) {
+    this.draftURIs[writeToken] = nodeUrlStr ? new URI(nodeUrlStr) : this.BaseURI();
   }
 
   RequestHeaders(bodyType, headers={}) {
