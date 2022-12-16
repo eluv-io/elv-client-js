@@ -126,60 +126,6 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
   return balances;
 };
 
-
-/**
- * Returns basic contract info about the items the specified/current user owns, organized by contract address + token ID
- *
- * This method is significantly faster than <a href="#.UserItems">UserItems</a>, but does not include any NFT metadata.
- *
- * @methodGroup User
- * @namedParams
- * @param {string=} userAddress - Address of the user to query for. If unspecified, will use the currently logged in user.
- *
- * @returns {Promise<Object>} - Basic info about all owned items.
- */
-exports.UserItemInfo = async function ({userAddress}={}) {
-  const accountId = `iusr${Utils.AddressToHash(userAddress || this.UserAddress())}`;
-  this.profileData = await this.client.ethClient.MakeProviderCall({
-    methodName: "send",
-    args: [
-      "elv_getAccountProfile",
-      [this.client.contentSpaceId, accountId]
-    ]
-  });
-
-  if(!this.profileData || !this.profileData.NFTs) { return {}; }
-
-  let nftInfo = {};
-  Object.keys(this.profileData.NFTs).map(tenantId =>
-    this.profileData.NFTs[tenantId].forEach(details => {
-      const versionHash = (details.TokenUri || "").split("/").find(s => (s || "").startsWith("hq__"));
-
-      if(!versionHash) {
-        return;
-      }
-
-      if(details.TokenHold) {
-        details.TokenHoldDate = new Date(parseInt(details.TokenHold) * 1000);
-      }
-
-      const contractAddress = Utils.FormatAddress(details.ContractAddr);
-      const key = `${contractAddress}-${details.TokenIdStr}`;
-      nftInfo[key] = {
-        ...details,
-        ContractAddr: Utils.FormatAddress(details.ContractAddr),
-        ContractId: `ictr${Utils.AddressToHash(details.ContractAddr)}`,
-        VersionHash: versionHash
-      };
-    })
-  );
-
-  this.nftInfo = nftInfo;
-
-  return this.nftInfo;
-};
-
-
 /**
  * Retrieve all valid names for filtering user items. Full item names are required for filtering results by name.
  *
@@ -286,7 +232,7 @@ exports.UserItemAttributes = async function({marketplaceParams, displayName, use
  * @param {string=} userAddress - Address of a user. If not specified, will return results for current user
  * @param {integer=} start=0 - PAGINATION: Index from which the results should start
  * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
- * @param {string=} sortBy="created" - Sort order. Options: `default`, `meta/display_name`
+ * @param {string=} sortBy="default" - Sort order. Options: `default`, `meta/display_name`
  * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
  * @param {string=} filter - Filter results by item name.
  * @param {string=} contractAddress - Filter results by the address of the NFT contract
@@ -296,8 +242,8 @@ exports.UserItemAttributes = async function({marketplaceParams, displayName, use
  *
  * @returns {Promise<Object>} - Results of the query and pagination info
  */
-exports.UserItems = async function() {
-  return this.FilteredQuery({mode: "owned", ...(arguments[0] || {})});
+exports.UserItems = async function({sortBy="default"}={}) {
+  return this.FilteredQuery({mode: "owned", sortBy, ...(arguments[0] || {})});
 };
 
 /**
