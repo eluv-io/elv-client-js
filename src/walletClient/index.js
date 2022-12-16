@@ -869,6 +869,11 @@ class ElvWalletClient {
       sort_descending: sortDesc
     };
 
+    // Created isn't a valid sort mode for owned
+    if(mode === "owned" && sortBy === "created") {
+      sortBy = "default";
+    }
+
     if(mode !== "leaderboard") {
       params.sort_by = sortBy;
     }
