@@ -1129,6 +1129,12 @@ class ElvWalletClient {
             confirmationId = status.extra && status.extra.trans_id;
           }
 
+          if(op === "nft-offer-redeem") {
+            status.offerId = status.extra && status.extra.offer_id;
+            confirmationId = status.op.split(":").slice(-1)[0];
+            tokenId = status.extra && status.extra.token_id_str;
+          }
+
           return {
             ...status,
             timestamp: new Date(status.ts),
