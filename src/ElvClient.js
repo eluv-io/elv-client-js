@@ -147,6 +147,7 @@ class ElvClient {
     fabricURIs,
     ethereumURIs,
     authServiceURIs,
+    searchURIs,
     ethereumContractTimeout = 10,
     trustAuthorityId,
     staticToken,
@@ -169,6 +170,7 @@ class ElvClient {
     this.fabricURIs = fabricURIs;
     this.authServiceURIs = authServiceURIs;
     this.ethereumURIs = ethereumURIs;
+    this.searchURIs = searchURIs;
     this.ethereumContractTimeout = ethereumContractTimeout;
 
     this.trustAuthorityId = trustAuthorityId;
@@ -230,6 +232,8 @@ class ElvClient {
         authServiceURIs = authServiceURIs.filter(filterHTTPS);
       }
 
+      const searchURIs = fabricInfo.network.services.search || [];
+
       const fabricVersion = Math.max(...(fabricInfo.network.api_versions || [2]));
 
       return {
@@ -241,6 +245,7 @@ class ElvClient {
         ethereumURIs,
         authServiceURIs,
         kmsURIs: kmsUrls,
+        searchURIs,
         fabricVersion
       };
     } catch(error) {
@@ -326,6 +331,7 @@ class ElvClient {
       fabricURIs,
       ethereumURIs,
       authServiceURIs,
+      searchURIs,
       fabricVersion
     } = await ElvClient.Configuration({
       configUrl,
@@ -340,6 +346,7 @@ class ElvClient {
       fabricURIs,
       ethereumURIs,
       authServiceURIs,
+      searchURIs,
       ethereumContractTimeout,
       trustAuthorityId,
       staticToken,
@@ -421,7 +428,7 @@ class ElvClient {
       throw Error("Unable to change region: Configuration URL not set");
     }
 
-    const {fabricURIs, ethereumURIs, authServiceURIs} = await ElvClient.Configuration({
+    const {fabricURIs, ethereumURIs, authServiceURIs, searchURIs} = await ElvClient.Configuration({
       configUrl: this.configUrl,
       region
     });
@@ -429,6 +436,7 @@ class ElvClient {
     this.authServiceURIs = authServiceURIs;
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
+    this.searchURIs = searchURIs;
 
     this.HttpClient.uris = fabricURIs;
     this.HttpClient.uriIndex = 0;
@@ -438,7 +446,8 @@ class ElvClient {
 
     return {
       fabricURIs,
-      ethereumURIs
+      ethereumURIs,
+      searchURIs
     };
   }
 
