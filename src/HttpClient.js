@@ -22,8 +22,8 @@ class HttpClient {
     return Fetch(url, params);
   }
 
-  RecordWriteToken(writeToken) {
-    this.draftURIs[writeToken] = this.BaseURI();
+  RecordWriteToken(writeToken, nodeUrlStr) {
+    this.draftURIs[writeToken] = nodeUrlStr ? new URI(nodeUrlStr) : this.BaseURI();
   }
 
   RequestHeaders(bodyType, headers={}) {
@@ -54,7 +54,7 @@ class HttpClient {
     let baseURI = this.BaseURI();
 
     // If URL contains a write token, it must go to the correct server and can not fail over
-    const writeTokenMatch = path.replace(/^\//, "").match(/(qlibs\/ilib[a-zA-Z0-9]+|q|qid)\/(tqw_[a-zA-Z0-9]+)/);
+    const writeTokenMatch = path.replace(/^\//, "").match(/(qlibs\/ilib[a-zA-Z0-9]+|q|qid)\/(tqw__[a-zA-Z0-9]+)/);
     const writeToken = writeTokenMatch ? writeTokenMatch[2] : undefined;
 
     if(writeToken) {
