@@ -1429,13 +1429,13 @@ exports.CreateNonOwnerCap = /*#__PURE__*/function () {
  * meta: New metadata for the object - will be merged into existing metadata if specified
  * type: New type for the object - Object ID, version hash or name of type
  *
- * @returns {Promise<object>} - Response containing the object ID and write token of the draft
+ * @returns {Promise<object>} - Response containing the object ID and write token of the draft, as well as URL of node handling the draft
  */
 
 
 exports.EditContentObject = /*#__PURE__*/function () {
   var _ref28 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee15(_ref27) {
-    var libraryId, objectId, _ref27$options, options, path, editResponse;
+    var libraryId, objectId, _ref27$options, options, path, rawEditResponse, actualUrl, nodeUrl, editResponse;
 
     return _regeneratorRuntime.wrap(function _callee15$(_context15) {
       while (1) {
@@ -1505,38 +1505,47 @@ exports.EditContentObject = /*#__PURE__*/function () {
 
           case 23:
             path = UrlJoin("qid", objectId);
-            _context15.t0 = this.utils;
-            _context15.t1 = this.HttpClient;
-            _context15.next = 28;
+            _context15.t0 = this.HttpClient;
+            _context15.next = 27;
             return this.authClient.AuthorizationHeader({
               libraryId: libraryId,
               objectId: objectId,
               update: true
             });
 
-          case 28:
-            _context15.t2 = _context15.sent;
-            _context15.t3 = path;
-            _context15.t4 = options;
-            _context15.t5 = {
-              headers: _context15.t2,
+          case 27:
+            _context15.t1 = _context15.sent;
+            _context15.t2 = path;
+            _context15.t3 = options;
+            _context15.t4 = {
+              headers: _context15.t1,
               method: "POST",
-              path: _context15.t3,
-              body: _context15.t4
+              path: _context15.t2,
+              body: _context15.t3
             };
-            _context15.t6 = _context15.t1.Request.call(_context15.t1, _context15.t5);
-            _context15.next = 35;
-            return _context15.t0.ResponseToJson.call(_context15.t0, _context15.t6);
+            _context15.next = 33;
+            return _context15.t0.Request.call(_context15.t0, _context15.t4);
 
-          case 35:
+          case 33:
+            rawEditResponse = _context15.sent;
+            actualUrl = new URL(rawEditResponse.url);
+            actualUrl.pathname = "";
+            actualUrl.search = "";
+            actualUrl.hash = "";
+            nodeUrl = actualUrl.href;
+            _context15.next = 41;
+            return this.utils.ResponseToJson(rawEditResponse);
+
+          case 41:
             editResponse = _context15.sent;
             // Record the node used in creating this write token
-            this.HttpClient.RecordWriteToken(editResponse.write_token);
+            this.HttpClient.RecordWriteToken(editResponse.write_token, nodeUrl);
             editResponse.writeToken = editResponse.write_token;
             editResponse.objectId = editResponse.id;
+            editResponse.nodeUrl = nodeUrl;
             return _context15.abrupt("return", editResponse);
 
-          case 40:
+          case 47:
           case "end":
             return _context15.stop();
         }
@@ -2639,7 +2648,7 @@ exports.UpdateContentObjectGraph = /*#__PURE__*/function () {
 /**
  * Generate a signed link token.
  *
- * @methodGroup Access Requests
+ * @methodGroup Links
  * @namedParams
  * @param {string=} containerId - ID of the container object
  * @param {string=} versionHash - Version hash of the object
