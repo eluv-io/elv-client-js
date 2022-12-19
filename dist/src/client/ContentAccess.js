@@ -19,6 +19,8 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
  */
 var UrlJoin = require("url-join");
 
+var objectPath = require("object-path");
+
 var HttpClient = require("../HttpClient");
 
 var _require = require("../Validation"),
@@ -1154,6 +1156,7 @@ exports.ContentObjects = /*#__PURE__*/function () {
  * @param {string=} libraryId - ID of the library
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
+ * @param {string=} writeToken - Write token for an object draft -- if supplied, versionHash will be ignored
  *
  * @returns {Promise<Object>} - Description of content object
  */
@@ -1161,24 +1164,24 @@ exports.ContentObjects = /*#__PURE__*/function () {
 
 exports.ContentObject = /*#__PURE__*/function () {
   var _ref26 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee15(_ref25) {
-    var libraryId, objectId, versionHash, path;
+    var libraryId, objectId, versionHash, writeToken, path;
     return _regeneratorRuntime.wrap(function _callee15$(_context15) {
       while (1) {
         switch (_context15.prev = _context15.next) {
           case 0:
-            libraryId = _ref25.libraryId, objectId = _ref25.objectId, versionHash = _ref25.versionHash;
+            libraryId = _ref25.libraryId, objectId = _ref25.objectId, versionHash = _ref25.versionHash, writeToken = _ref25.writeToken;
             ValidateParameters({
               libraryId: libraryId,
               objectId: objectId,
               versionHash: versionHash
             });
-            this.Log("Retrieving content object: ".concat(libraryId || "", " ").concat(objectId || versionHash));
+            this.Log("Retrieving content object: ".concat(libraryId || "", " ").concat(writeToken || versionHash || objectId));
 
             if (versionHash) {
               objectId = this.utils.DecodeVersionHash(versionHash).objectId;
             }
 
-            path = UrlJoin("q", versionHash || objectId);
+            path = UrlJoin("q", writeToken || versionHash || objectId);
             _context15.t0 = this.utils;
             _context15.t1 = this.HttpClient;
             _context15.next = 9;
@@ -1782,7 +1785,7 @@ exports.MetadataAuth = /*#__PURE__*/function () {
 
 exports.ContentObjectMetadata = /*#__PURE__*/function () {
   var _ref41 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee24(_ref40) {
-    var libraryId, objectId, versionHash, writeToken, _ref40$metadataSubtre, metadataSubtree, _ref40$queryParams, queryParams, _ref40$select, select, _ref40$remove, remove, authorizationToken, _ref40$noAuth, noAuth, _ref40$resolveLinks, resolveLinks, _ref40$resolveInclude, resolveIncludeSource, _ref40$resolveIgnoreE, resolveIgnoreErrors, _ref40$linkDepthLimit, linkDepthLimit, _ref40$produceLinkUrl, produceLinkUrls, path, defaultAuthToken, authTokens, metadata;
+    var libraryId, objectId, versionHash, writeToken, _ref40$metadataSubtre, metadataSubtree, _ref40$queryParams, queryParams, _ref40$select, select, _ref40$remove, remove, authorizationToken, _ref40$noAuth, noAuth, _ref40$resolveLinks, resolveLinks, _ref40$resolveInclude, resolveIncludeSource, _ref40$resolveIgnoreE, resolveIgnoreErrors, _ref40$linkDepthLimit, linkDepthLimit, _ref40$produceLinkUrl, produceLinkUrls, path, defaultAuthToken, authTokens, metadata, errQwtoken;
 
     return _regeneratorRuntime.wrap(function _callee24$(_context24) {
       while (1) {
@@ -1841,7 +1844,7 @@ exports.ContentObjectMetadata = /*#__PURE__*/function () {
 
           case 14:
             metadata = _context24.sent;
-            _context24.next = 22;
+            _context24.next = 27;
             break;
 
           case 17:
@@ -1856,18 +1859,32 @@ exports.ContentObjectMetadata = /*#__PURE__*/function () {
             throw _context24.t0;
 
           case 21:
+            // For a 404 error, check if error was due to write token not found
+            errQwtoken = objectPath.get(_context24.t0.body, "errors[0].cause.cause.cause.qwtoken");
+
+            if (!errQwtoken) {
+              _context24.next = 26;
+              break;
+            }
+
+            throw _context24.t0;
+
+          case 26:
+            // For all other 404 errors (not just 'subtree not found'), suppress error and
+            // return an empty value. (there are function call chains that depend on this behavior,
+            //  e.g. CreateABRMezzanine -> CreateEncryptionConk -> ContentObjectMetadata)
             metadata = metadataSubtree === "/" ? {} : undefined;
 
-          case 22:
+          case 27:
             if (produceLinkUrls) {
-              _context24.next = 24;
+              _context24.next = 29;
               break;
             }
 
             return _context24.abrupt("return", metadata);
 
-          case 24:
-            _context24.next = 26;
+          case 29:
+            _context24.next = 31;
             return this.ProduceMetadataLinks({
               libraryId: libraryId,
               objectId: objectId,
@@ -1878,10 +1895,10 @@ exports.ContentObjectMetadata = /*#__PURE__*/function () {
               noAuth: noAuth
             });
 
-          case 26:
+          case 31:
             return _context24.abrupt("return", _context24.sent);
 
-          case 27:
+          case 32:
           case "end":
             return _context24.stop();
         }

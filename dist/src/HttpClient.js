@@ -41,8 +41,8 @@ var HttpClient = /*#__PURE__*/function () {
     }
   }, {
     key: "RecordWriteToken",
-    value: function RecordWriteToken(writeToken) {
-      this.draftURIs[writeToken] = this.BaseURI();
+    value: function RecordWriteToken(writeToken, nodeUrlStr) {
+      this.draftURIs[writeToken] = nodeUrlStr ? new URI(nodeUrlStr) : this.BaseURI();
     }
   }, {
     key: "RequestHeaders",
@@ -74,7 +74,7 @@ var HttpClient = /*#__PURE__*/function () {
                 method = _ref2.method, path = _ref2.path, _ref2$queryParams = _ref2.queryParams, queryParams = _ref2$queryParams === void 0 ? {} : _ref2$queryParams, body = _ref2.body, _ref2$bodyType = _ref2.bodyType, bodyType = _ref2$bodyType === void 0 ? "JSON" : _ref2$bodyType, _ref2$headers = _ref2.headers, headers = _ref2$headers === void 0 ? {} : _ref2$headers, _ref2$attempts = _ref2.attempts, attempts = _ref2$attempts === void 0 ? 0 : _ref2$attempts, _ref2$failover = _ref2.failover, failover = _ref2$failover === void 0 ? true : _ref2$failover, _ref2$forceFailover = _ref2.forceFailover, forceFailover = _ref2$forceFailover === void 0 ? false : _ref2$forceFailover;
                 baseURI = this.BaseURI(); // If URL contains a write token, it must go to the correct server and can not fail over
 
-                writeTokenMatch = path.replace(/^\//, "").match(/(qlibs\/ilib[a-zA-Z0-9]+|q|qid)\/(tqw_[a-zA-Z0-9]+)/);
+                writeTokenMatch = path.replace(/^\//, "").match(/(qlibs\/ilib[a-zA-Z0-9]+|q|qid)\/(tqw__[a-zA-Z0-9]+)/);
                 writeToken = writeTokenMatch ? writeTokenMatch[2] : undefined;
 
                 if (writeToken) {

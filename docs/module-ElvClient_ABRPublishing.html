@@ -179,7 +179,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id=".CreateABRMezzanine">
-      <span class="type-signature">static </span>CreateABRMezzanine<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId<span class="signature-attributes">optional</span>,</div><div class="block-param">type<span class="signature-attributes">optional</span>,</div><div class="block-param">name,</div><div class="block-param">description<span class="signature-attributes">optional</span>,</div><div class="block-param">metadata<span class="signature-attributes">optional</span>,</div><div class="block-param">masterVersionHash,</div><div class="block-param">variant<span class="signature-attributes">optional</span>,</div><div class="block-param">offeringKey<span class="signature-attributes">optional</span>,</div><div class="block-param">abrProfile<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Object</span>
+      <span class="type-signature">static </span>CreateABRMezzanine<span class="signature">({<div class="block-param">abrProfile<span class="signature-attributes">optional</span>,</div><div class="block-param">addlOfferingSpecs<span class="signature-attributes">optional</span>,</div><div class="block-param">description<span class="signature-attributes">optional</span>,</div><div class="block-param">keepOtherStreams<span class="signature-attributes">optional</span>,</div><div class="block-param">libraryId,</div><div class="block-param">masterVersionHash,</div><div class="block-param">metadata<span class="signature-attributes">optional</span>,</div><div class="block-param">name,</div><div class="block-param">objectId<span class="signature-attributes">optional</span>,</div><div class="block-param">offeringKey<span class="signature-attributes">optional</span>,</div><div class="block-param">respLogLevel<span class="signature-attributes">optional</span>,</div><div class="block-param">structLogLevel<span class="signature-attributes">optional</span>,</div><div class="block-param">streamKeys,</div><div class="block-param">type<span class="signature-attributes">optional</span>,</div><div class="block-param">variant<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Object</span>
     </h4>
   </span>
 
@@ -188,7 +188,7 @@
 
 
   <div class="description">
-    <p>Create a mezzanine of the given master content object</p>
+    <p>Create (or edit) a mezzanine offering based on the a given master content object version and variant key</p>
   </div>
 
 
@@ -236,55 +236,14 @@
     
       <tr>
         
-          <td class="name"><code>libraryId</code></td>
+          <td class="name"><code>abrProfile</code></td>
         
 
         <td class="type">
           
             
     <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-          <td class="default">
-            
-          </td>
-        
-
-        <td class="description last">
-          <p>ID of the mezzanine library</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>objectId</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
+      Object
     </span>
 
     
@@ -312,7 +271,7 @@
         
 
         <td class="description last">
-          <p>ID of existing object (if not specified, new object will be created)</p>
+          <p>Custom ABR profile. If not specified, the profile of the mezzanine library will be used</p>
           
         </td>
       </tr>
@@ -320,14 +279,14 @@
     
       <tr>
         
-          <td class="name"><code>type</code></td>
+          <td class="name"><code>addlOfferingSpecs</code></td>
         
 
         <td class="type">
           
             
     <span class="param-type">
-      string
+      Object
     </span>
 
     
@@ -355,48 +314,7 @@
         
 
         <td class="description last">
-          <p>ID or version hash of the content type for the mezzanine</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>name</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-          <td class="default">
-            
-          </td>
-        
-
-        <td class="description last">
-          <p>Name for mezzanine content object</p>
+          <p>Specs for additional offerings to create by patching the offering being created/edited</p>
           
         </td>
       </tr>
@@ -447,14 +365,14 @@
     
       <tr>
         
-          <td class="name"><code>metadata</code></td>
+          <td class="name"><code>keepOtherStreams</code></td>
         
 
         <td class="type">
           
             
     <span class="param-type">
-      Object
+      boolean
     </span>
 
     
@@ -478,11 +396,54 @@
         
           <td class="default">
             
+              false
+            
           </td>
         
 
         <td class="description last">
-          <p>Additional metadata for mezzanine content object</p>
+          <p>If objectId is specified, whether to preserve existing streams with keys other than the ones specified in production master</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>libraryId</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>ID of the mezzanine library</p>
           
         </td>
       </tr>
@@ -531,7 +492,91 @@
     
       <tr>
         
-          <td class="name"><code>variant</code></td>
+          <td class="name"><code>metadata</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      Object
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>Additional metadata for mezzanine content object</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>name</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>Name for mezzanine content object</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>objectId</code></td>
         
 
         <td class="type">
@@ -562,13 +607,11 @@
         
           <td class="default">
             
-              default
-            
           </td>
         
 
         <td class="description last">
-          <p>What variant of the master content object to use</p>
+          <p>ID of existing object (if not specified, new object will be created)</p>
           
         </td>
       </tr>
@@ -621,14 +664,181 @@
     
       <tr>
         
-          <td class="name"><code>abrProfile</code></td>
+          <td class="name"><code>respLogLevel</code></td>
         
 
         <td class="type">
           
             
     <span class="param-type">
-      Object
+      "warn"
+    </span>
+
+    |
+
+    <span class="param-type">
+      "info"
+    </span>
+
+    |
+
+    <span class="param-type">
+      "debug"
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              warn
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>The level of logging to return in http response</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>structLogLevel</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      "none"
+    </span>
+
+    |
+
+    <span class="param-type">
+      "error"
+    </span>
+
+    |
+
+    <span class="param-type">
+      "warn"
+    </span>
+
+    |
+
+    <span class="param-type">
+      "info"
+    </span>
+
+    |
+
+    <span class="param-type">
+      "debug"
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              none
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>The level of logging to save to object metadata</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>streamKeys</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      Array.&lt;string>
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>List of stream keys from variant to include. If not supplied all streams will be included.</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>type</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
     </span>
 
     
@@ -656,7 +866,52 @@
         
 
         <td class="description last">
-          <p>Custom ABR profile. If not specified, the profile of the mezzanine library will be used</p>
+          <p>ID or version hash of the content type for the mezzanine</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>variant</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              default
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>What variant of the master content object to use</p>
           
         </td>
       </tr>
@@ -761,7 +1016,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line235">line 235</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line248">line 248</a>
         </li>
       </ul>
     </dd>
@@ -784,7 +1039,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id=".CreateProductionMaster">
-      <span class="type-signature">static </span>CreateProductionMaster<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">type<span class="signature-attributes">optional</span>,</div><div class="block-param">name,</div><div class="block-param">description<span class="signature-attributes">optional</span>,</div><div class="block-param">contentTypeName,</div><div class="block-param">metadata<span class="signature-attributes">optional</span>,</div><div class="block-param">fileInfo<span class="signature-attributes">optional</span>,</div><div class="block-param">encrypt<span class="signature-attributes">optional</span>,</div><div class="block-param">copy<span class="signature-attributes">optional</span>,</div><div class="block-param">callback<span class="signature-attributes">optional</span>,</div><div class="block-param">access<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Object</span>
+      <span class="type-signature">static </span>CreateProductionMaster<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">type<span class="signature-attributes">optional</span>,</div><div class="block-param">name,</div><div class="block-param">description<span class="signature-attributes">optional</span>,</div><div class="block-param">contentTypeName,</div><div class="block-param">metadata<span class="signature-attributes">optional</span>,</div><div class="block-param">fileInfo<span class="signature-attributes">optional</span>,</div><div class="block-param">encrypt<span class="signature-attributes">optional</span>,</div><div class="block-param">copy<span class="signature-attributes">optional</span>,</div><div class="block-param">callback<span class="signature-attributes">optional</span>,</div><div class="block-param">respLogLevel<span class="signature-attributes">optional</span>,</div><div class="block-param">structLogLevel<span class="signature-attributes">optional</span>,</div><div class="block-param">access<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Object</span>
     </h4>
   </span>
 
@@ -1273,6 +1528,132 @@
     
       <tr>
         
+          <td class="name"><code>respLogLevel</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      "warn"
+    </span>
+
+    |
+
+    <span class="param-type">
+      "info"
+    </span>
+
+    |
+
+    <span class="param-type">
+      "debug"
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              warn
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>The level of logging to return in http response</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>structLogLevel</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      "none"
+    </span>
+
+    |
+
+    <span class="param-type">
+      "error"
+    </span>
+
+    |
+
+    <span class="param-type">
+      "warn"
+    </span>
+
+    |
+
+    <span class="param-type">
+      "info"
+    </span>
+
+    |
+
+    <span class="param-type">
+      "debug"
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              none
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>The level of logging to save to object metadata</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
           <td class="name"><code>access</code></td>
         
 
@@ -1549,7 +1930,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line69">line 69</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line71">line 71</a>
         </li>
       </ul>
     </dd>
@@ -1572,7 +1953,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id=".FinalizeABRMezzanine">
-      <span class="type-signature">static </span>FinalizeABRMezzanine<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">writeToken,</div><div class="block-param">offeringKey<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
+      <span class="type-signature">static </span>FinalizeABRMezzanine<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">writeToken,</div><div class="block-param">offeringKey<span class="signature-attributes">optional</span>,</div><div class="block-param">preFinalizeFn<span class="signature-attributes">optional</span>,</div><div class="block-param">preFinalizeThrow<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
     </h4>
   </span>
 
@@ -1795,6 +2176,92 @@
       </tr>
 
     
+      <tr>
+        
+          <td class="name"><code>preFinalizeFn</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      function
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>A function to call before finalizing changes, to allow further modifications to offering. The function will be invoked with {elvClient, nodeUrl, writeToken} to allow access to the draft and MUST NOT finalize the draft.</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>preFinalizeThrow</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      boolean
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>If set to <code>true</code> then any error thrown by preFinalizeFn will not be caught. Otherwise, any exception will be appended to the <code>warnings</code> array returned after finalization.</p>
+          
+        </td>
+      </tr>
+
+    
   </tbody>
 </table>
 
@@ -1883,7 +2350,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line588">line 588</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line611">line 611</a>
         </li>
       </ul>
     </dd>
@@ -2238,7 +2705,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line524">line 524</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line557">line 557</a>
         </li>
       </ul>
     </dd>
@@ -2622,7 +3089,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line421">line 421</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line454">line 454</a>
         </li>
       </ul>
     </dd>
