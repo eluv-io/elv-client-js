@@ -34,6 +34,8 @@ const {
  * @param {boolean=} encrypt=true - (Local or copied files only) - Unless `false` is passed in explicitly, any uploaded/copied files will be stored encrypted
  * @param {boolean=} copy=false - (S3) If specified, files will be copied from S3
  * @param {function=} callback - Progress callback for file upload (See UploadFiles/UploadFilesFromS3 method)
+ * @param {("warn"|"info"|"debug")=} respLogLevel=warn - The level of logging to return in http response
+ * @param {("none"|"error"|"warn"|"info"|"debug")=} structLogLevel=none - The level of logging to save to object metadata
  * @param {Array<Object>=} access=[] - Array of cloud credentials, along with path matching regex strings - Required if any files in the masters are cloud references (currently only AWS S3 is supported)
  * - If this parameter is non-empty, all items in fileInfo are assumed to be items in cloud storage
  * - Format: [
@@ -76,7 +78,9 @@ exports.CreateProductionMaster = async function({
   encrypt=true,
   access=[],
   copy=false,
-  callback
+  callback,
+  respLogLevel = "warn",
+  structLogLevel="none"
 }) {
   ValidateLibrary(libraryId);
 
@@ -174,6 +178,10 @@ exports.CreateProductionMaster = async function({
     objectId: id,
     writeToken: write_token,
     method: UrlJoin("media", "production_master", "init"),
+    queryParams: {
+      response_log_level: respLogLevel,
+      struct_log_level: structLogLevel
+    },
     body: {
       access
     },
@@ -215,20 +223,25 @@ exports.CreateProductionMaster = async function({
 };
 
 /**
- * Create a mezzanine of the given master content object
+ * Create (or edit) a mezzanine offering based on the a given master content object version and variant key
  *
  * @methodGroup ABR Publishing
  * @namedParams
- * @param {string} libraryId - ID of the mezzanine library
- * @param {string=} objectId - ID of existing object (if not specified, new object will be created)
- * @param {string=} type - ID or version hash of the content type for the mezzanine
- * @param {string} name - Name for mezzanine content object
- * @param {string=} description - Description for mezzanine content object
- * @param {Object=} metadata - Additional metadata for mezzanine content object
- * @param {string} masterVersionHash - The version hash of the production master content object
- * @param {string=} variant=default - What variant of the master content object to use
- * @param {string=} offeringKey=default - The key of the offering to create
  * @param {Object=} abrProfile - Custom ABR profile. If not specified, the profile of the mezzanine library will be used
+ * @param {Object=} addlOfferingSpecs - Specs for additional offerings to create by patching the offering being created/edited
+ * @param {string=} description - Description for mezzanine content object
+ * @param {boolean=} keepOtherStreams=false - If objectId is specified, whether to preserve existing streams with keys other than the ones specified in production master
+ * @param {string} libraryId - ID of the mezzanine library
+ * @param {string} masterVersionHash - The version hash of the production master content object
+ * @param {Object=} metadata - Additional metadata for mezzanine content object
+ * @param {string} name - Name for mezzanine content object
+ * @param {string=} objectId - ID of existing object (if not specified, new object will be created)
+ * @param {string=} offeringKey=default - The key of the offering to create
+ * @param {("warn"|"info"|"debug")=} respLogLevel=warn - The level of logging to return in http response
+ * @param {("none"|"error"|"warn"|"info"|"debug")=} structLogLevel=none - The level of logging to save to object metadata
+ * @param {Array<string>} streamKeys - List of stream keys from variant to include. If not supplied all streams will be included.
+ * @param {string=} type - ID or version hash of the content type for the mezzanine
+ * @param {string=} variant=default - What variant of the master content object to use
  *
  * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the mezzanine initialization
  */
@@ -241,14 +254,27 @@ exports.CreateABRMezzanine = async function({
   metadata,
   masterVersionHash,
   abrProfile,
+  addlOfferingSpecs,
   variant="default",
-  offeringKey="default"
+  offeringKey="default",
+  keepOtherStreams= false,
+  respLogLevel = "warn",
+  structLogLevel="none",
+  streamKeys
 }) {
   ValidateLibrary(libraryId);
   ValidateVersion(masterVersionHash);
 
   if(!masterVersionHash) {
     throw Error("Master version hash not specified");
+  }
+
+  if(!objectId && (keepOtherStreams)) {
+    throw Error("Existing mezzanine object ID required in order to use 'keepOtherStreams'");
+  }
+
+  if(addlOfferingSpecs && !abrProfile) {
+    throw Error("abrProfile required when using addlOfferingSpecs");
   }
 
   const existingMez = !!objectId;
@@ -295,9 +321,12 @@ exports.CreateABRMezzanine = async function({
   };
 
   const body = {
+    additional_offering_specs: addlOfferingSpecs,
     offering_key: offeringKey,
-    variant_key: variant,
-    prod_master_hash: masterVersionHash
+    keep_other_streams: keepOtherStreams,
+    prod_master_hash: masterVersionHash,
+    stream_keys: streamKeys,
+    variant_key: variant
   };
 
   let storeClear = false;
@@ -327,6 +356,10 @@ exports.CreateABRMezzanine = async function({
     objectId: id,
     writeToken: write_token,
     method: UrlJoin("media", "abr_mezzanine", "init"),
+    queryParams: {
+      response_log_level: respLogLevel,
+      struct_log_level: structLogLevel
+    },
     headers,
     body,
     constant: false
@@ -551,26 +584,14 @@ exports.LROStatus = async function({libraryId, objectId, offeringKey="default"})
     }
   }
 
-  let error, result;
-  const fabricURIs = this.fabricURIs;
-  try {
-    this.SetNodes({fabricURIs: [lroDraft.node, ...fabricURIs]});
+  this.HttpClient.RecordWriteToken(lroDraft.write_token, lroDraft.node);
 
-    result = await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      writeToken: lroDraft.write_token,
-      metadataSubtree: "lro_status"
-    });
-  } catch(err) {
-    error = err;
-  } finally {
-    this.SetNodes({fabricURIs});
-  }
-
-  if(error) { throw error; }
-
-  return result;
+  return await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    writeToken: lroDraft.write_token,
+    metadataSubtree: "lro_status"
+  });
 };
 
 /**
@@ -582,10 +603,12 @@ exports.LROStatus = async function({libraryId, objectId, offeringKey="default"})
  * @param {string} objectId - ID of the mezzanine object
  * @param {string} writeToken - Write token for the mezzanine object
  * @param {string=} offeringKey=default - The offering to process
+ * @param {function=} preFinalizeFn - A function to call before finalizing changes, to allow further modifications to offering. The function will be invoked with {elvClient, nodeUrl, writeToken} to allow access to the draft and MUST NOT finalize the draft.
+ * @param {boolean=} preFinalizeThrow - If set to `true` then any error thrown by preFinalizeFn will not be caught. Otherwise, any exception will be appended to the `warnings` array returned after finalization.
  *
  * @return {Promise<Object>} - The finalize response for the mezzanine object, as well as any logs, warnings and errors from the finalization
  */
-exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey="default"}) {
+exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey="default", preFinalizeFn, preFinalizeThrow}) {
   ValidateParameters({libraryId, objectId});
 
   const lroDraft = await this.ContentObjectMetadata({
@@ -632,6 +655,22 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey=
       constant: false
     });
 
+    let preFinalizeWarnings = [];
+    if(preFinalizeFn) {
+      const params = {
+        elvClient: this,
+        nodeUrl: lroDraft.node,
+        writeToken: lroDraft.write_token
+      };
+      if(preFinalizeThrow){
+        await preFinalizeFn(params);
+      } else try {
+        await preFinalizeFn(params);
+      } catch(e) {
+        preFinalizeWarnings = `Error trying to set video stream codec descriptors: ${e}`;
+      }
+    }
+
     const finalizeResponse = await this.FinalizeContentObject({
       libraryId,
       objectId: objectId,
@@ -643,7 +682,7 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey=
     result = {
       data,
       logs: logs || [],
-      warnings: warnings || [],
+      warnings: (warnings || []).concat(preFinalizeWarnings),
       errors: errors || [],
       ...finalizeResponse
     };
