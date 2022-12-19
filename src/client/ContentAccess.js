@@ -5,6 +5,7 @@
  */
 
 const UrlJoin = require("url-join");
+const objectPath = require("object-path");
 
 const HttpClient = require("../HttpClient");
 
@@ -581,17 +582,18 @@ exports.ContentObjects = async function({libraryId, filterOptions={}}) {
  * @param {string=} libraryId - ID of the library
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
+ * @param {string=} writeToken - Write token for an object draft -- if supplied, versionHash will be ignored
  *
  * @returns {Promise<Object>} - Description of content object
  */
-exports.ContentObject = async function({libraryId, objectId, versionHash}) {
+exports.ContentObject = async function({libraryId, objectId, versionHash, writeToken}) {
   ValidateParameters({libraryId, objectId, versionHash});
 
-  this.Log(`Retrieving content object: ${libraryId || ""} ${objectId || versionHash}`);
+  this.Log(`Retrieving content object: ${libraryId || ""} ${writeToken || versionHash || objectId}`);
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-  let path = UrlJoin("q", versionHash || objectId);
+  let path = UrlJoin("q", writeToken || versionHash || objectId);
 
   return await this.utils.ResponseToJson(
     this.HttpClient.Request({
@@ -925,8 +927,17 @@ exports.ContentObjectMetadata = async function({
     if(error.status !== 404) {
       throw error;
     }
-
-    metadata = metadataSubtree === "/" ? {} : undefined;
+    // For a 404 error, check if error was due to write token not found
+    const errQwtoken = objectPath.get(error.body, "errors[0].cause.cause.cause.qwtoken");
+    if(errQwtoken) {
+      // if so, re-throw rather than suppress error
+      throw error;
+    } else {
+      // For all other 404 errors (not just 'subtree not found'), suppress error and
+      // return an empty value. (there are function call chains that depend on this behavior,
+      //  e.g. CreateABRMezzanine -> CreateEncryptionConk -> ContentObjectMetadata)
+      metadata = metadataSubtree === "/" ? {} : undefined;
+    }
   }
 
   if(!produceLinkUrls) { return metadata; }
