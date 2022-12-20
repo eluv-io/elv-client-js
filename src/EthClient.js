@@ -39,7 +39,7 @@ class EthClient {
     // HTTP client for making misc calls to elv-master
     this.HttpClient = new HttpClient({uris: this.ethereumURIs, debug: this.debug});
 
-    Ethers.errors.setLogLevel("error");
+    //Ethers.errors.setLogLevel("error");
   }
 
   SetEthereumURIs(uris) {
@@ -234,7 +234,7 @@ class EthClient {
 
     contract = contract || this.Contract({contractAddress, abi, cacheContract, overrideCachedContract});
 
-    abi = contract.interface.abi;
+    abi = contract.interface.fragments;
 
     // Automatically format contract arguments
     if(formatArguments) {
@@ -262,7 +262,7 @@ class EthClient {
         Args: [${methodArgs.join(", ")}]`
     );
 
-    const methodAbi = contract.interface.abi.find(method => method.name === methodName);
+    const methodAbi = contract.interface.fragments.find(method => method.name === methodName);
 
     // Lock if performing a transaction
     if(!methodAbi || !methodAbi.constant) {
@@ -278,7 +278,7 @@ class EthClient {
       let success = false;
       while(!success) {
         try {
-          result = await contract.functions[methodName](...methodArgs, overrides);
+          result = await contract[methodName](...methodArgs, overrides);
           success = true;
         } catch(error) {
           if(error.code === -32000 || error.code === "REPLACEMENT_UNDERPRICED") {
