@@ -660,17 +660,17 @@
         },
         {
           "bit_rate": 810000,
-          "height": 360,
+          "height": 640,
           "media_type": "video",
           "pregenerate": false,
-          "width": 640
+          "width": 360
         },
         {
           "bit_rate": 520000,
-          "height": 360,
+          "height": 640,
           "media_type": "video",
           "pregenerate": false,
-          "width": 640
+          "width": 360
         }
       ]
     },
