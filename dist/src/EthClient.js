@@ -71,8 +71,7 @@ var EthClient = /*#__PURE__*/function () {
     this.HttpClient = new HttpClient({
       uris: this.ethereumURIs,
       debug: this.debug
-    });
-    Ethers.errors.setLogLevel("error");
+    }); //Ethers.errors.setLogLevel("error");
   }
 
   _createClass(EthClient, [{
@@ -429,7 +428,7 @@ var EthClient = /*#__PURE__*/function () {
     key: "CallContractMethod",
     value: function () {
       var _CallContractMethod = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee6(_ref9) {
-        var contract, contractAddress, abi, methodName, _ref9$methodArgs, methodArgs, value, _ref9$overrides, overrides, _ref9$formatArguments, formatArguments, _ref9$cacheContract, cacheContract, _ref9$overrideCachedC, overrideCachedContract, methodAbi, result, success, _contract$functions, latestBlock;
+        var contract, contractAddress, abi, methodName, _ref9$methodArgs, methodArgs, value, _ref9$overrides, overrides, _ref9$formatArguments, formatArguments, _ref9$cacheContract, cacheContract, _ref9$overrideCachedC, overrideCachedContract, methodAbi, result, success, _contract, latestBlock;
 
         return _regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
@@ -457,7 +456,7 @@ var EthClient = /*#__PURE__*/function () {
                   cacheContract: cacheContract,
                   overrideCachedContract: overrideCachedContract
                 });
-                abi = contract["interface"].abi; // Automatically format contract arguments
+                abi = contract["interface"].fragments; // Automatically format contract arguments
 
                 if (formatArguments) {
                   methodArgs = this.FormatContractArguments({
@@ -481,7 +480,7 @@ var EthClient = /*#__PURE__*/function () {
 
               case 11:
                 this.Log("Calling contract method:\n        Provider: ".concat(this.Provider().connection.url, "\n        Address: ").concat(contract.address, "\n        Method: ").concat(methodName, "\n        Args: [").concat(methodArgs.join(", "), "]"));
-                methodAbi = contract["interface"].abi.find(function (method) {
+                methodAbi = contract["interface"].fragments.find(function (method) {
                   return method.name === methodName;
                 }); // Lock if performing a transaction
 
@@ -520,7 +519,7 @@ var EthClient = /*#__PURE__*/function () {
 
                 _context6.prev = 23;
                 _context6.next = 26;
-                return (_contract$functions = contract.functions)[methodName].apply(_contract$functions, _toConsumableArray(methodArgs).concat([overrides]));
+                return (_contract = contract)[methodName].apply(_contract, _toConsumableArray(methodArgs).concat([overrides]));
 
               case 26:
                 result = _context6.sent;
@@ -673,7 +672,13 @@ var EthClient = /*#__PURE__*/function () {
                 }
 
                 methodEvent.logs = methodEvent.logs.map(function (log) {
-                  return _objectSpread(_objectSpread({}, log), contract["interface"].parseLog(log));
+                  var parsedLogs = {};
+
+                  try {
+                    parsedLogs = contract["interface"].parseLog(log); // eslint-disable-next-line no-empty
+                  } catch (error) {}
+
+                  return _objectSpread(_objectSpread({}, log), parsedLogs);
                 });
                 return _context7.abrupt("break", 25);
 
@@ -766,11 +771,15 @@ var EthClient = /*#__PURE__*/function () {
       try {
         for (_iterator.s(); !(_step = _iterator.n()).done;) {
           var log = _step.value;
-          var parsedLog = contractInterface.parseLog(log);
 
-          if (parsedLog && parsedLog.name === eventName) {
-            return parsedLog;
-          }
+          try {
+            var parsedLog = contractInterface.parseLog(log);
+
+            if (parsedLog && parsedLog.name === eventName) {
+              return parsedLog;
+            } // eslint-disable-next-line no-empty
+
+          } catch (error) {}
         }
       } catch (err) {
         _iterator.e(err);
@@ -821,7 +830,7 @@ var EthClient = /*#__PURE__*/function () {
                 throw Error("".concat(methodName, " failed - Log not present in transaction"));
 
               case 10:
-                newContractAddress = eventLog.values[eventValue];
+                newContractAddress = eventLog.args[eventValue];
                 return _context9.abrupt("return", {
                   contractAddress: Utils.FormatAddress(newContractAddress),
                   transactionHash: event.transactionHash

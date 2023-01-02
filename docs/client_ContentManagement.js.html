@@ -721,7 +721,7 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
   const userCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
 
   if(metadata[userCapKey]) {
-    const userConkKey = await this.Crypto.DecryptCap(metadata[userCapKey], this.signer.signingKey.privateKey);
+    const userConkKey = await this.Crypto.DecryptCap(metadata[userCapKey], this.signer._signingKey().privateKey);
     userConkKey.qid = objectId;
 
     await this.ReplaceMetadata({
@@ -729,7 +729,7 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
       objectId,
       writeToken,
       metadataSubtree: userCapKey,
-      metadata: await this.Crypto.EncryptConk(userConkKey, this.signer.signingKey.publicKey)
+      metadata: await this.Crypto.EncryptConk(userConkKey, this.signer._signingKey().publicKey)
     });
   }
 
@@ -774,7 +774,7 @@ exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, writ
     throw Error("No user cap found for current user");
   }
 
-  const userConk = await this.Crypto.DecryptCap(userCapValue, this.signer.signingKey.privateKey);
+  const userConk = await this.Crypto.DecryptCap(userCapValue, this.signer._signingKey().privateKey);
 
   const publicAddress = this.utils.PublicKeyToAddress(publicKey);
 
@@ -1117,7 +1117,7 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
       });
 
       const confirmEvent = events.find(blockEvents =>
-        blockEvents.find(event => objectHash === (event &amp;&amp; event.values &amp;&amp; event.values.objectHash))
+        blockEvents.find(event => objectHash === (event &amp;&amp; event.args &amp;&amp; event.args.objectHash))
       );
 
       if(confirmEvent) {

@@ -57,6 +57,7 @@ const spyOn = (object, methodName) => {
 const expect = (value) => {
   const ops = {
     toBeDefined: () => value !== undefined,
+    toBeUndefined: () => value === undefined,
     toBeTruthy: () => !!value,
     toBeFalsy: () => !value,
     toEqual: (otherValue) => Lodash.isEqual(value, otherValue),
@@ -66,6 +67,14 @@ const expect = (value) => {
     toBeLessThan: (otherValue) => value < otherValue,
     toBeLessThanOrEqual: (otherValue) => value <= otherValue,
     toContain: (entry) => Lodash.includes(value, entry),
+    toThrow: () => {
+      try {
+        value();
+        return false;
+      } catch(error) {
+        return true;
+      }
+    },
     toHaveBeenCalled: () => !!value.calls && value.calls.length > 0,
     toHaveBeenCalledTimes: (times) => !!value.calls && value.calls.length === times,
     toHaveBeenCalledWith: (args) => !!value.calls && !!value.calls.find(calledArgs => Lodash.isMatch(calledArgs, args))
@@ -109,6 +118,10 @@ class TestSuite {
     this.mockCallback = mockCallback;
     this.spyOn = spyOn;
 
+    this.onlySpecified = false;
+    this.fromIndex = 0;
+    this.toIndex = 999999;
+
     this.testList = [];
     this.describeBlocks = {};
     this.describeBlockTiming = {};
@@ -119,10 +132,16 @@ class TestSuite {
     this.describe = this.describe.bind(this);
     this.test = this.test.bind(this);
     this.skip = this.skip.bind(this);
+    this.only = this.only.bind(this);
+    this.fromHere = this.fromHere.bind(this);
+    this.upToHere = this.upToHere.bind(this);
     this.beforeAll = this.beforeAll.bind(this);
     this.afterAll = this.afterAll.bind(this);
 
     this.test.skip = this.skip;
+    this.test.only = this.only;
+    this.test.fromHere = this.fromHere;
+    this.test.upToHere = this.upToHere;
   }
 
   async runTests() {
@@ -135,8 +154,29 @@ class TestSuite {
 
     let currentDescribeBlocks = [];
 
+    this.fromIndex = this.testList.findIndex(test => test.fromHere);
+    this.toIndex = this.testList.findIndex(test => test.toHere);
+    this.toIndex = this.toIndex < 0 ? 99999 : this.toIndex;
+
     for(let i = 0; i < this.testList.length; i++) {
-      const { name, f, describeBlocks, skip } = this.testList[i];
+      let { name, f, describeBlocks, skip, only } = this.testList[i];
+
+      if(!["beforeAll", "afterAll"].includes(name)) {
+        // Handle "Only"
+        if(this.onlySpecified && !only) {
+          skip = true;
+        }
+
+        // Handle "From"
+        if(i < this.fromIndex) {
+          skip = true;
+        }
+
+        // Handle "Up To"
+        if(i > this.toIndex){
+          skip = true;
+        }
+      }
 
       if(!Lodash.isEqual(describeBlocks, currentDescribeBlocks)) {
         console.log();
@@ -216,10 +256,10 @@ class TestSuite {
 
           Log(`${tabs}<ERROR> ${name} ✗   (${(time / 1000).toFixed(1)}s)\n`, true, "red");
 
-          console.log();
+          console.log("\n\n");
           console.log(message);
           console.log(JSON.stringify(error, null, 2));
-          console.log("\n");
+          console.log("\n\n");
         }
       }
     }
@@ -278,7 +318,36 @@ class TestSuite {
     this.testList.push({
       name,
       f,
-      describeBlocks: [...this.currentDescribeBlocks]
+      describeBlocks: [...this.currentDescribeBlocks],
+    });
+  }
+
+  only(name, f) {
+    this.onlySpecified = true;
+
+    this.testList.push({
+      name,
+      f,
+      only: true,
+      describeBlocks: [...this.currentDescribeBlocks],
+    });
+  }
+
+  fromHere(name, f) {
+    this.testList.push({
+      name,
+      f,
+      fromHere: true,
+      describeBlocks: [...this.currentDescribeBlocks],
+    });
+  }
+
+  upToHere(name, f) {
+    this.testList.push({
+      name,
+      f,
+      toHere: true,
+      describeBlocks: [...this.currentDescribeBlocks],
     });
   }
 

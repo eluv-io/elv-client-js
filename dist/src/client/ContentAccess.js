@@ -4392,7 +4392,7 @@ exports.CreateEncryptionConk = /*#__PURE__*/function () {
             }
 
             _context46.next = 17;
-            return this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
+            return this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
 
           case 17:
             this.encryptionConks[objectId] = _context46.sent;
@@ -4414,7 +4414,7 @@ exports.CreateEncryptionConk = /*#__PURE__*/function () {
             _context46.t3 = writeToken;
             _context46.t4 = capKey;
             _context46.next = 30;
-            return this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
+            return this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer._signingKey().publicKey);
 
           case 30:
             _context46.t5 = _context46.sent;
@@ -4631,7 +4631,7 @@ exports.EncryptionConk = /*#__PURE__*/function () {
             }
 
             _context47.next = 29;
-            return this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
+            return this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
 
           case 29:
             this.encryptionConks[objectId] = _context47.sent;

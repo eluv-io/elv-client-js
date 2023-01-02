@@ -2437,7 +2437,7 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash,
     });
 
   if(existingUserCap) {
-    this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
+    this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
   } else {
     this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk({
       spaceId: this.contentSpaceId,
@@ -2449,7 +2449,7 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash,
       objectId,
       writeToken,
       metadataSubtree: capKey,
-      metadata: await this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey)
+      metadata: await this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer._signingKey().publicKey)
     });
   }
 
@@ -2540,7 +2540,7 @@ exports.EncryptionConk = async function({libraryId, objectId, versionHash, write
       });
 
     if(existingUserCap) {
-      this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
+      this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
     } else if(writeToken) {
       await this.CreateEncryptionConk({libraryId, objectId, versionHash, writeToken, createKMSConk: false});
     } else {

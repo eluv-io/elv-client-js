@@ -520,7 +520,7 @@ exports.ExtractEventFromLogs = function({abi, event, eventName}) {
  */
 exports.ExtractValueFromEvent = function({abi, event, eventName, eventValue}) {
   const eventLog = this.ethClient.ExtractEventFromLogs({abi, event, eventName, eventValue});
-  return eventLog ? eventLog.values[eventValue] : undefined;
+  return eventLog ? eventLog.args[eventValue] : undefined;
 };
 
 exports.FormatBlockNumbers = async function({fromBlock, toBlock, count=10}) {

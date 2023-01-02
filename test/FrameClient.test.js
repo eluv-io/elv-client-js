@@ -35,6 +35,7 @@ describe("Test FrameClient", () => {
   beforeAll(async () => {
     // Initialize fake window object to test the frame client
     global.window = new (require("window"))();
+    global.document = global.window.document;
 
     frameClient = OutputLogger(
       FrameClient,
@@ -71,7 +72,7 @@ describe("Test FrameClient", () => {
   });
 
   test("FrameClient methods match expected ElvClient methods", () => {
-    CompareMethods(frameClient.AllowedMethods(), client.FrameAllowedMethods());
+    CompareMethods([...frameClient.AllowedMethods(), ...frameClient.OverriddenMethods()], client.FrameAllowedMethods());
   });
 
   test("FrameClient methods match expected UserProfile methods", () => {
