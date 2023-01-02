@@ -71,8 +71,7 @@ var EthClient = /*#__PURE__*/function () {
     this.HttpClient = new HttpClient({
       uris: this.ethereumURIs,
       debug: this.debug
-    });
-    Ethers.errors.setLogLevel("error");
+    }); //Ethers.errors.setLogLevel("error");
   }
 
   _createClass(EthClient, [{
@@ -429,7 +428,7 @@ var EthClient = /*#__PURE__*/function () {
     key: "CallContractMethod",
     value: function () {
       var _CallContractMethod = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee6(_ref9) {
-        var contract, contractAddress, abi, methodName, _ref9$methodArgs, methodArgs, value, _ref9$overrides, overrides, _ref9$formatArguments, formatArguments, _ref9$cacheContract, cacheContract, _ref9$overrideCachedC, overrideCachedContract, methodAbi, result, success, _contract$functions, latestBlock;
+        var contract, contractAddress, abi, methodName, _ref9$methodArgs, methodArgs, value, _ref9$overrides, overrides, _ref9$formatArguments, formatArguments, _ref9$cacheContract, cacheContract, _ref9$overrideCachedC, overrideCachedContract, methodAbi, result, success, _contract, latestBlock;
 
         return _regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
@@ -457,7 +456,8 @@ var EthClient = /*#__PURE__*/function () {
                   cacheContract: cacheContract,
                   overrideCachedContract: overrideCachedContract
                 });
-                abi = contract["interface"].abi; // Automatically format contract arguments
+                abi = contract["interface"].fragments;
+                console.log("CCM", Utils.AddressToHash(contract.address), methodName, methodArgs); // Automatically format contract arguments
 
                 if (formatArguments) {
                   methodArgs = this.FormatContractArguments({
@@ -473,125 +473,125 @@ var EthClient = /*#__PURE__*/function () {
                 }
 
                 if (!(contract.functions[methodName] === undefined)) {
-                  _context6.next = 11;
+                  _context6.next = 12;
                   break;
                 }
 
                 throw Error("Unknown method: " + methodName);
 
-              case 11:
+              case 12:
                 this.Log("Calling contract method:\n        Provider: ".concat(this.Provider().connection.url, "\n        Address: ").concat(contract.address, "\n        Method: ").concat(methodName, "\n        Args: [").concat(methodArgs.join(", "), "]"));
-                methodAbi = contract["interface"].abi.find(function (method) {
+                methodAbi = contract["interface"].fragments.find(function (method) {
                   return method.name === methodName;
                 }); // Lock if performing a transaction
 
                 if (!(!methodAbi || !methodAbi.constant)) {
+                  _context6.next = 21;
+                  break;
+                }
+
+              case 15:
+                if (!this.locked) {
                   _context6.next = 20;
                   break;
                 }
 
-              case 14:
-                if (!this.locked) {
-                  _context6.next = 19;
-                  break;
-                }
-
-                _context6.next = 17;
+                _context6.next = 18;
                 return new Promise(function (resolve) {
                   return setTimeout(resolve, 100);
                 });
 
-              case 17:
-                _context6.next = 14;
+              case 18:
+                _context6.next = 15;
                 break;
-
-              case 19:
-                this.locked = true;
 
               case 20:
-                _context6.prev = 20;
+                this.locked = true;
+
+              case 21:
+                _context6.prev = 21;
                 success = false;
 
-              case 22:
+              case 23:
                 if (success) {
-                  _context6.next = 49;
+                  _context6.next = 50;
                   break;
                 }
 
-                _context6.prev = 23;
-                _context6.next = 26;
-                return (_contract$functions = contract.functions)[methodName].apply(_contract$functions, _toConsumableArray(methodArgs).concat([overrides]));
+                _context6.prev = 24;
+                _context6.next = 27;
+                return (_contract = contract)[methodName].apply(_contract, _toConsumableArray(methodArgs).concat([overrides]));
 
-              case 26:
+              case 27:
                 result = _context6.sent;
                 success = true;
-                _context6.next = 47;
+                _context6.next = 48;
                 break;
 
-              case 30:
-                _context6.prev = 30;
-                _context6.t0 = _context6["catch"](23);
+              case 31:
+                _context6.prev = 31;
+                _context6.t0 = _context6["catch"](24);
 
                 if (!(_context6.t0.code === -32000 || _context6.t0.code === "REPLACEMENT_UNDERPRICED")) {
-                  _context6.next = 40;
+                  _context6.next = 41;
                   break;
                 }
 
-                _context6.next = 35;
+                _context6.next = 36;
                 return this.MakeProviderCall({
                   methodName: "getBlock",
                   args: ["latest"]
                 });
 
-              case 35:
+              case 36:
                 latestBlock = _context6.sent;
                 overrides.gasLimit = latestBlock.gasLimit;
                 overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
-                _context6.next = 47;
+                _context6.next = 48;
                 break;
 
-              case 40:
+              case 41:
                 if (!(_context6.t0.code === "NONCE_EXPIRED" && _context6.t0.reason === "nonce has already been used")) {
-                  _context6.next = 44;
+                  _context6.next = 45;
                   break;
                 }
 
                 this.Log("Retrying method call ".concat(methodName));
-                _context6.next = 47;
+                _context6.next = 48;
                 break;
 
-              case 44:
+              case 45:
                 if ((_context6.t0.message || _context6.t0).includes("invalid response")) {
-                  _context6.next = 47;
+                  _context6.next = 48;
                   break;
                 }
 
                 this.Log(_typeof(_context6.t0) === "object" ? JSON.stringify(_context6.t0, null, 2) : _context6.t0, true);
                 throw _context6.t0;
 
-              case 47:
-                _context6.next = 22;
+              case 48:
+                _context6.next = 23;
                 break;
 
-              case 49:
+              case 50:
                 return _context6.abrupt("return", result);
 
-              case 50:
-                _context6.prev = 50;
+              case 51:
+                _context6.prev = 51;
 
                 // Unlock if performing a transaction
                 if (!methodAbi || !methodAbi.constant) {
                   this.locked = false;
                 }
 
-                return _context6.finish(50);
+                return _context6.finish(51);
 
-              case 53:
+              case 54:
               case "end":
                 return _context6.stop();
             }
           }
-        }, _callee6, this, [[20,, 50, 53], [23, 30]]);
+        }, _callee6, this, [[21,, 51, 54], [24, 31]]);
       }));
 
       function CallContractMethod(_x5) {
@@ -654,7 +654,7 @@ var EthClient = /*#__PURE__*/function () {
 
               case 13:
                 if (!(elapsed < timeout)) {
-                  _context7.next = 25;
+                  _context7.next = 27;
                   break;
                 }
 
@@ -666,40 +666,51 @@ var EthClient = /*#__PURE__*/function () {
 
               case 16:
                 methodEvent = _context7.sent;
+                console.log(methodEvent);
 
                 if (!methodEvent) {
-                  _context7.next = 20;
+                  _context7.next = 22;
                   break;
                 }
 
+                window.contract = contract;
                 methodEvent.logs = methodEvent.logs.map(function (log) {
-                  return _objectSpread(_objectSpread({}, log), contract["interface"].parseLog(log));
-                });
-                return _context7.abrupt("break", 25);
+                  var parsedLogs = {};
 
-              case 20:
+                  try {
+                    parsedLogs = contract["interface"].parseLog(log);
+                  } catch (error) {
+                    console.error(error);
+                  }
+
+                  console.log(log);
+                  return _objectSpread(_objectSpread({}, log), parsedLogs);
+                });
+                return _context7.abrupt("break", 27);
+
+              case 22:
                 elapsed += interval;
-                _context7.next = 23;
+                _context7.next = 25;
                 return new Promise(function (resolve) {
                   return setTimeout(resolve, interval);
                 });
 
-              case 23:
+              case 25:
                 _context7.next = 13;
                 break;
 
-              case 25:
+              case 27:
                 if (methodEvent) {
-                  _context7.next = 27;
+                  _context7.next = 29;
                   break;
                 }
 
                 throw Error("Timed out waiting for completion of ".concat(methodName, ". TXID: ").concat(createMethodCall.hash));
 
-              case 27:
+              case 29:
                 return _context7.abrupt("return", methodEvent);
 
-              case 28:
+              case 30:
               case "end":
                 return _context7.stop();
             }
@@ -821,7 +832,7 @@ var EthClient = /*#__PURE__*/function () {
                 throw Error("".concat(methodName, " failed - Log not present in transaction"));
 
               case 10:
-                newContractAddress = eventLog.values[eventValue];
+                newContractAddress = eventLog.args[eventValue];
                 return _context9.abrupt("return", {
                   contractAddress: Utils.FormatAddress(newContractAddress),
                   transactionHash: event.transactionHash

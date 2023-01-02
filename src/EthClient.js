@@ -343,9 +343,15 @@ class EthClient {
 
       if(methodEvent) {
         methodEvent.logs = methodEvent.logs.map(log => {
+          let parsedLogs = {};
+          try {
+            parsedLogs = contract.interface.parseLog(log);
+          // eslint-disable-next-line no-empty
+          } catch(error) {}
+
           return {
             ...log,
-            ...(contract.interface.parseLog(log))
+            ...parsedLogs
           };
         });
 
@@ -378,10 +384,13 @@ class EthClient {
     const contractInterface = new Ethers.utils.Interface(abi);
     // Loop through logs to find the desired log
     for(const log of event.logs) {
-      const parsedLog = contractInterface.parseLog(log);
-      if(parsedLog && parsedLog.name === eventName) {
-        return parsedLog;
-      }
+      try {
+        const parsedLog = contractInterface.parseLog(log);
+        if(parsedLog && parsedLog.name === eventName) {
+          return parsedLog;
+        }
+      // eslint-disable-next-line no-empty
+      } catch(error) {}
     }
   }
 
@@ -400,7 +409,7 @@ class EthClient {
       throw Error(`${methodName} failed - Log not present in transaction`);
     }
 
-    const newContractAddress = eventLog.values[eventValue];
+    const newContractAddress = eventLog.args[eventValue];
 
     return {
       contractAddress: Utils.FormatAddress(newContractAddress),

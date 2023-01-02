@@ -243,7 +243,7 @@ class FrameClient {
       "DeleteUserMetadata",
       "MergeUserMetadata",
       "ReplaceUserMetadata",
-      "UserMetadata"
+      "UserMetadata",
     ];
   }
 
@@ -265,6 +265,13 @@ class FrameClient {
       "UploadFilesFromS3",
       "UploadPart",
       "UploadPartChunk"
+    ];
+  }
+
+  // List of methods that are defined separately in FrameClient
+  OverriddenMethods() {
+    return [
+      "UploadFiles"
     ];
   }
 
@@ -334,6 +341,7 @@ class FrameClient {
       "CreateContentObject",
       "CreateContentType",
       "CreateEncryptionConk",
+      "CreateFabricToken",
       "CreateFileDirectories",
       "CreateFileUploadJob",
       "CreateLinks",
@@ -377,6 +385,7 @@ class FrameClient {
       "FinalizeUploadJob",
       "FormatContractArguments",
       "GenerateStateChannelToken",
+      "GenerateSignedLinkToken",
       "GetBalance",
       "InitializeAuthPolicy",
       "IssueNTPCode",
@@ -440,7 +449,6 @@ class FrameClient {
       "UpdateContentObjectGraph",
       "UpdateNTPInstance",
       "UploadFileData",
-      /*"UploadFiles",*/ //Override
       "UploadFilesFromS3",
       "UploadJobStatus",
       "UploadPart",

@@ -998,7 +998,7 @@ class ElvClient {
 
     ValidatePresence("message", message);
 
-    return await this.Crypto.EncryptConk(message, publicKey || this.signer.signingKey.keyPair.publicKey);
+    return await this.Crypto.EncryptConk(message, publicKey || this.signer._signingKey().publicKey);
   }
 
   /**
@@ -1016,7 +1016,7 @@ class ElvClient {
 
     ValidatePresence("message", message);
 
-    return await this.Crypto.DecryptCap(message, this.signer.signingKey.privateKey);
+    return await this.Crypto.DecryptCap(message, this.signer._signingKey().privateKey);
   }
 
   /**
@@ -1061,6 +1061,7 @@ class ElvClient {
       "GenerateWallet",
       "InitializeClients",
       "Log",
+      "PersonalSign",
       "SetRemoteSigner",
       "SetSigner",
       "SetSignerFromWeb3Provider",

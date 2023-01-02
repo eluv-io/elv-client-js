@@ -1479,7 +1479,7 @@ var ElvClient = /*#__PURE__*/function () {
               case 3:
                 ValidatePresence("message", message);
                 _context17.next = 6;
-                return this.Crypto.EncryptConk(message, publicKey || this.signer.signingKey.keyPair.publicKey);
+                return this.Crypto.EncryptConk(message, publicKey || this.signer._signingKey().publicKey);
 
               case 6:
                 return _context17.abrupt("return", _context17.sent);
@@ -1528,7 +1528,7 @@ var ElvClient = /*#__PURE__*/function () {
               case 3:
                 ValidatePresence("message", message);
                 _context18.next = 6;
-                return this.Crypto.DecryptCap(message, this.signer.signingKey.privateKey);
+                return this.Crypto.DecryptCap(message, this.signer._signingKey().privateKey);
 
               case 6:
                 return _context18.abrupt("return", _context18.sent);
