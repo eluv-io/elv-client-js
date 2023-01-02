@@ -7,8 +7,6 @@ class ElvWallet {
    * NOTE: It is recommended to initialize wallets from the ElvClient, not using this constructor
    *
    * @see ElvClient#GenerateWallet()
-   *
-   * @param {string} providerUrl - URL of blockchain provider
    */
   constructor(provider) {
     this.provider = provider;
@@ -21,7 +19,7 @@ class ElvWallet {
    * @returns {string} - Space-separated list of random words
    */
   GenerateMnemonic() {
-    return Ethers.utils.HDNode.entropyToMnemonic(Ethers.utils.randomBytes(16));
+    return Ethers.Wallet.createRandom().mnemonic.phrase;
   }
 
   /**

@@ -1219,7 +1219,7 @@ exports.CopyContentObject = /*#__PURE__*/function () {
             }
 
             _context13.next = 20;
-            return this.Crypto.DecryptCap(metadata[userCapKey], this.signer.signingKey.privateKey);
+            return this.Crypto.DecryptCap(metadata[userCapKey], this.signer._signingKey().privateKey);
 
           case 20:
             userConkKey = _context13.sent;
@@ -1230,7 +1230,7 @@ exports.CopyContentObject = /*#__PURE__*/function () {
             _context13.t3 = writeToken;
             _context13.t4 = userCapKey;
             _context13.next = 29;
-            return this.Crypto.EncryptConk(userConkKey, this.signer.signingKey.publicKey);
+            return this.Crypto.EncryptConk(userConkKey, this.signer._signingKey().publicKey);
 
           case 29:
             _context13.t5 = _context13.sent;
@@ -1357,7 +1357,7 @@ exports.CreateNonOwnerCap = /*#__PURE__*/function () {
 
           case 7:
             _context14.next = 9;
-            return this.Crypto.DecryptCap(userCapValue, this.signer.signingKey.privateKey);
+            return this.Crypto.DecryptCap(userCapValue, this.signer._signingKey().privateKey);
 
           case 9:
             userConk = _context14.sent;
@@ -2095,7 +2095,7 @@ exports.PublishContentVersion = /*#__PURE__*/function () {
                       events = _context21.sent;
                       confirmEvent = events.find(function (blockEvents) {
                         return blockEvents.find(function (event) {
-                          return objectHash === (event && event.values && event.values.objectHash);
+                          return objectHash === (event && event.args && event.args.objectHash);
                         });
                       });
 

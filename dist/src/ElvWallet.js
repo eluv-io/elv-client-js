@@ -19,8 +19,6 @@ var ElvWallet = /*#__PURE__*/function () {
    * NOTE: It is recommended to initialize wallets from the ElvClient, not using this constructor
    *
    * @see ElvClient#GenerateWallet()
-   *
-   * @param {string} providerUrl - URL of blockchain provider
    */
   function ElvWallet(provider) {
     _classCallCheck(this, ElvWallet);
@@ -38,7 +36,7 @@ var ElvWallet = /*#__PURE__*/function () {
   _createClass(ElvWallet, [{
     key: "GenerateMnemonic",
     value: function GenerateMnemonic() {
-      return Ethers.utils.HDNode.entropyToMnemonic(Ethers.utils.randomBytes(16));
+      return Ethers.Wallet.createRandom().mnemonic.phrase;
     }
     /**
      * Generate a private key from the given mnemonic
