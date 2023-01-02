@@ -1598,7 +1598,7 @@ var ElvClient = /*#__PURE__*/function () {
     value: function FrameAllowedMethods() {
       var _this2 = this;
 
-      var forbiddenMethods = ["constructor", "AccessGroupMembershipMethod", "CallFromFrameMessage", "ClearSigner", "CreateAccount", "EnableMethodLogging", "FormatBlockNumbers", "FrameAllowedMethods", "FromConfigurationUrl", "GenerateWallet", "InitializeClients", "Log", "SetRemoteSigner", "SetSigner", "SetSignerFromWeb3Provider", "Sign", "ToggleLogging"];
+      var forbiddenMethods = ["constructor", "AccessGroupMembershipMethod", "CallFromFrameMessage", "ClearSigner", "CreateAccount", "EnableMethodLogging", "FormatBlockNumbers", "FrameAllowedMethods", "FromConfigurationUrl", "GenerateWallet", "InitializeClients", "Log", "PersonalSign", "SetRemoteSigner", "SetSigner", "SetSignerFromWeb3Provider", "Sign", "ToggleLogging"];
       return Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(function (method) {
         return typeof _this2[method] === "function" && !forbiddenMethods.includes(method);
       });

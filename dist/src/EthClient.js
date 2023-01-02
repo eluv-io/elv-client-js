@@ -456,8 +456,7 @@ var EthClient = /*#__PURE__*/function () {
                   cacheContract: cacheContract,
                   overrideCachedContract: overrideCachedContract
                 });
-                abi = contract["interface"].fragments;
-                console.log("CCM", Utils.AddressToHash(contract.address), methodName, methodArgs); // Automatically format contract arguments
+                abi = contract["interface"].fragments; // Automatically format contract arguments
 
                 if (formatArguments) {
                   methodArgs = this.FormatContractArguments({
@@ -473,125 +472,125 @@ var EthClient = /*#__PURE__*/function () {
                 }
 
                 if (!(contract.functions[methodName] === undefined)) {
-                  _context6.next = 12;
+                  _context6.next = 11;
                   break;
                 }
 
                 throw Error("Unknown method: " + methodName);
 
-              case 12:
+              case 11:
                 this.Log("Calling contract method:\n        Provider: ".concat(this.Provider().connection.url, "\n        Address: ").concat(contract.address, "\n        Method: ").concat(methodName, "\n        Args: [").concat(methodArgs.join(", "), "]"));
                 methodAbi = contract["interface"].fragments.find(function (method) {
                   return method.name === methodName;
                 }); // Lock if performing a transaction
 
                 if (!(!methodAbi || !methodAbi.constant)) {
-                  _context6.next = 21;
-                  break;
-                }
-
-              case 15:
-                if (!this.locked) {
                   _context6.next = 20;
                   break;
                 }
 
-                _context6.next = 18;
+              case 14:
+                if (!this.locked) {
+                  _context6.next = 19;
+                  break;
+                }
+
+                _context6.next = 17;
                 return new Promise(function (resolve) {
                   return setTimeout(resolve, 100);
                 });
 
-              case 18:
-                _context6.next = 15;
+              case 17:
+                _context6.next = 14;
                 break;
 
-              case 20:
+              case 19:
                 this.locked = true;
 
-              case 21:
-                _context6.prev = 21;
+              case 20:
+                _context6.prev = 20;
                 success = false;
 
-              case 23:
+              case 22:
                 if (success) {
-                  _context6.next = 50;
+                  _context6.next = 49;
                   break;
                 }
 
-                _context6.prev = 24;
-                _context6.next = 27;
+                _context6.prev = 23;
+                _context6.next = 26;
                 return (_contract = contract)[methodName].apply(_contract, _toConsumableArray(methodArgs).concat([overrides]));
 
-              case 27:
+              case 26:
                 result = _context6.sent;
                 success = true;
-                _context6.next = 48;
+                _context6.next = 47;
                 break;
 
-              case 31:
-                _context6.prev = 31;
-                _context6.t0 = _context6["catch"](24);
+              case 30:
+                _context6.prev = 30;
+                _context6.t0 = _context6["catch"](23);
 
                 if (!(_context6.t0.code === -32000 || _context6.t0.code === "REPLACEMENT_UNDERPRICED")) {
-                  _context6.next = 41;
+                  _context6.next = 40;
                   break;
                 }
 
-                _context6.next = 36;
+                _context6.next = 35;
                 return this.MakeProviderCall({
                   methodName: "getBlock",
                   args: ["latest"]
                 });
 
-              case 36:
+              case 35:
                 latestBlock = _context6.sent;
                 overrides.gasLimit = latestBlock.gasLimit;
                 overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
-                _context6.next = 48;
+                _context6.next = 47;
                 break;
 
-              case 41:
+              case 40:
                 if (!(_context6.t0.code === "NONCE_EXPIRED" && _context6.t0.reason === "nonce has already been used")) {
-                  _context6.next = 45;
+                  _context6.next = 44;
                   break;
                 }
 
                 this.Log("Retrying method call ".concat(methodName));
-                _context6.next = 48;
+                _context6.next = 47;
                 break;
 
-              case 45:
+              case 44:
                 if ((_context6.t0.message || _context6.t0).includes("invalid response")) {
-                  _context6.next = 48;
+                  _context6.next = 47;
                   break;
                 }
 
                 this.Log(_typeof(_context6.t0) === "object" ? JSON.stringify(_context6.t0, null, 2) : _context6.t0, true);
                 throw _context6.t0;
 
-              case 48:
-                _context6.next = 23;
+              case 47:
+                _context6.next = 22;
                 break;
 
-              case 50:
+              case 49:
                 return _context6.abrupt("return", result);
 
-              case 51:
-                _context6.prev = 51;
+              case 50:
+                _context6.prev = 50;
 
                 // Unlock if performing a transaction
                 if (!methodAbi || !methodAbi.constant) {
                   this.locked = false;
                 }
 
-                return _context6.finish(51);
+                return _context6.finish(50);
 
-              case 54:
+              case 53:
               case "end":
                 return _context6.stop();
             }
           }
-        }, _callee6, this, [[21,, 51, 54], [24, 31]]);
+        }, _callee6, this, [[20,, 50, 53], [23, 30]]);
       }));
 
       function CallContractMethod(_x5) {
@@ -654,7 +653,7 @@ var EthClient = /*#__PURE__*/function () {
 
               case 13:
                 if (!(elapsed < timeout)) {
-                  _context7.next = 27;
+                  _context7.next = 25;
                   break;
                 }
 
@@ -666,51 +665,46 @@ var EthClient = /*#__PURE__*/function () {
 
               case 16:
                 methodEvent = _context7.sent;
-                console.log(methodEvent);
 
                 if (!methodEvent) {
-                  _context7.next = 22;
+                  _context7.next = 20;
                   break;
                 }
 
-                window.contract = contract;
                 methodEvent.logs = methodEvent.logs.map(function (log) {
                   var parsedLogs = {};
 
                   try {
-                    parsedLogs = contract["interface"].parseLog(log);
-                  } catch (error) {
-                    console.error(error);
-                  }
+                    parsedLogs = contract["interface"].parseLog(log); // eslint-disable-next-line no-empty
+                  } catch (error) {}
 
-                  console.log(log);
                   return _objectSpread(_objectSpread({}, log), parsedLogs);
                 });
-                return _context7.abrupt("break", 27);
+                return _context7.abrupt("break", 25);
 
-              case 22:
+              case 20:
                 elapsed += interval;
-                _context7.next = 25;
+                _context7.next = 23;
                 return new Promise(function (resolve) {
                   return setTimeout(resolve, interval);
                 });
 
-              case 25:
+              case 23:
                 _context7.next = 13;
                 break;
 
-              case 27:
+              case 25:
                 if (methodEvent) {
-                  _context7.next = 29;
+                  _context7.next = 27;
                   break;
                 }
 
                 throw Error("Timed out waiting for completion of ".concat(methodName, ". TXID: ").concat(createMethodCall.hash));
 
-              case 29:
+              case 27:
                 return _context7.abrupt("return", methodEvent);
 
-              case 30:
+              case 28:
               case "end":
                 return _context7.stop();
             }
@@ -777,11 +771,15 @@ var EthClient = /*#__PURE__*/function () {
       try {
         for (_iterator.s(); !(_step = _iterator.n()).done;) {
           var log = _step.value;
-          var parsedLog = contractInterface.parseLog(log);
 
-          if (parsedLog && parsedLog.name === eventName) {
-            return parsedLog;
-          }
+          try {
+            var parsedLog = contractInterface.parseLog(log);
+
+            if (parsedLog && parsedLog.name === eventName) {
+              return parsedLog;
+            } // eslint-disable-next-line no-empty
+
+          } catch (error) {}
         }
       } catch (err) {
         _iterator.e(err);
