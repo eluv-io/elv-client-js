@@ -755,7 +755,7 @@ class ElvWalletClient {
       let marketplace = await this.client.ContentObjectMetadata({
         versionHash: marketplaceHash,
         metadataSubtree: "public/asset_metadata/info",
-        linkDepthLimit: 2,
+        linkDepthLimit: 1,
         resolveLinks: true,
         resolveIgnoreErrors: true,
         resolveIncludeSource: true,
@@ -868,6 +868,11 @@ class ElvWalletClient {
       limit,
       sort_descending: sortDesc
     };
+
+    // Created isn't a valid sort mode for owned
+    if(mode === "owned" && sortBy === "created") {
+      sortBy = "default";
+    }
 
     if(mode !== "leaderboard") {
       params.sort_by = sortBy;
@@ -1146,5 +1151,6 @@ class ElvWalletClient {
 
 Object.assign(ElvWalletClient.prototype, require("./ClientMethods"));
 Object.assign(ElvWalletClient.prototype, require("./Profile"));
+Object.assign(ElvWalletClient.prototype, require("./Notifications"));
 
 exports.ElvWalletClient = ElvWalletClient;

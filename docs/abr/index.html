@@ -429,14 +429,16 @@ Done.
 <p>An <strong>ABR Profile</strong> contains information on what formats, resolutions and bitrates to offer for streaming playout, as well as any DRM and/or watermarking information.</p>
 <p>There are JSON files containing commonly used profiles in elv-client-js/testScripts/</p>
 <ul>
-<li><code>abr_profile_4k_clear.json</code></li>
+<li><code>abr_profile_4k_clear_store_encrypted.json</code></li>
+<li><code>abr_profile_4k_clear_store_unencrypted.json</code></li>
 <li><code>abr_profile_4k_drm.json</code></li>
-<li><code>abr_profile_clear.json</code></li>
+<li><code>abr_profile_clear_store_encrypted.json</code></li>
+<li><code>abr_profile_clear_store_unencrypted.json</code></li>
 <li><code>abr_profile_drm.json</code></li>
 </ul>
 <p>The 4k files are specifically for offering 16:9 material at 3840x2160 resolution.</p>
 <p>For most content we recommend using the <code>abr_profile_drm.json</code> file, which contains resolution ladders for a variety of aspect ratios. (For material with 16:9 aspect ratio, this file's top ladder rung is 1920x1080 @ 9.5 mbps)</p>
-<p>The <code>*_clear</code> files are for publishing without DRM.</p>
+<p>The <code>*_clear_*</code> files are for publishing without DRM. For items that are intended to be publicly accessible, use the profiles that end in <code>_store_unencrypted.json</code>. If there is a chance that you might want to change the mezzanine later to have DRM, use the profiles that end in <code>_store_encrypted.json</code> (however, these offerings will not be playable to users without a Fabric private key that has been granted access to it).</p>
 <p><a id="create-the-mezzanine-object"></a></p>
 <h3 id="createthemezzanineobjectnbsp8673contents">Create the Mezzanine object&nbsp;<a href="#contents">&#8673;</a></h3>
 <p>Once you have the required information, substitute it into the sample command below (if you do not need to attach an asset ID, you can omit the <code>--ip-title-id</code> line):</p>
