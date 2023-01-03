@@ -130,7 +130,8 @@ class ElvClient {
    * @param {number} fabricVersion - The version of the target content fabric
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
-   * @param {Array<string>} ethereumURIs - A list of full URIs to auth service endpoints
+   * @param {Array<string>} authServiceURIs - A list of full URIs to auth service endpoints
+   * @param {Array<string>=} searchURIs - A list of full URIs to search service endpoints
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth

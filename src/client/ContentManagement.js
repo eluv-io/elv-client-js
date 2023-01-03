@@ -749,11 +749,11 @@ exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, writ
  * @param {object=} options -
  * meta: New metadata for the object - will be merged into existing metadata if specified
  * type: New type for the object - Object ID, version hash or name of type
- * @param {string} httpNodeUrl - Node URL to use in HTTP call
+ * nodeUrl: Node URL to use in HTTP call
  *
  * @returns {Promise<object>} - Response containing the object ID and write token of the draft, as well as URL of node handling the draft
  */
-exports.EditContentObject = async function({libraryId, objectId, options={}, httpNodeUrl}) {
+exports.EditContentObject = async function({libraryId, objectId, options={}}) {
   ValidateParameters({libraryId, objectId});
 
   this.Log(`Opening content draft: ${libraryId} ${objectId}`);
@@ -780,7 +780,7 @@ exports.EditContentObject = async function({libraryId, objectId, options={}, htt
     method: "POST",
     path: path,
     body: options,
-    nodeUrl: httpNodeUrl
+    nodeUrl: options.nodeUrl
   });
 
   const actualUrl = new URL(rawEditResponse.url);

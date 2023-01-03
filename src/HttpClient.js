@@ -52,6 +52,7 @@ class HttpClient {
     forceFailover=false,
     nodeUrl
   }) {
+    // if nodeUrl passed in, restrict communication to that node only (unless previously recorded write token is found in next step)
     let baseURI = this.BaseURI(nodeUrl);
 
     // If URL contains a write token, it must go to the correct server and can not fail over
@@ -106,7 +107,7 @@ class HttpClient {
 
     if(!response.ok) {
       // Fail over if not a write token request, the response was a server error, and we haven't tried all available nodes
-      if(!writeToken && ((failover && parseInt(response.status) >= 500) || forceFailover) && attempts < this.uris.length) {
+      if(!writeToken && !nodeUrl && ((failover && parseInt(response.status) >= 500) || forceFailover) && attempts < this.uris.length) {
         // Server error - Try next node
         this.Log(`HttpClient failing over from ${this.BaseURI()}: ${attempts + 1} attempts`, true);
         this.uriIndex = (this.uriIndex + 1) % this.uris.length;
