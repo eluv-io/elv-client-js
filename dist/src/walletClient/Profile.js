@@ -177,19 +177,18 @@ exports.SetProfileMetadata = /*#__PURE__*/function () {
  * @param {string=} mode="public" - Specify `public` or `private` metadata.
  * @param {string=} appId - Namespace to use for the metadata, if retrieving app metadata.. Uses the app ID specified on client initialization by default.
  * @param {string} key - The metadata key to set
- * @param {string} value - The metadata value to set
  */
 
 
 exports.RemoveProfileMetadata = /*#__PURE__*/function () {
   var _ref8 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(_ref7) {
-    var _ref7$type, type, _ref7$mode, mode, appId, key, value;
+    var _ref7$type, type, _ref7$mode, mode, appId, key;
 
     return _regeneratorRuntime.wrap(function _callee3$(_context3) {
       while (1) {
         switch (_context3.prev = _context3.next) {
           case 0:
-            _ref7$type = _ref7.type, type = _ref7$type === void 0 ? "app" : _ref7$type, _ref7$mode = _ref7.mode, mode = _ref7$mode === void 0 ? "public" : _ref7$mode, appId = _ref7.appId, key = _ref7.key, value = _ref7.value;
+            _ref7$type = _ref7.type, type = _ref7$type === void 0 ? "app" : _ref7$type, _ref7$mode = _ref7.mode, mode = _ref7$mode === void 0 ? "public" : _ref7$mode, appId = _ref7.appId, key = _ref7.key;
             _context3.next = 3;
             return this.stateStoreClient.Request({
               method: "DELETE",
@@ -201,7 +200,6 @@ exports.RemoveProfileMetadata = /*#__PURE__*/function () {
                 mode: mode,
                 key: key
               }),
-              body: value,
               headers: {
                 Authorization: "Bearer ".concat(this.AuthToken())
               }

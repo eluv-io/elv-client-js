@@ -126,60 +126,6 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
   return balances;
 };
 
-
-/**
- * Returns basic contract info about the items the specified/current user owns, organized by contract address + token ID
- *
- * This method is significantly faster than <a href="#.UserItems">UserItems</a>, but does not include any NFT metadata.
- *
- * @methodGroup User
- * @namedParams
- * @param {string=} userAddress - Address of the user to query for. If unspecified, will use the currently logged in user.
- *
- * @returns {Promise<Object>} - Basic info about all owned items.
- */
-exports.UserItemInfo = async function ({userAddress}={}) {
-  const accountId = `iusr${Utils.AddressToHash(userAddress || this.UserAddress())}`;
-  this.profileData = await this.client.ethClient.MakeProviderCall({
-    methodName: "send",
-    args: [
-      "elv_getAccountProfile",
-      [this.client.contentSpaceId, accountId]
-    ]
-  });
-
-  if(!this.profileData || !this.profileData.NFTs) { return {}; }
-
-  let nftInfo = {};
-  Object.keys(this.profileData.NFTs).map(tenantId =>
-    this.profileData.NFTs[tenantId].forEach(details => {
-      const versionHash = (details.TokenUri || "").split("/").find(s => (s || "").startsWith("hq__"));
-
-      if(!versionHash) {
-        return;
-      }
-
-      if(details.TokenHold) {
-        details.TokenHoldDate = new Date(parseInt(details.TokenHold) * 1000);
-      }
-
-      const contractAddress = Utils.FormatAddress(details.ContractAddr);
-      const key = `${contractAddress}-${details.TokenIdStr}`;
-      nftInfo[key] = {
-        ...details,
-        ContractAddr: Utils.FormatAddress(details.ContractAddr),
-        ContractId: `ictr${Utils.AddressToHash(details.ContractAddr)}`,
-        VersionHash: versionHash
-      };
-    })
-  );
-
-  this.nftInfo = nftInfo;
-
-  return this.nftInfo;
-};
-
-
 /**
  * Retrieve all valid names for filtering user items. Full item names are required for filtering results by name.
  *
@@ -286,7 +232,7 @@ exports.UserItemAttributes = async function({marketplaceParams, displayName, use
  * @param {string=} userAddress - Address of a user. If not specified, will return results for current user
  * @param {integer=} start=0 - PAGINATION: Index from which the results should start
  * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
- * @param {string=} sortBy="created" - Sort order. Options: `default`, `meta/display_name`
+ * @param {string=} sortBy="default" - Sort order. Options: `default`, `meta/display_name`
  * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
  * @param {string=} filter - Filter results by item name.
  * @param {string=} contractAddress - Filter results by the address of the NFT contract
@@ -296,8 +242,8 @@ exports.UserItemAttributes = async function({marketplaceParams, displayName, use
  *
  * @returns {Promise<Object>} - Results of the query and pagination info
  */
-exports.UserItems = async function() {
-  return this.FilteredQuery({mode: "owned", ...(arguments[0] || {})});
+exports.UserItems = async function({sortBy="default"}={}) {
+  return this.FilteredQuery({mode: "owned", sortBy, ...(arguments[0] || {})});
 };
 
 /**
@@ -423,6 +369,28 @@ exports.TenantConfiguration = async function({tenantId, contractAddress}) {
     return {};
   }
 };
+
+
+/**
+ * Retrieve the current exchange rate for the specified currency to USD
+ *
+ * @methodGroup Tenants
+ * @namedParams
+ * @param {string} currency - The currency for which to retrieve the USD exchange rate
+ */
+exports.ExchangeRate = async function({currency}) {
+  if(!currency) {
+    throw Error("Eluvio Wallet Client: Invalid or missing currency in ExchangeRate");
+  }
+
+  return await Utils.ResponseToJson(
+    this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "xr", "ebanx", currency),
+      method: "GET"
+    })
+  );
+};
+
 
 
 /* MARKETPLACE */
@@ -978,6 +946,32 @@ exports.RemoveListing = async function({listingId}) {
 };
 
 /**
+ * Retrieve all valid names for filtering listing sales names. Full item names are required for filtering sales results by name.
+ *
+ * Specify marketplace information to filter the results to only items offered in that marketplace.
+ *
+ * @methodGroup Listings
+ * @namedParams
+ * @param {Object} marketplaceParams - Parameters of a marketplace to filter results by
+ *
+ * @returns {Promise<Array<String>>} - A list of item names
+ */
+exports.SalesNames = async function({marketplaceParams}) {
+  let tenantId;
+  if(marketplaceParams) {
+    tenantId = (await this.MarketplaceInfo({marketplaceParams})).tenantId;
+  }
+
+  return await Utils.ResponseToJson(
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "mkt", "names", "hst"),
+      method: "GET",
+      queryParams: tenantId ? { filter: `tenant:eq:${tenantId}` } : {}
+    })
+  );
+};
+
+/**
  * Retrieve all valid names for filtering listings. Full item names are required for filtering listing results by name.
  *
  * Specify marketplace information to filter the results to only items offered in that marketplace.
@@ -1075,9 +1069,10 @@ exports.ListingAttributes = async function({marketplaceParams, displayName}={}) 
  * @methodGroup Purchase
  * @namedParams
  * @param {Object} marketplaceParams - Parameters of the marketplace
- * @param {string} sku - The SKU of the item to claime
+ * @param {string} sku - The SKU of the item to claim
+ * @param {string=} email - Email address of the user. If specified, this will bind the user to the tenant of the specified marketplace
  */
-exports.ClaimItem = async function({marketplaceParams, sku}) {
+exports.ClaimItem = async function({marketplaceParams, sku, email}) {
   const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
 
   await this.client.authClient.MakeAuthServiceRequest({
@@ -1086,7 +1081,8 @@ exports.ClaimItem = async function({marketplaceParams, sku}) {
     body: {
       op: "nft-claim",
       sid: marketplaceInfo.marketplaceId,
-      sku
+      sku,
+      email
     },
     headers: {
       Authorization: `Bearer ${this.AuthToken()}`

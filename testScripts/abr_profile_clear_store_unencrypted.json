@@ -14,16 +14,16 @@
     "{\"media_type\":\"audio\",\"channels\":2}": {
       "rung_specs": [
         {
-          "bit_rate": 128000,
+          "bit_rate": 192000,
           "media_type": "audio",
           "pregenerate": true
         }
       ]
     },
-    "{\"media_type\":\"audio\",\"channels\":4}": {
+    "{\"media_type\":\"audio\",\"channels\":6}": {
       "rung_specs": [
         {
-          "bit_rate": 128000,
+          "bit_rate": 384000,
           "media_type": "audio",
           "pregenerate": true
         }
@@ -660,17 +660,17 @@
         },
         {
           "bit_rate": 810000,
-          "height": 360,
+          "height": 640,
           "media_type": "video",
           "pregenerate": false,
-          "width": 640
+          "width": 360
         },
         {
           "bit_rate": 520000,
-          "height": 360,
+          "height": 640,
           "media_type": "video",
           "pregenerate": false,
-          "width": 640
+          "width": 360
         }
       ]
     },
@@ -1869,9 +1869,62 @@
           "width": 640
         }
       ]
+    },
+    "{\"media_type\":\"video\",\"aspect_ratio_height\":1,\"aspect_ratio_width\":1}": {
+      "rung_specs": [
+        {
+          "bit_rate": 9500000,
+          "height": 1080,
+          "media_type": "video",
+          "pregenerate": true,
+          "width": 1080
+        },
+        {
+          "bit_rate": 4500000,
+          "height": 720,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 720
+        },
+        {
+          "bit_rate": 2000000,
+          "height": 540,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 540
+        },
+        {
+          "bit_rate": 1100000,
+          "height": 432,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 432
+        },
+        {
+          "bit_rate": 810000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 360
+        },
+        {
+          "bit_rate": 520000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 360
+        }
+      ]
     }
   },
   "playout_formats": {
+    "dash-clear": {
+      "drm": null,
+      "protocol": {
+        "min_buffer_length": 2,
+        "type": "ProtoDash"
+      }
+    },
     "hls-clear": {
       "drm": null,
       "protocol": {

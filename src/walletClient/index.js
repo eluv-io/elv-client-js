@@ -9,6 +9,13 @@ const Ethers = require("ethers");
 const inBrowser = typeof window !== "undefined";
 const embedded = inBrowser && window.top !== window.self;
 
+let localStorageAvailable = false;
+try {
+  typeof localStorage !== "undefined" && localStorage.getItem("test");
+  localStorageAvailable = true;
+// eslint-disable-next-line no-empty
+} catch(error) {}
+
 /**
  * Use the <a href="#.Initialize">Initialize</a> method to initialize a new client.
  *
@@ -16,7 +23,7 @@ const embedded = inBrowser && window.top !== window.self;
  * See the Modules section on the sidebar for all client methods unrelated to login and authorization
  */
 class ElvWalletClient {
-  constructor({appId, client, network, mode, marketplaceInfo, storeAuthToken}) {
+  constructor({appId, client, network, mode, marketplaceInfo, previewMarketplaceHash, storeAuthToken}) {
     this.appId = appId;
 
     this.client = client;
@@ -31,6 +38,8 @@ class ElvWalletClient {
     this.storeAuthToken = storeAuthToken;
 
     this.selectedMarketplaceInfo = marketplaceInfo;
+    this.previewMarketplaceId = previewMarketplaceHash ? Utils.DecodeVersionHash(previewMarketplaceHash).objectId : undefined;
+    this.previewMarketplaceHash = previewMarketplaceHash;
 
     this.availableMarketplaces = {};
     this.availableMarketplacesById = {};
@@ -74,14 +83,17 @@ class ElvWalletClient {
    * @param {string} mode=production - Environment to use (`production`, `staging`)
    * @param {Object=} marketplaceParams - Marketplace parameters
    * @param {boolean=} storeAuthToken=true - If specified, auth tokens will be stored in localstorage (if available)
+   * @param {Object=} client - Existing instance of ElvClient to use instead of initializing a new one
    *
    * @returns {Promise<ElvWalletClient>}
    */
   static async Initialize({
+    client,
     appId="general",
     network="main",
     mode="production",
     marketplaceParams,
+    previewMarketplaceId,
     storeAuthToken=true
   }) {
     let { tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash } = (marketplaceParams || {});
@@ -92,7 +104,14 @@ class ElvWalletClient {
       throw Error(`ElvWalletClient: Invalid mode ${mode}`);
     }
 
-    const client = await ElvClient.FromNetworkName({networkName: network, assumeV3: true});
+    if(!client) {
+      client = await ElvClient.FromNetworkName({networkName: network, assumeV3: true});
+    }
+
+    let previewMarketplaceHash = previewMarketplaceId;
+    if(previewMarketplaceHash && !previewMarketplaceHash.startsWith("hq__")) {
+      previewMarketplaceHash = await client.LatestVersionHash({objectId: previewMarketplaceId});
+    }
 
     const walletClient = new ElvWalletClient({
       appId,
@@ -105,6 +124,7 @@ class ElvWalletClient {
         marketplaceId: marketplaceHash ? client.utils.DecodeVersionHash(marketplaceHash).objectId : marketplaceId,
         marketplaceHash
       },
+      previewMarketplaceHash,
       storeAuthToken
     });
 
@@ -116,7 +136,7 @@ class ElvWalletClient {
         url.searchParams.delete("elvToken");
 
         window.history.replaceState("", "", url);
-      } else if(storeAuthToken && typeof localStorage !== "undefined") {
+      } else if(storeAuthToken && localStorageAvailable) {
         try {
           // Load saved auth token
           let savedToken = localStorage.getItem(`__elv-token-${network}`);
@@ -329,7 +349,7 @@ class ElvWalletClient {
     this.cachedMarketplaces = {};
 
     // Delete saved auth token
-    if(typeof localStorage !== "undefined") {
+    if(localStorageAvailable) {
       try {
         localStorage.removeItem(`__elv-token-${this.network}`);
       // eslint-disable-next-line no-empty
@@ -519,7 +539,7 @@ class ElvWalletClient {
 
     const token = this.ClientAuthToken();
 
-    if(this.storeAuthToken && typeof localStorage !== "undefined") {
+    if(this.storeAuthToken && localStorageAvailable) {
       try {
         localStorage.setItem(`__elv-token-${this.network}`, token);
       // eslint-disable-next-line no-empty
@@ -565,14 +585,13 @@ class ElvWalletClient {
 
 
 
-  // If marketplace slug is specified, load only that marketplace. Otherwise load all
   async LoadAvailableMarketplaces(forceReload=false) {
     if(!forceReload && Object.keys(this.availableMarketplaces) > 0) {
       return;
     }
 
     const mainSiteHash = await this.client.LatestVersionHash({objectId: this.mainSiteId});
-    const metadata = await this.client.ContentObjectMetadata({
+    let metadata = await this.client.ContentObjectMetadata({
       versionHash: mainSiteHash,
       metadataSubtree: "public/asset_metadata/tenants",
       resolveLinks: true,
@@ -587,20 +606,83 @@ class ElvWalletClient {
         "*/marketplaces/*/.",
         "*/marketplaces/*/info/tenant_id",
         "*/marketplaces/*/info/tenant_name",
-        "*/marketplaces/*/info/branding"
+        "*/marketplaces/*/info/branding",
+        "*/marketplaces/*/info/storefront/background",
+        "*/marketplaces/*/info/storefront/background_mobile"
       ],
       remove: [
         "*/marketplaces/*/info/branding/custom_css"
       ]
     });
 
+    // If preview marketplace is specified, load it appropriately
+    if(this.previewMarketplaceId) {
+      let previewTenantSlug = "PREVIEW";
+      let previewMarketplaceSlug, previewMarketplaceMetadata;
+      Object.keys(metadata || {}).forEach(tenantSlug =>
+        Object.keys(metadata[tenantSlug].marketplaces || {}).forEach(marketplaceSlug => {
+          const versionHash = metadata[tenantSlug].marketplaces[marketplaceSlug]["."].source;
+          const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+
+          if(objectId === this.previewMarketplaceId) {
+            // Marketplace exists in site meta
+            previewTenantSlug = tenantSlug;
+            previewMarketplaceSlug = marketplaceSlug;
+
+            // Deployed marketplace is same as preview marketplace
+            if(versionHash === this.previewMarketplaceHash) {
+              previewMarketplaceMetadata = metadata[tenantSlug].marketplaces[marketplaceSlug];
+            }
+          }
+        })
+      );
+
+      // Marketplace not present in branch, or preview version is different - Load metadata directly
+      if(!previewMarketplaceMetadata) {
+        previewMarketplaceMetadata = await this.client.ContentObjectMetadata({
+          versionHash: this.previewMarketplaceHash,
+          metadataSubtree: "public/asset_metadata",
+          produceLinkUrls: true,
+          authorizationToken: this.publicStaticToken,
+          noAuth: true,
+          select: [
+            "slug",
+            "info/tenant_id",
+            "info/tenant_name",
+            "info/branding",
+          ],
+          remove: [
+            "info/branding/custom_css"
+          ]
+        });
+
+        if(!previewMarketplaceSlug) {
+          previewMarketplaceSlug = previewMarketplaceMetadata.slug;
+        }
+      }
+
+      previewMarketplaceMetadata["."] = {
+        source: this.previewMarketplaceHash
+      };
+
+      previewMarketplaceMetadata.info["."] = {
+        source: this.previewMarketplaceHash
+      };
+
+      previewMarketplaceMetadata.info.branding.preview = true;
+      previewMarketplaceMetadata.info.branding.show = true;
+
+      metadata[previewTenantSlug] = metadata[previewTenantSlug] || {};
+      metadata[previewTenantSlug].marketplaces = metadata[previewTenantSlug].marketplaces || {};
+      metadata[previewTenantSlug].marketplaces[previewMarketplaceSlug] = previewMarketplaceMetadata;
+    }
+
     let availableMarketplaces = { ...(this.availableMarketplaces || {}) };
     let availableMarketplacesById = { ...(this.availableMarketplacesById || {}) };
     Object.keys(metadata || {}).forEach(tenantSlug => {
       try {
-        availableMarketplaces[tenantSlug] = {
-          versionHash: metadata[tenantSlug]["."].source
-        };
+        availableMarketplaces[tenantSlug] = metadata[tenantSlug]["."] ?
+          { versionHash: metadata[tenantSlug]["."].source } : { };
 
         Object.keys(metadata[tenantSlug].marketplaces || {}).forEach(marketplaceSlug => {
           try {
@@ -642,11 +724,17 @@ class ElvWalletClient {
   }
 
   // Get the hash of the currently linked marketplace
-  async LatestMarketplaceHash({tenantSlug, marketplaceSlug}) {
+  async LatestMarketplaceHash({marketplaceParams}) {
+    const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
+
+    if(this.previewMarketplaceId && this.previewMarketplaceId === marketplaceInfo.marketplaceId) {
+      return this.availableMarketplaces[marketplaceInfo.tenantSlug][marketplaceInfo.marketplaceSlug]["."].source;
+    }
+
     const mainSiteHash = await this.client.LatestVersionHash({objectId: this.mainSiteId});
     const marketplaceLink = await this.client.ContentObjectMetadata({
       versionHash: mainSiteHash,
-      metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", tenantSlug, "marketplaces", marketplaceSlug),
+      metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", marketplaceInfo.tenantSlug, "marketplaces", marketplaceInfo.marketplaceSlug),
       resolveLinks: false
     });
 
@@ -657,7 +745,7 @@ class ElvWalletClient {
     const marketplaceInfo = this.MarketplaceInfo({marketplaceParams});
 
     const marketplaceId = marketplaceInfo.marketplaceId;
-    const marketplaceHash = await this.LatestMarketplaceHash({tenantSlug: marketplaceInfo.tenantSlug, marketplaceSlug: marketplaceInfo.marketplaceSlug});
+    const marketplaceHash = await this.LatestMarketplaceHash({marketplaceParams});
 
     if(this.cachedMarketplaces[marketplaceId] && this.cachedMarketplaces[marketplaceId].versionHash !== marketplaceHash) {
       delete this.cachedMarketplaces[marketplaceId];
@@ -667,7 +755,7 @@ class ElvWalletClient {
       let marketplace = await this.client.ContentObjectMetadata({
         versionHash: marketplaceHash,
         metadataSubtree: "public/asset_metadata/info",
-        linkDepthLimit: 2,
+        linkDepthLimit: 1,
         resolveLinks: true,
         resolveIgnoreErrors: true,
         resolveIncludeSource: true,
@@ -678,19 +766,23 @@ class ElvWalletClient {
       marketplace.items = await Promise.all(
         marketplace.items.map(async (item, index) => {
           if(item.requires_permissions) {
+            let authorizationToken;
             if(!this.loggedIn) {
-              item.authorized = false;
-            } else {
-              try {
-                await this.client.ContentObjectMetadata({
-                  versionHash: LinkTargetHash(item.nft_template),
-                  metadataSubtree: "permissioned"
-                });
+              // If not logged in, generated a dummy signed token
+              // Authorization may be based on geo-restriction, which doesn't require login
+              authorizationToken = await this.client.CreateFabricToken({});
+            }
 
-                item.authorized = true;
-              } catch(error) {
-                item.authorized = false;
-              }
+            try {
+              await this.client.ContentObjectMetadata({
+                versionHash: LinkTargetHash(item.nft_template),
+                metadataSubtree: "permissioned",
+                authorizationToken
+              });
+
+              item.authorized = true;
+            } catch(error) {
+              item.authorized = false;
             }
           }
 
@@ -710,6 +802,11 @@ class ElvWalletClient {
       marketplace.retrievedAt = Date.now();
       marketplace.marketplaceId = marketplaceId;
       marketplace.versionHash = marketplaceHash;
+      marketplace.marketplaceHash = marketplaceHash;
+
+      if(this.previewMarketplaceId && marketplaceId === this.previewMarketplaceId) {
+        marketplace.branding.preview = true;
+      }
 
       // Generate embed URLs for pack opening animations
       ["purchase_animation", "purchase_animation__mobile", "reveal_animation", "reveal_animation_mobile"].forEach(key => {
@@ -771,6 +868,11 @@ class ElvWalletClient {
       limit,
       sort_descending: sortDesc
     };
+
+    // Created isn't a valid sort mode for owned
+    if(mode === "owned" && sortBy === "created") {
+      sortBy = "default";
+    }
 
     if(mode !== "leaderboard") {
       params.sort_by = sortBy;
@@ -837,7 +939,7 @@ class ElvWalletClient {
           filters.push(`token:eq:${tokenId}`);
         }
       } else if(filter) {
-        if(mode === "listing") {
+        if(mode.includes("listing")) {
           filters.push(`nft/display_name:eq:${filter}`);
         } else if(mode === "owned") {
           filters.push(`meta/display_name:eq:${filter}`);
@@ -1049,5 +1151,6 @@ class ElvWalletClient {
 
 Object.assign(ElvWalletClient.prototype, require("./ClientMethods"));
 Object.assign(ElvWalletClient.prototype, require("./Profile"));
+Object.assign(ElvWalletClient.prototype, require("./Notifications"));
 
 exports.ElvWalletClient = ElvWalletClient;

@@ -23,9 +23,16 @@ let WalletConfiguration = {
     }
   },
   __MARKETPLACE_ORDER: [
-    "dolly-marketplace",
-    "oc-marketplace",
+    "PREVIEW",
+    "de228e92-ed45-4fe0-8e52-658cf366e962",
+    "wwe-marketplace-main",
+    "realcannonballrun-marketplace",
     "maskverse-marketplace",
+    "dolly-marketplace",
+    "eluvio-live-marketplace-sonark",
+    "cirkay-marketplace",
+    "eluvio-live-marketplace-fuudge",
+    "oc-marketplace",
     "emp-marketplace",
     "microsoft",
     "indieflix-marketplace",

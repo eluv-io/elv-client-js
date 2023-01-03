@@ -42,9 +42,11 @@ var _require = require("../Validation"),
  * @param {string} contentTypeName - Name of the content type to use
  * @param {Object=} metadata - Additional metadata for the content object
  * @param {Array<Object>=} fileInfo - Files to upload (See UploadFiles/UploadFilesFromS3 method)
- * @param {boolean=} encrypt=false - (Local files only) - If specified, files will be encrypted
+ * @param {boolean=} encrypt=true - (Local or copied files only) - Unless `false` is passed in explicitly, any uploaded/copied files will be stored encrypted
  * @param {boolean=} copy=false - (S3) If specified, files will be copied from S3
  * @param {function=} callback - Progress callback for file upload (See UploadFiles/UploadFilesFromS3 method)
+ * @param {("warn"|"info"|"debug")=} respLogLevel=warn - The level of logging to return in http response
+ * @param {("none"|"error"|"warn"|"info"|"debug")=} structLogLevel=none - The level of logging to save to object metadata
  * @param {Array<Object>=} access=[] - Array of cloud credentials, along with path matching regex strings - Required if any files in the masters are cloud references (currently only AWS S3 is supported)
  * - If this parameter is non-empty, all items in fileInfo are assumed to be items in cloud storage
  * - Format: [
@@ -81,13 +83,13 @@ var _require = require("../Validation"),
 
 exports.CreateProductionMaster = /*#__PURE__*/function () {
   var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(_ref) {
-    var libraryId, type, name, description, _ref$metadata, metadata, fileInfo, _ref$encrypt, encrypt, _ref$access, access, _ref$copy, copy, callback, _yield$this$CreateCon, id, write_token, s3prefixRegex, i, oneFileInfo, matched, j, credentialSet, credentialSetBucket, matchers, k, matcher, fileSourcePath, s3prefixMatch, bucketName, _i, _credentialSet, region, bucket, accessKey, secret, _yield$this$CallBitco, logs, errors, warnings, finalizeResponse;
+    var libraryId, type, name, description, _ref$metadata, metadata, fileInfo, _ref$encrypt, encrypt, _ref$access, access, _ref$copy, copy, callback, _ref$respLogLevel, respLogLevel, _ref$structLogLevel, structLogLevel, _yield$this$CreateCon, id, write_token, s3prefixRegex, i, oneFileInfo, matched, j, credentialSet, credentialSetBucket, matchers, k, matcher, fileSourcePath, s3prefixMatch, bucketName, _i, _credentialSet, region, bucket, accessKey, secret, _yield$this$CallBitco, logs, errors, warnings, finalizeResponse;
 
     return _regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
-            libraryId = _ref.libraryId, type = _ref.type, name = _ref.name, description = _ref.description, _ref$metadata = _ref.metadata, metadata = _ref$metadata === void 0 ? {} : _ref$metadata, fileInfo = _ref.fileInfo, _ref$encrypt = _ref.encrypt, encrypt = _ref$encrypt === void 0 ? false : _ref$encrypt, _ref$access = _ref.access, access = _ref$access === void 0 ? [] : _ref$access, _ref$copy = _ref.copy, copy = _ref$copy === void 0 ? false : _ref$copy, callback = _ref.callback;
+            libraryId = _ref.libraryId, type = _ref.type, name = _ref.name, description = _ref.description, _ref$metadata = _ref.metadata, metadata = _ref$metadata === void 0 ? {} : _ref$metadata, fileInfo = _ref.fileInfo, _ref$encrypt = _ref.encrypt, encrypt = _ref$encrypt === void 0 ? true : _ref$encrypt, _ref$access = _ref.access, access = _ref$access === void 0 ? [] : _ref$access, _ref$copy = _ref.copy, copy = _ref$copy === void 0 ? false : _ref$copy, callback = _ref.callback, _ref$respLogLevel = _ref.respLogLevel, respLogLevel = _ref$respLogLevel === void 0 ? "warn" : _ref$respLogLevel, _ref$structLogLevel = _ref.structLogLevel, structLogLevel = _ref$structLogLevel === void 0 ? "none" : _ref$structLogLevel;
             ValidateLibrary(libraryId);
             _context.next = 4;
             return this.CreateContentObject({
@@ -275,6 +277,10 @@ exports.CreateProductionMaster = /*#__PURE__*/function () {
               objectId: id,
               writeToken: write_token,
               method: UrlJoin("media", "production_master", "init"),
+              queryParams: {
+                response_log_level: respLogLevel,
+                struct_log_level: structLogLevel
+              },
               body: {
                 access: access
               },
@@ -334,20 +340,25 @@ exports.CreateProductionMaster = /*#__PURE__*/function () {
   };
 }();
 /**
- * Create a mezzanine of the given master content object
+ * Create (or edit) a mezzanine offering based on the a given master content object version and variant key
  *
  * @methodGroup ABR Publishing
  * @namedParams
- * @param {string} libraryId - ID of the mezzanine library
- * @param {string=} objectId - ID of existing object (if not specified, new object will be created)
- * @param {string=} type - ID or version hash of the content type for the mezzanine
- * @param {string} name - Name for mezzanine content object
- * @param {string=} description - Description for mezzanine content object
- * @param {Object=} metadata - Additional metadata for mezzanine content object
- * @param {string} masterVersionHash - The version hash of the production master content object
- * @param {string=} variant=default - What variant of the master content object to use
- * @param {string=} offeringKey=default - The key of the offering to create
  * @param {Object=} abrProfile - Custom ABR profile. If not specified, the profile of the mezzanine library will be used
+ * @param {Object=} addlOfferingSpecs - Specs for additional offerings to create by patching the offering being created/edited
+ * @param {string=} description - Description for mezzanine content object
+ * @param {boolean=} keepOtherStreams=false - If objectId is specified, whether to preserve existing streams with keys other than the ones specified in production master
+ * @param {string} libraryId - ID of the mezzanine library
+ * @param {string} masterVersionHash - The version hash of the production master content object
+ * @param {Object=} metadata - Additional metadata for mezzanine content object
+ * @param {string} name - Name for mezzanine content object
+ * @param {string=} objectId - ID of existing object (if not specified, new object will be created)
+ * @param {string=} offeringKey=default - The key of the offering to create
+ * @param {("warn"|"info"|"debug")=} respLogLevel=warn - The level of logging to return in http response
+ * @param {("none"|"error"|"warn"|"info"|"debug")=} structLogLevel=none - The level of logging to save to object metadata
+ * @param {Array<string>} streamKeys - List of stream keys from variant to include. If not supplied all streams will be included.
+ * @param {string=} type - ID or version hash of the content type for the mezzanine
+ * @param {string=} variant=default - What variant of the master content object to use
  *
  * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the mezzanine initialization
  */
@@ -355,13 +366,13 @@ exports.CreateProductionMaster = /*#__PURE__*/function () {
 
 exports.CreateABRMezzanine = /*#__PURE__*/function () {
   var _ref4 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(_ref3) {
-    var libraryId, objectId, type, name, description, metadata, masterVersionHash, abrProfile, _ref3$variant, variant, _ref3$offeringKey, offeringKey, existingMez, options, id, write_token, editResponse, createResponse, masterName, authorizationTokens, headers, body, storeClear, _yield$this$CallBitco2, logs, errors, warnings, existingMetadata, finalizeResponse;
+    var libraryId, objectId, type, name, description, metadata, masterVersionHash, abrProfile, addlOfferingSpecs, _ref3$variant, variant, _ref3$offeringKey, offeringKey, _ref3$keepOtherStream, keepOtherStreams, _ref3$respLogLevel, respLogLevel, _ref3$structLogLevel, structLogLevel, streamKeys, existingMez, options, id, write_token, editResponse, createResponse, masterName, authorizationTokens, headers, body, storeClear, _yield$this$CallBitco2, logs, errors, warnings, existingMetadata, finalizeResponse;
 
     return _regeneratorRuntime.wrap(function _callee2$(_context2) {
       while (1) {
         switch (_context2.prev = _context2.next) {
           case 0:
-            libraryId = _ref3.libraryId, objectId = _ref3.objectId, type = _ref3.type, name = _ref3.name, description = _ref3.description, metadata = _ref3.metadata, masterVersionHash = _ref3.masterVersionHash, abrProfile = _ref3.abrProfile, _ref3$variant = _ref3.variant, variant = _ref3$variant === void 0 ? "default" : _ref3$variant, _ref3$offeringKey = _ref3.offeringKey, offeringKey = _ref3$offeringKey === void 0 ? "default" : _ref3$offeringKey;
+            libraryId = _ref3.libraryId, objectId = _ref3.objectId, type = _ref3.type, name = _ref3.name, description = _ref3.description, metadata = _ref3.metadata, masterVersionHash = _ref3.masterVersionHash, abrProfile = _ref3.abrProfile, addlOfferingSpecs = _ref3.addlOfferingSpecs, _ref3$variant = _ref3.variant, variant = _ref3$variant === void 0 ? "default" : _ref3$variant, _ref3$offeringKey = _ref3.offeringKey, offeringKey = _ref3$offeringKey === void 0 ? "default" : _ref3$offeringKey, _ref3$keepOtherStream = _ref3.keepOtherStreams, keepOtherStreams = _ref3$keepOtherStream === void 0 ? false : _ref3$keepOtherStream, _ref3$respLogLevel = _ref3.respLogLevel, respLogLevel = _ref3$respLogLevel === void 0 ? "warn" : _ref3$respLogLevel, _ref3$structLogLevel = _ref3.structLogLevel, structLogLevel = _ref3$structLogLevel === void 0 ? "none" : _ref3$structLogLevel, streamKeys = _ref3.streamKeys;
             ValidateLibrary(libraryId);
             ValidateVersion(masterVersionHash);
 
@@ -373,44 +384,60 @@ exports.CreateABRMezzanine = /*#__PURE__*/function () {
             throw Error("Master version hash not specified");
 
           case 5:
+            if (!(!objectId && keepOtherStreams)) {
+              _context2.next = 7;
+              break;
+            }
+
+            throw Error("Existing mezzanine object ID required in order to use 'keepOtherStreams'");
+
+          case 7:
+            if (!(addlOfferingSpecs && !abrProfile)) {
+              _context2.next = 9;
+              break;
+            }
+
+            throw Error("abrProfile required when using addlOfferingSpecs");
+
+          case 9:
             existingMez = !!objectId;
             options = type ? {
               type: type
             } : {};
 
             if (!existingMez) {
-              _context2.next = 15;
+              _context2.next = 19;
               break;
             }
 
-            _context2.next = 10;
+            _context2.next = 14;
             return this.EditContentObject({
               libraryId: libraryId,
               objectId: objectId,
               options: options
             });
 
-          case 10:
+          case 14:
             editResponse = _context2.sent;
             id = editResponse.id;
             write_token = editResponse.write_token;
-            _context2.next = 20;
+            _context2.next = 24;
             break;
 
-          case 15:
-            _context2.next = 17;
+          case 19:
+            _context2.next = 21;
             return this.CreateContentObject({
               libraryId: libraryId,
               options: options
             });
 
-          case 17:
+          case 21:
             createResponse = _context2.sent;
             id = createResponse.id;
             write_token = createResponse.write_token;
 
-          case 20:
-            _context2.next = 22;
+          case 24:
+            _context2.next = 26;
             return this.CreateEncryptionConk({
               libraryId: libraryId,
               objectId: id,
@@ -418,48 +445,48 @@ exports.CreateABRMezzanine = /*#__PURE__*/function () {
               createKMSConk: true
             });
 
-          case 22:
-            _context2.next = 24;
+          case 26:
+            _context2.next = 28;
             return this.ContentObjectMetadata({
               versionHash: masterVersionHash,
               metadataSubtree: "public/name"
             });
 
-          case 24:
+          case 28:
             masterName = _context2.sent;
             // Include authorization for library, master, and mezzanine
             authorizationTokens = [];
             _context2.t0 = authorizationTokens;
-            _context2.next = 29;
+            _context2.next = 33;
             return this.authClient.AuthorizationToken({
               libraryId: libraryId,
               objectId: id,
               update: true
             });
 
-          case 29:
+          case 33:
             _context2.t1 = _context2.sent;
 
             _context2.t0.push.call(_context2.t0, _context2.t1);
 
             _context2.t2 = authorizationTokens;
-            _context2.next = 34;
+            _context2.next = 38;
             return this.authClient.AuthorizationToken({
               libraryId: libraryId
             });
 
-          case 34:
+          case 38:
             _context2.t3 = _context2.sent;
 
             _context2.t2.push.call(_context2.t2, _context2.t3);
 
             _context2.t4 = authorizationTokens;
-            _context2.next = 39;
+            _context2.next = 43;
             return this.authClient.AuthorizationToken({
               versionHash: masterVersionHash
             });
 
-          case 39:
+          case 43:
             _context2.t5 = _context2.sent;
 
             _context2.t4.push.call(_context2.t4, _context2.t5);
@@ -470,59 +497,66 @@ exports.CreateABRMezzanine = /*#__PURE__*/function () {
               }).join(",")
             };
             body = {
+              additional_offering_specs: addlOfferingSpecs,
               offering_key: offeringKey,
-              variant_key: variant,
-              prod_master_hash: masterVersionHash
+              keep_other_streams: keepOtherStreams,
+              prod_master_hash: masterVersionHash,
+              stream_keys: streamKeys,
+              variant_key: variant
             };
             storeClear = false;
 
             if (!abrProfile) {
-              _context2.next = 49;
+              _context2.next = 53;
               break;
             }
 
             body.abr_profile = abrProfile;
             storeClear = abrProfile.store_clear;
-            _context2.next = 52;
+            _context2.next = 56;
             break;
 
-          case 49:
-            _context2.next = 51;
+          case 53:
+            _context2.next = 55;
             return this.ContentObjectMetadata({
               libraryId: libraryId,
               objectId: this.utils.AddressToObjectId(this.utils.HashToAddress(libraryId)),
               metadataSubtree: "abr_profile/store_clear"
             });
 
-          case 51:
+          case 55:
             storeClear = _context2.sent;
 
-          case 52:
+          case 56:
             if (storeClear) {
-              _context2.next = 55;
+              _context2.next = 59;
               break;
             }
 
-            _context2.next = 55;
+            _context2.next = 59;
             return this.EncryptionConk({
               libraryId: libraryId,
               objectId: id,
               writeToken: write_token
             });
 
-          case 55:
-            _context2.next = 57;
+          case 59:
+            _context2.next = 61;
             return this.CallBitcodeMethod({
               libraryId: libraryId,
               objectId: id,
               writeToken: write_token,
               method: UrlJoin("media", "abr_mezzanine", "init"),
+              queryParams: {
+                response_log_level: respLogLevel,
+                struct_log_level: structLogLevel
+              },
               headers: headers,
               body: body,
               constant: false
             });
 
-          case 57:
+          case 61:
             _yield$this$CallBitco2 = _context2.sent;
             logs = _yield$this$CallBitco2.logs;
             errors = _yield$this$CallBitco2.errors;
@@ -564,14 +598,14 @@ exports.CreateABRMezzanine = /*#__PURE__*/function () {
             } // retrieve existing metadata to merge with updated metadata
 
 
-            _context2.next = 71;
+            _context2.next = 75;
             return this.ContentObjectMetadata({
               libraryId: libraryId,
               objectId: id,
               writeToken: write_token
             });
 
-          case 71:
+          case 75:
             existingMetadata = _context2.sent;
             // newer metadata values replace existing metadata, unless both new and old values are objects,
             // in which case their keys are merged recursively
@@ -583,7 +617,7 @@ exports.CreateABRMezzanine = /*#__PURE__*/function () {
             } // write metadata to mezzanine object
 
 
-            _context2.next = 76;
+            _context2.next = 80;
             return this.ReplaceMetadata({
               libraryId: libraryId,
               objectId: id,
@@ -591,8 +625,8 @@ exports.CreateABRMezzanine = /*#__PURE__*/function () {
               metadata: metadata
             });
 
-          case 76:
-            _context2.next = 78;
+          case 80:
+            _context2.next = 82;
             return this.FinalizeContentObject({
               libraryId: libraryId,
               objectId: id,
@@ -600,7 +634,7 @@ exports.CreateABRMezzanine = /*#__PURE__*/function () {
               commitMessage: "Create ABR mezzanine"
             });
 
-          case 78:
+          case 82:
             finalizeResponse = _context2.sent;
             return _context2.abrupt("return", _objectSpread({
               logs: logs || [],
@@ -608,7 +642,7 @@ exports.CreateABRMezzanine = /*#__PURE__*/function () {
               errors: errors || []
             }, finalizeResponse));
 
-          case 80:
+          case 84:
           case "end":
             return _context2.stop();
         }
@@ -819,7 +853,7 @@ exports.StartABRMezzanineJobs = /*#__PURE__*/function () {
 
 exports.LROStatus = /*#__PURE__*/function () {
   var _ref9 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee5(_ref8) {
-    var libraryId, objectId, _ref8$offeringKey, offeringKey, lroDraft, ready, error, result, fabricURIs;
+    var libraryId, objectId, _ref8$offeringKey, offeringKey, lroDraft, ready;
 
     return _regeneratorRuntime.wrap(function _callee5$(_context5) {
       while (1) {
@@ -884,12 +918,8 @@ exports.LROStatus = /*#__PURE__*/function () {
             throw Error("No LRO draft found for this mezzanine");
 
           case 19:
-            fabricURIs = this.fabricURIs;
-            _context5.prev = 20;
-            this.SetNodes({
-              fabricURIs: [lroDraft.node].concat(_toConsumableArray(fabricURIs))
-            });
-            _context5.next = 24;
+            this.HttpClient.RecordWriteToken(lroDraft.write_token, lroDraft.node);
+            _context5.next = 22;
             return this.ContentObjectMetadata({
               libraryId: libraryId,
               objectId: objectId,
@@ -897,40 +927,15 @@ exports.LROStatus = /*#__PURE__*/function () {
               metadataSubtree: "lro_status"
             });
 
-          case 24:
-            result = _context5.sent;
-            _context5.next = 30;
-            break;
+          case 22:
+            return _context5.abrupt("return", _context5.sent);
 
-          case 27:
-            _context5.prev = 27;
-            _context5.t1 = _context5["catch"](20);
-            error = _context5.t1;
-
-          case 30:
-            _context5.prev = 30;
-            this.SetNodes({
-              fabricURIs: fabricURIs
-            });
-            return _context5.finish(30);
-
-          case 33:
-            if (!error) {
-              _context5.next = 35;
-              break;
-            }
-
-            throw error;
-
-          case 35:
-            return _context5.abrupt("return", result);
-
-          case 36:
+          case 23:
           case "end":
             return _context5.stop();
         }
       }
-    }, _callee5, this, [[20, 27, 30, 33]]);
+    }, _callee5, this);
   }));
 
   return function (_x5) {
@@ -946,6 +951,8 @@ exports.LROStatus = /*#__PURE__*/function () {
  * @param {string} objectId - ID of the mezzanine object
  * @param {string} writeToken - Write token for the mezzanine object
  * @param {string=} offeringKey=default - The offering to process
+ * @param {function=} preFinalizeFn - A function to call before finalizing changes, to allow further modifications to offering. The function will be invoked with {elvClient, nodeUrl, writeToken} to allow access to the draft and MUST NOT finalize the draft.
+ * @param {boolean=} preFinalizeThrow - If set to `true` then any error thrown by preFinalizeFn will not be caught. Otherwise, any exception will be appended to the `warnings` array returned after finalization.
  *
  * @return {Promise<Object>} - The finalize response for the mezzanine object, as well as any logs, warnings and errors from the finalization
  */
@@ -953,13 +960,13 @@ exports.LROStatus = /*#__PURE__*/function () {
 
 exports.FinalizeABRMezzanine = /*#__PURE__*/function () {
   var _ref11 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee6(_ref10) {
-    var libraryId, objectId, _ref10$offeringKey, offeringKey, lroDraft, httpClient, error, result, mezzanineMetadata, masterHash, authorizationTokens, headers, _yield$this$CallBitco4, data, errors, warnings, logs, finalizeResponse;
+    var libraryId, objectId, _ref10$offeringKey, offeringKey, preFinalizeFn, preFinalizeThrow, lroDraft, httpClient, error, result, mezzanineMetadata, masterHash, authorizationTokens, headers, _yield$this$CallBitco4, data, errors, warnings, logs, preFinalizeWarnings, params, finalizeResponse;
 
     return _regeneratorRuntime.wrap(function _callee6$(_context6) {
       while (1) {
         switch (_context6.prev = _context6.next) {
           case 0:
-            libraryId = _ref10.libraryId, objectId = _ref10.objectId, _ref10$offeringKey = _ref10.offeringKey, offeringKey = _ref10$offeringKey === void 0 ? "default" : _ref10$offeringKey;
+            libraryId = _ref10.libraryId, objectId = _ref10.objectId, _ref10$offeringKey = _ref10.offeringKey, offeringKey = _ref10$offeringKey === void 0 ? "default" : _ref10$offeringKey, preFinalizeFn = _ref10.preFinalizeFn, preFinalizeThrow = _ref10.preFinalizeThrow;
             ValidateParameters({
               libraryId: libraryId,
               objectId: objectId
@@ -1039,7 +1046,47 @@ exports.FinalizeABRMezzanine = /*#__PURE__*/function () {
             errors = _yield$this$CallBitco4.errors;
             warnings = _yield$this$CallBitco4.warnings;
             logs = _yield$this$CallBitco4.logs;
-            _context6.next = 31;
+            preFinalizeWarnings = [];
+
+            if (!preFinalizeFn) {
+              _context6.next = 45;
+              break;
+            }
+
+            params = {
+              elvClient: this,
+              nodeUrl: lroDraft.node,
+              writeToken: lroDraft.write_token
+            };
+
+            if (!preFinalizeThrow) {
+              _context6.next = 37;
+              break;
+            }
+
+            _context6.next = 35;
+            return preFinalizeFn(params);
+
+          case 35:
+            _context6.next = 45;
+            break;
+
+          case 37:
+            _context6.prev = 37;
+            _context6.next = 40;
+            return preFinalizeFn(params);
+
+          case 40:
+            _context6.next = 45;
+            break;
+
+          case 42:
+            _context6.prev = 42;
+            _context6.t2 = _context6["catch"](37);
+            preFinalizeWarnings = "Error trying to set video stream codec descriptors: ".concat(_context6.t2);
+
+          case 45:
+            _context6.next = 47;
             return this.FinalizeContentObject({
               libraryId: libraryId,
               objectId: objectId,
@@ -1048,45 +1095,45 @@ exports.FinalizeABRMezzanine = /*#__PURE__*/function () {
               awaitCommitConfirmation: false
             });
 
-          case 31:
+          case 47:
             finalizeResponse = _context6.sent;
             result = _objectSpread({
               data: data,
               logs: logs || [],
-              warnings: warnings || [],
+              warnings: (warnings || []).concat(preFinalizeWarnings),
               errors: errors || []
             }, finalizeResponse);
-            _context6.next = 38;
+            _context6.next = 54;
             break;
 
-          case 35:
-            _context6.prev = 35;
-            _context6.t2 = _context6["catch"](8);
-            error = _context6.t2;
+          case 51:
+            _context6.prev = 51;
+            _context6.t3 = _context6["catch"](8);
+            error = _context6.t3;
 
-          case 38:
-            _context6.prev = 38;
+          case 54:
+            _context6.prev = 54;
             // Ensure original http client is restored
             this.HttpClient = httpClient;
-            return _context6.finish(38);
+            return _context6.finish(54);
 
-          case 41:
+          case 57:
             if (!error) {
-              _context6.next = 43;
+              _context6.next = 59;
               break;
             }
 
             throw error;
 
-          case 43:
+          case 59:
             return _context6.abrupt("return", result);
 
-          case 44:
+          case 60:
           case "end":
             return _context6.stop();
         }
       }
-    }, _callee6, this, [[8, 35, 38, 41]]);
+    }, _callee6, this, [[8, 51, 54, 57], [37, 42]]);
   }));
 
   return function (_x6) {

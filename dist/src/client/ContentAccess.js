@@ -19,6 +19,8 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
  */
 var UrlJoin = require("url-join");
 
+var objectPath = require("object-path");
+
 var HttpClient = require("../HttpClient");
 
 var _require = require("../Validation"),
@@ -84,14 +86,18 @@ exports.Visibility = /*#__PURE__*/function () {
   var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(_ref) {
     var _this = this;
 
-    var id, address;
+    var id, clearCache, address;
     return _regeneratorRuntime.wrap(function _callee2$(_context2) {
       while (1) {
         switch (_context2.prev = _context2.next) {
           case 0:
-            id = _ref.id;
+            id = _ref.id, clearCache = _ref.clearCache;
             _context2.prev = 1;
             address = this.utils.HashToAddress(id);
+
+            if (clearCache) {
+              delete this.visibilityInfo[address];
+            }
 
             if (!this.visibilityInfo[address]) {
               this.visibilityInfo[address] = new Promise( /*#__PURE__*/function () {
@@ -152,43 +158,43 @@ exports.Visibility = /*#__PURE__*/function () {
               }());
             }
 
-            _context2.prev = 4;
-            _context2.next = 7;
+            _context2.prev = 5;
+            _context2.next = 8;
             return this.visibilityInfo[address];
 
-          case 7:
+          case 8:
             return _context2.abrupt("return", _context2.sent);
 
-          case 10:
-            _context2.prev = 10;
-            _context2.t0 = _context2["catch"](4);
+          case 11:
+            _context2.prev = 11;
+            _context2.t0 = _context2["catch"](5);
             delete this.visibilityInfo[address];
             throw _context2.t0;
 
-          case 14:
-            _context2.next = 21;
+          case 15:
+            _context2.next = 22;
             break;
 
-          case 16:
-            _context2.prev = 16;
+          case 17:
+            _context2.prev = 17;
             _context2.t1 = _context2["catch"](1);
 
             if (!(_context2.t1.code === "CALL_EXCEPTION")) {
-              _context2.next = 20;
+              _context2.next = 21;
               break;
             }
 
             return _context2.abrupt("return", 0);
 
-          case 20:
+          case 21:
             throw _context2.t1;
 
-          case 21:
+          case 22:
           case "end":
             return _context2.stop();
         }
       }
-    }, _callee2, this, [[1, 16], [4, 10]]);
+    }, _callee2, this, [[1, 17], [5, 11]]);
   }));
 
   return function (_x) {
@@ -211,12 +217,12 @@ exports.Permission = /*#__PURE__*/function () {
   var _ref5 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(_ref4) {
     var _this2 = this;
 
-    var objectId, visibility, kmsAddress, kmsId, hasKmsConk, statusCode, permission;
+    var objectId, clearCache, visibility, kmsAddress, kmsId, hasKmsConk, statusCode, permission;
     return _regeneratorRuntime.wrap(function _callee3$(_context3) {
       while (1) {
         switch (_context3.prev = _context3.next) {
           case 0:
-            objectId = _ref4.objectId;
+            objectId = _ref4.objectId, clearCache = _ref4.clearCache;
             ValidateObject(objectId);
             _context3.next = 4;
             return this.AccessType({
@@ -237,7 +243,8 @@ exports.Permission = /*#__PURE__*/function () {
           case 8:
             _context3.next = 10;
             return this.Visibility({
-              id: objectId
+              id: objectId,
+              clearCache: clearCache
             });
 
           case 10:
@@ -1149,6 +1156,7 @@ exports.ContentObjects = /*#__PURE__*/function () {
  * @param {string=} libraryId - ID of the library
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
+ * @param {string=} writeToken - Write token for an object draft -- if supplied, versionHash will be ignored
  *
  * @returns {Promise<Object>} - Description of content object
  */
@@ -1156,24 +1164,24 @@ exports.ContentObjects = /*#__PURE__*/function () {
 
 exports.ContentObject = /*#__PURE__*/function () {
   var _ref26 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee15(_ref25) {
-    var libraryId, objectId, versionHash, path;
+    var libraryId, objectId, versionHash, writeToken, path;
     return _regeneratorRuntime.wrap(function _callee15$(_context15) {
       while (1) {
         switch (_context15.prev = _context15.next) {
           case 0:
-            libraryId = _ref25.libraryId, objectId = _ref25.objectId, versionHash = _ref25.versionHash;
+            libraryId = _ref25.libraryId, objectId = _ref25.objectId, versionHash = _ref25.versionHash, writeToken = _ref25.writeToken;
             ValidateParameters({
               libraryId: libraryId,
               objectId: objectId,
               versionHash: versionHash
             });
-            this.Log("Retrieving content object: ".concat(libraryId || "", " ").concat(objectId || versionHash));
+            this.Log("Retrieving content object: ".concat(libraryId || "", " ").concat(writeToken || versionHash || objectId));
 
             if (versionHash) {
               objectId = this.utils.DecodeVersionHash(versionHash).objectId;
             }
 
-            path = UrlJoin("q", versionHash || objectId);
+            path = UrlJoin("q", writeToken || versionHash || objectId);
             _context15.t0 = this.utils;
             _context15.t1 = this.HttpClient;
             _context15.next = 9;
@@ -1777,7 +1785,7 @@ exports.MetadataAuth = /*#__PURE__*/function () {
 
 exports.ContentObjectMetadata = /*#__PURE__*/function () {
   var _ref41 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee24(_ref40) {
-    var libraryId, objectId, versionHash, writeToken, _ref40$metadataSubtre, metadataSubtree, _ref40$queryParams, queryParams, _ref40$select, select, _ref40$remove, remove, authorizationToken, _ref40$noAuth, noAuth, _ref40$resolveLinks, resolveLinks, _ref40$resolveInclude, resolveIncludeSource, _ref40$resolveIgnoreE, resolveIgnoreErrors, _ref40$linkDepthLimit, linkDepthLimit, _ref40$produceLinkUrl, produceLinkUrls, path, defaultAuthToken, authTokens, metadata;
+    var libraryId, objectId, versionHash, writeToken, _ref40$metadataSubtre, metadataSubtree, _ref40$queryParams, queryParams, _ref40$select, select, _ref40$remove, remove, authorizationToken, _ref40$noAuth, noAuth, _ref40$resolveLinks, resolveLinks, _ref40$resolveInclude, resolveIncludeSource, _ref40$resolveIgnoreE, resolveIgnoreErrors, _ref40$linkDepthLimit, linkDepthLimit, _ref40$produceLinkUrl, produceLinkUrls, path, defaultAuthToken, authTokens, metadata, errQwtoken;
 
     return _regeneratorRuntime.wrap(function _callee24$(_context24) {
       while (1) {
@@ -1836,7 +1844,7 @@ exports.ContentObjectMetadata = /*#__PURE__*/function () {
 
           case 14:
             metadata = _context24.sent;
-            _context24.next = 22;
+            _context24.next = 27;
             break;
 
           case 17:
@@ -1851,18 +1859,32 @@ exports.ContentObjectMetadata = /*#__PURE__*/function () {
             throw _context24.t0;
 
           case 21:
+            // For a 404 error, check if error was due to write token not found
+            errQwtoken = objectPath.get(_context24.t0.body, "errors[0].cause.cause.cause.qwtoken");
+
+            if (!errQwtoken) {
+              _context24.next = 26;
+              break;
+            }
+
+            throw _context24.t0;
+
+          case 26:
+            // For all other 404 errors (not just 'subtree not found'), suppress error and
+            // return an empty value. (there are function call chains that depend on this behavior,
+            //  e.g. CreateABRMezzanine -> CreateEncryptionConk -> ContentObjectMetadata)
             metadata = metadataSubtree === "/" ? {} : undefined;
 
-          case 22:
+          case 27:
             if (produceLinkUrls) {
-              _context24.next = 24;
+              _context24.next = 29;
               break;
             }
 
             return _context24.abrupt("return", metadata);
 
-          case 24:
-            _context24.next = 26;
+          case 29:
+            _context24.next = 31;
             return this.ProduceMetadataLinks({
               libraryId: libraryId,
               objectId: objectId,
@@ -1873,10 +1895,10 @@ exports.ContentObjectMetadata = /*#__PURE__*/function () {
               noAuth: noAuth
             });
 
-          case 26:
+          case 31:
             return _context24.abrupt("return", _context24.sent);
 
-          case 27:
+          case 32:
           case "end":
             return _context24.stop();
         }
@@ -4370,7 +4392,7 @@ exports.CreateEncryptionConk = /*#__PURE__*/function () {
             }
 
             _context46.next = 17;
-            return this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
+            return this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
 
           case 17:
             this.encryptionConks[objectId] = _context46.sent;
@@ -4392,7 +4414,7 @@ exports.CreateEncryptionConk = /*#__PURE__*/function () {
             _context46.t3 = writeToken;
             _context46.t4 = capKey;
             _context46.next = 30;
-            return this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
+            return this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer._signingKey().publicKey);
 
           case 30:
             _context46.t5 = _context46.sent;
@@ -4609,7 +4631,7 @@ exports.EncryptionConk = /*#__PURE__*/function () {
             }
 
             _context47.next = 29;
-            return this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
+            return this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
 
           case 29:
             this.encryptionConks[objectId] = _context47.sent;

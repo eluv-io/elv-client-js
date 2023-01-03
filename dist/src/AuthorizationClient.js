@@ -353,7 +353,7 @@ var AuthorizationClient = /*#__PURE__*/function () {
                   addr: Utils.FormatAddress(this.client.signer && this.client.signer.address || "")
                 };
 
-                if (this.noAuth || noAuth) {
+                if (!update) {
                   _context3.next = 29;
                   break;
                 }
@@ -602,8 +602,8 @@ var AuthorizationClient = /*#__PURE__*/function () {
                   }; // Save request ID if present
 
                   accessRequest.logs.some(function (log) {
-                    if (log.values && (log.values.requestID || log.values.requestNonce)) {
-                      _this.requestIds[address] = (log.values.requestID || log.values.requestNonce || "").toString().replace(/^0x/, "");
+                    if (log.args && (log.args.requestID || log.args.requestNonce)) {
+                      _this.requestIds[address] = (log.args.requestID || log.args.requestNonce || "").toString().replace(/^0x/, "");
                       return true;
                     }
                   });
@@ -1231,11 +1231,11 @@ var AuthorizationClient = /*#__PURE__*/function () {
                   if (!isV3) {
                     if (args && args.length > 0) {
                       // Inject public key of requester
-                      args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
+                      args[1] = this.client.signer._signingKey ? this.client.signer._signingKey().publicKey : "";
                     } else {
                       // Set default args
                       args = [0, // Access level
-                      this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
+                      this.client.signer._signingKey ? this.client.signer._signingKey().publicKey : "", // Public key of requester
                       publicKey, //cap.public_key,
                       [], // Custom values
                       [] // Stakeholders
@@ -1607,7 +1607,7 @@ var AuthorizationClient = /*#__PURE__*/function () {
 
               case 7:
                 _context17.next = 9;
-                return this.client.signer.signingKey.signDigest(message);
+                return this.client.signer._signingKey().signDigest(message);
 
               case 9:
                 _context17.t1 = _context17.sent;

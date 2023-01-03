@@ -36,12 +36,19 @@ var Ethers = require("ethers");
 
 var inBrowser = typeof window !== "undefined";
 var embedded = inBrowser && window.top !== window.self;
+var localStorageAvailable = false;
+
+try {
+  typeof localStorage !== "undefined" && localStorage.getItem("test");
+  localStorageAvailable = true; // eslint-disable-next-line no-empty
+} catch (error) {}
 /**
  * Use the <a href="#.Initialize">Initialize</a> method to initialize a new client.
  *
  *
  * See the Modules section on the sidebar for all client methods unrelated to login and authorization
  */
+
 
 var ElvWalletClient = /*#__PURE__*/function () {
   "use strict";
@@ -52,6 +59,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
         network = _ref.network,
         mode = _ref.mode,
         marketplaceInfo = _ref.marketplaceInfo,
+        previewMarketplaceHash = _ref.previewMarketplaceHash,
         storeAuthToken = _ref.storeAuthToken;
 
     _classCallCheck(this, ElvWalletClient);
@@ -67,6 +75,8 @@ var ElvWalletClient = /*#__PURE__*/function () {
     this.publicStaticToken = client.staticToken;
     this.storeAuthToken = storeAuthToken;
     this.selectedMarketplaceInfo = marketplaceInfo;
+    this.previewMarketplaceId = previewMarketplaceHash ? Utils.DecodeVersionHash(previewMarketplaceHash).objectId : undefined;
+    this.previewMarketplaceHash = previewMarketplaceHash;
     this.availableMarketplaces = {};
     this.availableMarketplacesById = {};
     this.marketplaceHashes = {};
@@ -112,6 +122,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
      * @param {string} mode=production - Environment to use (`production`, `staging`)
      * @param {Object=} marketplaceParams - Marketplace parameters
      * @param {boolean=} storeAuthToken=true - If specified, auth tokens will be stored in localstorage (if available)
+     * @param {Object=} client - Existing instance of ElvClient to use instead of initializing a new one
      *
      * @returns {Promise<ElvWalletClient>}
      */
@@ -529,7 +540,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
       this.loggedIn = false;
       this.cachedMarketplaces = {}; // Delete saved auth token
 
-      if (typeof localStorage !== "undefined") {
+      if (localStorageAvailable) {
         try {
           localStorage.removeItem("__elv-token-".concat(this.network)); // eslint-disable-next-line no-empty
         } catch (error) {}
@@ -888,7 +899,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
       this.cachedMarketplaces = {};
       var token = this.ClientAuthToken();
 
-      if (this.storeAuthToken && typeof localStorage !== "undefined") {
+      if (this.storeAuthToken && localStorageAvailable) {
         try {
           localStorage.setItem("__elv-token-".concat(this.network), token); // eslint-disable-next-line no-empty
         } catch (error) {}
@@ -967,7 +978,6 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
       return SignMetamask;
     }() // Internal loading methods
-    // If marketplace slug is specified, load only that marketplace. Otherwise load all
 
   }, {
     key: "LoadAvailableMarketplaces",
@@ -978,6 +988,9 @@ var ElvWalletClient = /*#__PURE__*/function () {
         var forceReload,
             mainSiteHash,
             metadata,
+            previewTenantSlug,
+            previewMarketplaceSlug,
+            previewMarketplaceMetadata,
             availableMarketplaces,
             availableMarketplacesById,
             _args12 = arguments;
@@ -1013,19 +1026,81 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   produceLinkUrls: true,
                   authorizationToken: this.publicStaticToken,
                   noAuth: true,
-                  select: ["*/.", "*/marketplaces/*/.", "*/marketplaces/*/info/tenant_id", "*/marketplaces/*/info/tenant_name", "*/marketplaces/*/info/branding"],
+                  select: ["*/.", "*/marketplaces/*/.", "*/marketplaces/*/info/tenant_id", "*/marketplaces/*/info/tenant_name", "*/marketplaces/*/info/branding", "*/marketplaces/*/info/storefront/background", "*/marketplaces/*/info/storefront/background_mobile"],
                   remove: ["*/marketplaces/*/info/branding/custom_css"]
                 });
 
               case 8:
                 metadata = _context12.sent;
+
+                if (!this.previewMarketplaceId) {
+                  _context12.next = 24;
+                  break;
+                }
+
+                previewTenantSlug = "PREVIEW";
+                Object.keys(metadata || {}).forEach(function (tenantSlug) {
+                  return Object.keys(metadata[tenantSlug].marketplaces || {}).forEach(function (marketplaceSlug) {
+                    var versionHash = metadata[tenantSlug].marketplaces[marketplaceSlug]["."].source;
+
+                    var objectId = _this4.utils.DecodeVersionHash(versionHash).objectId;
+
+                    if (objectId === _this4.previewMarketplaceId) {
+                      // Marketplace exists in site meta
+                      previewTenantSlug = tenantSlug;
+                      previewMarketplaceSlug = marketplaceSlug; // Deployed marketplace is same as preview marketplace
+
+                      if (versionHash === _this4.previewMarketplaceHash) {
+                        previewMarketplaceMetadata = metadata[tenantSlug].marketplaces[marketplaceSlug];
+                      }
+                    }
+                  });
+                }); // Marketplace not present in branch, or preview version is different - Load metadata directly
+
+                if (previewMarketplaceMetadata) {
+                  _context12.next = 17;
+                  break;
+                }
+
+                _context12.next = 15;
+                return this.client.ContentObjectMetadata({
+                  versionHash: this.previewMarketplaceHash,
+                  metadataSubtree: "public/asset_metadata",
+                  produceLinkUrls: true,
+                  authorizationToken: this.publicStaticToken,
+                  noAuth: true,
+                  select: ["slug", "info/tenant_id", "info/tenant_name", "info/branding"],
+                  remove: ["info/branding/custom_css"]
+                });
+
+              case 15:
+                previewMarketplaceMetadata = _context12.sent;
+
+                if (!previewMarketplaceSlug) {
+                  previewMarketplaceSlug = previewMarketplaceMetadata.slug;
+                }
+
+              case 17:
+                previewMarketplaceMetadata["."] = {
+                  source: this.previewMarketplaceHash
+                };
+                previewMarketplaceMetadata.info["."] = {
+                  source: this.previewMarketplaceHash
+                };
+                previewMarketplaceMetadata.info.branding.preview = true;
+                previewMarketplaceMetadata.info.branding.show = true;
+                metadata[previewTenantSlug] = metadata[previewTenantSlug] || {};
+                metadata[previewTenantSlug].marketplaces = metadata[previewTenantSlug].marketplaces || {};
+                metadata[previewTenantSlug].marketplaces[previewMarketplaceSlug] = previewMarketplaceMetadata;
+
+              case 24:
                 availableMarketplaces = _objectSpread({}, this.availableMarketplaces || {});
                 availableMarketplacesById = _objectSpread({}, this.availableMarketplacesById || {});
                 Object.keys(metadata || {}).forEach(function (tenantSlug) {
                   try {
-                    availableMarketplaces[tenantSlug] = {
+                    availableMarketplaces[tenantSlug] = metadata[tenantSlug]["."] ? {
                       versionHash: metadata[tenantSlug]["."].source
-                    };
+                    } : {};
                     Object.keys(metadata[tenantSlug].marketplaces || {}).forEach(function (marketplaceSlug) {
                       try {
                         var versionHash = metadata[tenantSlug].marketplaces[marketplaceSlug]["."].source;
@@ -1062,7 +1137,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 this.availableMarketplaces = availableMarketplaces;
                 this.availableMarketplacesById = availableMarketplacesById;
 
-              case 14:
+              case 29:
               case "end":
                 return _context12.stop();
             }
@@ -1081,31 +1156,47 @@ var ElvWalletClient = /*#__PURE__*/function () {
     key: "LatestMarketplaceHash",
     value: function () {
       var _LatestMarketplaceHash = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee13(_ref12) {
-        var tenantSlug, marketplaceSlug, mainSiteHash, marketplaceLink;
+        var marketplaceParams, marketplaceInfo, mainSiteHash, marketplaceLink;
         return _regeneratorRuntime.wrap(function _callee13$(_context13) {
           while (1) {
             switch (_context13.prev = _context13.next) {
               case 0:
-                tenantSlug = _ref12.tenantSlug, marketplaceSlug = _ref12.marketplaceSlug;
+                marketplaceParams = _ref12.marketplaceParams;
                 _context13.next = 3;
+                return this.MarketplaceInfo({
+                  marketplaceParams: marketplaceParams
+                });
+
+              case 3:
+                marketplaceInfo = _context13.sent;
+
+                if (!(this.previewMarketplaceId && this.previewMarketplaceId === marketplaceInfo.marketplaceId)) {
+                  _context13.next = 6;
+                  break;
+                }
+
+                return _context13.abrupt("return", this.availableMarketplaces[marketplaceInfo.tenantSlug][marketplaceInfo.marketplaceSlug]["."].source);
+
+              case 6:
+                _context13.next = 8;
                 return this.client.LatestVersionHash({
                   objectId: this.mainSiteId
                 });
 
-              case 3:
+              case 8:
                 mainSiteHash = _context13.sent;
-                _context13.next = 6;
+                _context13.next = 11;
                 return this.client.ContentObjectMetadata({
                   versionHash: mainSiteHash,
-                  metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", tenantSlug, "marketplaces", marketplaceSlug),
+                  metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", marketplaceInfo.tenantSlug, "marketplaces", marketplaceInfo.marketplaceSlug),
                   resolveLinks: false
                 });
 
-              case 6:
+              case 11:
                 marketplaceLink = _context13.sent;
                 return _context13.abrupt("return", LinkTargetHash(marketplaceLink));
 
-              case 8:
+              case 13:
               case "end":
                 return _context13.stop();
             }
@@ -1136,8 +1227,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 marketplaceId = marketplaceInfo.marketplaceId;
                 _context15.next = 4;
                 return this.LatestMarketplaceHash({
-                  tenantSlug: marketplaceInfo.tenantSlug,
-                  marketplaceSlug: marketplaceInfo.marketplaceSlug
+                  marketplaceParams: marketplaceParams
                 });
 
               case 4:
@@ -1148,7 +1238,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 }
 
                 if (this.cachedMarketplaces[marketplaceId]) {
-                  _context15.next = 19;
+                  _context15.next = 21;
                   break;
                 }
 
@@ -1156,7 +1246,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 return this.client.ContentObjectMetadata({
                   versionHash: marketplaceHash,
                   metadataSubtree: "public/asset_metadata/info",
-                  linkDepthLimit: 2,
+                  linkDepthLimit: 1,
                   resolveLinks: true,
                   resolveIgnoreErrors: true,
                   resolveIncludeSource: true,
@@ -1169,6 +1259,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 _context15.next = 12;
                 return Promise.all(marketplace.items.map( /*#__PURE__*/function () {
                   var _ref13 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee14(item, index) {
+                    var authorizationToken;
                     return _regeneratorRuntime.wrap(function _callee14$(_context14) {
                       while (1) {
                         switch (_context14.prev = _context14.next) {
@@ -1183,16 +1274,19 @@ var ElvWalletClient = /*#__PURE__*/function () {
                               break;
                             }
 
-                            item.authorized = false;
-                            _context14.next = 14;
-                            break;
+                            _context14.next = 4;
+                            return _this5.client.CreateFabricToken({});
+
+                          case 4:
+                            authorizationToken = _context14.sent;
 
                           case 5:
                             _context14.prev = 5;
                             _context14.next = 8;
                             return _this5.client.ContentObjectMetadata({
                               versionHash: LinkTargetHash(item.nft_template),
-                              metadataSubtree: "permissioned"
+                              metadataSubtree: "permissioned",
+                              authorizationToken: authorizationToken
                             });
 
                           case 8:
@@ -1233,7 +1327,13 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 });
                 marketplace.retrievedAt = Date.now();
                 marketplace.marketplaceId = marketplaceId;
-                marketplace.versionHash = marketplaceHash; // Generate embed URLs for pack opening animations
+                marketplace.versionHash = marketplaceHash;
+                marketplace.marketplaceHash = marketplaceHash;
+
+                if (this.previewMarketplaceId && marketplaceId === this.previewMarketplaceId) {
+                  marketplace.branding.preview = true;
+                } // Generate embed URLs for pack opening animations
+
 
                 ["purchase_animation", "purchase_animation__mobile", "reveal_animation", "reveal_animation_mobile"].forEach(function (key) {
                   try {
@@ -1258,10 +1358,10 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 });
                 this.cachedMarketplaces[marketplaceId] = marketplace;
 
-              case 19:
+              case 21:
                 return _context15.abrupt("return", this.cachedMarketplaces[marketplaceId]);
 
-              case 20:
+              case 22:
               case "end":
                 return _context15.stop();
             }
@@ -1332,7 +1432,11 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   start: start,
                   limit: limit,
                   sort_descending: sortDesc
-                };
+                }; // Created isn't a valid sort mode for owned
+
+                if (mode === "owned" && sortBy === "created") {
+                  sortBy = "default";
+                }
 
                 if (mode !== "leaderboard") {
                   params.sort_by = sortBy;
@@ -1343,33 +1447,33 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 }
 
                 if (!marketplaceParams) {
-                  _context16.next = 13;
+                  _context16.next = 14;
                   break;
                 }
 
-                _context16.next = 8;
+                _context16.next = 9;
                 return this.MarketplaceInfo({
                   marketplaceParams: marketplaceParams
                 });
 
-              case 8:
+              case 9:
                 marketplaceInfo = _context16.sent;
 
                 if (!(collectionIndexes.length > 0)) {
-                  _context16.next = 13;
+                  _context16.next = 14;
                   break;
                 }
 
-                _context16.next = 12;
+                _context16.next = 13;
                 return this.Marketplace({
                   marketplaceParams: marketplaceParams
                 });
 
-              case 12:
+              case 13:
                 marketplace = _context16.sent;
 
-              case 13:
-                _context16.prev = 13;
+              case 14:
+                _context16.prev = 14;
                 filters = [];
 
                 if (sellerAddress) {
@@ -1416,7 +1520,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                     filters.push("token:eq:".concat(tokenId));
                   }
                 } else if (filter) {
-                  if (mode === "listing") {
+                  if (mode.includes("listing")) {
                     filters.push("nft/display_name:eq:".concat(filter));
                   } else if (mode === "owned") {
                     filters.push("meta/display_name:eq:".concat(filter));
@@ -1484,87 +1588,87 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 }
 
                 _context16.t0 = mode;
-                _context16.next = _context16.t0 === "owned" ? 28 : _context16.t0 === "listings" ? 30 : _context16.t0 === "transfers" ? 32 : _context16.t0 === "sales" ? 36 : _context16.t0 === "listing-stats" ? 40 : _context16.t0 === "sales-stats" ? 42 : _context16.t0 === "leaderboard" ? 45 : 47;
+                _context16.next = _context16.t0 === "owned" ? 29 : _context16.t0 === "listings" ? 31 : _context16.t0 === "transfers" ? 33 : _context16.t0 === "sales" ? 37 : _context16.t0 === "listing-stats" ? 41 : _context16.t0 === "sales-stats" ? 43 : _context16.t0 === "leaderboard" ? 46 : 48;
                 break;
 
-              case 28:
+              case 29:
                 path = UrlJoin("as", "wlt", userAddress || this.UserAddress());
-                return _context16.abrupt("break", 47);
+                return _context16.abrupt("break", 48);
 
-              case 30:
+              case 31:
                 path = UrlJoin("as", "mkt", "f");
-                return _context16.abrupt("break", 47);
+                return _context16.abrupt("break", 48);
 
-              case 32:
+              case 33:
                 path = UrlJoin("as", "mkt", "hst", "f");
                 filters.push("action:eq:TRANSFERRED");
                 filters.push("action:eq:SOLD");
-                return _context16.abrupt("break", 47);
+                return _context16.abrupt("break", 48);
 
-              case 36:
+              case 37:
                 path = UrlJoin("as", "mkt", "hst", "f");
                 filters.push("action:eq:SOLD");
                 filters.push("seller:co:0x");
-                return _context16.abrupt("break", 47);
+                return _context16.abrupt("break", 48);
 
-              case 40:
+              case 41:
                 path = UrlJoin("as", "mkt", "stats", "listed");
-                return _context16.abrupt("break", 47);
+                return _context16.abrupt("break", 48);
 
-              case 42:
+              case 43:
                 path = UrlJoin("as", "mkt", "stats", "sold");
                 filters.push("seller:co:0x");
-                return _context16.abrupt("break", 47);
+                return _context16.abrupt("break", 48);
 
-              case 45:
+              case 46:
                 path = UrlJoin("as", "wlt", "leaders");
-                return _context16.abrupt("break", 47);
+                return _context16.abrupt("break", 48);
 
-              case 47:
+              case 48:
                 if (filters.length > 0) {
                   params.filter = filters;
                 }
 
                 if (!mode.includes("stats")) {
-                  _context16.next = 52;
+                  _context16.next = 53;
                   break;
                 }
 
-                _context16.next = 51;
+                _context16.next = 52;
                 return Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
                   path: path,
                   method: "GET",
                   queryParams: params
                 }));
 
-              case 51:
+              case 52:
                 return _context16.abrupt("return", _context16.sent);
 
-              case 52:
+              case 53:
                 _context16.t2 = Utils;
-                _context16.next = 55;
+                _context16.next = 56;
                 return this.client.authClient.MakeAuthServiceRequest({
                   path: path,
                   method: "GET",
                   queryParams: params
                 });
 
-              case 55:
+              case 56:
                 _context16.t3 = _context16.sent;
-                _context16.next = 58;
+                _context16.next = 59;
                 return _context16.t2.ResponseToJson.call(_context16.t2, _context16.t3);
 
-              case 58:
+              case 59:
                 _context16.t1 = _context16.sent;
 
                 if (_context16.t1) {
-                  _context16.next = 61;
+                  _context16.next = 62;
                   break;
                 }
 
                 _context16.t1 = [];
 
-              case 61:
+              case 62:
                 _ref16 = _context16.t1;
                 contents = _ref16.contents;
                 paging = _ref16.paging;
@@ -1580,12 +1684,12 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   })
                 });
 
-              case 67:
-                _context16.prev = 67;
-                _context16.t4 = _context16["catch"](13);
+              case 68:
+                _context16.prev = 68;
+                _context16.t4 = _context16["catch"](14);
 
                 if (!(_context16.t4.status && _context16.t4.status.toString() === "404")) {
-                  _context16.next = 71;
+                  _context16.next = 72;
                   break;
                 }
 
@@ -1599,15 +1703,15 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   results: []
                 });
 
-              case 71:
+              case 72:
                 throw _context16.t4;
 
-              case 72:
+              case 73:
               case "end":
                 return _context16.stop();
             }
           }
-        }, _callee16, this, [[13, 67]]);
+        }, _callee16, this, [[14, 68]]);
       }));
 
       function FilteredQuery() {
@@ -1721,13 +1825,13 @@ var ElvWalletClient = /*#__PURE__*/function () {
     key: "Initialize",
     value: function () {
       var _Initialize = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18(_ref18) {
-        var _ref18$appId, appId, _ref18$network, network, _ref18$mode, mode, marketplaceParams, _ref18$storeAuthToken, storeAuthToken, _ref19, tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash, client, walletClient, url, savedToken;
+        var client, _ref18$appId, appId, _ref18$network, network, _ref18$mode, mode, marketplaceParams, previewMarketplaceId, _ref18$storeAuthToken, storeAuthToken, _ref19, tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash, previewMarketplaceHash, walletClient, url, savedToken;
 
         return _regeneratorRuntime.wrap(function _callee18$(_context18) {
           while (1) {
             switch (_context18.prev = _context18.next) {
               case 0:
-                _ref18$appId = _ref18.appId, appId = _ref18$appId === void 0 ? "general" : _ref18$appId, _ref18$network = _ref18.network, network = _ref18$network === void 0 ? "main" : _ref18$network, _ref18$mode = _ref18.mode, mode = _ref18$mode === void 0 ? "production" : _ref18$mode, marketplaceParams = _ref18.marketplaceParams, _ref18$storeAuthToken = _ref18.storeAuthToken, storeAuthToken = _ref18$storeAuthToken === void 0 ? true : _ref18$storeAuthToken;
+                client = _ref18.client, _ref18$appId = _ref18.appId, appId = _ref18$appId === void 0 ? "general" : _ref18$appId, _ref18$network = _ref18.network, network = _ref18$network === void 0 ? "main" : _ref18$network, _ref18$mode = _ref18.mode, mode = _ref18$mode === void 0 ? "production" : _ref18$mode, marketplaceParams = _ref18.marketplaceParams, previewMarketplaceId = _ref18.previewMarketplaceId, _ref18$storeAuthToken = _ref18.storeAuthToken, storeAuthToken = _ref18$storeAuthToken === void 0 ? true : _ref18$storeAuthToken;
                 _ref19 = marketplaceParams || {}, tenantSlug = _ref19.tenantSlug, marketplaceSlug = _ref19.marketplaceSlug, marketplaceId = _ref19.marketplaceId, marketplaceHash = _ref19.marketplaceHash;
 
                 if (Configuration[network]) {
@@ -1746,14 +1850,37 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 throw Error("ElvWalletClient: Invalid mode ".concat(mode));
 
               case 8:
-                _context18.next = 10;
+                if (client) {
+                  _context18.next = 12;
+                  break;
+                }
+
+                _context18.next = 11;
                 return ElvClient.FromNetworkName({
                   networkName: network,
                   assumeV3: true
                 });
 
-              case 10:
+              case 11:
                 client = _context18.sent;
+
+              case 12:
+                previewMarketplaceHash = previewMarketplaceId;
+
+                if (!(previewMarketplaceHash && !previewMarketplaceHash.startsWith("hq__"))) {
+                  _context18.next = 17;
+                  break;
+                }
+
+                _context18.next = 16;
+                return client.LatestVersionHash({
+                  objectId: previewMarketplaceId
+                });
+
+              case 16:
+                previewMarketplaceHash = _context18.sent;
+
+              case 17:
                 walletClient = new ElvWalletClient({
                   appId: appId,
                   client: client,
@@ -1765,73 +1892,74 @@ var ElvWalletClient = /*#__PURE__*/function () {
                     marketplaceId: marketplaceHash ? client.utils.DecodeVersionHash(marketplaceHash).objectId : marketplaceId,
                     marketplaceHash: marketplaceHash
                   },
+                  previewMarketplaceHash: previewMarketplaceHash,
                   storeAuthToken: storeAuthToken
                 });
 
                 if (!(inBrowser && window.location && window.location.href)) {
-                  _context18.next = 31;
+                  _context18.next = 37;
                   break;
                 }
 
                 url = new URL(window.location.href);
 
                 if (!url.searchParams.get("elvToken")) {
-                  _context18.next = 21;
-                  break;
-                }
-
-                _context18.next = 17;
-                return walletClient.Authenticate({
-                  token: url.searchParams.get("elvToken")
-                });
-
-              case 17:
-                url.searchParams["delete"]("elvToken");
-                window.history.replaceState("", "", url);
-                _context18.next = 31;
-                break;
-
-              case 21:
-                if (!(storeAuthToken && typeof localStorage !== "undefined")) {
-                  _context18.next = 31;
-                  break;
-                }
-
-                _context18.prev = 22;
-                // Load saved auth token
-                savedToken = localStorage.getItem("__elv-token-".concat(network));
-
-                if (!savedToken) {
                   _context18.next = 27;
                   break;
                 }
 
-                _context18.next = 27;
+                _context18.next = 23;
+                return walletClient.Authenticate({
+                  token: url.searchParams.get("elvToken")
+                });
+
+              case 23:
+                url.searchParams["delete"]("elvToken");
+                window.history.replaceState("", "", url);
+                _context18.next = 37;
+                break;
+
+              case 27:
+                if (!(storeAuthToken && localStorageAvailable)) {
+                  _context18.next = 37;
+                  break;
+                }
+
+                _context18.prev = 28;
+                // Load saved auth token
+                savedToken = localStorage.getItem("__elv-token-".concat(network));
+
+                if (!savedToken) {
+                  _context18.next = 33;
+                  break;
+                }
+
+                _context18.next = 33;
                 return walletClient.Authenticate({
                   token: savedToken
                 });
 
-              case 27:
-                _context18.next = 31;
+              case 33:
+                _context18.next = 37;
                 break;
 
-              case 29:
-                _context18.prev = 29;
-                _context18.t0 = _context18["catch"](22);
+              case 35:
+                _context18.prev = 35;
+                _context18.t0 = _context18["catch"](28);
 
-              case 31:
-                _context18.next = 33;
+              case 37:
+                _context18.next = 39;
                 return walletClient.LoadAvailableMarketplaces();
 
-              case 33:
+              case 39:
                 return _context18.abrupt("return", walletClient);
 
-              case 34:
+              case 40:
               case "end":
                 return _context18.stop();
             }
           }
-        }, _callee18, null, [[22, 29]]);
+        }, _callee18, null, [[28, 35]]);
       }));
 
       function Initialize(_x21) {
@@ -1847,4 +1975,5 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
 Object.assign(ElvWalletClient.prototype, require("./ClientMethods"));
 Object.assign(ElvWalletClient.prototype, require("./Profile"));
+Object.assign(ElvWalletClient.prototype, require("./Notifications"));
 exports.ElvWalletClient = ElvWalletClient;

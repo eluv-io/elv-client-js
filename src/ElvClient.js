@@ -750,6 +750,22 @@ class ElvClient {
     json                    79b  {"adr":"VVf4DQU357tDnZGYQeDrntRJ5rs=","spc":"ispc3ANoVSzNA3P6t7abLR69ho5YPPZU"}
    */
 
+  async PersonalSign({
+    message,
+    addEthereumPrefix,
+    Sign
+  }) {
+    if(!Sign) {
+      Sign = async message => this.authClient.Sign(message);
+    }
+
+    if(addEthereumPrefix) {
+      message = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${message.length}${message}`, "utf-8"));
+    }
+
+    return await Sign(message);
+  }
+
   /**
    * Create a signed authorization token that can be used to authorize against the fabric
    *
@@ -779,17 +795,9 @@ class ElvClient {
       exp: Date.now() + duration,
     };
 
-    if(!Sign) {
-      Sign = async message => this.authClient.Sign(message);
-    }
-
     let message = `Eluvio Content Fabric Access Token 1.0\n${JSON.stringify(token)}`;
 
-    if(addEthereumPrefix) {
-      message = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${message.length}${message}`, "utf-8"));
-    }
-
-    const signature = await Sign(message);
+    const signature = await this.PersonalSign({message, addEthereumPrefix, Sign});
 
     const compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
     return `acspjc${this.utils.B58(
@@ -1032,7 +1040,7 @@ class ElvClient {
 
     ValidatePresence("message", message);
 
-    return await this.Crypto.EncryptConk(message, publicKey || this.signer.signingKey.keyPair.publicKey);
+    return await this.Crypto.EncryptConk(message, publicKey || this.signer._signingKey().publicKey);
   }
 
   /**
@@ -1050,7 +1058,7 @@ class ElvClient {
 
     ValidatePresence("message", message);
 
-    return await this.Crypto.DecryptCap(message, this.signer.signingKey.privateKey);
+    return await this.Crypto.DecryptCap(message, this.signer._signingKey().privateKey);
   }
 
   /**
@@ -1095,6 +1103,7 @@ class ElvClient {
       "GenerateWallet",
       "InitializeClients",
       "Log",
+      "PersonalSign",
       "SetRemoteSigner",
       "SetSigner",
       "SetSignerFromWeb3Provider",

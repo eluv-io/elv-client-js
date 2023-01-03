@@ -65,13 +65,24 @@ var FormatNFTDetails = function FormatNFTDetails(entry) {
   var isListing = !!entry.id;
   var metadata = (isListing ? entry.nft : entry.meta) || {};
   var info = isListing ? entry.info : entry;
+  var paymentAccounts = entry.accepts || [];
   var details = {
-    USDCAccepted: !!(entry.accepts || []).find(function (entry) {
-      return entry.type === "sol";
+    USDCAccepted: paymentAccounts.length > 0,
+    USDCOnly: !!paymentAccounts.find(function (entry) {
+      return entry.preferred;
     }),
-    USDCOnly: ((entry.accepts || []).find(function (entry) {
-      return entry.type === "sol";
-    }) || {}).preferred,
+    EthUSDCAccepted: !!paymentAccounts.find(function (account) {
+      return account.type === "eth";
+    }),
+    EthUSDCOnly: !!paymentAccounts.find(function (account) {
+      return account.type === "eth" && account.preferred;
+    }),
+    SolUSDCAccepted: !!paymentAccounts.find(function (account) {
+      return account.type === "eth";
+    }),
+    SolUSDCOnly: !!paymentAccounts.find(function (account) {
+      return account.type === "eth" && account.preferred;
+    }),
     TenantId: entry.tenant || entry.tenant_id,
     ContractAddr: info.contract_addr,
     ContractId: "ictr".concat(Utils.AddressToHash(info.contract_addr)),
@@ -99,6 +110,8 @@ var FormatNFTDetails = function FormatNFTDetails(entry) {
       Price: entry.price,
       Fee: entry.fee
     });
+  } else {
+    details.Offers = info.offers || [];
   }
 
   return {

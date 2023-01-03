@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 // initialize abr mezzaninewithout uploading any files
 // - use to turn a manually created object into an abr mezzanine
 
@@ -18,7 +19,7 @@ const ABRMezzanineInit = async (libraryId, objectId, productionMasterHash, produ
     });
     await client.SetSigner({signer});
 
-    console.log("\nCalling production_master/init");
+    console.log("\nCalling abr_mezzanine/init");
 
     try {
 
@@ -37,7 +38,7 @@ const ABRMezzanineInit = async (libraryId, objectId, productionMasterHash, produ
 
       // ** temporary workaround for server permissions issue **
       const production_master = masterMetaData["production_master"];
-      const masterName = masterMetaData["name"];
+      // const masterName = masterMetaData["name"];
       // const production_master_files = masterMetaData["fies"];
 
       // get master object name
