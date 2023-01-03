@@ -14,8 +14,8 @@ class HttpClient {
     this.draftURIs = {};
   }
 
-  BaseURI() {
-    return new URI(this.uris[this.uriIndex]);
+  BaseURI(url) {
+    return new URI(url || this.uris[this.uriIndex]);
   }
 
   static Fetch(url, params={}) {
@@ -49,9 +49,10 @@ class HttpClient {
     headers={},
     attempts=0,
     failover=true,
-    forceFailover=false
+    forceFailover=false,
+    nodeUrl
   }) {
-    let baseURI = this.BaseURI();
+    let baseURI = this.BaseURI(nodeUrl);
 
     // If URL contains a write token, it must go to the correct server and can not fail over
     const writeTokenMatch = path.replace(/^\//, "").match(/(qlibs\/ilib[a-zA-Z0-9]+|q|qid)\/(tqw__[a-zA-Z0-9]+)/);
