@@ -799,13 +799,11 @@ class AuthorizationClient {
     return Utils.FormatAddress(ownerAddress);
   }
 
-  async Sign(message) {
-    if(!this.client.signer.signDigest) {
+  async SignDigest(message) {
+    if(!this.client.signer.signDigest && !this.client.signer.signingKey.signDigest) {
       const signer = this.client.signer;
       let signDigest;
-      if(signer.signingKey && signer.signingKey.signDigest) {
-        signDigest = signer.signingKey.signDigest;
-      } else if(signer.provider && signer.provider.request && signer.address) {
+      if(signer.provider && signer.provider.request && signer.address) {
         signDigest = (_message) => {
           return signer.provider.request({
             method: "personal_sign",
@@ -820,12 +818,18 @@ class AuthorizationClient {
           });
         };
       } else {
-        throw Error("Unable to Sign(), SignDigest() not available; did you set a valid provider?");
+        throw Error("SignDigest() not available; did you set a valid provider?");
       }
-      this.client.signer.signDigest = signDigest;
+      return signDigest(message);
     }
 
-    return Ethers.utils.joinSignature(await this.client.signer.signDigest(message));
+    return this.client.signer.signDigest ?
+      await this.client.signer.signDigest(message) :
+      await this.client.signer.signingKey.signDigest(message);
+  }
+
+  async Sign(message) {
+    return Ethers.utils.joinSignature(await this.SignDigest(message));
   }
 
   async KMSAddress({objectId, versionHash}) {
