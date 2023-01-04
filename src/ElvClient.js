@@ -492,11 +492,11 @@ class ElvClient {
   }
 
   /**
-   * Retrieve the fabric and ethereum nodes currently used by the client, in preference order
+   * Retrieve the fabric, ethereum, auth service, and search nodes currently used by the client, in preference order
    *
    * @methodGroup Nodes
    *
-   * @return {Promise<Object>} - An object containing the lists of fabric and ethereum urls in use by the client
+   * @return {Promise<Object>} - An object containing the lists of fabric, ethereum, auth service, and search urls in use by the client
    */
   Nodes() {
     return {
