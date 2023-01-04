@@ -89,6 +89,14 @@ class FrameClient {
         });
       };
     }
+
+    this.httpClient = {};
+    for(const httpMethodName of this.AllowedHttpClientMethods()) {
+      this.httpClient[httpMethodName] = async (args) => {
+        let callback = args && args.callback;
+        if(callback) { delete args.callback; }
+      };
+    }
   }
 
   /**
@@ -477,9 +485,15 @@ class FrameClient {
       "WalletAddress"
     ];
   }
+
+  AllowedHttpClientMethods() {
+    return [
+      "RecordWriteToken"
+    ];
+  }
 }
 
 const { UploadFiles } = require("./client/Files");
-FrameClient.prototype.UploadFiles=UploadFiles;
+FrameClient.prototype.UploadFiles = UploadFiles;
 
 exports.FrameClient = FrameClient;

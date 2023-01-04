@@ -126,7 +126,8 @@ class ElvClient {
    *
    * @namedParams
    * @param {string} contentSpaceId - ID of the content space
-   * @param {string} contentSpaceId - ID of the blockchain network
+   * @param {string} networkId - ID of the blockchain network
+   * @param {string} networkName - Name of the blockchain network
    * @param {number} fabricVersion - The version of the target content fabric
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
@@ -501,7 +502,8 @@ class ElvClient {
     return {
       fabricURIs: this.fabricURIs,
       ethereumURIs: this.ethereumURIs,
-      authServiceURIs: this.authServiceURIs
+      authServiceURIs: this.authServiceURIs,
+      searchURIs: this.searchURIs
     };
   }
 
