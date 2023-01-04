@@ -87,7 +87,8 @@ var ElvClient = /*#__PURE__*/function () {
    * @param {number} fabricVersion - The version of the target content fabric
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
-   * @param {Array<string>} ethereumURIs - A list of full URIs to auth service endpoints
+   * @param {Array<string>} authServiceURIs - A list of full URIs to auth service endpoints
+   * @param {Array<string>=} searchURIs - A list of full URIs to search service endpoints
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
@@ -104,6 +105,7 @@ var ElvClient = /*#__PURE__*/function () {
         fabricURIs = _ref.fabricURIs,
         ethereumURIs = _ref.ethereumURIs,
         authServiceURIs = _ref.authServiceURIs,
+        searchURIs = _ref.searchURIs,
         _ref$ethereumContract = _ref.ethereumContractTimeout,
         ethereumContractTimeout = _ref$ethereumContract === void 0 ? 10 : _ref$ethereumContract,
         trustAuthorityId = _ref.trustAuthorityId,
@@ -128,6 +130,7 @@ var ElvClient = /*#__PURE__*/function () {
     this.fabricURIs = fabricURIs;
     this.authServiceURIs = authServiceURIs;
     this.ethereumURIs = ethereumURIs;
+    this.searchURIs = searchURIs;
     this.ethereumContractTimeout = ethereumContractTimeout;
     this.trustAuthorityId = trustAuthorityId;
     this.noCache = noCache;
@@ -364,7 +367,7 @@ var ElvClient = /*#__PURE__*/function () {
     key: "UseRegion",
     value: function () {
       var _UseRegion = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(_ref4) {
-        var region, _yield$ElvClient$Conf, fabricURIs, ethereumURIs, authServiceURIs;
+        var region, _yield$ElvClient$Conf, fabricURIs, ethereumURIs, authServiceURIs, searchURIs;
 
         return _regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
@@ -391,19 +394,22 @@ var ElvClient = /*#__PURE__*/function () {
                 fabricURIs = _yield$ElvClient$Conf.fabricURIs;
                 ethereumURIs = _yield$ElvClient$Conf.ethereumURIs;
                 authServiceURIs = _yield$ElvClient$Conf.authServiceURIs;
+                searchURIs = _yield$ElvClient$Conf.searchURIs;
                 this.authServiceURIs = authServiceURIs;
                 this.fabricURIs = fabricURIs;
                 this.ethereumURIs = ethereumURIs;
+                this.searchURIs = searchURIs;
                 this.HttpClient.uris = fabricURIs;
                 this.HttpClient.uriIndex = 0;
                 this.ethClient.ethereumURIs = ethereumURIs;
                 this.ethClient.ethereumURIIndex = 0;
                 return _context3.abrupt("return", {
                   fabricURIs: fabricURIs,
-                  ethereumURIs: ethereumURIs
+                  ethereumURIs: ethereumURIs,
+                  searchURIs: searchURIs
                 });
 
-              case 17:
+              case 19:
               case "end":
                 return _context3.stop();
             }
@@ -1715,7 +1721,7 @@ var ElvClient = /*#__PURE__*/function () {
     key: "Configuration",
     value: function () {
       var _Configuration = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee21(_ref22) {
-        var configUrl, _ref22$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs, authServiceURIs, fabricVersion;
+        var configUrl, _ref22$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs, authServiceURIs, searchURIs, fabricVersion;
 
         return _regeneratorRuntime.wrap(function _callee21$(_context21) {
           while (1) {
@@ -1759,6 +1765,7 @@ var ElvClient = /*#__PURE__*/function () {
                   authServiceURIs = authServiceURIs.filter(filterHTTPS);
                 }
 
+                searchURIs = fabricInfo.network.services.search || [];
                 fabricVersion = Math.max.apply(Math, _toConsumableArray(fabricInfo.network.api_versions || [2]));
                 return _context21.abrupt("return", {
                   nodeId: fabricInfo.node_id,
@@ -1769,11 +1776,12 @@ var ElvClient = /*#__PURE__*/function () {
                   ethereumURIs: ethereumURIs,
                   authServiceURIs: authServiceURIs,
                   kmsURIs: kmsUrls,
+                  searchURIs: searchURIs,
                   fabricVersion: fabricVersion
                 });
 
-              case 19:
-                _context21.prev = 19;
+              case 20:
+                _context21.prev = 20;
                 _context21.t0 = _context21["catch"](1);
                 // eslint-disable-next-line no-console
                 console.error("Error retrieving fabric configuration:"); // eslint-disable-next-line no-console
@@ -1781,12 +1789,12 @@ var ElvClient = /*#__PURE__*/function () {
                 console.error(_context21.t0);
                 throw _context21.t0;
 
-              case 24:
+              case 25:
               case "end":
                 return _context21.stop();
             }
           }
-        }, _callee21, null, [[1, 19]]);
+        }, _callee21, null, [[1, 20]]);
       }));
 
       function Configuration(_x18) {
@@ -1881,7 +1889,7 @@ var ElvClient = /*#__PURE__*/function () {
     key: "FromConfigurationUrl",
     value: function () {
       var _FromConfigurationUrl = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee23(_ref24) {
-        var configUrl, region, trustAuthorityId, staticToken, _ref24$ethereumContra, ethereumContractTimeout, _ref24$noCache, noCache, _ref24$noAuth, noAuth, _ref24$assumeV, assumeV3, _yield$ElvClient$Conf3, contentSpaceId, networkId, networkName, fabricURIs, ethereumURIs, authServiceURIs, fabricVersion, client;
+        var configUrl, region, trustAuthorityId, staticToken, _ref24$ethereumContra, ethereumContractTimeout, _ref24$noCache, noCache, _ref24$noAuth, noAuth, _ref24$assumeV, assumeV3, _yield$ElvClient$Conf3, contentSpaceId, networkId, networkName, fabricURIs, ethereumURIs, authServiceURIs, searchURIs, fabricVersion, client;
 
         return _regeneratorRuntime.wrap(function _callee23$(_context23) {
           while (1) {
@@ -1902,6 +1910,7 @@ var ElvClient = /*#__PURE__*/function () {
                 fabricURIs = _yield$ElvClient$Conf3.fabricURIs;
                 ethereumURIs = _yield$ElvClient$Conf3.ethereumURIs;
                 authServiceURIs = _yield$ElvClient$Conf3.authServiceURIs;
+                searchURIs = _yield$ElvClient$Conf3.searchURIs;
                 fabricVersion = _yield$ElvClient$Conf3.fabricVersion;
                 client = new ElvClient({
                   contentSpaceId: contentSpaceId,
@@ -1911,6 +1920,7 @@ var ElvClient = /*#__PURE__*/function () {
                   fabricURIs: fabricURIs,
                   ethereumURIs: ethereumURIs,
                   authServiceURIs: authServiceURIs,
+                  searchURIs: searchURIs,
                   ethereumContractTimeout: ethereumContractTimeout,
                   trustAuthorityId: trustAuthorityId,
                   staticToken: staticToken,
@@ -1921,7 +1931,7 @@ var ElvClient = /*#__PURE__*/function () {
                 client.configUrl = configUrl;
                 return _context23.abrupt("return", client);
 
-              case 14:
+              case 15:
               case "end":
                 return _context23.stop();
             }

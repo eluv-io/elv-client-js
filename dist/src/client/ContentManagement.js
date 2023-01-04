@@ -1428,6 +1428,7 @@ exports.CreateNonOwnerCap = /*#__PURE__*/function () {
  * @param {object=} options -
  * meta: New metadata for the object - will be merged into existing metadata if specified
  * type: New type for the object - Object ID, version hash or name of type
+ * nodeUrl: Node URL to use in HTTP call
  *
  * @returns {Promise<object>} - Response containing the object ID and write token of the draft, as well as URL of node handling the draft
  */
@@ -1517,26 +1518,28 @@ exports.EditContentObject = /*#__PURE__*/function () {
             _context15.t1 = _context15.sent;
             _context15.t2 = path;
             _context15.t3 = options;
-            _context15.t4 = {
+            _context15.t4 = options.nodeUrl;
+            _context15.t5 = {
               headers: _context15.t1,
               method: "POST",
               path: _context15.t2,
-              body: _context15.t3
+              body: _context15.t3,
+              nodeUrl: _context15.t4
             };
-            _context15.next = 33;
-            return _context15.t0.Request.call(_context15.t0, _context15.t4);
+            _context15.next = 34;
+            return _context15.t0.Request.call(_context15.t0, _context15.t5);
 
-          case 33:
+          case 34:
             rawEditResponse = _context15.sent;
             actualUrl = new URL(rawEditResponse.url);
             actualUrl.pathname = "";
             actualUrl.search = "";
             actualUrl.hash = "";
             nodeUrl = actualUrl.href;
-            _context15.next = 41;
+            _context15.next = 42;
             return this.utils.ResponseToJson(rawEditResponse);
 
-          case 41:
+          case 42:
             editResponse = _context15.sent;
             // Record the node used in creating this write token
             this.HttpClient.RecordWriteToken(editResponse.write_token, nodeUrl);
@@ -1545,7 +1548,7 @@ exports.EditContentObject = /*#__PURE__*/function () {
             editResponse.nodeUrl = nodeUrl;
             return _context15.abrupt("return", editResponse);
 
-          case 47:
+          case 48:
           case "end":
             return _context15.stop();
         }
