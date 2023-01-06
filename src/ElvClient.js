@@ -1056,6 +1056,18 @@ class ElvClient {
     );
   }
 
+  /**
+   * Record the write token with node url to the HttpClient
+   *
+   * @param {string} writeToken - Write token to be cached
+   * @param {string=} nodeUrlStr - If provided, this node url
+   * will be associated with the provided write token, which will
+   * be used in subsequent HTTP calls
+   */
+  RecordWriteToken(writeToken, nodeUrlStr) {
+    this.HttpClient.RecordWriteToken(writeToken, nodeUrlStr);
+  }
+
   /* FrameClient related */
 
   // Whitelist of methods allowed to be called using the frame API

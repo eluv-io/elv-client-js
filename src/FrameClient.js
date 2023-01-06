@@ -89,14 +89,6 @@ class FrameClient {
         });
       };
     }
-
-    this.httpClient = {};
-    for(const httpMethodName of this.AllowedHttpClientMethods()) {
-      this.httpClient[httpMethodName] = async (args) => {
-        let callback = args && args.callback;
-        if(callback) { delete args.callback; }
-      };
-    }
   }
 
   /**
@@ -424,6 +416,7 @@ class FrameClient {
       "PublicRep",
       "PublishContentVersion",
       "QParts",
+      "RecordWriteToken",
       "RedeemCode",
       "RemoveAccessGroupManager",
       "RemoveAccessGroupMember",
@@ -483,12 +476,6 @@ class FrameClient {
       "UserWalletAddress",
       "UserWalletObjectInfo",
       "WalletAddress"
-    ];
-  }
-
-  AllowedHttpClientMethods() {
-    return [
-      "RecordWriteToken"
     ];
   }
 }
