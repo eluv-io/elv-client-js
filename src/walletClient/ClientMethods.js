@@ -1379,5 +1379,5 @@ exports.RemoveMarketplaceOffer = async function({offerId}) {
     headers: {
       Authorization: `Bearer ${this.AuthToken()}`
     }
-  })
+  });
 };
