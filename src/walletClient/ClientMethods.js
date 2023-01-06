@@ -1291,3 +1291,93 @@ exports.DropStatus = async function({marketplace, eventId, dropId}) {
     return "";
   }
 };
+
+
+/* OFFERS */
+// TODO: Document
+
+exports.MarketplaceOffers = async function({contractAddress, tokenId, statuses=["ACTIVE", "DECLINED", "EXPIRED"]}) {
+  const offers = await Utils.ResponseToJson(
+    this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "mkt", "offers", "ls", "c", contractAddress, tokenId ? `t/${tokenId}` : ""),
+      method: "GET"
+    })
+  );
+
+  return offers
+    .filter(offer => offer.status && statuses.includes(offer.status))
+    .map(offer => ({
+      ...offer,
+      created: offer.created * 1000,
+      updated: offer.updated * 1000,
+      expiration: offer.expiration * 1000
+    }));
+};
+
+exports.UserMarketplaceOffers = async function({statuses=["ACTIVE", "DECLINED", "EXPIRED"]}) {
+  const offers = await Utils.ResponseToJson(
+    this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "wlt", "mkt", "offers"),
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${this.AuthToken()}`
+      }
+    })
+  );
+
+  return offers
+    .filter(offer => offer.status && statuses.includes(offer.status))
+    .map(offer => ({
+      ...offer,
+      created: offer.created * 1000,
+      updated: offer.updated * 1000,
+      expiration: offer.expiration * 1000
+    }));
+};
+
+exports.CreateMarketplaceOffer = async function({contractAddress, tokenId, offerId, price, expiresAt}) {
+  let response;
+  if(offerId) {
+    response = await Utils.ResponseToJson(
+      this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "mkt", "offers", offerId),
+        method: "PUT",
+        body: {
+          price,
+          expiration: Math.floor(expiresAt / 1000)
+        },
+        headers: {
+          Authorization: `Bearer ${this.AuthToken()}`
+        }
+      })
+    );
+  } else {
+    response = await Utils.ResponseToJson(
+      this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "mkt", "offers", contractAddress, tokenId),
+        method: "POST",
+        body: {
+          contract: contractAddress,
+          token: tokenId,
+          price,
+          expiration: Math.floor(expiresAt / 1000)
+        },
+        headers: {
+          Authorization: `Bearer ${this.AuthToken()}`
+        }
+      })
+    );
+  }
+
+  return response.offer_id;
+};
+
+exports.RemoveMarketplaceOffer = async function({offerId}) {
+  return await this.client.authClient.MakeAuthServiceRequest({
+    path: UrlJoin("as", "wlt", "mkt", "offers", offerId),
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${this.AuthToken()}`
+    }
+  })
+};
