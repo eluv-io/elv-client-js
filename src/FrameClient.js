@@ -416,6 +416,7 @@ class FrameClient {
       "PublicRep",
       "PublishContentVersion",
       "QParts",
+      "RecordWriteToken",
       "RedeemCode",
       "RemoveAccessGroupManager",
       "RemoveAccessGroupMember",
@@ -480,6 +481,6 @@ class FrameClient {
 }
 
 const { UploadFiles } = require("./client/Files");
-FrameClient.prototype.UploadFiles=UploadFiles;
+FrameClient.prototype.UploadFiles = UploadFiles;
 
 exports.FrameClient = FrameClient;
