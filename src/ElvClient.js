@@ -126,7 +126,8 @@ class ElvClient {
    *
    * @namedParams
    * @param {string} contentSpaceId - ID of the content space
-   * @param {string} contentSpaceId - ID of the blockchain network
+   * @param {string} networkId - ID of the blockchain network
+   * @param {string} networkName - Name of the blockchain network
    * @param {number} fabricVersion - The version of the target content fabric
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
@@ -491,17 +492,18 @@ class ElvClient {
   }
 
   /**
-   * Retrieve the fabric and ethereum nodes currently used by the client, in preference order
+   * Retrieve the fabric, ethereum, auth service, and search nodes currently used by the client, in preference order
    *
    * @methodGroup Nodes
    *
-   * @return {Promise<Object>} - An object containing the lists of fabric and ethereum urls in use by the client
+   * @return {Promise<Object>} - An object containing the lists of fabric, ethereum, auth service, and search urls in use by the client
    */
   Nodes() {
     return {
       fabricURIs: this.fabricURIs,
       ethereumURIs: this.ethereumURIs,
-      authServiceURIs: this.authServiceURIs
+      authServiceURIs: this.authServiceURIs,
+      searchURIs: this.searchURIs
     };
   }
 
@@ -1052,6 +1054,18 @@ class ElvClient {
         }
       )
     );
+  }
+
+  /**
+   * Record the write token with node url to the HttpClient
+   *
+   * @param {string} writeToken - Write token to be cached
+   * @param {string=} nodeUrlStr - If provided, this node url
+   * will be associated with the provided write token, which will
+   * be used in subsequent HTTP calls
+   */
+  RecordWriteToken(writeToken, nodeUrlStr) {
+    this.HttpClient.RecordWriteToken(writeToken, nodeUrlStr);
   }
 
   /* FrameClient related */
