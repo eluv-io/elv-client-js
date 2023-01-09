@@ -66,7 +66,7 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
   if(!this.loggedIn) { return; }
 
   // eslint-disable-next-line no-unused-vars
-  const { balance, usage_hold, payout_hold, stripe_id, stripe_payouts_enabled } = await this.client.utils.ResponseToJson(
+  const { balance, usage_hold, payout_hold, locked_offer_balance, stripe_id, stripe_payouts_enabled } = await this.client.utils.ResponseToJson(
     await this.client.authClient.MakeAuthServiceRequest({
       path: UrlJoin("as", "wlt", "mkt", "bal"),
       method: "GET",
@@ -79,7 +79,8 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
   const userStripeId = stripe_id;
   const userStripeEnabled = stripe_payouts_enabled;
   const totalWalletBalance = parseFloat(balance || 0);
-  const availableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(usage_hold || 0));
+  const lockedWalletBalance = parseFloat(locked_offer_balance || 0);
+  const availableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(usage_hold || 0) - lockedWalletBalance);
   const pendingWalletBalance = Math.max(0, totalWalletBalance - availableWalletBalance);
   const withdrawableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(payout_hold || 0));
 
@@ -106,6 +107,7 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
   let balances = {
     totalWalletBalance,
     availableWalletBalance,
+    lockedWalletBalance,
     pendingWalletBalance,
     withdrawableWalletBalance,
   };
@@ -1296,37 +1298,40 @@ exports.DropStatus = async function({marketplace, eventId, dropId}) {
 /* OFFERS */
 // TODO: Document
 
-exports.MarketplaceOffers = async function({contractAddress, tokenId, statuses=["ACTIVE", "DECLINED", "EXPIRED"]}) {
+exports.MarketplaceOffers = async function({contractAddress, tokenId, buyerAddress, sellerAddress, statuses, start=0, limit=10}) {
+  let path = UrlJoin("as", "mkt", "offers", "ls");
+  if(buyerAddress) {
+    path = UrlJoin(path, "b", Utils.FormatAddress(buyerAddress));
+  } else if(sellerAddress) {
+    path = UrlJoin(path, "s", Utils.FormatAddress(sellerAddress));
+  }
+
+  if(contractAddress) {
+    path = UrlJoin(path, "c", Utils.FormatAddress(contractAddress));
+
+    if(tokenId) {
+      path = UrlJoin(path, "t", tokenId);
+    }
+  }
+
+  let queryParams = {
+    start,
+    limit
+  };
+
+  if(statuses && statuses.length > 0) {
+    queryParams.include = statuses.join(",");
+  }
+
   const offers = await Utils.ResponseToJson(
     this.client.authClient.MakeAuthServiceRequest({
-      path: UrlJoin("as", "mkt", "offers", "ls", "c", contractAddress, tokenId ? `t/${tokenId}` : ""),
-      method: "GET"
-    })
-  );
-
-  return offers
-    .filter(offer => offer.status && statuses.includes(offer.status))
-    .map(offer => ({
-      ...offer,
-      created: offer.created * 1000,
-      updated: offer.updated * 1000,
-      expiration: offer.expiration * 1000
-    }));
-};
-
-exports.UserMarketplaceOffers = async function({statuses=["ACTIVE", "DECLINED", "EXPIRED"]}) {
-  const offers = await Utils.ResponseToJson(
-    this.client.authClient.MakeAuthServiceRequest({
-      path: UrlJoin("as", "wlt", "mkt", "offers"),
+      path: path,
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${this.AuthToken()}`
-      }
+      queryParams
     })
   );
 
   return offers
-    .filter(offer => offer.status && statuses.includes(offer.status))
     .map(offer => ({
       ...offer,
       created: offer.created * 1000,
@@ -1376,6 +1381,27 @@ exports.RemoveMarketplaceOffer = async function({offerId}) {
   return await this.client.authClient.MakeAuthServiceRequest({
     path: UrlJoin("as", "wlt", "mkt", "offers", offerId),
     method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${this.AuthToken()}`
+    }
+  });
+};
+
+
+exports.AcceptMarketplaceOffer = async function({offerId}) {
+  return await this.client.authClient.MakeAuthServiceRequest({
+    path: UrlJoin("as", "wlt", "mkt", "offers", "accept", offerId),
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${this.AuthToken()}`
+    }
+  });
+};
+
+exports.RejectMarketplaceOffer = async function({offerId}) {
+  return await this.client.authClient.MakeAuthServiceRequest({
+    path: UrlJoin("as", "wlt", "mkt", "offers", "decline", offerId),
+    method: "PUT",
     headers: {
       Authorization: `Bearer ${this.AuthToken()}`
     }
