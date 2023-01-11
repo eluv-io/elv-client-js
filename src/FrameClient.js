@@ -416,7 +416,6 @@ class FrameClient {
       "PublicRep",
       "PublishContentVersion",
       "QParts",
-      "RecordWriteToken",
       "RedeemCode",
       "RemoveAccessGroupManager",
       "RemoveAccessGroupMember",

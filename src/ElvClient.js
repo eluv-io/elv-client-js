@@ -138,6 +138,9 @@ class ElvClient {
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+   * @param {boolean=} assumeV3=false - If enabled, V3 fabric will be assumed
+   * @param {string=} clientMode=default - The mode that determines how HttpClient will be initialized.
+   * If 'default' is set, HttpClient uris will use fabricUris. If 'search' is used, searchUris will be used
    *
    * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
    */
@@ -155,7 +158,8 @@ class ElvClient {
     staticToken,
     noCache=false,
     noAuth=false,
-    assumeV3=false
+    assumeV3=false,
+    clientMode="default"
   }) {
     this.utils = Utils;
 
@@ -180,6 +184,7 @@ class ElvClient {
     this.noCache = noCache;
     this.noAuth = noAuth;
     this.assumeV3 = assumeV3;
+    this.clientMode = clientMode;
 
     this.debug = false;
 
@@ -373,7 +378,8 @@ class ElvClient {
     this.visibilityInfo = {};
     this.inaccessibleLibraries = {};
 
-    this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
+    const uris = this.clientMode === "search" ? this.searchURIs : this.fabricURIs;
+    this.HttpClient = new HttpClient({uris, debug: this.debug});
     this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, networkId: this.networkId, debug: this.debug, timeout: this.ethereumContractTimeout});
 
@@ -423,7 +429,7 @@ class ElvClient {
    * @param {string} region - Preferred region - the fabric will auto-detect the best region if not specified
    * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
    *
-   * @return {Promise<Object>} - An object containing the updated fabric and ethereum URLs in order of preference
+   * @return {Promise<Object>} - An object containing the updated fabric, ethereum, auth service, and search URLs in order of preference
    */
   async UseRegion({region}) {
     if(!this.configUrl) {
@@ -508,16 +514,17 @@ class ElvClient {
   }
 
   /**
-   * Set the client to use the specified fabric and ethereum nodes, in preference order
+   * Set the client to use the specified fabric, ethereum, auth service, and search nodes, in preference order
    *
    * @namedParams
    * @param {Array<string>=} fabricURIs - A list of URLs for the fabric, in preference order
    * @param {Array<string>=} ethereumURIs - A list of URLs for the blockchain, in preference order
    * @param {Array<string>=} authServiceURIs - A list of URLs for the auth service, in preference order
+   * @param {Array<string>=} searchURIs - A list of URLs for the search nodes, in preference order
    *
    * @methodGroup Nodes
    */
-  SetNodes({fabricURIs, ethereumURIs, authServiceURIs}) {
+  SetNodes({fabricURIs, ethereumURIs, authServiceURIs, searchURIs}) {
     if(fabricURIs) {
       this.fabricURIs = fabricURIs;
 
@@ -536,6 +543,10 @@ class ElvClient {
       this.authServiceURIs = authServiceURIs;
       this.AuthHttpClient.uris = authServiceURIs;
       this.AuthHttpClient.uriIndex = 0;
+    }
+
+    if(searchURIs) {
+      this.searchURIs = searchURIs;
     }
   }
 
@@ -1054,18 +1065,6 @@ class ElvClient {
         }
       )
     );
-  }
-
-  /**
-   * Record the write token with node url to the HttpClient
-   *
-   * @param {string} writeToken - Write token to be cached
-   * @param {string=} nodeUrlStr - If provided, this node url
-   * will be associated with the provided write token, which will
-   * be used in subsequent HTTP calls
-   */
-  RecordWriteToken(writeToken, nodeUrlStr) {
-    this.HttpClient.RecordWriteToken(writeToken, nodeUrlStr);
   }
 
   /* FrameClient related */
