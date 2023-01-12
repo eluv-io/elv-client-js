@@ -139,7 +139,7 @@ class ElvClient {
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    * @param {boolean=} assumeV3=false - If enabled, V3 fabric will be assumed
-   * @param {string=} clientMode=default - The mode that determines how HttpClient will be initialized.
+   * @param {string=} service=default - The mode that determines how HttpClient will be initialized.
    * If 'default' is set, HttpClient uris will use fabricUris. If 'search' is used, searchUris will be used
    *
    * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
@@ -159,7 +159,7 @@ class ElvClient {
     noCache=false,
     noAuth=false,
     assumeV3=false,
-    clientMode="default"
+    service="default"
   }) {
     this.utils = Utils;
 
@@ -184,7 +184,12 @@ class ElvClient {
     this.noCache = noCache;
     this.noAuth = noAuth;
     this.assumeV3 = assumeV3;
-    this.clientMode = clientMode;
+
+    if(!["search", "default"].includes(this.service)) {
+      throw Error(`Invalid service: ${this.service}`);
+    }
+
+    this.service = service;
 
     this.debug = false;
 
@@ -378,7 +383,7 @@ class ElvClient {
     this.visibilityInfo = {};
     this.inaccessibleLibraries = {};
 
-    const uris = this.clientMode === "search" ? this.searchURIs : this.fabricURIs;
+    const uris = this.service === "search" ? this.searchURIs : this.fabricURIs;
     this.HttpClient = new HttpClient({uris, debug: this.debug});
     this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, networkId: this.networkId, debug: this.debug, timeout: this.ethereumContractTimeout});
