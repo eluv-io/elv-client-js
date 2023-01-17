@@ -83,7 +83,8 @@ var ElvClient = /*#__PURE__*/function () {
    *
    * @namedParams
    * @param {string} contentSpaceId - ID of the content space
-   * @param {string} contentSpaceId - ID of the blockchain network
+   * @param {string} networkId - ID of the blockchain network
+   * @param {string} networkName - Name of the blockchain network
    * @param {number} fabricVersion - The version of the target content fabric
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
@@ -94,6 +95,9 @@ var ElvClient = /*#__PURE__*/function () {
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+   * @param {boolean=} assumeV3=false - If enabled, V3 fabric will be assumed
+   * @param {string=} service=default - The mode that determines how HttpClient will be initialized.
+   * If 'default' is set, HttpClient uris will use fabricUris. If 'search' is used, searchUris will be used
    *
    * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
    */
@@ -115,7 +119,9 @@ var ElvClient = /*#__PURE__*/function () {
         _ref$noAuth = _ref.noAuth,
         noAuth = _ref$noAuth === void 0 ? false : _ref$noAuth,
         _ref$assumeV = _ref.assumeV3,
-        assumeV3 = _ref$assumeV === void 0 ? false : _ref$assumeV;
+        assumeV3 = _ref$assumeV === void 0 ? false : _ref$assumeV,
+        _ref$service = _ref.service,
+        service = _ref$service === void 0 ? "default" : _ref$service;
 
     _classCallCheck(this, ElvClient);
 
@@ -136,6 +142,12 @@ var ElvClient = /*#__PURE__*/function () {
     this.noCache = noCache;
     this.noAuth = noAuth;
     this.assumeV3 = assumeV3;
+
+    if (!["search", "default"].includes(this.service)) {
+      throw Error("Invalid service: ".concat(this.service));
+    }
+
+    this.service = service;
     this.debug = false;
     this.InitializeClients({
       staticToken: staticToken
@@ -261,6 +273,7 @@ var ElvClient = /*#__PURE__*/function () {
       var _InitializeClients = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2() {
         var _ref3,
             staticToken,
+            uris,
             wallet,
             signer,
             _args2 = arguments;
@@ -279,8 +292,9 @@ var ElvClient = /*#__PURE__*/function () {
                 this.objectImageUrls = {};
                 this.visibilityInfo = {};
                 this.inaccessibleLibraries = {};
+                uris = this.service === "search" ? this.searchURIs : this.fabricURIs;
                 this.HttpClient = new HttpClient({
-                  uris: this.fabricURIs,
+                  uris: uris,
                   debug: this.debug
                 });
                 this.AuthHttpClient = new HttpClient({
@@ -325,7 +339,7 @@ var ElvClient = /*#__PURE__*/function () {
                 this.Crypto = Crypto;
                 this.Crypto.ElvCrypto();
 
-              case 17:
+              case 18:
               case "end":
                 return _context2.stop();
             }
@@ -360,7 +374,7 @@ var ElvClient = /*#__PURE__*/function () {
      * @param {string} region - Preferred region - the fabric will auto-detect the best region if not specified
      * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
      *
-     * @return {Promise<Object>} - An object containing the updated fabric and ethereum URLs in order of preference
+     * @return {Promise<Object>} - An object containing the updated fabric, ethereum, auth service, and search URLs in order of preference
      */
 
   }, {
@@ -521,11 +535,11 @@ var ElvClient = /*#__PURE__*/function () {
       return NodeId;
     }()
     /**
-     * Retrieve the fabric and ethereum nodes currently used by the client, in preference order
+     * Retrieve the fabric, ethereum, auth service, and search nodes currently used by the client, in preference order
      *
      * @methodGroup Nodes
      *
-     * @return {Promise<Object>} - An object containing the lists of fabric and ethereum urls in use by the client
+     * @return {Promise<Object>} - An object containing the lists of fabric, ethereum, auth service, and search urls in use by the client
      */
 
   }, {
@@ -534,16 +548,18 @@ var ElvClient = /*#__PURE__*/function () {
       return {
         fabricURIs: this.fabricURIs,
         ethereumURIs: this.ethereumURIs,
-        authServiceURIs: this.authServiceURIs
+        authServiceURIs: this.authServiceURIs,
+        searchURIs: this.searchURIs
       };
     }
     /**
-     * Set the client to use the specified fabric and ethereum nodes, in preference order
+     * Set the client to use the specified fabric, ethereum, auth service, and search nodes, in preference order
      *
      * @namedParams
      * @param {Array<string>=} fabricURIs - A list of URLs for the fabric, in preference order
      * @param {Array<string>=} ethereumURIs - A list of URLs for the blockchain, in preference order
      * @param {Array<string>=} authServiceURIs - A list of URLs for the auth service, in preference order
+     * @param {Array<string>=} searchURIs - A list of URLs for the search nodes, in preference order
      *
      * @methodGroup Nodes
      */
@@ -553,7 +569,8 @@ var ElvClient = /*#__PURE__*/function () {
     value: function SetNodes(_ref6) {
       var fabricURIs = _ref6.fabricURIs,
           ethereumURIs = _ref6.ethereumURIs,
-          authServiceURIs = _ref6.authServiceURIs;
+          authServiceURIs = _ref6.authServiceURIs,
+          searchURIs = _ref6.searchURIs;
 
       if (fabricURIs) {
         this.fabricURIs = fabricURIs;
@@ -571,6 +588,10 @@ var ElvClient = /*#__PURE__*/function () {
         this.authServiceURIs = authServiceURIs;
         this.AuthHttpClient.uris = authServiceURIs;
         this.AuthHttpClient.uriIndex = 0;
+      }
+
+      if (searchURIs) {
+        this.searchURIs = searchURIs;
       }
     }
     /**
