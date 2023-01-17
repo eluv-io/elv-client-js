@@ -36,8 +36,8 @@ var HttpClient = /*#__PURE__*/function () {
     }
   }, {
     key: "BaseURI",
-    value: function BaseURI() {
-      return new URI(this.uris[this.uriIndex]);
+    value: function BaseURI(url) {
+      return new URI(url || this.uris[this.uriIndex]);
     }
   }, {
     key: "RecordWriteToken",
@@ -65,14 +65,15 @@ var HttpClient = /*#__PURE__*/function () {
     key: "Request",
     value: function () {
       var _Request = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(_ref2) {
-        var method, path, _ref2$queryParams, queryParams, body, _ref2$bodyType, bodyType, _ref2$headers, headers, _ref2$attempts, attempts, _ref2$failover, failover, _ref2$forceFailover, forceFailover, baseURI, writeTokenMatch, writeToken, uri, fetchParameters, response, responseType, errorBody, error;
+        var method, path, _ref2$queryParams, queryParams, body, _ref2$bodyType, bodyType, _ref2$headers, headers, _ref2$attempts, attempts, _ref2$failover, failover, _ref2$forceFailover, forceFailover, nodeUrl, baseURI, writeTokenMatch, writeToken, uri, fetchParameters, response, responseType, errorBody, error;
 
         return _regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                method = _ref2.method, path = _ref2.path, _ref2$queryParams = _ref2.queryParams, queryParams = _ref2$queryParams === void 0 ? {} : _ref2$queryParams, body = _ref2.body, _ref2$bodyType = _ref2.bodyType, bodyType = _ref2$bodyType === void 0 ? "JSON" : _ref2$bodyType, _ref2$headers = _ref2.headers, headers = _ref2$headers === void 0 ? {} : _ref2$headers, _ref2$attempts = _ref2.attempts, attempts = _ref2$attempts === void 0 ? 0 : _ref2$attempts, _ref2$failover = _ref2.failover, failover = _ref2$failover === void 0 ? true : _ref2$failover, _ref2$forceFailover = _ref2.forceFailover, forceFailover = _ref2$forceFailover === void 0 ? false : _ref2$forceFailover;
-                baseURI = this.BaseURI(); // If URL contains a write token, it must go to the correct server and can not fail over
+                method = _ref2.method, path = _ref2.path, _ref2$queryParams = _ref2.queryParams, queryParams = _ref2$queryParams === void 0 ? {} : _ref2$queryParams, body = _ref2.body, _ref2$bodyType = _ref2.bodyType, bodyType = _ref2$bodyType === void 0 ? "JSON" : _ref2$bodyType, _ref2$headers = _ref2.headers, headers = _ref2$headers === void 0 ? {} : _ref2$headers, _ref2$attempts = _ref2.attempts, attempts = _ref2$attempts === void 0 ? 0 : _ref2$attempts, _ref2$failover = _ref2.failover, failover = _ref2$failover === void 0 ? true : _ref2$failover, _ref2$forceFailover = _ref2.forceFailover, forceFailover = _ref2$forceFailover === void 0 ? false : _ref2$forceFailover, nodeUrl = _ref2.nodeUrl;
+                // if nodeUrl passed in, restrict communication to that node only (unless previously recorded write token is found in next step)
+                baseURI = this.BaseURI(nodeUrl); // If URL contains a write token, it must go to the correct server and can not fail over
 
                 writeTokenMatch = path.replace(/^\//, "").match(/(qlibs\/ilib[a-zA-Z0-9]+|q|qid)\/(tqw__[a-zA-Z0-9]+)/);
                 writeToken = writeTokenMatch ? writeTokenMatch[2] : undefined;
@@ -127,7 +128,7 @@ var HttpClient = /*#__PURE__*/function () {
                   break;
                 }
 
-                if (!(!writeToken && (failover && parseInt(response.status) >= 500 || forceFailover) && attempts < this.uris.length)) {
+                if (!(!writeToken && !nodeUrl && (failover && parseInt(response.status) >= 500 || forceFailover) && attempts < this.uris.length)) {
                   _context.next = 24;
                   break;
                 }

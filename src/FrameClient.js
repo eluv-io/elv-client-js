@@ -480,6 +480,6 @@ class FrameClient {
 }
 
 const { UploadFiles } = require("./client/Files");
-FrameClient.prototype.UploadFiles=UploadFiles;
+FrameClient.prototype.UploadFiles = UploadFiles;
 
 exports.FrameClient = FrameClient;
