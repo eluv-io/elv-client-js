@@ -185,8 +185,8 @@ class ElvClient {
     this.noAuth = noAuth;
     this.assumeV3 = assumeV3;
 
-    if(!["search", "default"].includes(this.service)) {
-      throw Error(`Invalid service: ${this.service}`);
+    if(!["search", "default"].includes(service)) {
+      throw Error(`Invalid service: ${service}`);
     }
 
     this.service = service;
