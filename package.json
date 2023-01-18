@@ -78,6 +78,7 @@
     "fraction.js": "^4.0.12",
     "hash.js": "^1.1.7",
     "image-type": "^4.1.0",
+    "isarray": "^2.0.5",
     "js-polyfills": "^0.1.42",
     "jsonpath-plus": "^6.0.1",
     "kind-of": "^6.0.3",
