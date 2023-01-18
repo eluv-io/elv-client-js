@@ -39,6 +39,9 @@ if(Utils.Platform() === Utils.PLATFORM_NODE) {
 /**
  * See the Modules section on the sidebar for details about methods related to interacting with the Fabric.
  *
+ * <br/>
+ *
+ * For information about the Eluvio Wallet Client, go <a href="wallet-client/index.html">here</a>.
  */
 class ElvClient {
   Log(message, error = false) {
@@ -116,23 +119,28 @@ class ElvClient {
   /**
    * Create a new ElvClient
    *
-   * NOTE: It is highly recommended to use ElvClient.FromConfiguration to
+   * NOTE: It is highly recommended to use the <a href="#.FromConfigurationUrl">FromConfigurationUrl</a> or <a href="#.FromNetworkName">FromNetworkName</a> method
    * automatically import the client settings from the fabric
    *
    * @constructor
    *
    * @namedParams
    * @param {string} contentSpaceId - ID of the content space
-   * @param {string} contentSpaceId - ID of the blockchain network
+   * @param {string} networkId - ID of the blockchain network
+   * @param {string} networkName - Name of the blockchain network
    * @param {number} fabricVersion - The version of the target content fabric
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
-   * @param {Array<string>} ethereumURIs - A list of full URIs to auth service endpoints
+   * @param {Array<string>} authServiceURIs - A list of full URIs to auth service endpoints
+   * @param {Array<string>=} searchURIs - A list of full URIs to search service endpoints
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+   * @param {boolean=} assumeV3=false - If enabled, V3 fabric will be assumed
+   * @param {string=} service=default - The mode that determines how HttpClient will be initialized.
+   * If 'default' is set, HttpClient uris will use fabricUris. If 'search' is used, searchUris will be used
    *
    * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
    */
@@ -144,12 +152,14 @@ class ElvClient {
     fabricURIs,
     ethereumURIs,
     authServiceURIs,
+    searchURIs,
     ethereumContractTimeout = 10,
     trustAuthorityId,
     staticToken,
     noCache=false,
     noAuth=false,
-    assumeV3=false
+    assumeV3=false,
+    service="default"
   }) {
     this.utils = Utils;
 
@@ -166,6 +176,7 @@ class ElvClient {
     this.fabricURIs = fabricURIs;
     this.authServiceURIs = authServiceURIs;
     this.ethereumURIs = ethereumURIs;
+    this.searchURIs = searchURIs;
     this.ethereumContractTimeout = ethereumContractTimeout;
 
     this.trustAuthorityId = trustAuthorityId;
@@ -173,6 +184,12 @@ class ElvClient {
     this.noCache = noCache;
     this.noAuth = noAuth;
     this.assumeV3 = assumeV3;
+
+    if(!["search", "default"].includes(service)) {
+      throw Error(`Invalid service: ${service}`);
+    }
+
+    this.service = service;
 
     this.debug = false;
 
@@ -227,6 +244,8 @@ class ElvClient {
         authServiceURIs = authServiceURIs.filter(filterHTTPS);
       }
 
+      const searchURIs = fabricInfo.network.services.search || [];
+
       const fabricVersion = Math.max(...(fabricInfo.network.api_versions || [2]));
 
       return {
@@ -238,6 +257,7 @@ class ElvClient {
         ethereumURIs,
         authServiceURIs,
         kmsURIs: kmsUrls,
+        searchURIs,
         fabricVersion
       };
     } catch(error) {
@@ -323,6 +343,7 @@ class ElvClient {
       fabricURIs,
       ethereumURIs,
       authServiceURIs,
+      searchURIs,
       fabricVersion
     } = await ElvClient.Configuration({
       configUrl,
@@ -337,6 +358,7 @@ class ElvClient {
       fabricURIs,
       ethereumURIs,
       authServiceURIs,
+      searchURIs,
       ethereumContractTimeout,
       trustAuthorityId,
       staticToken,
@@ -361,7 +383,8 @@ class ElvClient {
     this.visibilityInfo = {};
     this.inaccessibleLibraries = {};
 
-    this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
+    const uris = this.service === "search" ? this.searchURIs : this.fabricURIs;
+    this.HttpClient = new HttpClient({uris, debug: this.debug});
     this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, networkId: this.networkId, debug: this.debug, timeout: this.ethereumContractTimeout});
 
@@ -411,14 +434,14 @@ class ElvClient {
    * @param {string} region - Preferred region - the fabric will auto-detect the best region if not specified
    * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
    *
-   * @return {Promise<Object>} - An object containing the updated fabric and ethereum URLs in order of preference
+   * @return {Promise<Object>} - An object containing the updated fabric, ethereum, auth service, and search URLs in order of preference
    */
   async UseRegion({region}) {
     if(!this.configUrl) {
       throw Error("Unable to change region: Configuration URL not set");
     }
 
-    const {fabricURIs, ethereumURIs, authServiceURIs} = await ElvClient.Configuration({
+    const {fabricURIs, ethereumURIs, authServiceURIs, searchURIs} = await ElvClient.Configuration({
       configUrl: this.configUrl,
       region
     });
@@ -426,6 +449,7 @@ class ElvClient {
     this.authServiceURIs = authServiceURIs;
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
+    this.searchURIs = searchURIs;
 
     this.HttpClient.uris = fabricURIs;
     this.HttpClient.uriIndex = 0;
@@ -435,7 +459,8 @@ class ElvClient {
 
     return {
       fabricURIs,
-      ethereumURIs
+      ethereumURIs,
+      searchURIs
     };
   }
 
@@ -478,31 +503,33 @@ class ElvClient {
   }
 
   /**
-   * Retrieve the fabric and ethereum nodes currently used by the client, in preference order
+   * Retrieve the fabric, ethereum, auth service, and search nodes currently used by the client, in preference order
    *
    * @methodGroup Nodes
    *
-   * @return {Promise<Object>} - An object containing the lists of fabric and ethereum urls in use by the client
+   * @return {Promise<Object>} - An object containing the lists of fabric, ethereum, auth service, and search urls in use by the client
    */
   Nodes() {
     return {
       fabricURIs: this.fabricURIs,
       ethereumURIs: this.ethereumURIs,
-      authServiceURIs: this.authServiceURIs
+      authServiceURIs: this.authServiceURIs,
+      searchURIs: this.searchURIs
     };
   }
 
   /**
-   * Set the client to use the specified fabric and ethereum nodes, in preference order
+   * Set the client to use the specified fabric, ethereum, auth service, and search nodes, in preference order
    *
    * @namedParams
    * @param {Array<string>=} fabricURIs - A list of URLs for the fabric, in preference order
    * @param {Array<string>=} ethereumURIs - A list of URLs for the blockchain, in preference order
    * @param {Array<string>=} authServiceURIs - A list of URLs for the auth service, in preference order
+   * @param {Array<string>=} searchURIs - A list of URLs for the search nodes, in preference order
    *
    * @methodGroup Nodes
    */
-  SetNodes({fabricURIs, ethereumURIs, authServiceURIs}) {
+  SetNodes({fabricURIs, ethereumURIs, authServiceURIs, searchURIs}) {
     if(fabricURIs) {
       this.fabricURIs = fabricURIs;
 
@@ -521,6 +548,10 @@ class ElvClient {
       this.authServiceURIs = authServiceURIs;
       this.AuthHttpClient.uris = authServiceURIs;
       this.AuthHttpClient.uriIndex = 0;
+    }
+
+    if(searchURIs) {
+      this.searchURIs = searchURIs;
     }
   }
 
@@ -598,15 +629,16 @@ class ElvClient {
    * @param {string=} authToken - Eluvio authorization token previously issued from OAuth ID token
    * @param {string=} tenantId - If specified, user will be associated with the tenant
    * @param {Object=} extraData - Additional data to pass to the login API
+   * @param {Array<string>=} signerURIs - (Only if using custom OAuth) - URIs corresponding to the key server(s) to use
    * @param {boolean=} unsignedPublicAuth=false - If specified, the client will use an unsigned static token for calls that don't require authorization (reduces remote signature calls)
    */
-  async SetRemoteSigner({idToken, authToken, tenantId, extraData, unsignedPublicAuth}) {
+  async SetRemoteSigner({idToken, authToken, tenantId, extraData, signerURIs, unsignedPublicAuth}) {
     const signer = new RemoteSigner({
-      rpcUris: this.authServiceURIs,
+      signerURIs: signerURIs || this.authServiceURIs,
       idToken,
       authToken,
       tenantId,
-      provider: this.ethClient.provider,
+      provider: await this.ethClient.Provider(),
       extraData,
       unsignedPublicAuth
     });
@@ -704,6 +736,22 @@ class ElvClient {
     json                    79b  {"adr":"VVf4DQU357tDnZGYQeDrntRJ5rs=","spc":"ispc3ANoVSzNA3P6t7abLR69ho5YPPZU"}
    */
 
+  async PersonalSign({
+    message,
+    addEthereumPrefix,
+    Sign
+  }) {
+    if(!Sign) {
+      Sign = async message => this.authClient.Sign(message);
+    }
+
+    if(addEthereumPrefix) {
+      message = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${message.length}${message}`, "utf-8"));
+    }
+
+    return await Sign(message);
+  }
+
   /**
    * Create a signed authorization token that can be used to authorize against the fabric
    *
@@ -733,17 +781,9 @@ class ElvClient {
       exp: Date.now() + duration,
     };
 
-    if(!Sign) {
-      Sign = async message => this.authClient.Sign(message);
-    }
-
     let message = `Eluvio Content Fabric Access Token 1.0\n${JSON.stringify(token)}`;
 
-    if(addEthereumPrefix) {
-      message = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${message.length}${message}`, "utf-8"));
-    }
-
-    const signature = await Sign(message);
+    const signature = await this.PersonalSign({message, addEthereumPrefix, Sign});
 
     const compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
     return `acspjc${this.utils.B58(
@@ -986,7 +1026,7 @@ class ElvClient {
 
     ValidatePresence("message", message);
 
-    return await this.Crypto.EncryptConk(message, publicKey || this.signer.signingKey.keyPair.publicKey);
+    return await this.Crypto.EncryptConk(message, publicKey || this.signer._signingKey().publicKey);
   }
 
   /**
@@ -1004,7 +1044,7 @@ class ElvClient {
 
     ValidatePresence("message", message);
 
-    return await this.Crypto.DecryptCap(message, this.signer.signingKey.privateKey);
+    return await this.Crypto.DecryptCap(message, this.signer._signingKey().privateKey);
   }
 
   /**
@@ -1049,6 +1089,7 @@ class ElvClient {
       "GenerateWallet",
       "InitializeClients",
       "Log",
+      "PersonalSign",
       "SetRemoteSigner",
       "SetSigner",
       "SetSignerFromWeb3Provider",

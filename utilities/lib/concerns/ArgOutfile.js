@@ -19,7 +19,7 @@ const blueprint = {
       type: "string"
     }),
     NewOpt("overwrite", {
-      descTemplate: "Replace file if it already exists.",
+      descTemplate: "Replace output file if it already exists.",
       type: "boolean"
     })
   ]

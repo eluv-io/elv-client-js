@@ -22,6 +22,15 @@ The Eluvio Javascript Client is designed to make interacting with the Eluvio Con
 npm install --save @eluvio/elv-client-js
 ```
 
+
+NOTE: If you see an `unsupported architecture` error on Mac OS X, try the following:
+
+```
+export SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+
+export SDK_DIR=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+```
+
 #### Usage
 
 ```

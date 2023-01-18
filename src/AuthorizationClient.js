@@ -204,7 +204,7 @@ class AuthorizationClient {
       addr: Utils.FormatAddress(((this.client.signer && this.client.signer.address) || ""))
     };
 
-    if(!(this.noAuth || noAuth) && !this.client.signer.remoteSigner) {
+    if(update) {
       const { transactionHash } =  await this.MakeAccessRequest({
         libraryId,
         objectId,
@@ -344,8 +344,8 @@ class AuthorizationClient {
 
           // Save request ID if present
           accessRequest.logs.some(log => {
-            if(log.values && (log.values.requestID || log.values.requestNonce)) {
-              this.requestIds[address] = (log.values.requestID || log.values.requestNonce || "").toString().replace(/^0x/, "");
+            if(log.args && (log.args.requestID || log.args.requestNonce)) {
+              this.requestIds[address] = (log.args.requestID || log.args.requestNonce || "").toString().replace(/^0x/, "");
               return true;
             }
           });
@@ -653,12 +653,12 @@ class AuthorizationClient {
       if(!isV3) {
         if(args && args.length > 0) {
           // Inject public key of requester
-          args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
+          args[1] = this.client.signer._signingKey ? this.client.signer._signingKey().publicKey : "";
         } else {
           // Set default args
           args = [
             0, // Access level
-            this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
+            this.client.signer._signingKey ? this.client.signer._signingKey().publicKey : "", // Public key of requester
             publicKey, //cap.public_key,
             [], // Custom values
             [] // Stakeholders
@@ -803,7 +803,7 @@ class AuthorizationClient {
     return await Ethers.utils.joinSignature(
       this.client.signer.signDigest ?
         await this.client.signer.signDigest(message) :
-        await this.client.signer.signingKey.signDigest(message)
+        await this.client.signer._signingKey().signDigest(message)
     );
   }
 

@@ -20,12 +20,16 @@ class ProductionMasterCreate extends Utility {
     return {
       concerns: [Client, CloudFile, LocalFile, ArgAssetMetadata, ArgMetadata, ContentType, ArgType],
       options: [
-        StdOpt("libraryId",{demand: true, forX: "new production master"}),
-        ModOpt("type",{demand: true, forX: "new production master"}),
+        StdOpt("libraryId", {demand: true, forX: "new production master"}),
+        ModOpt("type", {demand: true, forX: "new production master"}),
         ModOpt("metadata", {ofX: "production master object"}),
         ModOpt("title", {demand: true}),
         ModOpt("files", {forX: "for new production master"}),
-        StdOpt("encrypt", {X: "uploaded files"}),
+        StdOpt("encrypt", {descTemplate: "DEPRECATED: uploaded/copied files will always be stored encrypted unless --unencrypted is specified."}),
+        NewOpt("unencrypted", {
+          descTemplate: "Store uploaded/copied files unencrypted",
+          type: "boolean"
+        }),
         NewOpt("streams", {
           descTemplate: "JSON string (or file path if prefixed with '@') containing stream specifications for variant in new production master",
           type: "string"
@@ -37,6 +41,10 @@ class ProductionMasterCreate extends Utility {
   async body() {
     const logger = this.logger;
     const J = this.concerns.JSON;
+
+    const {encrypt, unencrypted} = this.args;
+
+    if(encrypt && unencrypted) throw new Error("Cannot specify both --encrypt and --unencrypted");
 
     let access;
     if(this.args.s3Reference || this.args.s3Copy) {
@@ -53,7 +61,10 @@ class ProductionMasterCreate extends Utility {
       VariantModel(variant);
     }
 
-    const newPublicMetadata = this.concerns.ArgAssetMetadata.publicMetadata({oldPublicMetadata: metadataFromArg.public, backupNameSuffix: "MASTER"});
+    const newPublicMetadata = this.concerns.ArgAssetMetadata.publicMetadata({
+      oldPublicMetadata: metadataFromArg.public,
+      backupNameSuffix: "MASTER"
+    });
     const metadata = R.mergeRight(metadataFromArg, {public: newPublicMetadata});
 
     let fileHandles = [];
@@ -66,7 +77,8 @@ class ProductionMasterCreate extends Utility {
     const client = await this.concerns.Client.get();
 
     const type = await await this.concerns.ArgType.typVersionHash();
-    const {libraryId, encrypt, s3Copy, s3Reference} = this.args;
+    const {libraryId, s3Copy, s3Reference} = this.args;
+
 
     const createResponse = await client.CreateProductionMaster({
       libraryId,
@@ -75,7 +87,7 @@ class ProductionMasterCreate extends Utility {
       description: "Production Master for " + metadata.public.asset_metadata.title,
       metadata,
       fileInfo,
-      encrypt,
+      encrypt: !unencrypted,
       access,
       copy: s3Copy && !s3Reference,
       callback: (access ? this.concerns.CloudFile : this.concerns.LocalFile).callback
@@ -110,7 +122,7 @@ class ProductionMasterCreate extends Utility {
         objectId: id,
         writeToken: write_token,
         metadata: streams,
-        metadataSubtree: "/production_master/variants/default"
+        metadataSubtree: "/production_master/variants/default/streams"
       });
 
       const finalizeResponse = await client.FinalizeContentObject({

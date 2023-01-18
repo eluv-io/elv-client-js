@@ -7,6 +7,8 @@
 const UrlJoin = require("url-join");
 const ImageType = require("image-type");
 const Ethers = require("ethers");
+const Pako = require("pako");
+
 
 /*
 const LibraryContract = require("../contracts/BaseLibrary");
@@ -654,21 +656,15 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
   const userCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
 
   if(metadata[userCapKey]) {
-    const isOwner = this.utils.EqualAddress(this.signer.address, await this.ContentObjectOwner({objectId: originalObjectId}));
-
-    if(!isOwner) {
-      throw Error(`Current user is not owner of object ${metadata}`);
-    }
-
-    const userConkKey = await this.Crypto.DecryptCap(metadata[userCapKey], this.signer.signingKey.privateKey);
+    const userConkKey = await this.Crypto.DecryptCap(metadata[userCapKey], this.signer._signingKey().privateKey);
     userConkKey.qid = objectId;
 
-    this.ReplaceMetadata({
+    await this.ReplaceMetadata({
       libraryId,
       objectId,
       writeToken,
       metadataSubtree: userCapKey,
-      metadata: await this.Crypto.EncryptConk(userConkKey, this.signer.signingKey.publicKey)
+      metadata: await this.Crypto.EncryptConk(userConkKey, this.signer._signingKey().publicKey)
     });
   }
 
@@ -676,16 +672,18 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
   await Promise.all(
     Object.keys(metadata)
       .filter(key => key.startsWith("eluv.caps.ikms"))
-      .map(async kmsCapKey => await this.DeleteMetadata({
-        libraryId,
-        objectId,
-        writeToken,
-        metadataSubtree: kmsCapKey
-      }))
+      .map(async kmsCapKey =>
+        await this.DeleteMetadata({
+          libraryId,
+          objectId,
+          writeToken,
+          metadataSubtree: kmsCapKey
+        })
+      )
   );
 
   if(permission !== "owner") {
-    await this.SetPermission({objectId, permission, writeToken});
+    await this.CreateEncryptionConk({libraryId, objectId, writeToken, createKMSConk: true});
   }
 
   return await this.FinalizeContentObject({libraryId, objectId, writeToken});
@@ -711,7 +709,7 @@ exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, writ
     throw Error("No user cap found for current user");
   }
 
-  const userConk = await this.Crypto.DecryptCap(userCapValue, this.signer.signingKey.privateKey);
+  const userConk = await this.Crypto.DecryptCap(userCapValue, this.signer._signingKey().privateKey);
 
   const publicAddress = this.utils.PublicKeyToAddress(publicKey);
 
@@ -752,7 +750,7 @@ exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, writ
  * meta: New metadata for the object - will be merged into existing metadata if specified
  * type: New type for the object - Object ID, version hash or name of type
  *
- * @returns {Promise<object>} - Response containing the object ID and write token of the draft
+ * @returns {Promise<object>} - Response containing the object ID and write token of the draft, as well as URL of node handling the draft
  */
 exports.EditContentObject = async function({libraryId, objectId, options={}}) {
   ValidateParameters({libraryId, objectId});
@@ -776,20 +774,27 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
 
   let path = UrlJoin("qid", objectId);
 
-  let editResponse = await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-      method: "POST",
-      path: path,
-      body: options
-    })
-  );
+  const rawEditResponse = await this.HttpClient.Request({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "POST",
+    path: path,
+    body: options
+  });
+
+  const actualUrl = new URL(rawEditResponse.url);
+  actualUrl.pathname = "";
+  actualUrl.search = "";
+  actualUrl.hash = "";
+  const nodeUrl = actualUrl.href;
+
+  let editResponse = await this.utils.ResponseToJson(rawEditResponse);
 
   // Record the node used in creating this write token
-  this.HttpClient.RecordWriteToken(editResponse.write_token);
+  this.HttpClient.RecordWriteToken(editResponse.write_token, nodeUrl);
 
   editResponse.writeToken = editResponse.write_token;
   editResponse.objectId = editResponse.id;
+  editResponse.nodeUrl = nodeUrl;
 
   return editResponse;
 };
@@ -1047,7 +1052,7 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
       });
 
       const confirmEvent = events.find(blockEvents =>
-        blockEvents.find(event => objectHash === (event && event.values && event.values.objectHash))
+        blockEvents.find(event => objectHash === (event && event.args && event.args.objectHash))
       );
 
       if(confirmEvent) {
@@ -1313,6 +1318,65 @@ exports.UpdateContentObjectGraph = async function({libraryId, objectId, versionH
 };
 
 /**
+ * Generate a signed link token.
+ *
+ * @methodGroup Links
+ * @namedParams
+ * @param {string=} containerId - ID of the container object
+ * @param {string=} versionHash - Version hash of the object
+ * @param {string=} link - Path
+ * @param {string=} duration - How long the link should last in milliseconds
+ *
+ * @return {Promise<string>} - The state channel token
+ */
+exports.GenerateSignedLinkToken = async function({
+  containerId,
+  versionHash,
+  link,
+  duration
+}) {
+  ValidateObject(containerId);
+  const canEdit = await this.CallContractMethod({
+    contractAddress: this.utils.HashToAddress(containerId),
+    methodName: "canEdit"
+  });
+
+  const { objectId } = this.utils.DecodeVersionHash(versionHash);
+
+  if(!canEdit) {
+    throw Error(`Current user does not have permission to edit content object ${objectId}`);
+  }
+
+  const signerAddress = this.CurrentAccountAddress();
+
+  let token = {
+    adr: this.utils.B64(signerAddress.replace("0x", ""), "hex"),
+    spc: await this.ContentSpaceId(),
+    lib: await this.ContentObjectLibraryId({objectId}),
+    qid: objectId,
+    sub: `iusr${this.utils.AddressToHash(signerAddress)}`,
+    gra: "read",
+    iat: Date.now(),
+    exp: duration ? (Date.now() + duration) : "",
+    ctx: {
+      elv: {
+        lnk: link,
+        src: containerId
+      }
+    }
+  };
+
+  const compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
+  const signature = await this.authClient.Sign(Ethers.utils.keccak256(compressedToken));
+
+  return `aslsjc${this.utils.B58(Buffer.concat([
+    Buffer.from(signature.replace(/^0x/, ""), "hex"),
+    Buffer.from(compressedToken)
+  ]))}`;
+};
+
+
+/**
  * Create links to files, metadata and/or representations of this or or other
  * content objects.
  *
@@ -1325,7 +1389,8 @@ exports.UpdateContentObjectGraph = async function({libraryId, objectId, versionH
       target: string (path to link target),
       type: string ("file", "meta" | "metadata", "rep" - default "metadata")
       targetHash: string (optional, for cross-object links),
-      autoUpdate: boolean (if specified, link will be automatically updated to latest version by UpdateContentObjectGraph method)
+      autoUpdate: boolean (if specified, link will be automatically updated to latest version by UpdateContentObjectGraph method),
+      authContainer: string (optional, object id of container object if creating a signed link)
     }
  ]
 
@@ -1354,7 +1419,9 @@ exports.CreateLinks = async function({
       let type = (info.type || "file") === "file" ? "files" : info.type;
       if(type === "metadata") { type = "meta"; }
 
-      let target = info.target.replace(/^(\/|\.)+/, "");
+      let target;
+      let authTarget;
+      target = authTarget = info.target.replace(/^(\/|\.)+/, "");
       if(info.targetHash) {
         target = `/qfab/${info.targetHash}/${type}/${target}`;
       } else {
@@ -1367,6 +1434,29 @@ exports.CreateLinks = async function({
 
       if(info.autoUpdate) {
         link["."] = { auto_update: { tag: "latest"} };
+      }
+
+      // Sign link
+      if(info.authContainer) {
+        const linkMetadata = await this.ContentObjectMetadata({
+          libraryId,
+          objectId,
+          metadataSubtree: path
+        });
+
+        if(linkMetadata) {
+          link = linkMetadata;
+        }
+
+        if(!link["."]) link["."] = {};
+
+        if(!linkMetadata["."]["authorization"]) {
+          link["."]["authorization"] = await this.GenerateSignedLinkToken({
+            containerId: info.authContainer,
+            versionHash: info.targetHash,
+            link: `./${type}/${authTarget}`
+          });
+        }
       }
 
       await this.ReplaceMetadata({

@@ -813,7 +813,7 @@ exports.ExtractValueFromEvent = function (_ref25) {
     eventName: eventName,
     eventValue: eventValue
   });
-  return eventLog ? eventLog.values[eventValue] : undefined;
+  return eventLog ? eventLog.args[eventValue] : undefined;
 };
 
 exports.FormatBlockNumbers = /*#__PURE__*/function () {

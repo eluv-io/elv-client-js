@@ -64,6 +64,9 @@ if (Utils.Platform() === Utils.PLATFORM_NODE) {
 /**
  * See the Modules section on the sidebar for details about methods related to interacting with the Fabric.
  *
+ * <br/>
+ *
+ * For information about the Eluvio Wallet Client, go <a href="wallet-client/index.html">here</a>.
  */
 
 
@@ -73,23 +76,28 @@ var ElvClient = /*#__PURE__*/function () {
   /**
    * Create a new ElvClient
    *
-   * NOTE: It is highly recommended to use ElvClient.FromConfiguration to
+   * NOTE: It is highly recommended to use the <a href="#.FromConfigurationUrl">FromConfigurationUrl</a> or <a href="#.FromNetworkName">FromNetworkName</a> method
    * automatically import the client settings from the fabric
    *
    * @constructor
    *
    * @namedParams
    * @param {string} contentSpaceId - ID of the content space
-   * @param {string} contentSpaceId - ID of the blockchain network
+   * @param {string} networkId - ID of the blockchain network
+   * @param {string} networkName - Name of the blockchain network
    * @param {number} fabricVersion - The version of the target content fabric
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
-   * @param {Array<string>} ethereumURIs - A list of full URIs to auth service endpoints
+   * @param {Array<string>} authServiceURIs - A list of full URIs to auth service endpoints
+   * @param {Array<string>=} searchURIs - A list of full URIs to search service endpoints
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+   * @param {boolean=} assumeV3=false - If enabled, V3 fabric will be assumed
+   * @param {string=} service=default - The mode that determines how HttpClient will be initialized.
+   * If 'default' is set, HttpClient uris will use fabricUris. If 'search' is used, searchUris will be used
    *
    * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
    */
@@ -101,6 +109,7 @@ var ElvClient = /*#__PURE__*/function () {
         fabricURIs = _ref.fabricURIs,
         ethereumURIs = _ref.ethereumURIs,
         authServiceURIs = _ref.authServiceURIs,
+        searchURIs = _ref.searchURIs,
         _ref$ethereumContract = _ref.ethereumContractTimeout,
         ethereumContractTimeout = _ref$ethereumContract === void 0 ? 10 : _ref$ethereumContract,
         trustAuthorityId = _ref.trustAuthorityId,
@@ -110,7 +119,9 @@ var ElvClient = /*#__PURE__*/function () {
         _ref$noAuth = _ref.noAuth,
         noAuth = _ref$noAuth === void 0 ? false : _ref$noAuth,
         _ref$assumeV = _ref.assumeV3,
-        assumeV3 = _ref$assumeV === void 0 ? false : _ref$assumeV;
+        assumeV3 = _ref$assumeV === void 0 ? false : _ref$assumeV,
+        _ref$service = _ref.service,
+        service = _ref$service === void 0 ? "default" : _ref$service;
 
     _classCallCheck(this, ElvClient);
 
@@ -125,11 +136,18 @@ var ElvClient = /*#__PURE__*/function () {
     this.fabricURIs = fabricURIs;
     this.authServiceURIs = authServiceURIs;
     this.ethereumURIs = ethereumURIs;
+    this.searchURIs = searchURIs;
     this.ethereumContractTimeout = ethereumContractTimeout;
     this.trustAuthorityId = trustAuthorityId;
     this.noCache = noCache;
     this.noAuth = noAuth;
     this.assumeV3 = assumeV3;
+
+    if (!["search", "default"].includes(service)) {
+      throw Error("Invalid service: ".concat(service));
+    }
+
+    this.service = service;
     this.debug = false;
     this.InitializeClients({
       staticToken: staticToken
@@ -255,6 +273,7 @@ var ElvClient = /*#__PURE__*/function () {
       var _InitializeClients = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2() {
         var _ref3,
             staticToken,
+            uris,
             wallet,
             signer,
             _args2 = arguments;
@@ -273,8 +292,9 @@ var ElvClient = /*#__PURE__*/function () {
                 this.objectImageUrls = {};
                 this.visibilityInfo = {};
                 this.inaccessibleLibraries = {};
+                uris = this.service === "search" ? this.searchURIs : this.fabricURIs;
                 this.HttpClient = new HttpClient({
-                  uris: this.fabricURIs,
+                  uris: uris,
                   debug: this.debug
                 });
                 this.AuthHttpClient = new HttpClient({
@@ -319,7 +339,7 @@ var ElvClient = /*#__PURE__*/function () {
                 this.Crypto = Crypto;
                 this.Crypto.ElvCrypto();
 
-              case 17:
+              case 18:
               case "end":
                 return _context2.stop();
             }
@@ -354,14 +374,14 @@ var ElvClient = /*#__PURE__*/function () {
      * @param {string} region - Preferred region - the fabric will auto-detect the best region if not specified
      * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
      *
-     * @return {Promise<Object>} - An object containing the updated fabric and ethereum URLs in order of preference
+     * @return {Promise<Object>} - An object containing the updated fabric, ethereum, auth service, and search URLs in order of preference
      */
 
   }, {
     key: "UseRegion",
     value: function () {
       var _UseRegion = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(_ref4) {
-        var region, _yield$ElvClient$Conf, fabricURIs, ethereumURIs, authServiceURIs;
+        var region, _yield$ElvClient$Conf, fabricURIs, ethereumURIs, authServiceURIs, searchURIs;
 
         return _regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
@@ -388,19 +408,22 @@ var ElvClient = /*#__PURE__*/function () {
                 fabricURIs = _yield$ElvClient$Conf.fabricURIs;
                 ethereumURIs = _yield$ElvClient$Conf.ethereumURIs;
                 authServiceURIs = _yield$ElvClient$Conf.authServiceURIs;
+                searchURIs = _yield$ElvClient$Conf.searchURIs;
                 this.authServiceURIs = authServiceURIs;
                 this.fabricURIs = fabricURIs;
                 this.ethereumURIs = ethereumURIs;
+                this.searchURIs = searchURIs;
                 this.HttpClient.uris = fabricURIs;
                 this.HttpClient.uriIndex = 0;
                 this.ethClient.ethereumURIs = ethereumURIs;
                 this.ethClient.ethereumURIIndex = 0;
                 return _context3.abrupt("return", {
                   fabricURIs: fabricURIs,
-                  ethereumURIs: ethereumURIs
+                  ethereumURIs: ethereumURIs,
+                  searchURIs: searchURIs
                 });
 
-              case 17:
+              case 19:
               case "end":
                 return _context3.stop();
             }
@@ -512,11 +535,11 @@ var ElvClient = /*#__PURE__*/function () {
       return NodeId;
     }()
     /**
-     * Retrieve the fabric and ethereum nodes currently used by the client, in preference order
+     * Retrieve the fabric, ethereum, auth service, and search nodes currently used by the client, in preference order
      *
      * @methodGroup Nodes
      *
-     * @return {Promise<Object>} - An object containing the lists of fabric and ethereum urls in use by the client
+     * @return {Promise<Object>} - An object containing the lists of fabric, ethereum, auth service, and search urls in use by the client
      */
 
   }, {
@@ -525,16 +548,18 @@ var ElvClient = /*#__PURE__*/function () {
       return {
         fabricURIs: this.fabricURIs,
         ethereumURIs: this.ethereumURIs,
-        authServiceURIs: this.authServiceURIs
+        authServiceURIs: this.authServiceURIs,
+        searchURIs: this.searchURIs
       };
     }
     /**
-     * Set the client to use the specified fabric and ethereum nodes, in preference order
+     * Set the client to use the specified fabric, ethereum, auth service, and search nodes, in preference order
      *
      * @namedParams
      * @param {Array<string>=} fabricURIs - A list of URLs for the fabric, in preference order
      * @param {Array<string>=} ethereumURIs - A list of URLs for the blockchain, in preference order
      * @param {Array<string>=} authServiceURIs - A list of URLs for the auth service, in preference order
+     * @param {Array<string>=} searchURIs - A list of URLs for the search nodes, in preference order
      *
      * @methodGroup Nodes
      */
@@ -544,7 +569,8 @@ var ElvClient = /*#__PURE__*/function () {
     value: function SetNodes(_ref6) {
       var fabricURIs = _ref6.fabricURIs,
           ethereumURIs = _ref6.ethereumURIs,
-          authServiceURIs = _ref6.authServiceURIs;
+          authServiceURIs = _ref6.authServiceURIs,
+          searchURIs = _ref6.searchURIs;
 
       if (fabricURIs) {
         this.fabricURIs = fabricURIs;
@@ -562,6 +588,10 @@ var ElvClient = /*#__PURE__*/function () {
         this.authServiceURIs = authServiceURIs;
         this.AuthHttpClient.uris = authServiceURIs;
         this.AuthHttpClient.uriIndex = 0;
+      }
+
+      if (searchURIs) {
+        this.searchURIs = searchURIs;
       }
     }
     /**
@@ -649,6 +679,7 @@ var ElvClient = /*#__PURE__*/function () {
      * @param {string=} authToken - Eluvio authorization token previously issued from OAuth ID token
      * @param {string=} tenantId - If specified, user will be associated with the tenant
      * @param {Object=} extraData - Additional data to pass to the login API
+     * @param {Array<string>=} signerURIs - (Only if using custom OAuth) - URIs corresponding to the key server(s) to use
      * @param {boolean=} unsignedPublicAuth=false - If specified, the client will use an unsigned static token for calls that don't require authorization (reduces remote signature calls)
      */
 
@@ -656,30 +687,43 @@ var ElvClient = /*#__PURE__*/function () {
     key: "SetRemoteSigner",
     value: function () {
       var _SetRemoteSigner = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee6(_ref8) {
-        var idToken, authToken, tenantId, extraData, unsignedPublicAuth, signer;
+        var idToken, authToken, tenantId, extraData, signerURIs, unsignedPublicAuth, signer;
         return _regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
             switch (_context6.prev = _context6.next) {
               case 0:
-                idToken = _ref8.idToken, authToken = _ref8.authToken, tenantId = _ref8.tenantId, extraData = _ref8.extraData, unsignedPublicAuth = _ref8.unsignedPublicAuth;
-                signer = new RemoteSigner({
-                  rpcUris: this.authServiceURIs,
-                  idToken: idToken,
-                  authToken: authToken,
-                  tenantId: tenantId,
-                  provider: this.ethClient.provider,
-                  extraData: extraData,
-                  unsignedPublicAuth: unsignedPublicAuth
-                });
-                _context6.next = 4;
+                idToken = _ref8.idToken, authToken = _ref8.authToken, tenantId = _ref8.tenantId, extraData = _ref8.extraData, signerURIs = _ref8.signerURIs, unsignedPublicAuth = _ref8.unsignedPublicAuth;
+                _context6.t0 = RemoteSigner;
+                _context6.t1 = signerURIs || this.authServiceURIs;
+                _context6.t2 = idToken;
+                _context6.t3 = authToken;
+                _context6.t4 = tenantId;
+                _context6.next = 8;
+                return this.ethClient.Provider();
+
+              case 8:
+                _context6.t5 = _context6.sent;
+                _context6.t6 = extraData;
+                _context6.t7 = unsignedPublicAuth;
+                _context6.t8 = {
+                  signerURIs: _context6.t1,
+                  idToken: _context6.t2,
+                  authToken: _context6.t3,
+                  tenantId: _context6.t4,
+                  provider: _context6.t5,
+                  extraData: _context6.t6,
+                  unsignedPublicAuth: _context6.t7
+                };
+                signer = new _context6.t0(_context6.t8);
+                _context6.next = 15;
                 return signer.Initialize();
 
-              case 4:
+              case 15:
                 this.SetSigner({
                   signer: signer
                 });
 
-              case 5:
+              case 16:
               case "end":
                 return _context6.stop();
             }
@@ -847,65 +891,18 @@ var ElvClient = /*#__PURE__*/function () {
       json                    79b  {"adr":"VVf4DQU357tDnZGYQeDrntRJ5rs=","spc":"ispc3ANoVSzNA3P6t7abLR69ho5YPPZU"}
      */
 
-    /**
-     * Create a signed authorization token that can be used to authorize against the fabric
-     *
-     * @methodGroup Authorization
-     * @namedParams
-     * @param {number} duration=86400000 - Time until the token expires, in milliseconds (1 hour = 60 * 60 * 1000 = 3600000). Default is 24 hours.
-     * @param {Object=} spec - Additional attributes for this token
-     * @param {string=} address - Address of the signing account - if not specified, the current signer address will be used.
-     * @param {function=} Sign - If specified, this function will be used to produce the signature instead of the client's current signer
-     * @param {boolean=} addEthereumPrefix=true - If specified, the 'Ethereum Signed Message' prefixed hash format will be performed. Disable this if the provided Sign method already does this (e.g. Metamask)
-     */
-
   }, {
-    key: "CreateFabricToken",
+    key: "PersonalSign",
     value: function () {
-      var _CreateFabricToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee10() {
+      var _PersonalSign = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee10(_ref11) {
         var _this = this;
 
-        var _ref11,
-            _ref11$duration,
-            duration,
-            _ref11$spec,
-            spec,
-            address,
-            Sign,
-            _ref11$addEthereumPre,
-            addEthereumPrefix,
-            token,
-            message,
-            signature,
-            compressedToken,
-            _args10 = arguments;
-
+        var message, addEthereumPrefix, Sign;
         return _regeneratorRuntime.wrap(function _callee10$(_context10) {
           while (1) {
             switch (_context10.prev = _context10.next) {
               case 0:
-                _ref11 = _args10.length > 0 && _args10[0] !== undefined ? _args10[0] : {}, _ref11$duration = _ref11.duration, duration = _ref11$duration === void 0 ? 24 * 60 * 60 * 1000 : _ref11$duration, _ref11$spec = _ref11.spec, spec = _ref11$spec === void 0 ? {} : _ref11$spec, address = _ref11.address, Sign = _ref11.Sign, _ref11$addEthereumPre = _ref11.addEthereumPrefix, addEthereumPrefix = _ref11$addEthereumPre === void 0 ? true : _ref11$addEthereumPre;
-                address = address || this.CurrentAccountAddress();
-                _context10.t0 = _objectSpread;
-                _context10.t1 = _objectSpread({}, spec);
-                _context10.t2 = {};
-                _context10.t3 = "iusr".concat(Utils.AddressToHash(address));
-                _context10.t4 = Buffer.from(address.replace(/^0x/, ""), "hex").toString("base64");
-                _context10.next = 9;
-                return this.ContentSpaceId();
-
-              case 9:
-                _context10.t5 = _context10.sent;
-                _context10.t6 = Date.now();
-                _context10.t7 = Date.now() + duration;
-                _context10.t8 = {
-                  sub: _context10.t3,
-                  adr: _context10.t4,
-                  spc: _context10.t5,
-                  iat: _context10.t6,
-                  exp: _context10.t7
-                };
-                token = (0, _context10.t0)(_context10.t1, _context10.t2, _context10.t8);
+                message = _ref11.message, addEthereumPrefix = _ref11.addEthereumPrefix, Sign = _ref11.Sign;
 
                 if (!Sign) {
                   Sign = /*#__PURE__*/function () {
@@ -924,32 +921,112 @@ var ElvClient = /*#__PURE__*/function () {
                       }, _callee9);
                     }));
 
-                    return function Sign(_x6) {
+                    return function Sign(_x7) {
                       return _ref12.apply(this, arguments);
                     };
                   }();
                 }
 
-                message = "Eluvio Content Fabric Access Token 1.0\n".concat(JSON.stringify(token));
-
                 if (addEthereumPrefix) {
                   message = Ethers.utils.keccak256(Buffer.from("\x19Ethereum Signed Message:\n".concat(message.length).concat(message), "utf-8"));
                 }
 
-                _context10.next = 19;
+                _context10.next = 5;
                 return Sign(message);
 
-              case 19:
-                signature = _context10.sent;
-                compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
-                return _context10.abrupt("return", "acspjc".concat(this.utils.B58(Buffer.concat([Buffer.from(signature.replace(/^0x/, ""), "hex"), Buffer.from(compressedToken)]))));
+              case 5:
+                return _context10.abrupt("return", _context10.sent);
 
-              case 22:
+              case 6:
               case "end":
                 return _context10.stop();
             }
           }
-        }, _callee10, this);
+        }, _callee10);
+      }));
+
+      function PersonalSign(_x6) {
+        return _PersonalSign.apply(this, arguments);
+      }
+
+      return PersonalSign;
+    }()
+    /**
+     * Create a signed authorization token that can be used to authorize against the fabric
+     *
+     * @methodGroup Authorization
+     * @namedParams
+     * @param {number} duration=86400000 - Time until the token expires, in milliseconds (1 hour = 60 * 60 * 1000 = 3600000). Default is 24 hours.
+     * @param {Object=} spec - Additional attributes for this token
+     * @param {string=} address - Address of the signing account - if not specified, the current signer address will be used.
+     * @param {function=} Sign - If specified, this function will be used to produce the signature instead of the client's current signer
+     * @param {boolean=} addEthereumPrefix=true - If specified, the 'Ethereum Signed Message' prefixed hash format will be performed. Disable this if the provided Sign method already does this (e.g. Metamask)
+     */
+
+  }, {
+    key: "CreateFabricToken",
+    value: function () {
+      var _CreateFabricToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee11() {
+        var _ref13,
+            _ref13$duration,
+            duration,
+            _ref13$spec,
+            spec,
+            address,
+            Sign,
+            _ref13$addEthereumPre,
+            addEthereumPrefix,
+            token,
+            message,
+            signature,
+            compressedToken,
+            _args11 = arguments;
+
+        return _regeneratorRuntime.wrap(function _callee11$(_context11) {
+          while (1) {
+            switch (_context11.prev = _context11.next) {
+              case 0:
+                _ref13 = _args11.length > 0 && _args11[0] !== undefined ? _args11[0] : {}, _ref13$duration = _ref13.duration, duration = _ref13$duration === void 0 ? 24 * 60 * 60 * 1000 : _ref13$duration, _ref13$spec = _ref13.spec, spec = _ref13$spec === void 0 ? {} : _ref13$spec, address = _ref13.address, Sign = _ref13.Sign, _ref13$addEthereumPre = _ref13.addEthereumPrefix, addEthereumPrefix = _ref13$addEthereumPre === void 0 ? true : _ref13$addEthereumPre;
+                address = address || this.CurrentAccountAddress();
+                _context11.t0 = _objectSpread;
+                _context11.t1 = _objectSpread({}, spec);
+                _context11.t2 = {};
+                _context11.t3 = "iusr".concat(Utils.AddressToHash(address));
+                _context11.t4 = Buffer.from(address.replace(/^0x/, ""), "hex").toString("base64");
+                _context11.next = 9;
+                return this.ContentSpaceId();
+
+              case 9:
+                _context11.t5 = _context11.sent;
+                _context11.t6 = Date.now();
+                _context11.t7 = Date.now() + duration;
+                _context11.t8 = {
+                  sub: _context11.t3,
+                  adr: _context11.t4,
+                  spc: _context11.t5,
+                  iat: _context11.t6,
+                  exp: _context11.t7
+                };
+                token = (0, _context11.t0)(_context11.t1, _context11.t2, _context11.t8);
+                message = "Eluvio Content Fabric Access Token 1.0\n".concat(JSON.stringify(token));
+                _context11.next = 17;
+                return this.PersonalSign({
+                  message: message,
+                  addEthereumPrefix: addEthereumPrefix,
+                  Sign: Sign
+                });
+
+              case 17:
+                signature = _context11.sent;
+                compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
+                return _context11.abrupt("return", "acspjc".concat(this.utils.B58(Buffer.concat([Buffer.from(signature.replace(/^0x/, ""), "hex"), Buffer.from(compressedToken)]))));
+
+              case 20:
+              case "end":
+                return _context11.stop();
+            }
+          }
+        }, _callee11, this);
       }));
 
       function CreateFabricToken() {
@@ -978,60 +1055,60 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "CreateSignedToken",
     value: function () {
-      var _CreateSignedToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee11(_ref13) {
-        var libraryId, objectId, versionHash, policyId, subject, _ref13$grantType, grantType, _ref13$allowDecryptio, allowDecryption, duration, _ref13$context, context, token, cap, compressedToken, signature;
+      var _CreateSignedToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee12(_ref14) {
+        var libraryId, objectId, versionHash, policyId, subject, _ref14$grantType, grantType, _ref14$allowDecryptio, allowDecryption, duration, _ref14$context, context, token, cap, compressedToken, signature;
 
-        return _regeneratorRuntime.wrap(function _callee11$(_context11) {
+        return _regeneratorRuntime.wrap(function _callee12$(_context12) {
           while (1) {
-            switch (_context11.prev = _context11.next) {
+            switch (_context12.prev = _context12.next) {
               case 0:
-                libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, policyId = _ref13.policyId, subject = _ref13.subject, _ref13$grantType = _ref13.grantType, grantType = _ref13$grantType === void 0 ? "read" : _ref13$grantType, _ref13$allowDecryptio = _ref13.allowDecryption, allowDecryption = _ref13$allowDecryptio === void 0 ? false : _ref13$allowDecryptio, duration = _ref13.duration, _ref13$context = _ref13.context, context = _ref13$context === void 0 ? {} : _ref13$context;
+                libraryId = _ref14.libraryId, objectId = _ref14.objectId, versionHash = _ref14.versionHash, policyId = _ref14.policyId, subject = _ref14.subject, _ref14$grantType = _ref14.grantType, grantType = _ref14$grantType === void 0 ? "read" : _ref14$grantType, _ref14$allowDecryptio = _ref14.allowDecryption, allowDecryption = _ref14$allowDecryptio === void 0 ? false : _ref14$allowDecryptio, duration = _ref14.duration, _ref14$context = _ref14.context, context = _ref14$context === void 0 ? {} : _ref14$context;
 
                 if (subject) {
-                  _context11.next = 9;
+                  _context12.next = 9;
                   break;
                 }
 
-                _context11.t0 = "iusr";
-                _context11.t1 = this.utils;
-                _context11.next = 6;
+                _context12.t0 = "iusr";
+                _context12.t1 = this.utils;
+                _context12.next = 6;
                 return this.CurrentAccountAddress();
 
               case 6:
-                _context11.t2 = _context11.sent;
-                _context11.t3 = _context11.t1.AddressToHash.call(_context11.t1, _context11.t2);
-                subject = _context11.t0.concat.call(_context11.t0, _context11.t3);
+                _context12.t2 = _context12.sent;
+                _context12.t3 = _context12.t1.AddressToHash.call(_context12.t1, _context12.t2);
+                subject = _context12.t0.concat.call(_context12.t0, _context12.t3);
 
               case 9:
                 if (policyId) {
                   context["elv:delegation-id"] = policyId;
                 }
 
-                _context11.t4 = Buffer;
-                _context11.next = 13;
+                _context12.t4 = Buffer;
+                _context12.next = 13;
                 return this.CurrentAccountAddress().replace(/^0x/, "");
 
               case 13:
-                _context11.t5 = _context11.sent;
-                _context11.t6 = _context11.t4.from.call(_context11.t4, _context11.t5, "hex").toString("base64");
-                _context11.t7 = subject;
-                _context11.next = 18;
+                _context12.t5 = _context12.sent;
+                _context12.t6 = _context12.t4.from.call(_context12.t4, _context12.t5, "hex").toString("base64");
+                _context12.t7 = subject;
+                _context12.next = 18;
                 return this.ContentSpaceId();
 
               case 18:
-                _context11.t8 = _context11.sent;
-                _context11.t9 = Date.now();
-                _context11.t10 = Date.now() + duration;
-                _context11.t11 = grantType;
-                _context11.t12 = context;
+                _context12.t8 = _context12.sent;
+                _context12.t9 = Date.now();
+                _context12.t10 = Date.now() + duration;
+                _context12.t11 = grantType;
+                _context12.t12 = context;
                 token = {
-                  adr: _context11.t6,
-                  sub: _context11.t7,
-                  spc: _context11.t8,
-                  iat: _context11.t9,
-                  exp: _context11.t10,
-                  gra: _context11.t11,
-                  ctx: _context11.t12
+                  adr: _context12.t6,
+                  sub: _context12.t7,
+                  spc: _context12.t8,
+                  iat: _context12.t9,
+                  exp: _context12.t10,
+                  gra: _context12.t11,
+                  ctx: _context12.t12
                 };
 
                 if (versionHash) {
@@ -1039,24 +1116,24 @@ var ElvClient = /*#__PURE__*/function () {
                 }
 
                 if (!objectId) {
-                  _context11.next = 31;
+                  _context12.next = 31;
                   break;
                 }
 
                 token.qid = objectId;
 
                 if (libraryId) {
-                  _context11.next = 31;
+                  _context12.next = 31;
                   break;
                 }
 
-                _context11.next = 30;
+                _context12.next = 30;
                 return this.ContentObjectLibraryId({
                   objectId: objectId
                 });
 
               case 30:
-                libraryId = _context11.sent;
+                libraryId = _context12.sent;
 
               case 31:
                 if (libraryId) {
@@ -1064,38 +1141,38 @@ var ElvClient = /*#__PURE__*/function () {
                 }
 
                 if (!allowDecryption) {
-                  _context11.next = 37;
+                  _context12.next = 37;
                   break;
                 }
 
-                _context11.next = 35;
+                _context12.next = 35;
                 return this.authClient.ReEncryptionConk({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
               case 35:
-                cap = _context11.sent;
+                cap = _context12.sent;
                 token.apk = cap.public_key;
 
               case 37:
                 compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
-                _context11.next = 40;
+                _context12.next = 40;
                 return this.authClient.Sign(Ethers.utils.keccak256(compressedToken));
 
               case 40:
-                signature = _context11.sent;
-                return _context11.abrupt("return", "aessjc".concat(this.utils.B58(Buffer.concat([Buffer.from(signature.replace(/^0x/, ""), "hex"), Buffer.from(compressedToken)]))));
+                signature = _context12.sent;
+                return _context12.abrupt("return", "aessjc".concat(this.utils.B58(Buffer.concat([Buffer.from(signature.replace(/^0x/, ""), "hex"), Buffer.from(compressedToken)]))));
 
               case 42:
               case "end":
-                return _context11.stop();
+                return _context12.stop();
             }
           }
-        }, _callee11, this);
+        }, _callee12, this);
       }));
 
-      function CreateSignedToken(_x7) {
+      function CreateSignedToken(_x8) {
         return _CreateSignedToken.apply(this, arguments);
       }
 
@@ -1124,13 +1201,13 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "SetOauthToken",
     value: function () {
-      var _SetOauthToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee12(_ref14) {
+      var _SetOauthToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee13(_ref15) {
         var token, wallet, signer;
-        return _regeneratorRuntime.wrap(function _callee12$(_context12) {
+        return _regeneratorRuntime.wrap(function _callee13$(_context13) {
           while (1) {
-            switch (_context12.prev = _context12.next) {
+            switch (_context13.prev = _context13.next) {
               case 0:
-                token = _ref14.token;
+                token = _ref15.token;
                 this.oauthToken = token;
                 wallet = this.GenerateWallet();
                 signer = wallet.AddAccountFromMnemonic({
@@ -1142,13 +1219,13 @@ var ElvClient = /*#__PURE__*/function () {
 
               case 5:
               case "end":
-                return _context12.stop();
+                return _context13.stop();
             }
           }
-        }, _callee12, this);
+        }, _callee13, this);
       }));
 
-      function SetOauthToken(_x8) {
+      function SetOauthToken(_x9) {
         return _SetOauthToken.apply(this, arguments);
       }
 
@@ -1168,17 +1245,17 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "SetSignerFromOauthToken",
     value: function () {
-      var _SetSignerFromOauthToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee13(_ref15) {
+      var _SetSignerFromOauthToken = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee14(_ref16) {
         var token, wallet, client, _yield$client$authCli, urls, path, httpClient, response, privateKey;
 
-        return _regeneratorRuntime.wrap(function _callee13$(_context13) {
+        return _regeneratorRuntime.wrap(function _callee14$(_context14) {
           while (1) {
-            switch (_context13.prev = _context13.next) {
+            switch (_context14.prev = _context14.next) {
               case 0:
-                token = _ref15.token;
+                token = _ref16.token;
 
                 if (this.trustAuthorityId) {
-                  _context13.next = 3;
+                  _context14.next = 3;
                   break;
                 }
 
@@ -1186,36 +1263,36 @@ var ElvClient = /*#__PURE__*/function () {
 
               case 3:
                 wallet = this.GenerateWallet();
-                _context13.prev = 4;
+                _context14.prev = 4;
 
                 if (this.kmsURIs) {
-                  _context13.next = 17;
+                  _context14.next = 17;
                   break;
                 }
 
-                _context13.next = 8;
+                _context14.next = 8;
                 return ElvClient.FromConfigurationUrl({
                   configUrl: this.configUrl
                 });
 
               case 8:
-                client = _context13.sent;
+                client = _context14.sent;
                 client.SetSigner({
                   signer: wallet.AddAccountFromMnemonic({
                     mnemonic: wallet.GenerateMnemonic()
                   })
                 });
-                _context13.next = 12;
+                _context14.next = 12;
                 return client.authClient.KMSInfo({
                   kmsId: this.trustAuthorityId
                 });
 
               case 12:
-                _yield$client$authCli = _context13.sent;
+                _yield$client$authCli = _context14.sent;
                 urls = _yield$client$authCli.urls;
 
                 if (!(!urls || urls.length === 0)) {
-                  _context13.next = 16;
+                  _context14.next = 16;
                   break;
                 }
 
@@ -1231,7 +1308,7 @@ var ElvClient = /*#__PURE__*/function () {
                   uris: this.kmsURIs,
                   debug: this.debug
                 });
-                _context13.next = 22;
+                _context14.next = 22;
                 return this.utils.ResponseToJson(httpClient.Request({
                   headers: {
                     Authorization: "Bearer ".concat(token)
@@ -1242,7 +1319,7 @@ var ElvClient = /*#__PURE__*/function () {
                 }));
 
               case 22:
-                response = _context13.sent;
+                response = _context14.sent;
                 privateKey = response["UserSKHex"];
                 this.SetSigner({
                   signer: wallet.AddAccount({
@@ -1250,33 +1327,33 @@ var ElvClient = /*#__PURE__*/function () {
                   })
                 }); // Ensure wallet is initialized
 
-                _context13.next = 27;
+                _context14.next = 27;
                 return this.userProfileClient.WalletAddress();
 
               case 27:
-                _context13.next = 36;
+                _context14.next = 36;
                 break;
 
               case 29:
-                _context13.prev = 29;
-                _context13.t0 = _context13["catch"](4);
+                _context14.prev = 29;
+                _context14.t0 = _context14["catch"](4);
                 this.Log("Failed to set signer from OAuth token:", true);
-                this.Log(_context13.t0, true);
-                _context13.next = 35;
+                this.Log(_context14.t0, true);
+                _context14.next = 35;
                 return this.ClearSigner();
 
               case 35:
-                throw _context13.t0;
+                throw _context14.t0;
 
               case 36:
               case "end":
-                return _context13.stop();
+                return _context14.stop();
             }
           }
-        }, _callee13, this, [[4, 29]]);
+        }, _callee14, this, [[4, 29]]);
       }));
 
-      function SetSignerFromOauthToken(_x9) {
+      function SetSignerFromOauthToken(_x10) {
         return _SetSignerFromOauthToken.apply(this, arguments);
       }
 
@@ -1293,8 +1370,8 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "SetStaticToken",
     value: function SetStaticToken() {
-      var _ref16 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          token = _ref16.token;
+      var _ref17 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          token = _ref17.token;
 
       if (!token) {
         token = this.utils.B64(JSON.stringify({
@@ -1326,36 +1403,36 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "SetPolicyAuthorization",
     value: function () {
-      var _SetPolicyAuthorization = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee14(_ref17) {
+      var _SetPolicyAuthorization = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee15(_ref18) {
         var objectId;
-        return _regeneratorRuntime.wrap(function _callee14$(_context14) {
+        return _regeneratorRuntime.wrap(function _callee15$(_context15) {
           while (1) {
-            switch (_context14.prev = _context14.next) {
+            switch (_context15.prev = _context15.next) {
               case 0:
-                objectId = _ref17.objectId;
-                _context14.t0 = this;
-                _context14.next = 4;
+                objectId = _ref18.objectId;
+                _context15.t0 = this;
+                _context15.next = 4;
                 return this.GenerateStateChannelToken({
                   objectId: objectId
                 });
 
               case 4:
-                _context14.t1 = _context14.sent;
-                _context14.t2 = {
-                  token: _context14.t1
+                _context15.t1 = _context15.sent;
+                _context15.t2 = {
+                  token: _context15.t1
                 };
 
-                _context14.t0.SetStaticToken.call(_context14.t0, _context14.t2);
+                _context15.t0.SetStaticToken.call(_context15.t0, _context15.t2);
 
               case 7:
               case "end":
-                return _context14.stop();
+                return _context15.stop();
             }
           }
-        }, _callee14, this);
+        }, _callee15, this);
       }));
 
-      function SetPolicyAuthorization(_x10) {
+      function SetPolicyAuthorization(_x11) {
         return _SetPolicyAuthorization.apply(this, arguments);
       }
 
@@ -1371,28 +1448,28 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "Sign",
     value: function () {
-      var _Sign = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee15(string) {
+      var _Sign = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee16(string) {
         var signature;
-        return _regeneratorRuntime.wrap(function _callee15$(_context15) {
+        return _regeneratorRuntime.wrap(function _callee16$(_context16) {
           while (1) {
-            switch (_context15.prev = _context15.next) {
+            switch (_context16.prev = _context16.next) {
               case 0:
-                _context15.next = 2;
+                _context16.next = 2;
                 return this.authClient.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(string)));
 
               case 2:
-                signature = _context15.sent;
-                return _context15.abrupt("return", this.utils.FormatSignature(signature));
+                signature = _context16.sent;
+                return _context16.abrupt("return", this.utils.FormatSignature(signature));
 
               case 4:
               case "end":
-                return _context15.stop();
+                return _context16.stop();
             }
           }
-        }, _callee15, this);
+        }, _callee16, this);
       }));
 
-      function Sign(_x11) {
+      function Sign(_x12) {
         return _Sign.apply(this, arguments);
       }
 
@@ -1411,16 +1488,16 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "EncryptECIES",
     value: function () {
-      var _EncryptECIES = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee16(_ref18) {
+      var _EncryptECIES = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee17(_ref19) {
         var message, publicKey;
-        return _regeneratorRuntime.wrap(function _callee16$(_context16) {
+        return _regeneratorRuntime.wrap(function _callee17$(_context17) {
           while (1) {
-            switch (_context16.prev = _context16.next) {
+            switch (_context17.prev = _context17.next) {
               case 0:
-                message = _ref18.message, publicKey = _ref18.publicKey;
+                message = _ref19.message, publicKey = _ref19.publicKey;
 
                 if (this.signer) {
-                  _context16.next = 3;
+                  _context17.next = 3;
                   break;
                 }
 
@@ -1428,21 +1505,21 @@ var ElvClient = /*#__PURE__*/function () {
 
               case 3:
                 ValidatePresence("message", message);
-                _context16.next = 6;
-                return this.Crypto.EncryptConk(message, publicKey || this.signer.signingKey.keyPair.publicKey);
+                _context17.next = 6;
+                return this.Crypto.EncryptConk(message, publicKey || this.signer._signingKey().publicKey);
 
               case 6:
-                return _context16.abrupt("return", _context16.sent);
+                return _context17.abrupt("return", _context17.sent);
 
               case 7:
               case "end":
-                return _context16.stop();
+                return _context17.stop();
             }
           }
-        }, _callee16, this);
+        }, _callee17, this);
       }));
 
-      function EncryptECIES(_x12) {
+      function EncryptECIES(_x13) {
         return _EncryptECIES.apply(this, arguments);
       }
 
@@ -1460,16 +1537,16 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "DecryptECIES",
     value: function () {
-      var _DecryptECIES = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee17(_ref19) {
+      var _DecryptECIES = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18(_ref20) {
         var message;
-        return _regeneratorRuntime.wrap(function _callee17$(_context17) {
+        return _regeneratorRuntime.wrap(function _callee18$(_context18) {
           while (1) {
-            switch (_context17.prev = _context17.next) {
+            switch (_context18.prev = _context18.next) {
               case 0:
-                message = _ref19.message;
+                message = _ref20.message;
 
                 if (this.signer) {
-                  _context17.next = 3;
+                  _context18.next = 3;
                   break;
                 }
 
@@ -1477,21 +1554,21 @@ var ElvClient = /*#__PURE__*/function () {
 
               case 3:
                 ValidatePresence("message", message);
-                _context17.next = 6;
-                return this.Crypto.DecryptCap(message, this.signer.signingKey.privateKey);
+                _context18.next = 6;
+                return this.Crypto.DecryptCap(message, this.signer._signingKey().privateKey);
 
               case 6:
-                return _context17.abrupt("return", _context17.sent);
+                return _context18.abrupt("return", _context18.sent);
 
               case 7:
               case "end":
-                return _context17.stop();
+                return _context18.stop();
             }
           }
-        }, _callee17, this);
+        }, _callee18, this);
       }));
 
-      function DecryptECIES(_x13) {
+      function DecryptECIES(_x14) {
         return _DecryptECIES.apply(this, arguments);
       }
 
@@ -1512,15 +1589,15 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "Request",
     value: function () {
-      var _Request = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18(_ref20) {
-        var url, _ref20$format, format, _ref20$method, method, _ref20$headers, headers, body;
+      var _Request = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee19(_ref21) {
+        var url, _ref21$format, format, _ref21$method, method, _ref21$headers, headers, body;
 
-        return _regeneratorRuntime.wrap(function _callee18$(_context18) {
+        return _regeneratorRuntime.wrap(function _callee19$(_context19) {
           while (1) {
-            switch (_context18.prev = _context18.next) {
+            switch (_context19.prev = _context19.next) {
               case 0:
-                url = _ref20.url, _ref20$format = _ref20.format, format = _ref20$format === void 0 ? "json" : _ref20$format, _ref20$method = _ref20.method, method = _ref20$method === void 0 ? "GET" : _ref20$method, _ref20$headers = _ref20.headers, headers = _ref20$headers === void 0 ? {} : _ref20$headers, body = _ref20.body;
-                return _context18.abrupt("return", this.utils.ResponseToFormat(format, HttpClient.Fetch(url, {
+                url = _ref21.url, _ref21$format = _ref21.format, format = _ref21$format === void 0 ? "json" : _ref21$format, _ref21$method = _ref21.method, method = _ref21$method === void 0 ? "GET" : _ref21$method, _ref21$headers = _ref21.headers, headers = _ref21$headers === void 0 ? {} : _ref21$headers, body = _ref21.body;
+                return _context19.abrupt("return", this.utils.ResponseToFormat(format, HttpClient.Fetch(url, {
                   method: method,
                   headers: headers,
                   body: body
@@ -1528,13 +1605,13 @@ var ElvClient = /*#__PURE__*/function () {
 
               case 2:
               case "end":
-                return _context18.stop();
+                return _context19.stop();
             }
           }
-        }, _callee18, this);
+        }, _callee19, this);
       }));
 
-      function Request(_x14) {
+      function Request(_x15) {
         return _Request.apply(this, arguments);
       }
 
@@ -1548,7 +1625,7 @@ var ElvClient = /*#__PURE__*/function () {
     value: function FrameAllowedMethods() {
       var _this2 = this;
 
-      var forbiddenMethods = ["constructor", "AccessGroupMembershipMethod", "CallFromFrameMessage", "ClearSigner", "CreateAccount", "EnableMethodLogging", "FormatBlockNumbers", "FrameAllowedMethods", "FromConfigurationUrl", "GenerateWallet", "InitializeClients", "Log", "SetRemoteSigner", "SetSigner", "SetSignerFromWeb3Provider", "Sign", "ToggleLogging"];
+      var forbiddenMethods = ["constructor", "AccessGroupMembershipMethod", "CallFromFrameMessage", "ClearSigner", "CreateAccount", "EnableMethodLogging", "FormatBlockNumbers", "FrameAllowedMethods", "FromConfigurationUrl", "GenerateWallet", "InitializeClients", "Log", "PersonalSign", "SetRemoteSigner", "SetSigner", "SetSignerFromWeb3Provider", "Sign", "ToggleLogging"];
       return Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(function (method) {
         return typeof _this2[method] === "function" && !forbiddenMethods.includes(method);
       });
@@ -1557,20 +1634,20 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "CallFromFrameMessage",
     value: function () {
-      var _CallFromFrameMessage = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee19(message, Respond) {
+      var _CallFromFrameMessage = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee20(message, Respond) {
         var _this3 = this;
 
         var callback, method, methodResults, responseError;
-        return _regeneratorRuntime.wrap(function _callee19$(_context19) {
+        return _regeneratorRuntime.wrap(function _callee20$(_context20) {
           while (1) {
-            switch (_context19.prev = _context19.next) {
+            switch (_context20.prev = _context20.next) {
               case 0:
                 if (!(message.type !== "ElvFrameRequest")) {
-                  _context19.next = 2;
+                  _context20.next = 2;
                   break;
                 }
 
-                return _context19.abrupt("return");
+                return _context20.abrupt("return");
 
               case 2:
                 if (message.callbackId) {
@@ -1585,44 +1662,44 @@ var ElvClient = /*#__PURE__*/function () {
                   message.args.callback = callback;
                 }
 
-                _context19.prev = 3;
+                _context20.prev = 3;
                 method = message.calledMethod;
 
                 if (!(message.module === "userProfileClient")) {
-                  _context19.next = 13;
+                  _context20.next = 13;
                   break;
                 }
 
                 if (this.userProfileClient.FrameAllowedMethods().includes(method)) {
-                  _context19.next = 8;
+                  _context20.next = 8;
                   break;
                 }
 
                 throw Error("Invalid user profile method: " + method);
 
               case 8:
-                _context19.next = 10;
+                _context20.next = 10;
                 return this.userProfileClient[method](message.args);
 
               case 10:
-                methodResults = _context19.sent;
-                _context19.next = 18;
+                methodResults = _context20.sent;
+                _context20.next = 18;
                 break;
 
               case 13:
                 if (this.FrameAllowedMethods().includes(method)) {
-                  _context19.next = 15;
+                  _context20.next = 15;
                   break;
                 }
 
                 throw Error("Invalid method: " + method);
 
               case 15:
-                _context19.next = 17;
+                _context20.next = 17;
                 return this[method](message.args);
 
               case 17:
-                methodResults = _context19.sent;
+                methodResults = _context20.sent;
 
               case 18:
                 Respond(this.utils.MakeClonable({
@@ -1630,17 +1707,17 @@ var ElvClient = /*#__PURE__*/function () {
                   requestId: message.requestId,
                   response: methodResults
                 }));
-                _context19.next = 27;
+                _context20.next = 27;
                 break;
 
               case 21:
-                _context19.prev = 21;
-                _context19.t0 = _context19["catch"](3);
+                _context20.prev = 21;
+                _context20.t0 = _context20["catch"](3);
                 // eslint-disable-next-line no-console
-                this.Log("Frame Message Error:\n        Method: ".concat(message.calledMethod, "\n        Arguments: ").concat(JSON.stringify(message.args, null, 2), "\n        Error: ").concat(_typeof(_context19.t0) === "object" ? JSON.stringify(_context19.t0, null, 2) : _context19.t0), true); // eslint-disable-next-line no-console
+                this.Log("Frame Message Error:\n        Method: ".concat(message.calledMethod, "\n        Arguments: ").concat(JSON.stringify(message.args, null, 2), "\n        Error: ").concat(_typeof(_context20.t0) === "object" ? JSON.stringify(_context20.t0, null, 2) : _context20.t0), true); // eslint-disable-next-line no-console
 
-                console.error(_context19.t0);
-                responseError = _context19.t0 instanceof Error ? _context19.t0.message : _context19.t0;
+                console.error(_context20.t0);
+                responseError = _context20.t0 instanceof Error ? _context20.t0.message : _context20.t0;
                 Respond(this.utils.MakeClonable({
                   type: "ElvFrameResponse",
                   requestId: message.requestId,
@@ -1649,13 +1726,13 @@ var ElvClient = /*#__PURE__*/function () {
 
               case 27:
               case "end":
-                return _context19.stop();
+                return _context20.stop();
             }
           }
-        }, _callee19, this, [[3, 21]]);
+        }, _callee20, this, [[3, 21]]);
       }));
 
-      function CallFromFrameMessage(_x15, _x16) {
+      function CallFromFrameMessage(_x16, _x17) {
         return _CallFromFrameMessage.apply(this, arguments);
       }
 
@@ -1664,15 +1741,15 @@ var ElvClient = /*#__PURE__*/function () {
   }], [{
     key: "Configuration",
     value: function () {
-      var _Configuration = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee20(_ref21) {
-        var configUrl, _ref21$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs, authServiceURIs, fabricVersion;
+      var _Configuration = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee21(_ref22) {
+        var configUrl, _ref22$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs, authServiceURIs, searchURIs, fabricVersion;
 
-        return _regeneratorRuntime.wrap(function _callee20$(_context20) {
+        return _regeneratorRuntime.wrap(function _callee21$(_context21) {
           while (1) {
-            switch (_context20.prev = _context20.next) {
+            switch (_context21.prev = _context21.next) {
               case 0:
-                configUrl = _ref21.configUrl, _ref21$kmsUrls = _ref21.kmsUrls, kmsUrls = _ref21$kmsUrls === void 0 ? [] : _ref21$kmsUrls, region = _ref21.region;
-                _context20.prev = 1;
+                configUrl = _ref22.configUrl, _ref22$kmsUrls = _ref22.kmsUrls, kmsUrls = _ref22$kmsUrls === void 0 ? [] : _ref22$kmsUrls, region = _ref22.region;
+                _context21.prev = 1;
                 uri = new URI(configUrl);
                 uri.pathname("/config");
 
@@ -1680,11 +1757,11 @@ var ElvClient = /*#__PURE__*/function () {
                   uri.addSearch("elvgeo", region);
                 }
 
-                _context20.next = 7;
+                _context21.next = 7;
                 return Utils.ResponseToJson(HttpClient.Fetch(uri.toString()));
 
               case 7:
-                fabricInfo = _context20.sent;
+                fabricInfo = _context21.sent;
 
                 // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
                 filterHTTPS = function filterHTTPS(uri) {
@@ -1709,8 +1786,9 @@ var ElvClient = /*#__PURE__*/function () {
                   authServiceURIs = authServiceURIs.filter(filterHTTPS);
                 }
 
+                searchURIs = fabricInfo.network.services.search || [];
                 fabricVersion = Math.max.apply(Math, _toConsumableArray(fabricInfo.network.api_versions || [2]));
-                return _context20.abrupt("return", {
+                return _context21.abrupt("return", {
                   nodeId: fabricInfo.node_id,
                   contentSpaceId: fabricInfo.qspace.id,
                   networkId: (fabricInfo.qspace.ethereum || {}).network_id,
@@ -1719,27 +1797,28 @@ var ElvClient = /*#__PURE__*/function () {
                   ethereumURIs: ethereumURIs,
                   authServiceURIs: authServiceURIs,
                   kmsURIs: kmsUrls,
+                  searchURIs: searchURIs,
                   fabricVersion: fabricVersion
                 });
 
-              case 19:
-                _context20.prev = 19;
-                _context20.t0 = _context20["catch"](1);
+              case 20:
+                _context21.prev = 20;
+                _context21.t0 = _context21["catch"](1);
                 // eslint-disable-next-line no-console
                 console.error("Error retrieving fabric configuration:"); // eslint-disable-next-line no-console
 
-                console.error(_context20.t0);
-                throw _context20.t0;
+                console.error(_context21.t0);
+                throw _context21.t0;
 
-              case 24:
+              case 25:
               case "end":
-                return _context20.stop();
+                return _context21.stop();
             }
           }
-        }, _callee20, null, [[1, 19]]);
+        }, _callee21, null, [[1, 20]]);
       }));
 
-      function Configuration(_x17) {
+      function Configuration(_x18) {
         return _Configuration.apply(this, arguments);
       }
 
@@ -1764,25 +1843,25 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "FromNetworkName",
     value: function () {
-      var _FromNetworkName = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee21(_ref22) {
-        var networkName, region, trustAuthorityId, staticToken, _ref22$ethereumContra, ethereumContractTimeout, _ref22$noCache, noCache, _ref22$noAuth, noAuth, assumeV3, configUrl;
+      var _FromNetworkName = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee22(_ref23) {
+        var networkName, region, trustAuthorityId, staticToken, _ref23$ethereumContra, ethereumContractTimeout, _ref23$noCache, noCache, _ref23$noAuth, noAuth, assumeV3, configUrl;
 
-        return _regeneratorRuntime.wrap(function _callee21$(_context21) {
+        return _regeneratorRuntime.wrap(function _callee22$(_context22) {
           while (1) {
-            switch (_context21.prev = _context21.next) {
+            switch (_context22.prev = _context22.next) {
               case 0:
-                networkName = _ref22.networkName, region = _ref22.region, trustAuthorityId = _ref22.trustAuthorityId, staticToken = _ref22.staticToken, _ref22$ethereumContra = _ref22.ethereumContractTimeout, ethereumContractTimeout = _ref22$ethereumContra === void 0 ? 10 : _ref22$ethereumContra, _ref22$noCache = _ref22.noCache, noCache = _ref22$noCache === void 0 ? false : _ref22$noCache, _ref22$noAuth = _ref22.noAuth, noAuth = _ref22$noAuth === void 0 ? false : _ref22$noAuth, assumeV3 = _ref22.assumeV3;
+                networkName = _ref23.networkName, region = _ref23.region, trustAuthorityId = _ref23.trustAuthorityId, staticToken = _ref23.staticToken, _ref23$ethereumContra = _ref23.ethereumContractTimeout, ethereumContractTimeout = _ref23$ethereumContra === void 0 ? 10 : _ref23$ethereumContra, _ref23$noCache = _ref23.noCache, noCache = _ref23$noCache === void 0 ? false : _ref23$noCache, _ref23$noAuth = _ref23.noAuth, noAuth = _ref23$noAuth === void 0 ? false : _ref23$noAuth, assumeV3 = _ref23.assumeV3;
                 configUrl = networks[networkName];
 
                 if (configUrl) {
-                  _context21.next = 4;
+                  _context22.next = 4;
                   break;
                 }
 
                 throw Error("Invalid network name: " + networkName);
 
               case 4:
-                _context21.next = 6;
+                _context22.next = 6;
                 return this.FromConfigurationUrl({
                   configUrl: configUrl,
                   region: region,
@@ -1795,17 +1874,17 @@ var ElvClient = /*#__PURE__*/function () {
                 });
 
               case 6:
-                return _context21.abrupt("return", _context21.sent);
+                return _context22.abrupt("return", _context22.sent);
 
               case 7:
               case "end":
-                return _context21.stop();
+                return _context22.stop();
             }
           }
-        }, _callee21, this);
+        }, _callee22, this);
       }));
 
-      function FromNetworkName(_x18) {
+      function FromNetworkName(_x19) {
         return _FromNetworkName.apply(this, arguments);
       }
 
@@ -1830,28 +1909,29 @@ var ElvClient = /*#__PURE__*/function () {
   }, {
     key: "FromConfigurationUrl",
     value: function () {
-      var _FromConfigurationUrl = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee22(_ref23) {
-        var configUrl, region, trustAuthorityId, staticToken, _ref23$ethereumContra, ethereumContractTimeout, _ref23$noCache, noCache, _ref23$noAuth, noAuth, _ref23$assumeV, assumeV3, _yield$ElvClient$Conf3, contentSpaceId, networkId, networkName, fabricURIs, ethereumURIs, authServiceURIs, fabricVersion, client;
+      var _FromConfigurationUrl = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee23(_ref24) {
+        var configUrl, region, trustAuthorityId, staticToken, _ref24$ethereumContra, ethereumContractTimeout, _ref24$noCache, noCache, _ref24$noAuth, noAuth, _ref24$assumeV, assumeV3, _yield$ElvClient$Conf3, contentSpaceId, networkId, networkName, fabricURIs, ethereumURIs, authServiceURIs, searchURIs, fabricVersion, client;
 
-        return _regeneratorRuntime.wrap(function _callee22$(_context22) {
+        return _regeneratorRuntime.wrap(function _callee23$(_context23) {
           while (1) {
-            switch (_context22.prev = _context22.next) {
+            switch (_context23.prev = _context23.next) {
               case 0:
-                configUrl = _ref23.configUrl, region = _ref23.region, trustAuthorityId = _ref23.trustAuthorityId, staticToken = _ref23.staticToken, _ref23$ethereumContra = _ref23.ethereumContractTimeout, ethereumContractTimeout = _ref23$ethereumContra === void 0 ? 10 : _ref23$ethereumContra, _ref23$noCache = _ref23.noCache, noCache = _ref23$noCache === void 0 ? false : _ref23$noCache, _ref23$noAuth = _ref23.noAuth, noAuth = _ref23$noAuth === void 0 ? false : _ref23$noAuth, _ref23$assumeV = _ref23.assumeV3, assumeV3 = _ref23$assumeV === void 0 ? false : _ref23$assumeV;
-                _context22.next = 3;
+                configUrl = _ref24.configUrl, region = _ref24.region, trustAuthorityId = _ref24.trustAuthorityId, staticToken = _ref24.staticToken, _ref24$ethereumContra = _ref24.ethereumContractTimeout, ethereumContractTimeout = _ref24$ethereumContra === void 0 ? 10 : _ref24$ethereumContra, _ref24$noCache = _ref24.noCache, noCache = _ref24$noCache === void 0 ? false : _ref24$noCache, _ref24$noAuth = _ref24.noAuth, noAuth = _ref24$noAuth === void 0 ? false : _ref24$noAuth, _ref24$assumeV = _ref24.assumeV3, assumeV3 = _ref24$assumeV === void 0 ? false : _ref24$assumeV;
+                _context23.next = 3;
                 return ElvClient.Configuration({
                   configUrl: configUrl,
                   region: region
                 });
 
               case 3:
-                _yield$ElvClient$Conf3 = _context22.sent;
+                _yield$ElvClient$Conf3 = _context23.sent;
                 contentSpaceId = _yield$ElvClient$Conf3.contentSpaceId;
                 networkId = _yield$ElvClient$Conf3.networkId;
                 networkName = _yield$ElvClient$Conf3.networkName;
                 fabricURIs = _yield$ElvClient$Conf3.fabricURIs;
                 ethereumURIs = _yield$ElvClient$Conf3.ethereumURIs;
                 authServiceURIs = _yield$ElvClient$Conf3.authServiceURIs;
+                searchURIs = _yield$ElvClient$Conf3.searchURIs;
                 fabricVersion = _yield$ElvClient$Conf3.fabricVersion;
                 client = new ElvClient({
                   contentSpaceId: contentSpaceId,
@@ -1861,6 +1941,7 @@ var ElvClient = /*#__PURE__*/function () {
                   fabricURIs: fabricURIs,
                   ethereumURIs: ethereumURIs,
                   authServiceURIs: authServiceURIs,
+                  searchURIs: searchURIs,
                   ethereumContractTimeout: ethereumContractTimeout,
                   trustAuthorityId: trustAuthorityId,
                   staticToken: staticToken,
@@ -1869,17 +1950,17 @@ var ElvClient = /*#__PURE__*/function () {
                   assumeV3: assumeV3
                 });
                 client.configUrl = configUrl;
-                return _context22.abrupt("return", client);
+                return _context23.abrupt("return", client);
 
-              case 14:
+              case 15:
               case "end":
-                return _context22.stop();
+                return _context23.stop();
             }
           }
-        }, _callee22);
+        }, _callee23);
       }));
 
-      function FromConfigurationUrl(_x19) {
+      function FromConfigurationUrl(_x20) {
         return _FromConfigurationUrl.apply(this, arguments);
       }
 

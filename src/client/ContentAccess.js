@@ -5,6 +5,7 @@
  */
 
 const UrlJoin = require("url-join");
+const objectPath = require("object-path");
 
 const HttpClient = require("../HttpClient");
 
@@ -18,7 +19,6 @@ const {
 } = require("../Validation");
 
 const MergeWith = require("lodash/mergeWith");
-
 
 // Note: Keep these ordered by most-restrictive to least-restrictive
 exports.permissionLevels = {
@@ -49,9 +49,13 @@ exports.permissionLevels = {
   }
 };
 
-exports.Visibility = async function({id}) {
+exports.Visibility = async function({id, clearCache}) {
   try {
     const address = this.utils.HashToAddress(id);
+
+    if(clearCache) {
+      delete this.visibilityInfo[address];
+    }
 
     if(!this.visibilityInfo[address]) {
       this.visibilityInfo[address] = new Promise(async (resolve, reject) => {
@@ -103,14 +107,14 @@ exports.Visibility = async function({id}) {
  *
  * @return {string} - Key for the permission of the object - Use this to retrieve more details from client.permissionLevels
  */
-exports.Permission = async function({objectId}) {
+exports.Permission = async function({objectId, clearCache}) {
   ValidateObject(objectId);
 
   if((await this.AccessType({id: objectId})) !== this.authClient.ACCESS_TYPES.OBJECT) {
     throw Error("Permission only valid for normal content objects: " + objectId);
   }
 
-  const visibility = await this.Visibility({id: objectId});
+  const visibility = await this.Visibility({id: objectId, clearCache});
 
   const kmsAddress = await this.CallContractMethod({
     contractAddress: this.utils.HashToAddress(objectId),
@@ -578,17 +582,18 @@ exports.ContentObjects = async function({libraryId, filterOptions={}}) {
  * @param {string=} libraryId - ID of the library
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
+ * @param {string=} writeToken - Write token for an object draft -- if supplied, versionHash will be ignored
  *
  * @returns {Promise<Object>} - Description of content object
  */
-exports.ContentObject = async function({libraryId, objectId, versionHash}) {
+exports.ContentObject = async function({libraryId, objectId, versionHash, writeToken}) {
   ValidateParameters({libraryId, objectId, versionHash});
 
-  this.Log(`Retrieving content object: ${libraryId || ""} ${objectId || versionHash}`);
+  this.Log(`Retrieving content object: ${libraryId || ""} ${writeToken || versionHash || objectId}`);
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-  let path = UrlJoin("q", versionHash || objectId);
+  let path = UrlJoin("q", writeToken || versionHash || objectId);
 
   return await this.utils.ResponseToJson(
     this.HttpClient.Request({
@@ -922,8 +927,17 @@ exports.ContentObjectMetadata = async function({
     if(error.status !== 404) {
       throw error;
     }
-
-    metadata = metadataSubtree === "/" ? {} : undefined;
+    // For a 404 error, check if error was due to write token not found
+    const errQwtoken = objectPath.get(error.body, "errors[0].cause.cause.cause.qwtoken");
+    if(errQwtoken) {
+      // if so, re-throw rather than suppress error
+      throw error;
+    } else {
+      // For all other 404 errors (not just 'subtree not found'), suppress error and
+      // return an empty value. (there are function call chains that depend on this behavior,
+      //  e.g. CreateABRMezzanine -> CreateEncryptionConk -> ContentObjectMetadata)
+      metadata = metadataSubtree === "/" ? {} : undefined;
+    }
   }
 
   if(!produceLinkUrls) { return metadata; }
@@ -2332,6 +2346,10 @@ exports.LinkData = async function({libraryId, objectId, versionHash, writeToken,
 /* Encryption */
 
 exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash, writeToken, createKMSConk=true}) {
+  if(this.signer.remoteSigner) {
+    return;
+  }
+
   ValidateParameters({libraryId, objectId, versionHash});
   ValidateWriteToken(writeToken);
 
@@ -2354,7 +2372,7 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash,
     });
 
   if(existingUserCap) {
-    this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
+    this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
   } else {
     this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk({
       spaceId: this.contentSpaceId,
@@ -2366,7 +2384,7 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash,
       objectId,
       writeToken,
       metadataSubtree: capKey,
-      metadata: await this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey)
+      metadata: await this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer._signingKey().publicKey)
     });
   }
 
@@ -2457,7 +2475,7 @@ exports.EncryptionConk = async function({libraryId, objectId, versionHash, write
       });
 
     if(existingUserCap) {
-      this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
+      this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
     } else if(writeToken) {
       await this.CreateEncryptionConk({libraryId, objectId, versionHash, writeToken, createKMSConk: false});
     } else {

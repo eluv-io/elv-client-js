@@ -8,8 +8,6 @@ var _defineProperty = require("@babel/runtime/helpers/defineProperty");
 
 var _slicedToArray = require("@babel/runtime/helpers/slicedToArray");
 
-var _this = this;
-
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
@@ -26,6 +24,8 @@ var VarInt = require("varint");
 
 var URI = require("urijs");
 
+var Pako = require("pako");
+
 var _require$utils = require("ethers").utils,
     keccak256 = _require$utils.keccak256,
     getAddress = _require$utils.getAddress;
@@ -36,14 +36,14 @@ var _require$utils = require("ethers").utils,
  *
  * Utils can be imported separately from the client:
  *
- * const Utils = require("@eluvio/elv-client-js/src/Utils)
+ * `const Utils = require("@eluvio/elv-client-js/src/Utils)`
  *
  * or
  *
- * import Utils from "@eluvio/elv-client-js/src/Utils"
+ * `import Utils from "@eluvio/elv-client-js/src/Utils"`
  *
  *
- * It can be accessed from ElvClient and FrameClient as client.utils
+ * It can be accessed from ElvClient and FrameClient as `client.utils`
  */
 
 
@@ -164,6 +164,24 @@ var Utils = {
       size: size,
       objectId: objectId,
       partHash: partHash
+    };
+  },
+
+  /**
+   * Decode the specified signed token into its component parts
+   *
+   * @param {string} token - The token to decode
+   *
+   * @return {Object} - Components of the signed token
+   */
+  DecodeSignedToken: function DecodeSignedToken(token) {
+    var decodedToken = Utils.FromB58(token.slice(6));
+    var signature = "0x".concat(decodedToken.slice(0, 65).toString("hex"));
+    var payload = JSON.parse(Buffer.from(Pako.inflateRaw(decodedToken.slice(65))).toString("utf-8"));
+    payload.adr = Utils.FormatAddress("0x".concat(Buffer.from(payload.adr, "base64").toString("hex")));
+    return {
+      payload: payload,
+      signature: signature
     };
   },
 
@@ -416,8 +434,6 @@ var Utils = {
       getAddress(address);
       return true;
     } catch (error) {
-      _this.Log(error);
-
       return false;
     }
   },
@@ -450,16 +466,34 @@ var Utils = {
     return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
   },
   B64: function B64(str) {
-    return Buffer.from(str, "utf-8").toString("base64");
+    var encoding = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "utf-8";
+    return Buffer.from(str, encoding).toString("base64");
   },
   FromB64: function FromB64(str) {
     return Buffer.from(str, "base64").toString("utf-8");
+  },
+  FromB64URL: function FromB64URL(str) {
+    str = str.replace(/-/g, "+").replace(/_/g, "/");
+    var pad = str.length % 4;
+
+    if (pad) {
+      if (pad === 1) {
+        throw new Error("InvalidLengthError: Input base64url string is the wrong length to determine padding");
+      }
+
+      str += new Array(5 - pad).join("=");
+    }
+
+    return Utils.FromB64(str);
   },
   B58: function B58(arr) {
     return bs58.encode(Buffer.from(arr));
   },
   FromB58: function FromB58(str) {
     return bs58.decode(str);
+  },
+  FromB58ToStr: function FromB58ToStr(str) {
+    return new TextDecoder().decode(Utils.FromB58(str));
   },
 
   /**
