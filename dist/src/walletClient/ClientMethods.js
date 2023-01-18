@@ -89,11 +89,13 @@ exports.UserWalletBalance = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regene
       balance,
       usage_hold,
       payout_hold,
+      locked_offer_balance,
       stripe_id,
       stripe_payouts_enabled,
       userStripeId,
       userStripeEnabled,
       totalWalletBalance,
+      lockedWalletBalance,
       availableWalletBalance,
       pendingWalletBalance,
       withdrawableWalletBalance,
@@ -135,23 +137,25 @@ exports.UserWalletBalance = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regene
           balance = _yield$this$client$ut.balance;
           usage_hold = _yield$this$client$ut.usage_hold;
           payout_hold = _yield$this$client$ut.payout_hold;
+          locked_offer_balance = _yield$this$client$ut.locked_offer_balance;
           stripe_id = _yield$this$client$ut.stripe_id;
           stripe_payouts_enabled = _yield$this$client$ut.stripe_payouts_enabled;
           userStripeId = stripe_id;
           userStripeEnabled = stripe_payouts_enabled;
           totalWalletBalance = parseFloat(balance || 0);
-          availableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(usage_hold || 0));
+          lockedWalletBalance = parseFloat(locked_offer_balance || 0);
+          availableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(usage_hold || 0) - lockedWalletBalance);
           pendingWalletBalance = Math.max(0, totalWalletBalance - availableWalletBalance);
-          withdrawableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(payout_hold || 0));
+          withdrawableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(Math.max(payout_hold, lockedWalletBalance) || 0));
 
           if (!(checkOnboard && stripe_id && !stripe_payouts_enabled)) {
-            _context.next = 28;
+            _context.next = 30;
             break;
           }
 
           // Refresh stripe enabled flag
           rootUrl = new URL(UrlJoin(window.location.origin, window.location.pathname)).toString();
-          _context.next = 25;
+          _context.next = 27;
           return this.client.authClient.MakeAuthServiceRequest({
             path: UrlJoin("as", "wlt", "onb", "stripe"),
             method: "POST",
@@ -166,17 +170,18 @@ exports.UserWalletBalance = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regene
             }
           });
 
-        case 25:
-          _context.next = 27;
+        case 27:
+          _context.next = 29;
           return this.UserWalletBalance(false);
 
-        case 27:
+        case 29:
           return _context.abrupt("return", _context.sent);
 
-        case 28:
+        case 30:
           balances = {
             totalWalletBalance: totalWalletBalance,
             availableWalletBalance: availableWalletBalance,
+            lockedWalletBalance: lockedWalletBalance,
             pendingWalletBalance: pendingWalletBalance,
             withdrawableWalletBalance: withdrawableWalletBalance
           };
@@ -195,7 +200,7 @@ exports.UserWalletBalance = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regene
 
           return _context.abrupt("return", balances);
 
-        case 31:
+        case 33:
         case "end":
           return _context.stop();
       }
@@ -657,27 +662,37 @@ exports.TenantConfiguration = /*#__PURE__*/function () {
           case 0:
             tenantId = _ref18.tenantId, contractAddress = _ref18.contractAddress;
             _context9.prev = 1;
-            _context9.next = 4;
+            contractAddress = contractAddress ? Utils.FormatAddress(contractAddress) : undefined;
+
+            if (this.tenantConfigs[contractAddress || tenantId]) {
+              _context9.next = 7;
+              break;
+            }
+
+            _context9.next = 6;
             return Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
               path: contractAddress ? UrlJoin("as", "config", "nft", contractAddress) : UrlJoin("as", "config", "tnt", tenantId),
               method: "GET"
             }));
 
-          case 4:
-            return _context9.abrupt("return", _context9.sent);
+          case 6:
+            this.tenantConfigs[contractAddress || tenantId] = _context9.sent;
 
           case 7:
-            _context9.prev = 7;
+            return _context9.abrupt("return", this.tenantConfigs[contractAddress || tenantId]);
+
+          case 10:
+            _context9.prev = 10;
             _context9.t0 = _context9["catch"](1);
             this.Log("Failed to load tenant configuration", true, _context9.t0);
             return _context9.abrupt("return", {});
 
-          case 11:
+          case 14:
           case "end":
             return _context9.stop();
         }
       }
-    }, _callee9, this, [[1, 7]]);
+    }, _callee9, this, [[1, 10]]);
   }));
 
   return function (_x2) {
@@ -2539,5 +2554,238 @@ exports.DropStatus = /*#__PURE__*/function () {
 
   return function (_x26) {
     return _ref80.apply(this, arguments);
+  };
+}();
+/* OFFERS */
+// TODO: Document
+
+
+exports.MarketplaceOffers = /*#__PURE__*/function () {
+  var _ref82 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee41(_ref81) {
+    var contractAddress, tokenId, buyerAddress, sellerAddress, statuses, _ref81$start, start, _ref81$limit, limit, path, queryParams, offers;
+
+    return _regeneratorRuntime.wrap(function _callee41$(_context41) {
+      while (1) {
+        switch (_context41.prev = _context41.next) {
+          case 0:
+            contractAddress = _ref81.contractAddress, tokenId = _ref81.tokenId, buyerAddress = _ref81.buyerAddress, sellerAddress = _ref81.sellerAddress, statuses = _ref81.statuses, _ref81$start = _ref81.start, start = _ref81$start === void 0 ? 0 : _ref81$start, _ref81$limit = _ref81.limit, limit = _ref81$limit === void 0 ? 10 : _ref81$limit;
+            path = UrlJoin("as", "mkt", "offers", "ls");
+
+            if (buyerAddress) {
+              path = UrlJoin(path, "b", Utils.FormatAddress(buyerAddress));
+            } else if (sellerAddress) {
+              path = UrlJoin(path, "s", Utils.FormatAddress(sellerAddress));
+            }
+
+            if (contractAddress) {
+              path = UrlJoin(path, "c", Utils.FormatAddress(contractAddress));
+
+              if (tokenId) {
+                path = UrlJoin(path, "t", tokenId);
+              }
+            }
+
+            queryParams = {
+              start: start,
+              limit: limit
+            };
+
+            if (statuses && statuses.length > 0) {
+              queryParams.include = statuses.join(",");
+            }
+
+            _context41.next = 8;
+            return Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
+              path: path,
+              method: "GET",
+              queryParams: queryParams
+            }));
+
+          case 8:
+            offers = _context41.sent;
+            return _context41.abrupt("return", offers.map(function (offer) {
+              return _objectSpread(_objectSpread({}, offer), {}, {
+                created: offer.created * 1000,
+                updated: offer.updated * 1000,
+                expiration: offer.expiration * 1000
+              });
+            }));
+
+          case 10:
+          case "end":
+            return _context41.stop();
+        }
+      }
+    }, _callee41, this);
+  }));
+
+  return function (_x27) {
+    return _ref82.apply(this, arguments);
+  };
+}();
+
+exports.CreateMarketplaceOffer = /*#__PURE__*/function () {
+  var _ref84 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee42(_ref83) {
+    var contractAddress, tokenId, offerId, price, expiresAt, response;
+    return _regeneratorRuntime.wrap(function _callee42$(_context42) {
+      while (1) {
+        switch (_context42.prev = _context42.next) {
+          case 0:
+            contractAddress = _ref83.contractAddress, tokenId = _ref83.tokenId, offerId = _ref83.offerId, price = _ref83.price, expiresAt = _ref83.expiresAt;
+
+            if (!offerId) {
+              _context42.next = 7;
+              break;
+            }
+
+            _context42.next = 4;
+            return Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
+              path: UrlJoin("as", "wlt", "mkt", "offers", offerId),
+              method: "PUT",
+              body: {
+                price: price,
+                expiration: Math.floor(expiresAt / 1000)
+              },
+              headers: {
+                Authorization: "Bearer ".concat(this.AuthToken())
+              }
+            }));
+
+          case 4:
+            response = _context42.sent;
+            _context42.next = 10;
+            break;
+
+          case 7:
+            _context42.next = 9;
+            return Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
+              path: UrlJoin("as", "wlt", "mkt", "offers", contractAddress, tokenId),
+              method: "POST",
+              body: {
+                contract: contractAddress,
+                token: tokenId,
+                price: price,
+                expiration: Math.floor(expiresAt / 1000)
+              },
+              headers: {
+                Authorization: "Bearer ".concat(this.AuthToken())
+              }
+            }));
+
+          case 9:
+            response = _context42.sent;
+
+          case 10:
+            return _context42.abrupt("return", response.offer_id);
+
+          case 11:
+          case "end":
+            return _context42.stop();
+        }
+      }
+    }, _callee42, this);
+  }));
+
+  return function (_x28) {
+    return _ref84.apply(this, arguments);
+  };
+}();
+
+exports.RemoveMarketplaceOffer = /*#__PURE__*/function () {
+  var _ref86 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee43(_ref85) {
+    var offerId;
+    return _regeneratorRuntime.wrap(function _callee43$(_context43) {
+      while (1) {
+        switch (_context43.prev = _context43.next) {
+          case 0:
+            offerId = _ref85.offerId;
+            _context43.next = 3;
+            return this.client.authClient.MakeAuthServiceRequest({
+              path: UrlJoin("as", "wlt", "mkt", "offers", offerId),
+              method: "DELETE",
+              headers: {
+                Authorization: "Bearer ".concat(this.AuthToken())
+              }
+            });
+
+          case 3:
+            return _context43.abrupt("return", _context43.sent);
+
+          case 4:
+          case "end":
+            return _context43.stop();
+        }
+      }
+    }, _callee43, this);
+  }));
+
+  return function (_x29) {
+    return _ref86.apply(this, arguments);
+  };
+}();
+
+exports.AcceptMarketplaceOffer = /*#__PURE__*/function () {
+  var _ref88 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee44(_ref87) {
+    var offerId;
+    return _regeneratorRuntime.wrap(function _callee44$(_context44) {
+      while (1) {
+        switch (_context44.prev = _context44.next) {
+          case 0:
+            offerId = _ref87.offerId;
+            _context44.next = 3;
+            return this.client.authClient.MakeAuthServiceRequest({
+              path: UrlJoin("as", "wlt", "mkt", "offers", "accept", offerId),
+              method: "PUT",
+              headers: {
+                Authorization: "Bearer ".concat(this.AuthToken())
+              }
+            });
+
+          case 3:
+            return _context44.abrupt("return", _context44.sent);
+
+          case 4:
+          case "end":
+            return _context44.stop();
+        }
+      }
+    }, _callee44, this);
+  }));
+
+  return function (_x30) {
+    return _ref88.apply(this, arguments);
+  };
+}();
+
+exports.RejectMarketplaceOffer = /*#__PURE__*/function () {
+  var _ref90 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee45(_ref89) {
+    var offerId;
+    return _regeneratorRuntime.wrap(function _callee45$(_context45) {
+      while (1) {
+        switch (_context45.prev = _context45.next) {
+          case 0:
+            offerId = _ref89.offerId;
+            _context45.next = 3;
+            return this.client.authClient.MakeAuthServiceRequest({
+              path: UrlJoin("as", "wlt", "mkt", "offers", "decline", offerId),
+              method: "PUT",
+              headers: {
+                Authorization: "Bearer ".concat(this.AuthToken())
+              }
+            });
+
+          case 3:
+            return _context45.abrupt("return", _context45.sent);
+
+          case 4:
+          case "end":
+            return _context45.stop();
+        }
+      }
+    }, _callee45, this);
+  }));
+
+  return function (_x31) {
+    return _ref90.apply(this, arguments);
   };
 }();

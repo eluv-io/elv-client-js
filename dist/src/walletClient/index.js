@@ -80,6 +80,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
     this.availableMarketplaces = {};
     this.availableMarketplacesById = {};
     this.marketplaceHashes = {};
+    this.tenantConfigs = {};
     this.stateStoreUrls = Configuration[network].stateStoreUrls;
     this.stateStoreClient = new HTTPClient({
       uris: this.stateStoreUrls
