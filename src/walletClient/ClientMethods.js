@@ -357,14 +357,20 @@ exports.UserTransfers = async function({userAddress, sortBy="created", sortDesc=
  */
 exports.TenantConfiguration = async function({tenantId, contractAddress}) {
   try {
-    return await Utils.ResponseToJson(
-      this.client.authClient.MakeAuthServiceRequest({
-        path: contractAddress ?
-          UrlJoin("as", "config", "nft", contractAddress) :
-          UrlJoin("as", "config", "tnt", tenantId),
-        method: "GET",
-      })
-    );
+    contractAddress = contractAddress ? Utils.FormatAddress(contractAddress) : undefined;
+
+    if(!this.tenantConfigs[contractAddress || tenantId]) {
+      this.tenantConfigs[contractAddress || tenantId] = await Utils.ResponseToJson(
+        this.client.authClient.MakeAuthServiceRequest({
+          path: contractAddress ?
+            UrlJoin("as", "config", "nft", contractAddress) :
+            UrlJoin("as", "config", "tnt", tenantId),
+          method: "GET",
+        })
+      );
+    }
+
+    return this.tenantConfigs[contractAddress || tenantId];
   } catch(error) {
     this.Log("Failed to load tenant configuration", true, error);
 

@@ -44,6 +44,7 @@ class ElvWalletClient {
     this.availableMarketplaces = {};
     this.availableMarketplacesById = {};
     this.marketplaceHashes = {};
+    this.tenantConfigs = {};
 
     this.stateStoreUrls = Configuration[network].stateStoreUrls;
     this.stateStoreClient = new HTTPClient({uris: this.stateStoreUrls});
