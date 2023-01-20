@@ -1,4 +1,4 @@
-if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
+require("buffer");
 
 const bs58 = require("bs58");
 const Stream = require("stream");
