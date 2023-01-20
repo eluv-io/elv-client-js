@@ -60,7 +60,7 @@
   ],
   "dependencies": {
     "@babel/runtime": "^7.8.4",
-    "@eluvio/crypto": ">=1.0.8",
+    "@eluvio/crypto": ">=1.0.12",
     "@eluvio/elv-abr-profile": "^1.0.0",
     "@sindresorhus/slugify": "^1.1.0",
     "babel-loader": "^8.0.6",
