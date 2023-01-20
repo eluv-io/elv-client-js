@@ -1,6 +1,4 @@
-if(typeof Buffer === "undefined") {
-  Buffer = require("buffer/").Buffer;
-}
+require("buffer");
 
 const URI = require("urijs");
 const Ethers = require("ethers");

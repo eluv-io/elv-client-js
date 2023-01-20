@@ -6,7 +6,6 @@ const ethers = require("ethers");
 
 const Test = async () => {
   try {
-
     const client = await ElvClient.FromNetworkName({
       networkName: "demo"
     });
