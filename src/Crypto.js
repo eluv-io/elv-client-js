@@ -1,4 +1,4 @@
-require("buffer");
+const Buffer = require("buffer/").Buffer;
 
 const bs58 = require("bs58");
 const Stream = require("stream");
