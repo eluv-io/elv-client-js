@@ -1,6 +1,6 @@
 var _regeneratorRuntime = require("@babel/runtime/regenerator");
 var _asyncToGenerator = require("@babel/runtime/helpers/asyncToGenerator");
-require("buffer");
+var Buffer = require("buffer/").Buffer;
 var bs58 = require("bs58");
 var Stream = require("stream");
 var Utils = require("./Utils");
