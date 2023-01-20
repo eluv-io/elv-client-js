@@ -1,4 +1,4 @@
-require("buffer");
+const Buffer = require("buffer/").Buffer;
 
 const URI = require("urijs");
 const Ethers = require("ethers");
