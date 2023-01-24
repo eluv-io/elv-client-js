@@ -111,7 +111,7 @@ const Utils = {
    * @returns {Object} - Components of the version hash.
    */
   DecodeVersionHash: (versionHash) => {
-    if(!(versionHash.startsWith("hq__") || versionHash.startsWith("tq__"))) {
+    if(!(versionHash.startsWith("hq__") || versionHash.startsWith("htq_"))) {
       throw new Error(`Invalid version hash: "${versionHash}"`);
     }
 

@@ -235,6 +235,7 @@ exports.CreateProductionMaster = async function({
 exports.CreateABRMezzanine = async function({
   libraryId,
   objectId,
+  writeToken,
   type,
   name,
   description,
@@ -245,7 +246,7 @@ exports.CreateABRMezzanine = async function({
   offeringKey="default"
 }) {
   ValidateLibrary(libraryId);
-  ValidateVersion(masterVersionHash);
+  //ValidateVersion(masterVersionHash);
 
   if(!masterVersionHash) {
     throw Error("Master version hash not specified");
@@ -256,6 +257,8 @@ exports.CreateABRMezzanine = async function({
   let options = type ? { type } : {};
 
   let id, write_token;
+
+  /*
   if(existingMez) {
     // Edit existing
     const editResponse = await this.EditContentObject({
@@ -276,23 +279,30 @@ exports.CreateABRMezzanine = async function({
     id = createResponse.id;
     write_token = createResponse.write_token;
   }
+  */
+  id = objectId;
+  write_token = writeToken;
 
-  await this.CreateEncryptionConk({libraryId, objectId: id, writeToken: write_token, createKMSConk: true});
+  //await this.CreateEncryptionConk({libraryId, objectId: id, writeToken: write_token, createKMSConk: true});
 
   const masterName = await this.ContentObjectMetadata({
-    versionHash: masterVersionHash,
+    libraryId,
+    objectId,
+    writeToken,
     metadataSubtree: "public/name"
   });
 
+  /*
   // Include authorization for library, master, and mezzanine
   let authorizationTokens = [];
   authorizationTokens.push(await this.authClient.AuthorizationToken({libraryId, objectId: id, update: true}));
   authorizationTokens.push(await this.authClient.AuthorizationToken({libraryId}));
   authorizationTokens.push(await this.authClient.AuthorizationToken({versionHash: masterVersionHash}));
+  */
 
-  const headers = {
-    Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
-  };
+  // Just overwrite with static token
+  const headers = { "Authorization": "Bearer " + this.staticToken };
+
 
   const body = {
     offering_key: offeringKey,
@@ -301,6 +311,8 @@ exports.CreateABRMezzanine = async function({
   };
 
   let storeClear = false;
+
+  storeClear = true;
   if(abrProfile) {
     body.abr_profile = abrProfile;
     storeClear = abrProfile.store_clear;
@@ -313,6 +325,8 @@ exports.CreateABRMezzanine = async function({
     });
   }
 
+  abrProfile.store_clear = true;
+  storeClear = true;
   if(!storeClear) {
     // If files are encrypted, generate encryption conks
     await this.EncryptionConk({
@@ -336,6 +350,7 @@ exports.CreateABRMezzanine = async function({
   if(!metadata.public) { metadata.public = {}; }
   if(!metadata.public.asset_metadata) { metadata.public.asset_metadata = {}; }
 
+/*
   metadata.master = {
     name: masterName,
     id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
@@ -388,19 +403,20 @@ exports.CreateABRMezzanine = async function({
     writeToken: write_token,
     metadata
   });
+*/
 
+/*
   const finalizeResponse = await this.FinalizeContentObject({
     libraryId,
     objectId: id,
     writeToken: write_token,
     commitMessage: "Create ABR mezzanine"
   });
-
+*/
   return {
     logs: logs || [],
     warnings: warnings || [],
-    errors: errors || [],
-    ...finalizeResponse
+    errors: errors || []
   };
 };
 
@@ -421,6 +437,7 @@ exports.CreateABRMezzanine = async function({
 exports.StartABRMezzanineJobs = async function({
   libraryId,
   objectId,
+  writeToken,
   offeringKey="default",
   access=[],
   jobIndexes = null
@@ -430,11 +447,13 @@ exports.StartABRMezzanineJobs = async function({
   const mezzanineMetadata = await this.ContentObjectMetadata({
     libraryId,
     objectId,
+    writeToken,
     metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
   });
 
   const prepSpecs = mezzanineMetadata[offeringKey].mez_prep_specs || [];
 
+/*
   // Retrieve all masters associated with this offering
   let masterVersionHashes = Object.keys(prepSpecs).map(spec =>
     (prepSpecs[spec].source_streams || []).map(stream => stream.source_hash)
@@ -444,9 +463,10 @@ exports.StartABRMezzanineJobs = async function({
   masterVersionHashes = [].concat.apply([], masterVersionHashes)
     .filter(hash => hash)
     .filter((v, i, a) => a.indexOf(v) === i);
+*/
 
   // Retrieve authorization tokens for all masters and the mezzanine
-
+/*
   let authorizationTokens = await Promise.all(
     masterVersionHashes.map(async versionHash => await this.authClient.AuthorizationToken({versionHash}))
   );
@@ -459,15 +479,19 @@ exports.StartABRMezzanineJobs = async function({
   const headers = {
     Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
   };
+*/
 
-  const processingDraft = await this.EditContentObject({libraryId, objectId});
+  const headers = { "Authorization": "Bearer " + this.staticToken };
+
+  // const processingDraft = await this.EditContentObject({libraryId, objectId});
 
   const lroInfo = {
-    write_token: processingDraft.write_token,
+    write_token: writeToken,
     node: this.HttpClient.BaseURI().toString(),
     offering: offeringKey
   };
 
+/*
   // Update metadata with LRO version write token
   const statusDraft = await this.EditContentObject({libraryId, objectId});
   await this.ReplaceMetadata({
@@ -484,11 +508,12 @@ exports.StartABRMezzanineJobs = async function({
     writeToken: statusDraft.write_token,
     commitMessage: "Mezzanine LRO status"
   });
+  */
 
   const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
     libraryId,
     objectId,
-    writeToken: processingDraft.write_token,
+    writeToken,
     headers,
     method: UrlJoin("media", "abr_mezzanine", "prep_start"),
     constant: false,
@@ -500,9 +525,9 @@ exports.StartABRMezzanineJobs = async function({
   });
 
   return {
-    hash: finalizeResponse.hash,
+    //hash: finalizeResponse.hash,
     lro_draft: lroInfo,
-    writeToken: processingDraft.write_token,
+    writeToken, //: processingDraft.write_token,
     data,
     logs: logs || [],
     warnings: warnings || [],
@@ -585,9 +610,10 @@ exports.LROStatus = async function({libraryId, objectId, offeringKey="default"})
  *
  * @return {Promise<Object>} - The finalize response for the mezzanine object, as well as any logs, warnings and errors from the finalization
  */
-exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey="default"}) {
+exports.FinalizeABRMezzanine = async function({libraryId, objectId, writeToken, offeringKey="default"}) {
   ValidateParameters({libraryId, objectId});
 
+  /*
   const lroDraft = await this.ContentObjectMetadata({
     libraryId,
     objectId,
@@ -597,22 +623,24 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey=
   if(!lroDraft || !lroDraft.write_token) {
     throw Error("No LRO draft found for this mezzanine");
   }
+  */
 
   const httpClient = this.HttpClient;
   let error, result;
   try {
     // Point directly to the node containing the draft
-    this.HttpClient = new HttpClient({uris: [lroDraft.node], debug: httpClient.debug});
+    // this.HttpClient = new HttpClient({uris: [lroDraft.node], debug: httpClient.debug});
 
     const mezzanineMetadata = await this.ContentObjectMetadata({
       libraryId,
       objectId,
-      writeToken: lroDraft.write_token,
+      writeToken,
       metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
     });
 
     const masterHash = mezzanineMetadata[offeringKey].prod_master_hash;
 
+    /*
     // Authorization token for mezzanine and master
     let authorizationTokens = [
       await this.authClient.AuthorizationToken({libraryId, objectId, update: true}),
@@ -622,16 +650,20 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey=
     const headers = {
       Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
     };
+*/
+
+    const headers = { "Authorization": "Bearer " + this.staticToken };
 
     const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
       objectId,
       libraryId,
-      writeToken: lroDraft.write_token,
+      writeToken,
       method: UrlJoin("media", "abr_mezzanine", "offerings", offeringKey, "finalize"),
       headers,
       constant: false
     });
 
+    /*
     const finalizeResponse = await this.FinalizeContentObject({
       libraryId,
       objectId: objectId,
@@ -639,13 +671,13 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey=
       commitMessage: "Finalize ABR mezzanine",
       awaitCommitConfirmation: false
     });
+    */
 
     result = {
       data,
       logs: logs || [],
       warnings: warnings || [],
-      errors: errors || [],
-      ...finalizeResponse
+      errors: errors || []
     };
   } catch(err) {
     error = err;

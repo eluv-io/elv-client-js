@@ -332,6 +332,10 @@ class ElvClient {
       region
     });
 
+    if (fabricURIs == null) {
+      fabricURIs = [ "http://127.0.0.1:8008"]
+    }
+
     const client = new ElvClient({
       contentSpaceId,
       networkId,
@@ -349,6 +353,23 @@ class ElvClient {
     });
 
     client.configUrl = configUrl;
+
+    return client;
+  }
+
+  static async FromSubstrateDev() {
+ 
+    const client = new ElvClient({
+      contentSpaceId: "ispc36s3uwY9voTx6gXcXENn4KfY29fC",
+      networkId: 956000,
+      networkName: 'substrate-dev',
+      fabricURIs: [ "http://127.0.0.1:8008"],
+      ethereumURIs: [],
+      authServiceURIs: [],
+      staticToken: "eyJxc3BhY2VfaWQiOiJpc3BjMzZzM3V3WTl2b1R4NmdYY1hFTm40S2ZZMjlmQyJ9Cg==",
+      noCache: true,
+      noAuth: true
+    });
 
     return client;
   }

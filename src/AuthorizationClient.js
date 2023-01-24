@@ -96,8 +96,8 @@ class AuthorizationClient {
 
   // Return authorization token in appropriate headers
   async AuthorizationHeader(params) {
-    const authorizationToken = await this.AuthorizationToken(params);
-
+    //const authorizationToken = await this.AuthorizationToken(params);
+    const authorizationToken = this.CreateStaticToken({libraryId: params.libraryId});
     const headers = { Authorization: "Bearer " + authorizationToken };
 
     if(params.encryption && params.encryption !== "none") {

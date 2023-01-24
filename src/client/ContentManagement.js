@@ -1114,8 +1114,8 @@ exports.DeleteContentObject = async function({libraryId, objectId}) {
  * @param {string=} metadataSubtree - Subtree of the object metadata to modify
  */
 exports.MergeMetadata = async function({libraryId, objectId, writeToken, metadataSubtree="/", metadata={}}) {
-  ValidateParameters({libraryId, objectId});
-  ValidateWriteToken(writeToken);
+  //ValidateParameters({libraryId, objectId});
+  //ValidateWriteToken(writeToken);
 
   this.Log(
     `Merging metadata: ${libraryId} ${objectId} ${writeToken}
@@ -1123,10 +1123,10 @@ exports.MergeMetadata = async function({libraryId, objectId, writeToken, metadat
   );
   this.Log(metadata);
 
-  let path = UrlJoin("q", writeToken, "meta", metadataSubtree);
+  let path = UrlJoin("qlibs", libraryId, "q", writeToken, "meta", metadataSubtree);
 
   await this.HttpClient.Request({
-    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    headers: { "Authorization": "Bearer " + this.staticToken },
     method: "POST",
     path: path,
     body: metadata,

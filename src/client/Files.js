@@ -265,7 +265,7 @@ exports.UploadFilesFromS3 = async function({
  * - Format: {"filename1": {uploaded: number, total: number}, ...}
  */
 exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo, encryption="none", callback}) {
-  ValidateParameters({libraryId, objectId});
+  //ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
   this.Log(`Uploading files: ${libraryId} ${objectId} ${writeToken}`);
@@ -330,6 +330,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
   // Insert the data to upload into the job spec, encrypting if necessary
   const PrepareJobs = async () => {
     for(let j = 0; j < jobs.length; j++) {
+
       while(prepared - uploaded > bufferSize) {
         // Wait for more data to be uploaded
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -450,11 +451,11 @@ exports.CreateFileUploadJob = async function({libraryId, objectId, writeToken, o
     ops
   };
 
-  const path = UrlJoin("q", writeToken, "file_jobs");
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "file_jobs");
 
   return this.utils.ResponseToJson(
     this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
+      headers: { "Authorization": "Bearer " + this.staticToken },
       method: "POST",
       path: path,
       body,

@@ -891,20 +891,20 @@ exports.ContentObjectMetadata = async function({
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-  let path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
+  let path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId, "meta", metadataSubtree);
 
   // Main authorization
-  let defaultAuthToken = await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree, noAuth});
+  //let defaultAuthToken = await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree, noAuth});
 
   // All authorization
-  const authTokens = [authorizationToken, queryParams.authorization, defaultAuthToken].flat().filter(token => token);
-  delete queryParams.authorization;
+  //const authTokens = [authorizationToken, queryParams.authorization, defaultAuthToken].flat().filter(token => token);
+  //delete queryParams.authorization;
 
   let metadata;
   try {
     metadata = await this.utils.ResponseToJson(
       this.HttpClient.Request({
-        headers: { "Authorization": authTokens.map(token => `Bearer ${token}`) },
+        headers: { "Authorization": "Bearer " + this.staticToken },
         queryParams: {
           ...queryParams,
           select,
