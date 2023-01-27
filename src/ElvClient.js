@@ -1,4 +1,4 @@
-const Buffer = require("buffer/").Buffer;
+if(typeof globalThis.Buffer === "undefined") { globalThis.Buffer = require("buffer/").Buffer; }
 
 const URI = require("urijs");
 const Ethers = require("ethers");
@@ -31,7 +31,7 @@ const networks = {
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
   // eslint-disable-next-line no-global-assign
-  global.Response = (require("node-fetch")).Response;
+  globalThis.Response = (require("node-fetch")).Response;
 }
 
 /**
