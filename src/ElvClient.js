@@ -1,6 +1,4 @@
-if(typeof globalThis.Buffer === "undefined") {
-  globalThis.Buffer = require("buffer/").Buffer;
-}
+if(typeof globalThis.Buffer === "undefined") { globalThis.Buffer = require("buffer/").Buffer; }
 
 const URI = require("urijs");
 const Ethers = require("ethers");

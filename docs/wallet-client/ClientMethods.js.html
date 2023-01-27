@@ -120,7 +120,7 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
   if(!this.loggedIn) { return; }
 
   // eslint-disable-next-line no-unused-vars
-  const { balance, usage_hold, payout_hold, stripe_id, stripe_payouts_enabled } = await this.client.utils.ResponseToJson(
+  const { balance, usage_hold, payout_hold, locked_offer_balance, stripe_id, stripe_payouts_enabled } = await this.client.utils.ResponseToJson(
     await this.client.authClient.MakeAuthServiceRequest({
       path: UrlJoin("as", "wlt", "mkt", "bal"),
       method: "GET",
@@ -133,9 +133,10 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
   const userStripeId = stripe_id;
   const userStripeEnabled = stripe_payouts_enabled;
   const totalWalletBalance = parseFloat(balance || 0);
-  const availableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(usage_hold || 0));
+  const lockedWalletBalance = parseFloat(locked_offer_balance || 0);
+  const availableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(usage_hold || 0) - lockedWalletBalance);
   const pendingWalletBalance = Math.max(0, totalWalletBalance - availableWalletBalance);
-  const withdrawableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(payout_hold || 0));
+  const withdrawableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(Math.max(payout_hold, lockedWalletBalance) || 0));
 
   if(checkOnboard &amp;&amp; stripe_id &amp;&amp; !stripe_payouts_enabled) {
     // Refresh stripe enabled flag
@@ -160,6 +161,7 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
   let balances = {
     totalWalletBalance,
     availableWalletBalance,
+    lockedWalletBalance,
     pendingWalletBalance,
     withdrawableWalletBalance,
   };
@@ -409,14 +411,20 @@ exports.UserTransfers = async function({userAddress, sortBy="created", sortDesc=
  */
 exports.TenantConfiguration = async function({tenantId, contractAddress}) {
   try {
-    return await Utils.ResponseToJson(
-      this.client.authClient.MakeAuthServiceRequest({
-        path: contractAddress ?
-          UrlJoin("as", "config", "nft", contractAddress) :
-          UrlJoin("as", "config", "tnt", tenantId),
-        method: "GET",
-      })
-    );
+    contractAddress = contractAddress ? Utils.FormatAddress(contractAddress) : undefined;
+
+    if(!this.tenantConfigs[contractAddress || tenantId]) {
+      this.tenantConfigs[contractAddress || tenantId] = await Utils.ResponseToJson(
+        this.client.authClient.MakeAuthServiceRequest({
+          path: contractAddress ?
+            UrlJoin("as", "config", "nft", contractAddress) :
+            UrlJoin("as", "config", "tnt", tenantId),
+          method: "GET",
+        })
+      );
+    }
+
+    return this.tenantConfigs[contractAddress || tenantId];
   } catch(error) {
     this.Log("Failed to load tenant configuration", true, error);
 
@@ -1345,6 +1353,120 @@ exports.DropStatus = async function({marketplace, eventId, dropId}) {
     return "";
   }
 };
+
+
+/* OFFERS */
+// TODO: Document
+
+exports.MarketplaceOffers = async function({contractAddress, tokenId, buyerAddress, sellerAddress, statuses, start=0, limit=10}) {
+  let path = UrlJoin("as", "mkt", "offers", "ls");
+  if(buyerAddress) {
+    path = UrlJoin(path, "b", Utils.FormatAddress(buyerAddress));
+  } else if(sellerAddress) {
+    path = UrlJoin(path, "s", Utils.FormatAddress(sellerAddress));
+  }
+
+  if(contractAddress) {
+    path = UrlJoin(path, "c", Utils.FormatAddress(contractAddress));
+
+    if(tokenId) {
+      path = UrlJoin(path, "t", tokenId);
+    }
+  }
+
+  let queryParams = {
+    start,
+    limit
+  };
+
+  if(statuses &amp;&amp; statuses.length > 0) {
+    queryParams.include = statuses.join(",");
+  }
+
+  const offers = await Utils.ResponseToJson(
+    this.client.authClient.MakeAuthServiceRequest({
+      path: path,
+      method: "GET",
+      queryParams
+    })
+  );
+
+  return offers
+    .map(offer => ({
+      ...offer,
+      created: offer.created * 1000,
+      updated: offer.updated * 1000,
+      expiration: offer.expiration * 1000
+    }));
+};
+
+exports.CreateMarketplaceOffer = async function({contractAddress, tokenId, offerId, price, expiresAt}) {
+  let response;
+  if(offerId) {
+    response = await Utils.ResponseToJson(
+      this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "mkt", "offers", offerId),
+        method: "PUT",
+        body: {
+          price,
+          expiration: Math.floor(expiresAt / 1000)
+        },
+        headers: {
+          Authorization: `Bearer ${this.AuthToken()}`
+        }
+      })
+    );
+  } else {
+    response = await Utils.ResponseToJson(
+      this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "mkt", "offers", contractAddress, tokenId),
+        method: "POST",
+        body: {
+          contract: contractAddress,
+          token: tokenId,
+          price,
+          expiration: Math.floor(expiresAt / 1000)
+        },
+        headers: {
+          Authorization: `Bearer ${this.AuthToken()}`
+        }
+      })
+    );
+  }
+
+  return response.offer_id;
+};
+
+exports.RemoveMarketplaceOffer = async function({offerId}) {
+  return await this.client.authClient.MakeAuthServiceRequest({
+    path: UrlJoin("as", "wlt", "mkt", "offers", offerId),
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${this.AuthToken()}`
+    }
+  });
+};
+
+
+exports.AcceptMarketplaceOffer = async function({offerId}) {
+  return await this.client.authClient.MakeAuthServiceRequest({
+    path: UrlJoin("as", "wlt", "mkt", "offers", "accept", offerId),
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${this.AuthToken()}`
+    }
+  });
+};
+
+exports.RejectMarketplaceOffer = async function({offerId}) {
+  return await this.client.authClient.MakeAuthServiceRequest({
+    path: UrlJoin("as", "wlt", "mkt", "offers", "decline", offerId),
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${this.AuthToken()}`
+    }
+  });
+};
 </code></pre>
 </div>
 
@@ -1353,7 +1475,7 @@ exports.DropStatus = async function({marketplace, eventId, dropId}) {
 
 
         <footer class="footer">
-          Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.10</a>
+          Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a>
         </footer>
       </div>
     </div>
