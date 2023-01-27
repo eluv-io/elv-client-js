@@ -1,4 +1,4 @@
-const Buffer = require("buffer/").Buffer;
+if(typeof globalThis.Buffer === "undefined") { globalThis.Buffer = require("buffer/").Buffer; }
 
 const bs58 = require("bs58");
 const BigNumber = require("bignumber.js").default;

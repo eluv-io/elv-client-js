@@ -55,8 +55,8 @@ const FormatNFTDetails = function(entry) {
     USDCOnly: !!paymentAccounts.find(entry => entry.preferred),
     EthUSDCAccepted: !!paymentAccounts.find(account => account.type === "eth"),
     EthUSDCOnly: !!paymentAccounts.find(account => account.type === "eth" && account.preferred),
-    SolUSDCAccepted: !!paymentAccounts.find(account => account.type === "eth"),
-    SolUSDCOnly: !!paymentAccounts.find(account => account.type === "eth" && account.preferred),
+    SolUSDCAccepted: !!paymentAccounts.find(account => account.type === "sol"),
+    SolUSDCOnly: !!paymentAccounts.find(account => account.type === "sol" && account.preferred),
 
     TenantId: entry.tenant || entry.tenant_id,
     ContractAddr: info.contract_addr,
