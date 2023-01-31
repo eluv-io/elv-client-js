@@ -23,11 +23,13 @@ try {
  * See the Modules section on the sidebar for all client methods unrelated to login and authorization
  */
 class ElvWalletClient {
-  constructor({appId, client, network, mode, marketplaceInfo, previewMarketplaceHash, storeAuthToken}) {
+  constructor({appId, client, network, mode, localization, marketplaceInfo, previewMarketplaceHash, storeAuthToken}) {
     this.appId = appId;
 
     this.client = client;
     this.loggedIn = false;
+
+    this.localization = localization;
 
     this.network = network;
     this.mode = mode;
@@ -93,6 +95,7 @@ class ElvWalletClient {
     appId="general",
     network="main",
     mode="production",
+    localization,
     marketplaceParams,
     previewMarketplaceId,
     storeAuthToken=true
@@ -119,6 +122,7 @@ class ElvWalletClient {
       client,
       network,
       mode,
+      localization,
       marketplaceInfo: {
         tenantSlug,
         marketplaceSlug,
@@ -756,6 +760,7 @@ class ElvWalletClient {
       let marketplace = await this.client.ContentObjectMetadata({
         versionHash: marketplaceHash,
         metadataSubtree: "public/asset_metadata/info",
+        localizationSubtree: this.localization ? UrlJoin("public", "asset_metadata", "localizations", this.localization, "info") : "",
         linkDepthLimit: 1,
         resolveLinks: true,
         resolveIgnoreErrors: true,
@@ -810,7 +815,7 @@ class ElvWalletClient {
       }
 
       // Generate embed URLs for pack opening animations
-      ["purchase_animation", "purchase_animation__mobile", "reveal_animation", "reveal_animation_mobile"].forEach(key => {
+      ["purchase_animation", "purchase_animation_mobile", "reveal_animation", "reveal_animation_mobile"].forEach(key => {
         try {
           if(marketplace.storefront[key]) {
             let embedUrl = new URL("https://embed.v3.contentfabric.io");
