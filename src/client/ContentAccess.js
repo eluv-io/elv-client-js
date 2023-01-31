@@ -874,6 +874,7 @@ exports.ContentObjectMetadata = async function({
   versionHash,
   writeToken,
   metadataSubtree="/",
+  localizationSubtree,
   queryParams={},
   select=[],
   remove=[],
@@ -940,17 +941,33 @@ exports.ContentObjectMetadata = async function({
     }
   }
 
-  if(!produceLinkUrls) { return metadata; }
+  if(produceLinkUrls) {
+    metadata = await this.ProduceMetadataLinks({
+      libraryId,
+      objectId,
+      versionHash,
+      path: metadataSubtree,
+      metadata,
+      authorizationToken,
+      noAuth
+    });
+  }
 
-  return await this.ProduceMetadataLinks({
-    libraryId,
-    objectId,
-    versionHash,
-    path: metadataSubtree,
-    metadata,
-    authorizationToken,
-    noAuth
-  });
+  if(!localizationSubtree) { return metadata; }
+
+  try {
+    const localizedMetadata = await this.ContentObjectMetadata({
+      ...arguments[0],
+      metadataSubtree: localizationSubtree,
+      localizationSubtree: undefined
+    });
+
+    return MergeWith({}, metadata, localizedMetadata, (a, b) => b === null || b === "" ? a : undefined);
+  } catch(error) {
+    this.Log(error, true);
+
+    return metadata;
+  }
 };
 
 
