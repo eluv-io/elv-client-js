@@ -174,20 +174,20 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
   this.Log(`Created type: ${contractAddress} ${objectId}`);
 
   /* Create object, upload bitcode and finalize */
-  const createResponse = await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({
-        libraryId: this.contentSpaceLibraryId,
-        objectId,
-        update: true
-      }),
-      method: "POST",
-      path: path
-    })
-  );
+  const rawCreateResponse = await this.HttpClient.Request({
+    headers: await this.authClient.AuthorizationHeader({
+      libraryId: this.contentSpaceLibraryId,
+      objectId,
+      update: true
+    }),
+    method: "POST",
+    path: path
+  });
+  const nodeUrl = (new URL(rawCreateResponse.url)).origin;
+  const createResponse = await this.utils.ResponseToJson(rawCreateResponse);
 
   // Record the node used in creating this write token
-  this.HttpClient.RecordWriteToken(createResponse.write_token);
+  this.HttpClient.RecordWriteToken(createResponse.write_token, nodeUrl);
 
   await this.ReplaceMetadata({
     libraryId: this.contentSpaceLibraryId,
@@ -605,20 +605,21 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
 
   const path = UrlJoin("qid", objectId);
 
-  let createResponse = await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-      method: "POST",
-      path: path,
-      body: options
-    })
-  );
+  const rawCreateResponse = await this.HttpClient.Request({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "POST",
+    path: path,
+    body: options
+  });
+  const nodeUrl = (new URL(rawCreateResponse.url)).origin;
+  const createResponse = await this.utils.ResponseToJson(rawCreateResponse);
 
   // Record the node used in creating this write token
-  this.HttpClient.RecordWriteToken(createResponse.write_token);
+  this.HttpClient.RecordWriteToken(createResponse.write_token, nodeUrl);
 
   createResponse.writeToken = createResponse.write_token;
   createResponse.objectId = createResponse.id;
+  createResponse.nodeUrl = nodeUrl;
 
   return createResponse;
 };
@@ -780,14 +781,8 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
     path: path,
     body: options
   });
-
-  const actualUrl = new URL(rawEditResponse.url);
-  actualUrl.pathname = "";
-  actualUrl.search = "";
-  actualUrl.hash = "";
-  const nodeUrl = actualUrl.href;
-
-  let editResponse = await this.utils.ResponseToJson(rawEditResponse);
+  const nodeUrl = (new URL(rawEditResponse.url)).origin;
+  const editResponse = await this.utils.ResponseToJson(rawEditResponse);
 
   // Record the node used in creating this write token
   this.HttpClient.RecordWriteToken(editResponse.write_token, nodeUrl);
