@@ -619,6 +619,7 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
 
   createResponse.writeToken = createResponse.write_token;
   createResponse.objectId = createResponse.id;
+  createResponse.nodeUrl = nodeUrl;
 
   return createResponse;
 };
