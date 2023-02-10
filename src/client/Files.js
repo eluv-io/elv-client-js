@@ -809,7 +809,7 @@ exports.DownloadPart = async function({
   const encryption = encrypted ? "cgck" : undefined;
   const path = UrlJoin("q", writeToken || versionHash || objectId, "data", partHash);
 
-  let headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
+  let headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption, makeAccessRequest: true});
 
   const bytesTotal = (await this.ContentPart({libraryId, objectId, versionHash, partHash})).part.size;
 
