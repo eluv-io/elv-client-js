@@ -204,7 +204,7 @@ class AuthorizationClient {
       addr: Utils.FormatAddress(((this.client.signer && this.client.signer.address) || ""))
     };
 
-    if(update) {
+    if(update || !(this.noAuth || noAuth)) {
       const { transactionHash } =  await this.MakeAccessRequest({
         libraryId,
         objectId,
