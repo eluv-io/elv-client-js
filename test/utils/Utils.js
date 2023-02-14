@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const Ethers = require("ethers");
 const Source = require("../../src/ElvClient");
-const Min = require("../../dist/ElvClient-node-min");
+//const Min = require("../../dist/ElvClient-node-min");
 const ClientConfiguration = require("../../TestConfiguration");
 const ElvCrypto = require("../../src/Crypto");
 
@@ -10,7 +10,9 @@ if(process.env["CONFIG_URL"]) {
 }
 
 // Uses source by default. If USE_BUILD is specified, uses the minified node version
-const ElvClient = process.env["USE_BUILD"] ? Min.ElvClient : Source.ElvClient;
+//const ElvClient = process.env["USE_BUILD"] ? Min.ElvClient : Source.ElvClient;
+const ElvClient = Source.ElvClient;
+
 
 // Private key can be specified as environment variable
 // e.g. PRIVATE_KEY=<private-key> npm run test
@@ -121,29 +123,7 @@ const ReturnBalance = async (client) => {
 };
 
 const Initialize = () => {
-  if(typeof jest !== "undefined") {
-    jest.setTimeout(240000);
-
-    const crypto = require("crypto");
-    Object.defineProperty(global.self, "crypto", {
-      value: {
-        getRandomValues: arr => crypto.randomBytes(arr.length),
-      },
-    });
-
-    return {
-      afterAll: afterAll,
-      beforeAll: beforeAll,
-      describe: describe,
-      expect: expect,
-      mockCallback: jest.fn,
-      spyOn: jest.spyOn,
-      runTests: () => {},
-      test: test
-    };
-  } else {
-    return new (require("../TestSuite/TestSuite"))();
-  }
+  return new (require("../TestSuite/TestSuite"))();
 };
 
 module.exports = {

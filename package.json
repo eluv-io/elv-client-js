@@ -30,15 +30,7 @@
     "publish": "npm publish --access public",
     "test": "node test/RunTests.js",
     "test-docs": "GENERATE_METHOD_LOGS=true node test/RunTests.js",
-    "test-utilities": "mocha --recursive utilities/tests/unit",
-    "jest": "jest",
-    "test-cov": "jest --coverage --coverageDirectory 'test/coverage'",
-    "test-build": "USE_BUILD=true jest"
-  },
-  "pre-commit": {
-    "run": [
-      "lint"
-    ]
+    "test-utilities": "mocha --recursive utilities/tests/unit"
   },
   "browser": {
     "fs": false
@@ -85,7 +77,6 @@
     "lodash": "^4.17.19",
     "lodash.isequal": "^4.5.0",
     "mime-types": "^2.1.24",
-    "multicodec": "^0.5.3",
     "multihashes": "^0.4.14",
     "node-fetch": "^2.6.7",
     "object-path": "^0.11.8",
@@ -96,7 +87,6 @@
     "ramda": "^0.27.1",
     "shell-escape": "^0.2.0",
     "sjcl": "^1.0.8",
-    "stream-browserify": "^3.0.0",
     "typedarray": "0.0.6",
     "unorm": "^1.5.0",
     "urijs": "^1.19.10",
@@ -116,21 +106,14 @@
     "copy-webpack-plugin": "^6.0.2",
     "eslint": "^5.15.0",
     "eslint-plugin-html": "^5.0.0",
-    "jest": "^24.9.0",
-    "jest-cli": "^24.9.0",
-    "jsdoc": "^3.6.10",
-    "minami": "^1.2.3",
+    "jsdoc": "^4.0.0",
     "mocha": "^8.2.1",
     "moment": "^2.27.0",
-    "pre-commit": "^1.2.2",
     "raw-loader": "^0.5.1",
     "shell-quote": "^1.7.2",
     "showdown": "^1.9.1",
     "simple-mock": "^0.8.0",
-    "solc": "^0.7.5",
-    "truffle": "^5.1.54",
-    "truffle-contract": "^3.0.7",
-    "truffle-test-utils": "^0.1.0",
+    "taffydb": "^2.7.3",
     "webpack": "^4.20.2",
     "webpack-bundle-analyzer": "^3.3.2",
     "webpack-cli": "^3.1.2",
