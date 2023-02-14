@@ -13,6 +13,8 @@ node_modules/
 
 test/bundle-analysis
 
+dist/
+
 ElvClient-min-dev.js*
 ElvClient-node-min-dev.js*
 
