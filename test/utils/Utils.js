@@ -121,29 +121,7 @@ const ReturnBalance = async (client) => {
 };
 
 const Initialize = () => {
-  if(typeof jest !== "undefined") {
-    jest.setTimeout(240000);
-
-    const crypto = require("crypto");
-    Object.defineProperty(global.self, "crypto", {
-      value: {
-        getRandomValues: arr => crypto.randomBytes(arr.length),
-      },
-    });
-
-    return {
-      afterAll: afterAll,
-      beforeAll: beforeAll,
-      describe: describe,
-      expect: expect,
-      mockCallback: jest.fn,
-      spyOn: jest.spyOn,
-      runTests: () => {},
-      test: test
-    };
-  } else {
-    return new (require("../TestSuite/TestSuite"))();
-  }
+  return new (require("../TestSuite/TestSuite"))();
 };
 
 module.exports = {
