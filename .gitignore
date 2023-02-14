@@ -1,4 +1,4 @@
-!.keep
+
 
 .idea/
 **.ignore.js
@@ -19,3 +19,4 @@ ElvClient-min-dev.js*
 ElvClient-node-min-dev.js*
 
 TestResults.json
+!.keep
