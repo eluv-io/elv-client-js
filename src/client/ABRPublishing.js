@@ -580,8 +580,7 @@ exports.LRODraftInfo = async function({libraryId, objectId}) {
   const lastJobOfferingsInfo = await this.ContentObjectMetadata({
     libraryId,
     objectId,
-    metadataSubtree: UrlJoin("abr_mezzanine", "offerings"),
-    select: ["mez_prep_specs", "ready"]
+    metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
   });
 
   if(!lastJobOfferingsInfo) throw Error("No metadata for mezzanine preparation job found at /abr_mezzanine");
