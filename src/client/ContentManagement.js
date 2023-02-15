@@ -183,6 +183,7 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
     method: "POST",
     path: path
   });
+  // extract the url for the node that handled the request
   const nodeUrl = (new URL(rawCreateResponse.url)).origin;
   const createResponse = await this.utils.ResponseToJson(rawCreateResponse);
 
@@ -748,8 +749,8 @@ exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, writ
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
  * @param {object=} options -
- * meta: New metadata for the object - will be merged into existing metadata if specified
- * type: New type for the object - Object ID, version hash or name of type
+ * @param {object=} options.meta - New metadata for the object - will be merged into existing metadata if specified
+ * @param {string=} options.type - New type for the object - Object ID, version hash or name of type
  *
  * @returns {Promise<object>} - Response containing the object ID and write token of the draft, as well as URL of node handling the draft
  */
@@ -781,6 +782,7 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
     path: path,
     body: options
   });
+  // extract the url for the node that handled the request
   const nodeUrl = (new URL(rawEditResponse.url)).origin;
   const editResponse = await this.utils.ResponseToJson(rawEditResponse);
 
