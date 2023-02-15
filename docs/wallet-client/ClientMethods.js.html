@@ -55,6 +55,7 @@
   <pre class="prettyprint source linenums"><code>const Utils = require("../Utils");
 const UrlJoin = require("url-join");
 const {FormatNFTDetails, FormatNFTMetadata, FormatNFT} = require("./Utils");
+const MergeWith = require("lodash/mergeWith");
 
 /**
  * Methods
@@ -625,16 +626,23 @@ exports.NFT = async function({tokenId, contractAddress}) {
     )
   );
 
-  nft.metadata = {
-    ...(
-      (await this.client.ContentObjectMetadata({
-        versionHash: nft.details.VersionHash,
-        metadataSubtree: "public/asset_metadata/nft",
-        produceLinkUrls: true
-      })) || {}
-    ),
-    ...(nft.metadata || {})
-  };
+  const assetMetadata = (await this.client.ContentObjectMetadata({
+    versionHash: nft.details.VersionHash,
+    metadataSubtree: "public/asset_metadata/nft",
+    produceLinkUrls: true
+  })) || {};
+
+  nft.metadata = MergeWith({}, assetMetadata, nft.metadata, (a, b) => b === null || b === "" ? a : undefined);
+
+  if(this.localization) {
+    const localizedMetadata = (await this.client.ContentObjectMetadata({
+      versionHash: nft.details.VersionHash,
+      metadataSubtree: UrlJoin("public", "asset_metadata", "localizations", this.localization, "nft"),
+      produceLinkUrls: true
+    })) || {};
+
+    nft.metadata = MergeWith({}, nft.metadata, localizedMetadata, (a, b) => b === null || b === "" ? a : undefined);
+  }
 
   nft.config = await this.TenantConfiguration({contractAddress});
 
