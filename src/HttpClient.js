@@ -88,7 +88,7 @@ class HttpClient {
     }
 
     let response;
-
+    this.Log(`${method} - ${uri.toString()}`);
     try {
       response =
         await HttpClient.Fetch(

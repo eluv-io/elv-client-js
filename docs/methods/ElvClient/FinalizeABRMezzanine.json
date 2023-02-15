@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async FinalizeABRMezzanine({\n  \"libraryId\": \"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\",\n  \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\",\n  \"offeringKey\": \"default\"\n});",
+    "signature": "async FinalizeABRMezzanine({\n  \"libraryId\": \"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\",\n  \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\",\n});",
     "result": "{\n  \"logs\": [\n    \"2021-03-09 20:07:22 Debug: getProductionVariantCtx(hq__sknpjER8hAHks8JkJKujw1JwDHPRXodMX59FiHS6ZLxPPSQmD1tE6bpvRyTNxiez5x1LCQmEH,default)\",\n    \"2021-03-09 20:07:22 Debug: getting production.Master: hq__sknpjER8hAHks8JkJKujw1JwDHPRXodMX59FiHS6ZLxPPSQmD1tE6bpvRyTNxiez5x1LCQmEH\",\n    \"2021-03-09 20:07:22 Debug: Get production.Variant 'default' from production.Master\"\n  ],\n  \"warnings\": [],\n  \"errors\": [],\n  \"id\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\",\n  \"hash\": \"hq__AXQrQWT8v1Xe784ciwaFJoXphaeoXHJzsG3JY8NHTsXZcZ18jqx6dPfqT8268c8Aoq5VnsmC3\",\n  \"write_token\": \"tqw__HSa7sjaqEvcqqzVzWXbKs3HYMrm2BiBqWMj228bGixxYn4ibq12Gr65QowfgLNBUX6qWhcPxkCyMnoAaHpW\",\n  \"type\": \"hq__J39WocoEB1hc19t3o1YUaZM2PAzhRvLck6NVmFFviSTRM5yvVTcJ4SJeULw3VarH6mD6xkfjaC\",\n  \"qlib_id\": \"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\"\n}"
   }
 ]
