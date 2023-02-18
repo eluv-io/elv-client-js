@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async LRODraftInfo({\n  \"libraryId\": \"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\",\n  \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\"\n});",
+    "result": "{\n    \"node\": \"https://host-76-74-28-234.contentfabric.io/\",\n    \"offering\": \"default\",\n    \"write_token\": \"tqw__HSR7Au7qqAZpAQWf8MKdCHpTvBor5fSRU49m1sjhgZd2w4fgHUoQNpKGkmAic9NpayTkJzwkeZeFVn94Fpa\"\n}"
+  }
+]

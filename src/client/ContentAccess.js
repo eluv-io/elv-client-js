@@ -104,6 +104,7 @@ exports.Visibility = async function({id, clearCache}) {
  *
  * @methodGroup Content Objects
  * @param {string} objectId - The ID of the object
+ * @param {boolean=} clearCache - Clear any Visibility info cached by client for this object (forces new Ethereum calls)
  *
  * @return {string} - Key for the permission of the object - Use this to retrieve more details from client.permissionLevels
  */
