@@ -24,9 +24,9 @@ let WalletConfiguration = {
   },
   __MARKETPLACE_ORDER: [
     "PREVIEW",
+    "masked-singer-brazil-marketplace",
     "de228e92-ed45-4fe0-8e52-658cf366e962",
     "wwe-marketplace-main",
-    "realcannonballrun-marketplace",
     "maskverse-marketplace",
     "dolly-marketplace",
     "eluvio-live-marketplace-sonark",
@@ -36,7 +36,8 @@ let WalletConfiguration = {
     "emp-marketplace",
     "microsoft",
     "indieflix-marketplace",
-    "angels-airwaves-marketplace"
+    "angels-airwaves-marketplace",
+    "realcannonballrun-marketplace"
   ]
 };
 

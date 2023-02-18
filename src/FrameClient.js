@@ -399,6 +399,7 @@ class FrameClient {
       "ListAccessGroups",
       "ListFiles",
       "ListNTPInstances",
+      "LRODraftInfo",
       "LROStatus",
       "MergeContractMetadata",
       "MergeMetadata",

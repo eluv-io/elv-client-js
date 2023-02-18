@@ -23,7 +23,9 @@ class HttpClient {
   }
 
   RecordWriteToken(writeToken, nodeUrlStr) {
-    this.draftURIs[writeToken] = nodeUrlStr ? new URI(nodeUrlStr) : this.BaseURI();
+    if(!nodeUrlStr) throw Error("RecordWriteToken() - nodeUrlStr not supplied");
+    if(!writeToken) throw Error("RecordWriteToken() - writeToken not supplied");
+    this.draftURIs[writeToken] = new URI(nodeUrlStr);
   }
 
   RequestHeaders(bodyType, headers={}) {
@@ -86,7 +88,7 @@ class HttpClient {
     }
 
     let response;
-
+    this.Log(`${method} - ${uri.toString()}`);
     try {
       response =
         await HttpClient.Fetch(

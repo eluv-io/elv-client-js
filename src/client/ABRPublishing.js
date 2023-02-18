@@ -8,13 +8,25 @@
 
 const R = require("ramda");
 const UrlJoin = require("url-join");
-const HttpClient = require("../HttpClient");
 
 const {
   ValidateLibrary,
   ValidateVersion,
   ValidateParameters
 } = require("../Validation");
+
+// When `/abr_mezzanine/offerings` contains more than one entry, only 1 is the 'real' offering, the others are
+// additional copies to be modified upon finalization due to addlOfferingSpecs having been specified in call to
+// `CreateABRMezzanine()`. The 'real' offering will have an object stored in `mez_prep_specs`, the copies will not.
+// This function accepts the metadata retrieved from `/abr_mezzanine/offerings` and returns the offering key for the
+// 'real' offering that actually has transcode LROs.
+// If no suitable offering is found, throws an error.
+const MezJobMainOfferingKey = function(abrMezOfferings) {
+  if(!abrMezOfferings) throw Error("No mezzanine preparation job info found at /abr_mezzanine");
+  const mainOfferingKey = Object.keys(abrMezOfferings).find(offKey => abrMezOfferings[offKey].mez_prep_specs);
+  if(!mainOfferingKey) throw Error("Could not determine offering key for last submitted job");
+  return mainOfferingKey;
+};
 
 /**
  * Create a master media content object with the given files.
@@ -438,13 +450,12 @@ exports.CreateABRMezzanine = async function({
 };
 
 /**
- * Start any incomplete jobs on the specified mezzanine
+ * Start transcoding jobs previously set up by CreateABRMezzanine() on the specified mezzanine
  *
  * @methodGroup ABR Publishing
  * @namedParams
  * @param {string} libraryId - ID of the mezzanine library
  * @param {string} objectId - ID of the mezzanine object
- * @param {string=} offeringKey=default - The offering to process
  * @param {Array<Object>=} access - Array of S3 credentials, along with path matching regexes - Required if any files in the masters are S3 references (See CreateProductionMaster method)
  * - Format: {region, bucket, accessKey, secret}
  * @param {number[]} jobIndexes - Array of LRO job indexes to start. LROs are listed in a map under metadata key /abr_mezzanine/offerings/(offeringKey)/mez_prep_specs/, and job indexes start with 0, corresponding to map keys in alphabetical order
@@ -454,19 +465,20 @@ exports.CreateABRMezzanine = async function({
 exports.StartABRMezzanineJobs = async function({
   libraryId,
   objectId,
-  offeringKey="default",
   access=[],
   jobIndexes = null
 }) {
   ValidateParameters({libraryId, objectId});
 
-  const mezzanineMetadata = await this.ContentObjectMetadata({
+  const lastJobOfferingsInfo = await this.ContentObjectMetadata({
     libraryId,
     objectId,
     metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
   });
+  const offeringKey = MezJobMainOfferingKey(lastJobOfferingsInfo);
 
-  const prepSpecs = mezzanineMetadata[offeringKey].mez_prep_specs || [];
+  const prepSpecs = lastJobOfferingsInfo[offeringKey].mez_prep_specs;
+  if(!prepSpecs) throw Error("No stream preparation specs found");
 
   // Retrieve all masters associated with this offering
   let masterVersionHashes = Object.keys(prepSpecs).map(spec =>
@@ -497,7 +509,7 @@ exports.StartABRMezzanineJobs = async function({
 
   const lroInfo = {
     write_token: processingDraft.write_token,
-    node: this.HttpClient.BaseURI().toString(),
+    node: processingDraft.nodeUrl,
     offering: offeringKey
   };
 
@@ -507,7 +519,7 @@ exports.StartABRMezzanineJobs = async function({
     libraryId,
     objectId,
     writeToken: statusDraft.write_token,
-    metadataSubtree: `lro_draft_${offeringKey}`,
+    metadataSubtree: "lro_draft",
     metadata: lroInfo
   });
 
@@ -536,6 +548,7 @@ exports.StartABRMezzanineJobs = async function({
     hash: finalizeResponse.hash,
     lro_draft: lroInfo,
     writeToken: processingDraft.write_token,
+    nodeUrl: processingDraft.nodeUrl,
     data,
     logs: logs || [],
     warnings: warnings || [],
@@ -544,45 +557,71 @@ exports.StartABRMezzanineJobs = async function({
 };
 
 /**
- * Retrieve status information for a long running operation (LRO) on the given object.
+ * Retrieve node and write token for a mezzanine's current offering preparation job (if any).
+ * Also returns the offering key.
  *
  * @methodGroup ABR Publishing
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
- * @param {string=} offeringKey=default - Offering key of the mezzanine
  *
  * @return {Promise<Object>} - LRO status
  */
-exports.LROStatus = async function({libraryId, objectId, offeringKey="default"}) {
-  ValidateParameters({libraryId, objectId});
+exports.LRODraftInfo = async function({libraryId, objectId}) {
+  const standardPathContents = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    metadataSubtree: "lro_draft"
+  });
 
-  const lroDraft =
-    await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      metadataSubtree: `lro_draft_${offeringKey}`
-    }) ||
-    await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      metadataSubtree: "lro_draft"
-    });
+  if(standardPathContents) return standardPathContents;
 
-  if(!lroDraft || !lroDraft.write_token) {
-    // Write token not present - check if mezz has already been finalized
-    const ready = await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      metadataSubtree: UrlJoin("abr_mezzanine", "offerings", offeringKey, "ready")
-    });
+  // get last job info, under /abr_mezzanine/offerings/
+  const lastJobOfferingsInfo = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
+  });
 
+  if(!lastJobOfferingsInfo) throw Error("No metadata for mezzanine preparation job found at /abr_mezzanine");
+
+  const mainOfferingKey = MezJobMainOfferingKey(lastJobOfferingsInfo);
+  if(!mainOfferingKey) throw Error("Could not determine offering key for last submitted job");
+
+  // see if offering from last job was finalized
+  const ready = lastJobOfferingsInfo[mainOfferingKey].ready;
+
+  // old location for LRO draft info
+  const oldPathContents = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    metadataSubtree: `lro_draft_${mainOfferingKey}`
+  });
+  if(oldPathContents) {
+    return oldPathContents;
+  } else {
     if(ready) {
-      throw Error(`Mezzanine already finalized for offering '${offeringKey}'`);
+      throw Error("No LRO draft found for this mezzanine - looks like last mez prep job was already finalized.");
     } else {
-      throw Error("No LRO draft found for this mezzanine");
+      throw Error("No LRO draft found for this mezzanine - looks like last mez prep job was either cancelled or discarded.");
     }
   }
+};
+
+/**
+ * Retrieve status information for mezzanine transcoding jobs, aka long running operations (LROs) on the given object.
+ *
+ * @methodGroup ABR Publishing
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ *
+ * @return {Promise<Object>} - LRO status
+ */
+exports.LROStatus = async function({libraryId, objectId}) {
+  ValidateParameters({libraryId, objectId});
+
+  const lroDraft = await this.LRODraftInfo({libraryId, objectId});
 
   this.HttpClient.RecordWriteToken(lroDraft.write_token, lroDraft.node);
 
@@ -602,98 +641,80 @@ exports.LROStatus = async function({libraryId, objectId, offeringKey="default"})
  * @param {string} libraryId - ID of the mezzanine library
  * @param {string} objectId - ID of the mezzanine object
  * @param {string} writeToken - Write token for the mezzanine object
- * @param {string=} offeringKey=default - The offering to process
  * @param {function=} preFinalizeFn - A function to call before finalizing changes, to allow further modifications to offering. The function will be invoked with {elvClient, nodeUrl, writeToken} to allow access to the draft and MUST NOT finalize the draft.
  * @param {boolean=} preFinalizeThrow - If set to `true` then any error thrown by preFinalizeFn will not be caught. Otherwise, any exception will be appended to the `warnings` array returned after finalization.
  *
  * @return {Promise<Object>} - The finalize response for the mezzanine object, as well as any logs, warnings and errors from the finalization
  */
-exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey="default", preFinalizeFn, preFinalizeThrow}) {
+exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeFn, preFinalizeThrow}) {
   ValidateParameters({libraryId, objectId});
 
-  const lroDraft = await this.ContentObjectMetadata({
+  const lroDraft = await this.LRODraftInfo({libraryId, objectId});
+
+  // tell http client what node to contact for this write token
+  this.HttpClient.RecordWriteToken(lroDraft.write_token, lroDraft.node);
+
+  const lastJobOfferingsInfo = await this.ContentObjectMetadata({
     libraryId,
     objectId,
-    metadataSubtree: `lro_draft_${offeringKey}`
+    writeToken: lroDraft.write_token,
+    metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
   });
 
-  if(!lroDraft || !lroDraft.write_token) {
-    throw Error("No LRO draft found for this mezzanine");
-  }
+  const offeringKey = MezJobMainOfferingKey(lastJobOfferingsInfo);
+  const masterHash = lastJobOfferingsInfo[offeringKey].prod_master_hash;
 
-  const httpClient = this.HttpClient;
-  let error, result;
-  try {
-    // Point directly to the node containing the draft
-    this.HttpClient = new HttpClient({uris: [lroDraft.node], debug: httpClient.debug});
+  // Authorization token for mezzanine and master
+  let authorizationTokens = [
+    await this.authClient.AuthorizationToken({libraryId, objectId, update: true}),
+    await this.authClient.AuthorizationToken({versionHash: masterHash})
+  ];
 
-    const mezzanineMetadata = await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      writeToken: lroDraft.write_token,
-      metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
-    });
+  const headers = {
+    Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
+  };
 
-    const masterHash = mezzanineMetadata[offeringKey].prod_master_hash;
+  const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
+    objectId,
+    libraryId,
+    writeToken: lroDraft.write_token,
+    method: UrlJoin("media", "abr_mezzanine", "offerings", offeringKey, "finalize"),
+    headers,
+    constant: false
+  });
 
-    // Authorization token for mezzanine and master
-    let authorizationTokens = [
-      await this.authClient.AuthorizationToken({libraryId, objectId, update: true}),
-      await this.authClient.AuthorizationToken({versionHash: masterHash})
-    ];
-
-    const headers = {
-      Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
+  let preFinalizeWarnings = [];
+  if(preFinalizeFn) {
+    const params = {
+      elvClient: this,
+      nodeUrl: lroDraft.node,
+      writeToken: lroDraft.write_token
     };
-
-    const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
-      objectId,
-      libraryId,
-      writeToken: lroDraft.write_token,
-      method: UrlJoin("media", "abr_mezzanine", "offerings", offeringKey, "finalize"),
-      headers,
-      constant: false
-    });
-
-    let preFinalizeWarnings = [];
-    if(preFinalizeFn) {
-      const params = {
-        elvClient: this,
-        nodeUrl: lroDraft.node,
-        writeToken: lroDraft.write_token
-      };
-      if(preFinalizeThrow){
-        await preFinalizeFn(params);
-      } else try {
-        await preFinalizeFn(params);
-      } catch(e) {
-        preFinalizeWarnings = `Error trying to set video stream codec descriptors: ${e}`;
+    try {
+      await preFinalizeFn(params);
+    } catch(err) {
+      if(preFinalizeThrow) {
+        // noinspection ExceptionCaughtLocallyJS
+        throw new Error("Error running preFinalize function", {cause: err});
+      } else {
+        preFinalizeWarnings = `Error running preFinalize function: ${err}`;
       }
     }
-
-    const finalizeResponse = await this.FinalizeContentObject({
-      libraryId,
-      objectId: objectId,
-      writeToken: lroDraft.write_token,
-      commitMessage: "Finalize ABR mezzanine",
-      awaitCommitConfirmation: false
-    });
-
-    result = {
-      data,
-      logs: logs || [],
-      warnings: (warnings || []).concat(preFinalizeWarnings),
-      errors: errors || [],
-      ...finalizeResponse
-    };
-  } catch(err) {
-    error = err;
-  } finally {
-    // Ensure original http client is restored
-    this.HttpClient = httpClient;
   }
 
-  if(error) { throw error; }
+  const finalizeResponse = await this.FinalizeContentObject({
+    libraryId,
+    objectId: objectId,
+    writeToken: lroDraft.write_token,
+    commitMessage: "Finalize ABR mezzanine",
+    awaitCommitConfirmation: false
+  });
 
-  return result;
+  return {
+    data,
+    logs: logs || [],
+    warnings: (warnings || []).concat(preFinalizeWarnings),
+    errors: errors || [],
+    ...finalizeResponse
+  };
 };
