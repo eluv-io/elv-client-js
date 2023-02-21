@@ -686,8 +686,8 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeF
   let preFinalizeWarnings = [];
   if(preFinalizeFn) {
     const params = {
-      elvClient: this,
       nodeUrl: lroDraft.node,
+      offeringKey,
       writeToken: lroDraft.write_token
     };
     try {
