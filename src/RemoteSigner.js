@@ -135,7 +135,7 @@ class RemoteSigner extends Ethers.Signer {
       transaction.nonce = await this.provider.getTransactionCount(this.address, "pending");
     }
 
-    return Ethers.utils.populateTransaction(transaction, this.provider, this.address).then((tx) => {
+    return this.populateTransaction(transaction, this.provider, this.address).then((tx) => {
       return this.sign(tx).then((signedTransaction) => {
         return this.provider.sendTransaction(signedTransaction);
       });
