@@ -5,7 +5,7 @@ let WalletConfiguration = {
     staging: {
       siteId: "iq__2gkNh8CCZqFFnoRpEUmz7P3PaBQG",
       purchaseMode: "develop",
-      appUrl: "https://core.test.contentfabric.io/wallet-demo"
+      appUrl: "https://wallet.demov3.contentfabric.io"
     }
   },
   main: {
