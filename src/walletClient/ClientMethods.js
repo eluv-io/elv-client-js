@@ -67,7 +67,8 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
   if(!this.loggedIn) { return; }
 
   // eslint-disable-next-line no-unused-vars
-  const { balance, usage_hold, payout_hold, locked_offer_balance, stripe_id, stripe_payouts_enabled } = await this.client.utils.ResponseToJson(
+  const { balance, usage_hold, payout_hold, locked_offer_balance, stripe_id, stripe_payouts_enabled, 
+    token_balance, token_value, combined_balance, token_contract, token_symbol, token_decimals } = await this.client.utils.ResponseToJson(
     await this.client.authClient.MakeAuthServiceRequest({
       path: UrlJoin("as", "wlt", "mkt", "bal"),
       method: "GET",
@@ -80,6 +81,12 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
   const userStripeId = stripe_id;
   const userStripeEnabled = stripe_payouts_enabled;
   const totalWalletBalance = parseFloat(balance || 0);
+  const tokenBalance = token_balance;
+  const tokenValue = parseFloat(token_value || 0);
+  const combinedBalance = parseFloat(combined_balance || 0);
+  const tokenContract = token_contract;
+  const tokenSymbol = token_symbol;
+  const tokenDecimals = parseInt(token_decimals || 0);
   const lockedWalletBalance = parseFloat(locked_offer_balance || 0);
   const availableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(usage_hold || 0) - lockedWalletBalance);
   const pendingWalletBalance = Math.max(0, totalWalletBalance - availableWalletBalance);
@@ -111,6 +118,12 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
     lockedWalletBalance,
     pendingWalletBalance,
     withdrawableWalletBalance,
+    tokenBalance,
+    tokenValue,
+    combinedBalance,
+    tokenContract,
+    tokenSymbol,
+    tokenDecimals
   };
 
   if(userStripeEnabled) {
