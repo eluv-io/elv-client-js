@@ -5,7 +5,6 @@
  */
 
 const UrlJoin = require("url-join");
-const ImageType = require("image-type");
 const Ethers = require("ethers");
 const Pako = require("pako");
 
@@ -386,10 +385,6 @@ exports.SetContentObjectImage = async function({libraryId, objectId, writeToken,
     image = await new Response(image).arrayBuffer();
   }
 
-  // Determine image type
-  const type = ImageType(image);
-  let mimeType = ["jpg", "jpeg", "png", "gif", "webp"].includes(type.ext) ? type.mime : "image/*";
-
   await this.UploadFiles({
     libraryId,
     objectId,
@@ -398,7 +393,7 @@ exports.SetContentObjectImage = async function({libraryId, objectId, writeToken,
     fileInfo: [
       {
         path: imageName,
-        mime_type: mimeType,
+        mime_type: "image/*",
         size: image.size || image.length || image.byteLength,
         data: image
       }
