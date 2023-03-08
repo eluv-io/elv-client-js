@@ -3,20 +3,23 @@ let WalletConfiguration = {
     configUrl: "https://demov3.net955210.contentfabric.io/config",
     stateStoreUrls: ["https://appsvc.svc.eluv.io/dv3"],
     staging: {
+      siteLibraryId: "ilib36Wi5fJDLXix8ckL7ZfaAJwJXWGD",
       siteId: "iq__2gkNh8CCZqFFnoRpEUmz7P3PaBQG",
       purchaseMode: "develop",
-      appUrl: "https://core.test.contentfabric.io/wallet-demo"
+      appUrl: "https://wallet.demov3.contentfabric.io"
     }
   },
   main: {
     configUrl: "https://main.net955305.contentfabric.io/config",
     stateStoreUrls: ["https://appsvc.svc.eluv.io/main"],
     staging: {
+      siteLibraryId: "ilib2GdaYEFxB7HyLPhSDPKMyPLhV8x9",
       siteId: "iq__inauxD1KLyKWPHargCWjdCh2ayr",
       purchaseMode: "production",
       appUrl: "https://wallet.preview.contentfabric.io",
     },
     production: {
+      siteLibraryId: "ilib2GdaYEFxB7HyLPhSDPKMyPLhV8x9",
       siteId: "iq__suqRJUt2vmXsyiWS5ZaSGwtFU9R",
       purchaseMode: "production",
       appUrl: "https://wallet.contentfabric.io"
