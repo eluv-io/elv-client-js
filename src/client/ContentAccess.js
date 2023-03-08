@@ -747,7 +747,7 @@ exports.ProduceMetadataLinks = async function({
     // Is file or rep link - produce a url
     return {
       ...metadata,
-      url: await this.LinkUrl({libraryId, objectId, versionHash, linkPath: path, authorizationToken})
+      url: await this.LinkUrl({libraryId, objectId, versionHash, linkPath: path, authorizationToken, noAuth})
     };
   }
 
@@ -783,7 +783,8 @@ exports.MetadataAuth = async function({
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-  noAuth = this.noAuth || noAuth;
+  noAuth = this.noAuth || noAuth || this.staticToken;
+
   let isPublic = noAuth;
   let accessType;
   if(!noAuth) {
@@ -899,6 +900,14 @@ exports.ContentObjectMetadata = async function({
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
   let path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
+
+  if(!versionHash) {
+    if(!libraryId) {
+      libraryId = await this.ContentObjectLibraryId({objectId});
+    }
+
+    path = UrlJoin("qlibs", libraryId, path);
+  }
 
   // Main authorization
   let defaultAuthToken = await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree, noAuth});
