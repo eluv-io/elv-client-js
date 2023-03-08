@@ -1298,9 +1298,9 @@ exports.LoadDrop = async function({tenantSlug, eventSlug, dropId}) {
   }
 
   if(!this.drops[tenantSlug][eventSlug][dropId]) {
-    const mainSiteHash = await this.client.LatestVersionHash({objectId: this.mainSiteId});
     const event = (await this.client.ContentObjectMetadata({
-      versionHash: mainSiteHash,
+      libraryId: this.mainSiteLibraryId,
+      objectId: this.mainSiteId,
       metadataSubtree: UrlJoin("public", "asset_metadata", "tenants", tenantSlug, "sites", eventSlug, "info"),
       resolveLinks: true,
       linkDepthLimit: 2,
