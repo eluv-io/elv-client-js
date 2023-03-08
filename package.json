@@ -67,6 +67,7 @@
     "deep-equal": "^1.0.1",
     "ellipsize": "^0.1.0",
     "ethers": "^5.7.2",
+    "file-type": "^18.2.1",
     "fraction.js": "^4.0.12",
     "hash.js": "^1.1.7",
     "image-type": "^5.2.0",
