@@ -752,7 +752,7 @@ class ElvWalletClient {
     const marketplaceInfo = this.MarketplaceInfo({marketplaceParams});
 
     const marketplaceId = marketplaceInfo.marketplaceId;
-    const marketplaceHashPromise = this.LatestMarketplaceHash({marketplaceParams});
+    const marketplaceHash = await this.LatestMarketplaceHash({marketplaceParams});
 
     if(this.cachedMarketplaces[marketplaceId] && this.cachedMarketplaces[marketplaceId].versionHash !== marketplaceHash) {
       delete this.cachedMarketplaces[marketplaceId];
@@ -810,8 +810,8 @@ class ElvWalletClient {
 
       marketplace.retrievedAt = Date.now();
       marketplace.marketplaceId = marketplaceId;
-      marketplace.versionHash = await marketplaceHashPromise;
-      marketplace.marketplaceHash = await marketplaceHashPromise;
+      marketplace.versionHash = marketplaceHash;
+      marketplace.marketplaceHash = marketplaceHash;
 
       if(this.previewMarketplaceId && marketplaceId === this.previewMarketplaceId) {
         marketplace.branding.preview = true;
