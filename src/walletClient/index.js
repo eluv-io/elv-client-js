@@ -34,6 +34,7 @@ class ElvWalletClient {
     this.network = network;
     this.mode = mode;
     this.purchaseMode = Configuration[network][mode].purchaseMode;
+    this.mainSiteLibraryId = Configuration[network][mode].siteLibraryId;
     this.mainSiteId = Configuration[network][mode].siteId;
     this.appUrl = Configuration[network][mode].appUrl;
     this.publicStaticToken = client.staticToken;
@@ -595,9 +596,9 @@ class ElvWalletClient {
       return;
     }
 
-    const mainSiteHash = await this.client.LatestVersionHash({objectId: this.mainSiteId});
     let metadata = await this.client.ContentObjectMetadata({
-      versionHash: mainSiteHash,
+      libraryId: this.mainSiteLibraryId,
+      objectId: this.mainSiteId,
       metadataSubtree: "public/asset_metadata/tenants",
       resolveLinks: true,
       linkDepthLimit: 2,
@@ -736,11 +737,12 @@ class ElvWalletClient {
       return this.availableMarketplaces[marketplaceInfo.tenantSlug][marketplaceInfo.marketplaceSlug]["."].source;
     }
 
-    const mainSiteHash = await this.client.LatestVersionHash({objectId: this.mainSiteId});
     const marketplaceLink = await this.client.ContentObjectMetadata({
-      versionHash: mainSiteHash,
+      libraryId: this.mainSiteLibraryId,
+      objectId: this.mainSiteId,
       metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", marketplaceInfo.tenantSlug, "marketplaces", marketplaceInfo.marketplaceSlug),
-      resolveLinks: false
+      resolveLinks: false,
+      noAuth: true
     });
 
     return LinkTargetHash(marketplaceLink);
@@ -750,7 +752,7 @@ class ElvWalletClient {
     const marketplaceInfo = this.MarketplaceInfo({marketplaceParams});
 
     const marketplaceId = marketplaceInfo.marketplaceId;
-    const marketplaceHash = await this.LatestMarketplaceHash({marketplaceParams});
+    const marketplaceHashPromise = this.LatestMarketplaceHash({marketplaceParams});
 
     if(this.cachedMarketplaces[marketplaceId] && this.cachedMarketplaces[marketplaceId].versionHash !== marketplaceHash) {
       delete this.cachedMarketplaces[marketplaceId];
@@ -758,8 +760,9 @@ class ElvWalletClient {
 
     if(!this.cachedMarketplaces[marketplaceId]) {
       let marketplace = await this.client.ContentObjectMetadata({
-        versionHash: marketplaceHash,
-        metadataSubtree: "public/asset_metadata/info",
+        libraryId: this.mainSiteLibraryId,
+        objectId: this.mainSiteId,
+        metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", marketplaceInfo.tenantSlug, "marketplaces", marketplaceInfo.marketplaceSlug, "info"),
         localizationSubtree: this.localization ? UrlJoin("public", "asset_metadata", "localizations", this.localization, "info") : "",
         linkDepthLimit: 1,
         resolveLinks: true,
@@ -807,8 +810,8 @@ class ElvWalletClient {
 
       marketplace.retrievedAt = Date.now();
       marketplace.marketplaceId = marketplaceId;
-      marketplace.versionHash = marketplaceHash;
-      marketplace.marketplaceHash = marketplaceHash;
+      marketplace.versionHash = await marketplaceHashPromise;
+      marketplace.marketplaceHash = await marketplaceHashPromise;
 
       if(this.previewMarketplaceId && marketplaceId === this.previewMarketplaceId) {
         marketplace.branding.preview = true;
