@@ -51,6 +51,7 @@ class ElvWalletClient {
 
     this.stateStoreUrls = Configuration[network].stateStoreUrls;
     this.stateStoreClient = new HTTPClient({uris: this.stateStoreUrls});
+    this.badgerAddress = Configuration[network].badgerAddress;
 
     // Caches
     this.cachedMarketplaces = {};

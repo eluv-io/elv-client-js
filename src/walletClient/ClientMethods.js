@@ -1310,8 +1310,22 @@ exports.DropStatus = async function({marketplace, eventId, dropId}) {
 
 
 /* OFFERS */
-// TODO: Document
 
+/**
+ * Retrieve offers for the specified parameters
+ *
+ * @methodGroup Offers
+ * @namedParams
+ * @param {string=} contractAddress - The address of an NFT contract
+ * @param {string=} tokenId - The token ID of an NFT
+ * @param {string=} buyerAddress - The address of the offerrer
+ * @param {string=} sellerAddress - The address of the offerree
+ * @param {Array<String>=} statuses - Status to filter results by. Allowed values: "ACTIVE", "ACCEPTED", "CANCELLED", "DECLINED", "INVALID"
+ * @param {number} start=0 - The index to start from
+ * @param {number=} limit=10 - The maximum number of results to return
+ *
+ * @returns {Promise<Array<Object>>} - Offers matching the specified filters
+ */
 exports.MarketplaceOffers = async function({contractAddress, tokenId, buyerAddress, sellerAddress, statuses, start=0, limit=10}) {
   let path = UrlJoin("as", "mkt", "offers", "ls");
   if(buyerAddress) {
@@ -1354,6 +1368,21 @@ exports.MarketplaceOffers = async function({contractAddress, tokenId, buyerAddre
     }));
 };
 
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Create or update an offer on the specified NFT
+ *
+ * @methodGroup Offers
+ * @namedParams
+ * @param {string} contractAddress - The contract address of the NFT
+ * @param {string} tokenId - The token ID of the NFT
+ * @param {string=} offerId - IF modifying an existing offer, the ID of the offer
+ * @param {number} price - The amount to offer
+ * @param {number=} expiresAt - The time (in epoch ms) the offer will expire
+ *
+ * @returns {Promise<Object>} - Info about the created/updated offer
+ */
 exports.CreateMarketplaceOffer = async function({contractAddress, tokenId, offerId, price, expiresAt}) {
   let response;
   if(offerId) {
@@ -1391,6 +1420,15 @@ exports.CreateMarketplaceOffer = async function({contractAddress, tokenId, offer
   return response.offer_id;
 };
 
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Cancel the specified offer
+ *
+ * @methodGroup Offers
+ * @namedParams
+ * @param {string} offerId - The ID of the offer
+ */
 exports.RemoveMarketplaceOffer = async function({offerId}) {
   return await this.client.authClient.MakeAuthServiceRequest({
     path: UrlJoin("as", "wlt", "mkt", "offers", offerId),
@@ -1401,7 +1439,15 @@ exports.RemoveMarketplaceOffer = async function({offerId}) {
   });
 };
 
-
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Accept the specified offer
+ *
+ * @methodGroup Offers
+ * @namedParams
+ * @param {string} offerId - The ID of the offer
+ */
 exports.AcceptMarketplaceOffer = async function({offerId}) {
   return await this.client.authClient.MakeAuthServiceRequest({
     path: UrlJoin("as", "wlt", "mkt", "offers", "accept", offerId),
@@ -1412,6 +1458,15 @@ exports.AcceptMarketplaceOffer = async function({offerId}) {
   });
 };
 
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Reject the specified offer
+ *
+ * @methodGroup Offers
+ * @namedParams
+ * @param {string} offerId - The ID of the offer
+ */
 exports.RejectMarketplaceOffer = async function({offerId}) {
   return await this.client.authClient.MakeAuthServiceRequest({
     path: UrlJoin("as", "wlt", "mkt", "offers", "decline", offerId),
@@ -1420,4 +1475,80 @@ exports.RejectMarketplaceOffer = async function({offerId}) {
       Authorization: `Bearer ${this.AuthToken()}`
     }
   });
+};
+
+
+/* Voting */
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Retrieve the current status of the specified voting event
+ *
+ * @methodGroup Voting
+ * @namedParams
+ * @param {string} tenantId - The tenant ID of the marketplace in which the voting event is specified
+ * @param {string} votingEventId - The ID of the voting event
+ *
+ * @returns {Promise<Object>} - Info about the voting event, including the current user's votes and the current total voting tally
+ */
+exports.VoteStatus = async function ({tenantId, votingEventId}) {
+  return await Utils.ResponseToJson(
+    this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "votes", tenantId, votingEventId),
+      headers: {
+        Authorization: `Bearer ${this.AuthToken()}`
+      }
+    })
+  );
+};
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Cast a vote for the specified item in the specified voting event
+ *
+ * @methodGroup Voting
+ * @namedParams
+ * @param {string} tenantId - The tenant ID of the marketplace in which the voting event is specified
+ * @param {string} votingEventId - The ID of the voting event
+ * @param {string} sku - The SKU of the item to vote for
+ *
+ * @returns {Promise<Object>} - Info about the voting event, including the current user's votes and the current total voting tally
+ */
+exports.CastVote = async function ({tenantId, votingEventId, sku}) {
+  return await Utils.ResponseToJson(
+    this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "votes", tenantId, votingEventId, sku),
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.AuthToken()}`
+      }
+    })
+  );
+};
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Revoke a previously cast vote for the specified item in the specified voting event
+ *
+ * @methodGroup Voting
+ * @namedParams
+ * @param {string} tenantId - The tenant ID of the marketplace in which the voting event is specified
+ * @param {string} votingEventId - The ID of the voting event
+ * @param {string} sku - The SKU of the item to vote for
+ *
+ * @returns {Promise<Object>} - Info about the voting event, including the current user's votes and the current total voting tally
+ */
+exports.RevokeVote = async function ({tenantId, votingEventId, sku}) {
+  return await Utils.ResponseToJson(
+    this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "votes", tenantId, votingEventId, sku),
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${this.AuthToken()}`
+      }
+    })
+  );
 };
