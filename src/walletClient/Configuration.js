@@ -2,6 +2,7 @@ let WalletConfiguration = {
   demo: {
     configUrl: "https://demov3.net955210.contentfabric.io/config",
     stateStoreUrls: ["https://appsvc.svc.eluv.io/dv3"],
+    badgerAddress: "0x39e9d567137217e8f7dae73bf168db28d242bb31",
     staging: {
       siteLibraryId: "ilib36Wi5fJDLXix8ckL7ZfaAJwJXWGD",
       siteId: "iq__2gkNh8CCZqFFnoRpEUmz7P3PaBQG",
@@ -12,6 +13,7 @@ let WalletConfiguration = {
   main: {
     configUrl: "https://main.net955305.contentfabric.io/config",
     stateStoreUrls: ["https://appsvc.svc.eluv.io/main"],
+    badgerAddress: "0xa042a585bbbac4419ba39c397f35ab749fc470f0",
     staging: {
       siteLibraryId: "ilib2GdaYEFxB7HyLPhSDPKMyPLhV8x9",
       siteId: "iq__inauxD1KLyKWPHargCWjdCh2ayr",
