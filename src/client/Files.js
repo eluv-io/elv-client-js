@@ -403,8 +403,10 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
     }
   };
 
-  // Preparing jobs is done asyncronously
-  PrepareJobs();
+  // Preparing jobs is done asynchronously
+  PrepareJobs().catch(e => {
+    throw e;
+  });
 
   // Upload the first several chunks in sequence, to determine average upload rate
   const rateTestJobs = Math.min(3, jobs.length);
