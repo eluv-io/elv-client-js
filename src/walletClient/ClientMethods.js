@@ -1481,8 +1481,6 @@ exports.RejectMarketplaceOffer = async function({offerId}) {
 /* Voting */
 
 /**
- * <b><i>Requires login</i></b>
- *
  * Retrieve the current status of the specified voting event
  *
  * @methodGroup Voting
