@@ -501,21 +501,45 @@ exports.UploadFileData = async function({libraryId, objectId, writeToken, upload
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
-  let path = UrlJoin("q", writeToken, "file_jobs", uploadId, jobId);
+  let retries = 0;
+  do {
+    try {
+      const jobStatus = await this.UploadJobStatus({libraryId, objectId, writeToken, uploadId, jobId});
 
-  await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      method: "POST",
-      path: path,
-      body: fileData,
-      bodyType: "BINARY",
-      headers: {
-        "Content-type": "application/octet-stream",
-        ...(await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}))
-      },
-      failover: false
-    })
-  );
+      if(jobStatus.rem === 0) {
+        // Job is actually done
+        return;
+      } else if(jobStatus.skip) {
+        fileData = fileData.slice(jobStatus.skip);
+      }
+
+      let path = UrlJoin("q", writeToken, "file_jobs", uploadId, jobId);
+
+      return await this.utils.ResponseToJson(
+        this.HttpClient.Request({
+          method: "POST",
+          path: path,
+          body: fileData,
+          bodyType: "BINARY",
+          headers: {
+            "Content-type": "application/octet-stream",
+            ...(await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}))
+          },
+          failover: false
+        })
+      );
+    } catch(error){
+      this.Log(error, true);
+
+      retries += 1;
+
+      if(retries >= 5) {
+        throw error;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 10 * retries * 1000));
+    }
+  } while(retries < 5);
 };
 
 exports.FinalizeUploadJob = async function({libraryId, objectId, writeToken}) {
