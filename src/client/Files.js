@@ -506,7 +506,10 @@ exports.UploadFileData = async function({libraryId, objectId, writeToken, upload
     try {
       const jobStatus = await this.UploadJobStatus({libraryId, objectId, writeToken, uploadId, jobId});
 
-      if(jobStatus.skip) {
+      if(jobStatus.rem === 0) {
+        // Job is actually done
+        return;
+      } else if(jobStatus.skip) {
         fileData = fileData.slice(jobStatus.skip);
       }
 
