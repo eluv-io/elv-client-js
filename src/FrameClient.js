@@ -54,7 +54,6 @@ class FrameClient {
     this.Crypto = Crypto;
     this.Crypto.ElvCrypto();
 
-
     // Dynamically defined methods defined in AllowedMethods
     for(const methodName of this.AllowedMethods()){
       this[methodName] = async (args) => {
@@ -258,13 +257,19 @@ class FrameClient {
 
   static FileMethods() {
     return [
+      "CreateFileUploadJob",
+      "DownloadEncrypted",
       "DownloadFile",
       "DownloadPart",
+      "FinalizeUploadJob",
       "UpdateContentObjectGraph",
+      "UploadFileData",
       "UploadFiles",
       "UploadFilesFromS3",
+      "UploadJobStatus",
       "UploadPart",
-      "UploadPartChunk"
+      "UploadPartChunk",
+      "UploadStatus"
     ];
   }
 
