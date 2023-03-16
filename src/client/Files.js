@@ -387,7 +387,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
     for(let f = 0; f < files.length; f++) {
       const fileInfo = files[f];
 
-      await this.UploadFileData({libraryId, objectId, writeToken, uploadId: id, jobId, fileData: fileInfo.data});
+      await this.UploadFileData({libraryId, objectId, writeToken, uploadId: id, jobId, filePath: fileInfo.path, fileData: fileInfo.data});
 
       delete jobSpecs[j].files[f].data;
       uploaded += fileInfo.len;
@@ -487,30 +487,51 @@ exports.UploadJobStatus = async function({libraryId, objectId, writeToken, uploa
 
   const path = UrlJoin("q", writeToken, "file_jobs", uploadId, "uploads", jobId);
 
-  return this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-      method: "GET",
-      path: path,
-      failover: false
-    })
-  );
+  // This request is sent during file data upload and might fail due to congestion
+  do {
+    try {
+      let jobStatus = this.utils.ResponseToJson(
+        this.HttpClient.Request({
+          headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+          method: "GET",
+          path: path,
+          failover: false
+        })
+      );
+      return jobStatus;
+    } catch(error) {
+      this.Log(error, true);
+
+      retries += 1;
+      if(retries >= 5) {
+        throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, 10 * retries * 1000));
+    }
+  } while(retries < 5);
+
 };
 
-exports.UploadFileData = async function({libraryId, objectId, writeToken, uploadId, jobId, fileData}) {
+exports.UploadFileData = async function({libraryId, objectId, writeToken, uploadId, jobId, filePath, fileData}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
   let retries = 0;
   do {
     try {
+
       const jobStatus = await this.UploadJobStatus({libraryId, objectId, writeToken, uploadId, jobId});
 
-      if(jobStatus.rem === 0) {
+      // Find the status of this file
+      const fileStatus = jobStatus.files.find(item => {
+        return item.path == filePath
+      });
+
+      if(fileStatus.rem === 0) {
         // Job is actually done
         return;
-      } else if(jobStatus.skip) {
-        fileData = fileData.slice(jobStatus.skip);
+      } else if(fileStatus.skip) {
+        fileData = fileData.slice(fileStatus.skip);
       }
 
       let path = UrlJoin("q", writeToken, "file_jobs", uploadId, jobId);
