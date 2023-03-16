@@ -267,6 +267,7 @@ exports.UploadFilesFromS3 = async function({
 exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo, encryption="none", callback}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
+  ValidatePresence("fileInfo", fileInfo);
 
   this.Log(`Uploading files: ${libraryId} ${objectId} ${writeToken}`);
 
@@ -279,8 +280,10 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
   let progress = {};
   let fileDataMap = {};
 
-  for(let i = 0; i < fileInfo.length; i++) {
-    let entry = { ...fileInfo[i], data: undefined };
+  let originalFileInfo = fileInfo;
+  fileInfo = [];
+  for(let i = 0; i < originalFileInfo.length; i++) {
+    let entry = { ...originalFileInfo[i], data: undefined };
 
     entry.path = entry.path.replace(/^\/+/, "");
 
@@ -290,9 +293,8 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
       };
     }
 
-    fileDataMap[entry.path] = fileInfo[i].data;
+    fileDataMap[entry.path] = originalFileInfo[i].data;
 
-    delete entry.data;
     entry.type = "file";
 
     progress[entry.path] = {
@@ -300,8 +302,10 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
       total: entry.size
     };
 
-    fileInfo[i] = entry;
+    fileInfo.push(entry);
   }
+
+  console.log(fileInfo);
 
   this.Log(fileInfo);
 
@@ -321,7 +325,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
   this.Log(jobs);
 
   // How far encryption can get ahead of upload
-  const bufferSize = 100 * 1024 * 1024;
+  const bufferSize = 500 * 1024 * 1024;
 
   let jobSpecs = [];
   let prepared = 0;
@@ -387,6 +391,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
     for(let f = 0; f < files.length; f++) {
       const fileInfo = files[f];
 
+      console.log("STARTING UPLOAD", fileInfo.path)
       await this.UploadFileData({
         libraryId,
         objectId,
@@ -397,6 +402,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
         fileData: fileInfo.data,
         encryption
       });
+      console.log("FINISHED UPLOAD", fileInfo.path)
 
       delete jobSpecs[j].files[f].data;
       uploaded += fileInfo.len;
@@ -526,10 +532,10 @@ exports.UploadFileData = async function({libraryId, objectId, writeToken, encryp
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
+  let originalFileData = fileData;
   let retries = 0;
   do {
     try {
-
       const jobStatus = await this.UploadJobStatus({libraryId, objectId, writeToken, uploadId, jobId});
 
       // Find the status of this file
@@ -538,11 +544,24 @@ exports.UploadFileData = async function({libraryId, objectId, writeToken, encryp
         fileStatus = fileStatus.encrypted;
       }
 
+      console.log("\n=====");
+      console.log(retries > 0 ? "RETRY": "", filePath);
+      console.log(fileStatus);
+      console.log("=====\n");
+
+      console.log("DATA SIZE", fileData.length || fileData.size);
+
       if(fileStatus.rem === 0) {
         // Job is actually done
         return;
       } else if(fileStatus.skip) {
-        fileData = fileData.slice(fileStatus.skip);
+        fileData = originalFileData.slice(fileStatus.skip);
+        console.log("SKIP SOME", fileData.size || fileData.length)
+        console.log("EXPECTED LENGTH", fileStatus.rem, fileStatus.len - fileStatus.skip);
+
+        if((fileData.size || fileData.length) !== fileStatus.rem) {
+          console.error("= === == = == SIZE MISMATCH = = == - - -")
+        }
       }
 
       let path = UrlJoin("q", writeToken, "file_jobs", uploadId, jobId);
@@ -561,6 +580,7 @@ exports.UploadFileData = async function({libraryId, objectId, writeToken, encryp
         })
       );
     } catch(error){
+      console.log(error);
       this.Log(error, true);
 
       retries += 1;
