@@ -192,7 +192,7 @@ class AuthorizationClient {
     if(encryption && encryption !== "none" && objectId && await this.AccessType(objectId) === ACCESS_TYPES.OBJECT) {
       const owner = await this.Owner({id: objectId});
       const ownerCapKey = `eluv.caps.iusr${Utils.AddressToHash(this.client.signer.address)}`;
-      const ownerCap = await this.client.ContentObjectMetadata({libraryId, objectId, metadataSubtree: ownerCapKey});
+      const ownerCap = await this.client.ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree: ownerCapKey});
 
       if(!Utils.EqualAddress(owner, this.client.signer.address) && !ownerCap) {
         const cap = await this.ReEncryptionConk({libraryId, objectId});
