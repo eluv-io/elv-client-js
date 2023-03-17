@@ -2,6 +2,7 @@ const { ElvClient } = require("../src/ElvClient");
 const { ElvWalletClient } = require("../src/walletClient/index");
 const ClientConfiguration = require("../TestConfiguration.json");
 const fs = require("fs");
+const path = require("path");
 
 const createHash = require("node:crypto").createHash;
 const MD5 = str => {
@@ -23,10 +24,12 @@ const Test = async () => {
 
     client.SetSigner({signer});
 
+    const uploadDir = process.argv[2];
+
     const dirname = `upload-test-${Date.now()}`;
-    const fileList = fs.readdirSync("/Users/kevin/Downloads/upload-test");
+    const fileList = fs.readdirSync(uploadDir);
     const fileInfo = fileList.map(filename => {
-      const data = fs.readFileSync(`/Users/kevin/Downloads/upload-test/${filename}`);
+      const data = fs.readFileSync(path.join(uploadDir, filename));
 
       return {
         path: `${dirname}/${filename}`,
