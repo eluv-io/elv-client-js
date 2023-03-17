@@ -1,5 +1,5 @@
 {
-  "drm_optional": true,
+  "drm_optional": false,
   "store_clear": false,
   "ladder_specs": {
     "{\"media_type\":\"audio\",\"channels\":1}": {
@@ -96,15 +96,6 @@
         "type": "ProtoDash"
       }
     },
-    "hls-aes128": {
-      "drm": {
-        "enc_scheme_name": "aes-128",
-        "type": "DrmAes128"
-      },
-      "protocol": {
-        "type": "ProtoHls"
-      }
-    },
     "hls-sample-aes": {
       "drm": {
         "enc_scheme_name": "cbcs",
@@ -114,15 +105,11 @@
         "type": "ProtoHls"
       }
     },
-    "dash-clear": {
-      "drm": null,
-      "protocol": {
-        "min_buffer_length": 2,
-        "type": "ProtoDash"
-      }
-    },
-    "hls-clear": {
-      "drm": null,
+    "hls-aes128": {
+      "drm": {
+        "enc_scheme_name": "aes-128",
+        "type": "DrmAes128"
+      },
       "protocol": {
         "type": "ProtoHls"
       }
