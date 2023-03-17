@@ -105,16 +105,6 @@
         "type": "ProtoHls"
       }
     },
-    "hls-fairplay": {
-      "drm": {
-        "enc_scheme_name": "cbcs",
-        "license_servers": [],
-        "type": "DrmFairplay"
-      },
-      "protocol": {
-        "type": "ProtoHls"
-      }
-    },
     "hls-sample-aes": {
       "drm": {
         "enc_scheme_name": "cbcs",

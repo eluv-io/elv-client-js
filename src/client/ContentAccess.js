@@ -1831,7 +1831,7 @@ exports.CallBitcodeMethod = async function({
       method: constant ? "GET" : "POST",
       path,
       queryParams,
-      failover: false
+      allowFailover: false
     })
   );
 };
