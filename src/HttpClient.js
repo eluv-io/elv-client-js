@@ -53,10 +53,8 @@ class HttpClient {
     attempts=0,
     allowFailover=true,
     forceFailover=false,
-    retries
+    allowRetry=true
   }) {
-    retries = retries || this.retries;
-
     let baseURI = this.BaseURI();
 
     // If URL contains a write token, it must go to the correct server and can not fail over
@@ -115,7 +113,8 @@ class HttpClient {
       // Fail over if not a write token request, the response was a server error, and we haven't tried all available nodes
       if(
         (parseInt(response.status) >= 500 || forceFailover) &&
-        attempts < retries
+        allowRetry &&
+        attempts < this.retries
       ) {
         // Server error
         if(allowFailover) {
