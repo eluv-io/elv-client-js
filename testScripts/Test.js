@@ -1,8 +1,7 @@
 const { ElvClient } = require("../src/ElvClient");
 const { ElvWalletClient } = require("../src/walletClient/index");
 const ClientConfiguration = require("../TestConfiguration.json");
-
-const ethers = require("ethers");
+const fs = require("fs");
 
 const Test = async () => {
   try {
