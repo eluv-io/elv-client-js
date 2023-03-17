@@ -489,7 +489,7 @@ exports.CreateFileUploadJob = async function({libraryId, objectId, writeToken, o
       method: "POST",
       path: path,
       body,
-      failover: false
+      allowFailover: false
     })
   );
 };
@@ -505,7 +505,7 @@ exports.UploadStatus = async function({libraryId, objectId, writeToken, uploadId
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "GET",
       path: path,
-      failover: false
+      allowFailover: false
     })
   );
 };
@@ -521,7 +521,7 @@ exports.UploadJobStatus = async function({libraryId, objectId, writeToken, uploa
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "GET",
       path: path,
-      failover: false
+      allowFailover: false
     })
   );
 };
@@ -557,7 +557,7 @@ exports.UploadFileData = async function({libraryId, objectId, writeToken, encryp
         "Content-type": "application/octet-stream",
         ...(await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}))
       },
-      failover: false,
+      allowFailover: false,
       retries: 0
     })
   );
@@ -576,7 +576,7 @@ exports.FinalizeUploadJob = async function({libraryId, objectId, writeToken}) {
     path: path,
     bodyType: "BINARY",
     headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-    failover: false
+    allowFailover: false
   });
 };
 
@@ -1040,7 +1040,7 @@ exports.CreatePart = async function({libraryId, objectId, writeToken, encryption
       path,
       bodyType: "BINARY",
       body: "",
-      failover: false
+      allowFailover: false
     })
   );
 
@@ -1079,7 +1079,7 @@ exports.UploadPartChunk = async function({libraryId, objectId, writeToken, partW
       path: UrlJoin(path, partWriteToken),
       body: chunk,
       bodyType: "BINARY",
-      failover: false
+      allowFailover: false
     })
   );
 };
@@ -1110,7 +1110,7 @@ exports.FinalizePart = async function({libraryId, objectId, writeToken, partWrit
       path: UrlJoin(path, partWriteToken),
       bodyType: "BINARY",
       body: "",
-      failover: false
+      allowFailover: false
     })
   );
 };
@@ -1189,6 +1189,6 @@ exports.DeletePart = async function({libraryId, objectId, writeToken, partHash})
     headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
     method: "DELETE",
     path: path,
-    failover: false
+    allowFailover: false
   });
 };

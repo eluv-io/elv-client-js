@@ -51,7 +51,7 @@ class HttpClient {
     bodyType="JSON",
     headers={},
     attempts=0,
-    failover=true,
+    allowFailover=true,
     forceFailover=false,
     retries
   }) {
@@ -64,7 +64,7 @@ class HttpClient {
     const writeToken = writeTokenMatch ? writeTokenMatch[2] : undefined;
 
     if(writeToken) {
-      failover = false;
+      allowFailover = false;
 
       if(this.draftURIs[writeToken]) {
         // Use saved write token URI
@@ -118,7 +118,7 @@ class HttpClient {
         attempts < retries
       ) {
         // Server error
-        if(failover) {
+        if(allowFailover) {
           // Fail over to alternate node
           this.uriIndex = (this.uriIndex + 1) % this.uris.length;
           this.Log(`HttpClient failing over from ${baseURI.toString()}: ${attempts + 1} attempts`, true);

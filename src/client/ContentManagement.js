@@ -967,7 +967,7 @@ exports.FinalizeContentObject = async function({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "POST",
       path: path,
-      failover: false
+      allowFailover: false
     })
   );
 
@@ -1127,7 +1127,7 @@ exports.MergeMetadata = async function({libraryId, objectId, writeToken, metadat
     method: "POST",
     path: path,
     body: metadata,
-    failover: false
+    allowFailover: false
   });
 };
 
@@ -1159,7 +1159,7 @@ exports.ReplaceMetadata = async function({libraryId, objectId, writeToken, metad
     method: "PUT",
     path: path,
     body: metadata,
-    failover: false
+    allowFailover: false
   });
 };
 
@@ -1190,7 +1190,7 @@ exports.DeleteMetadata = async function({libraryId, objectId, writeToken, metada
     headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
     method: "DELETE",
     path: path,
-    failover: false
+    allowFailover: false
   });
 };
 
