@@ -557,7 +557,8 @@ exports.UploadFileData = async function({libraryId, objectId, writeToken, encryp
         "Content-type": "application/octet-stream",
         ...(await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}))
       },
-      failover: false
+      failover: false,
+      retries: 0
     })
   );
 };
