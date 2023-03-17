@@ -393,12 +393,6 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
       let succeeded = false;
       do {
         try {
-          if(retries > 0) {
-            console.log("Retrying", jobId, fileInfo.path);
-          } else {
-            console.log("Uploading", jobId, fileInfo.path);
-          }
-
           await this.UploadFileData({
             libraryId,
             objectId,
@@ -412,7 +406,6 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
 
           succeeded = true;
         } catch(error) {
-          console.log(error);
           this.Log(error, true);
 
           retries += 1;
@@ -523,30 +516,14 @@ exports.UploadJobStatus = async function({libraryId, objectId, writeToken, uploa
 
   const path = UrlJoin("q", writeToken, "file_jobs", uploadId, "uploads", jobId);
 
-  // This request is sent during file data upload and might fail due to congestion
-  let retries = 0;
-  do {
-    try {
-      let jobStatus = this.utils.ResponseToJson(
-        this.HttpClient.Request({
-          headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-          method: "GET",
-          path: path,
-          failover: false
-        })
-      );
-      return jobStatus;
-    } catch(error) {
-      this.Log(error, true);
-
-      retries += 1;
-      if(retries >= 5) {
-        throw error;
-      }
-      await new Promise(resolve => setTimeout(resolve, 10 * retries * 1000));
-    }
-  } while(retries < 5);
-
+  return await this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+      method: "GET",
+      path: path,
+      failover: false
+    })
+  );
 };
 
 exports.UploadFileData = async function({libraryId, objectId, writeToken, encryption, uploadId, jobId, filePath, fileData}) {
