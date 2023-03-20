@@ -34,6 +34,15 @@ if(Utils.Platform() === Utils.PLATFORM_NODE) {
   globalThis.Response = (require("node-fetch")).Response;
 }
 
+// quiet node ExperimentalWarning: The Fetch API is an experimental feature
+const originalEmit = process.emit;
+process.emit = function (name, data, ...args) {
+  if(name === `warning` && typeof data === `object` && data.name === `ExperimentalWarning`) {
+    return false;
+  }
+  return originalEmit.apply(process, arguments);
+};
+
 /**
  * See the Modules section on the sidebar for details about methods related to interacting with the Fabric.
  *
