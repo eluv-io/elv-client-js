@@ -293,7 +293,7 @@ exports.CreateABRMezzanine = async function({
 
   let options = type ? { type } : {};
 
-  let id, write_token;
+  let id, write_token, nodeUrl;
   if(existingMez) {
     // Edit existing
     const editResponse = await this.EditContentObject({
@@ -313,6 +313,7 @@ exports.CreateABRMezzanine = async function({
 
     id = createResponse.id;
     write_token = createResponse.write_token;
+    nodeUrl = createResponse.nodeUrl;
   }
 
   await this.CreateEncryptionConk({libraryId, objectId: id, writeToken: write_token, createKMSConk: true});
@@ -445,6 +446,7 @@ exports.CreateABRMezzanine = async function({
     logs: logs || [],
     warnings: warnings || [],
     errors: errors || [],
+    nodeUrl,
     ...finalizeResponse
   };
 };
