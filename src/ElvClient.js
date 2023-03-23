@@ -203,14 +203,15 @@ class ElvClient {
    * @param {string} configUrl - Full URL to the config endpoint
    * @param {Array<string>} kmsUrls - List of KMS urls to use for OAuth authentication
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
-   *
+   * - Available regions: as-east, au-east, eu-east-north, eu-west-north, na-east-north, na-east-south, na-west-north, na-west-south, eu-east-south, eu-west-south
+   * @param {string=} clientIP - IP address to use in determining the region to use
    * @return {Promise<Object>} - Object containing content space ID and fabric and ethereum URLs
    */
   static async Configuration({
     configUrl,
     kmsUrls=[],
-    region
+    region,
+    clientIP
   }) {
     try {
       const uri = new URI(configUrl);
@@ -218,6 +219,10 @@ class ElvClient {
 
       if(region) {
         uri.addSearch("elvgeo", region);
+      }
+
+      if(clientIP) {
+        uri.addSearch("client_ip", clientIP);
       }
 
       const fabricInfo = await Utils.ResponseToJson(
@@ -275,7 +280,8 @@ class ElvClient {
    * @namedParams
    * @param {string} networkName - Name of the network to connect to ("main", "demo", "test)
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
+   * - Available regions: as-east, au-east, eu-east-north, eu-west-north, na-east-north, na-east-south, na-west-north, na-west-south, eu-east-south, eu-west-south
+   * @param {string=} clientIP - IP address to use in determining the region to use
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
@@ -286,6 +292,7 @@ class ElvClient {
   static async FromNetworkName({
     networkName,
     region,
+    clientIP,
     trustAuthorityId,
     staticToken,
     ethereumContractTimeout=10,
@@ -300,6 +307,7 @@ class ElvClient {
     return await this.FromConfigurationUrl({
       configUrl,
       region,
+      clientIP,
       trustAuthorityId,
       staticToken,
       ethereumContractTimeout,
@@ -316,7 +324,8 @@ class ElvClient {
    * @namedParams
    * @param {string} configUrl - Full URL to the config endpoint
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
+   * - Available regions: as-east, au-east, eu-east-north, eu-west-north, na-east-north, na-east-south, na-west-north, na-west-south, eu-east-south, eu-west-south
+   * @param {string=} clientIP - IP address to use in determining the region to use
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
@@ -327,6 +336,7 @@ class ElvClient {
   static async FromConfigurationUrl({
     configUrl,
     region,
+    clientIP,
     trustAuthorityId,
     staticToken,
     ethereumContractTimeout=10,
@@ -345,6 +355,7 @@ class ElvClient {
       fabricVersion
     } = await ElvClient.Configuration({
       configUrl,
+      clientIP,
       region
     });
 
@@ -425,12 +436,12 @@ class ElvClient {
   /**
    * Update fabric URLs to prefer the specified region.
    *
-   * Note: Client must have been initialized with FromConfiguration
+   * Note: Client must have been initialized with FromConfigurationUrl or FromNetworkName
    *
    * @methodGroup Nodes
    * @namedParams
    * @param {string} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
+   * - Available regions: as-east, au-east, eu-east-north, eu-west-north, na-east-north, na-east-south, na-west-north, na-west-south, eu-east-south, eu-west-south
    *
    * @return {Promise<Object>} - An object containing the updated fabric, ethereum, auth service, and search URLs in order of preference
    */
@@ -465,7 +476,7 @@ class ElvClient {
   /**
    * Reset fabric URLs to prefer the best region auto-detected by the fabric.
    *
-   * Note: Client must have been initialized with FromConfiguration
+   * Note: Client must have been initialized with FromConfigurationUrl or FromNetworkName
    *
    * @methodGroup Nodes
    *
@@ -482,7 +493,7 @@ class ElvClient {
   /**
    * Retrieve the node ID reported by the fabric for the specified region
    *
-   * Note: Client must have been initialized with FromConfiguration
+   * Note: Client must have been initialized with FromConfigurationUrl or FromNetworkName
    *
    * @methodGroup Nodes
    *
@@ -898,7 +909,7 @@ class ElvClient {
    * Set the signer for this client via OAuth token. The client will exchange the given token
    * for the user's private key using the KMS specified in the configuration.
    *
-   * NOTE: The KMS URL(s) must be set in the initial configuration of the client (FromConfigurationUrl)
+   * NOTE: The KMS URL(s) must be set in the initial configuration of the client (FromConfigurationUrl or FromNetworkName)
    *
    * @methodGroup Authorization
    * @namedParams
