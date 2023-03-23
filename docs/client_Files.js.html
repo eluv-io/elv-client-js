@@ -749,7 +749,7 @@ exports.DownloadFile = async function({
       UrlJoin("q", writeToken || versionHash || objectId, "files", filePath);
 
 
-  const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
+  const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption, makeAccessRequest: encryption === "cgck"});
   headers.Accept = "*/*";
 
   // If not owner, indicate re-encryption
