@@ -460,6 +460,7 @@ class ElvClient {
     const uris = this.service === "search" ? this.searchURIs : this.fabricURIs;
     this.HttpClient = new HttpClient({uris, debug: this.debug});
     this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, debug: this.debug});
+    this.SearchHttpClient = new HttpClient({uris: this.searchURIs || [], debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, networkId: this.networkId, debug: this.debug, timeout: this.ethereumContractTimeout});
 
     if(!this.signer) {
