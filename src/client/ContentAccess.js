@@ -1848,21 +1848,23 @@ exports.CallBitcodeMethod = async function({
  * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
  * @param {string} rep - Representation to use
  * @param {Object=} queryParams - Query params to add to the URL
+ * @param {string=} service=fabric - The service to use. By default, will use a fabric node. Options: "fabric", "search", "auth"
  * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
  * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
  * token. This is useful for accessing public assets.
  * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
  * whether such a request exists in the client cache. This request will not be cached. This option has no effect if noAuth is true.
+ * @param {boolean=} makeAccessRequest=false - If using auth, will make a full access request
  *
  * @see <a href="#FabricUrl">FabricUrl</a> for creating arbitrary fabric URLs
  *
  * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
  */
-exports.Rep = async function({libraryId, objectId, versionHash, rep, queryParams={}, channelAuth=false, noAuth=false, noCache=false}) {
+exports.Rep = async function({libraryId, objectId, versionHash, rep, queryParams={}, service="fabric", makeAccessRequest=false, channelAuth=false, noAuth=false, noCache=false}) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(!rep) { throw "Rep not specified"; }
 
-  return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, channelAuth, noAuth, noCache});
+  return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, service, makeAccessRequest, channelAuth, noAuth, noCache});
 };
 
 /**
@@ -1882,11 +1884,11 @@ exports.Rep = async function({libraryId, objectId, versionHash, rep, queryParams
  *
  * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
  */
-exports.PublicRep = async function({libraryId, objectId, versionHash, rep, queryParams={}}) {
+exports.PublicRep = async function({libraryId, objectId, versionHash, rep, queryParams={}, service="fabric"}) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(!rep) { throw "Rep not specified"; }
 
-  return this.FabricUrl({libraryId, objectId, versionHash, publicRep: rep, queryParams, noAuth: true});
+  return this.FabricUrl({libraryId, objectId, versionHash, publicRep: rep, queryParams, service, noAuth: true});
 };
 
 /**
@@ -1903,11 +1905,13 @@ exports.PublicRep = async function({libraryId, objectId, versionHash, rep, query
  * @param {string=} publicRep - Public rep parameter of the url
  * @param {string=} call - Bitcode method to call
  * @param {Object=} queryParams - Query params to add to the URL
+ * @param {string=} service=fabric - The service to use. By default, will use a fabric node. Options: "fabric", "search", "auth"
  * @param {boolean=} channelAuth=false - If specified, state channel authorization will be used instead of access request authorization
  * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
  * token. This is useful for accessing public assets.
  * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
  * whether such a request exists in the client cache. This request will not be cached. This option has no effect if noAuth is true.
+ * @param {boolean=} makeAccessRequest=false - If using auth, will make a full access request
  *
  * @returns {Promise<string>} - URL to the specified endpoint with authorization token
  */
@@ -1921,7 +1925,9 @@ exports.FabricUrl = async function({
   publicRep,
   call,
   queryParams={},
+  service="fabric",
   channelAuth=false,
+  makeAccessRequest=false,
   noAuth=false,
   noCache=false
 }) {
@@ -1960,6 +1966,7 @@ exports.FabricUrl = async function({
         objectId,
         versionHash,
         channelAuth,
+        makeAccessRequest,
         noAuth,
         noCache
       })
@@ -1997,7 +2004,14 @@ exports.FabricUrl = async function({
     path = UrlJoin(path, "call", call);
   }
 
-  return this.HttpClient.URL({
+  let httpClient = this.HttpClient;
+  if(service === "search") {
+    httpClient = this.SearchHttpClient;
+  } else if(service === "auth") {
+    httpClient = this.AuthHttpClient;
+  }
+
+  return httpClient.URL({
     path,
     queryParams
   });
