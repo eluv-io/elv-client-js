@@ -1349,7 +1349,7 @@ exports.GenerateSignedLinkToken = async function({
     sub: `iusr${this.utils.AddressToHash(signerAddress)}`,
     gra: "read",
     iat: Date.now(),
-    exp: duration ? (Date.now() + duration) : "",
+    exp: duration ? (Date.now() + duration) : undefined,
     ctx: {
       elv: {
         lnk: link,
