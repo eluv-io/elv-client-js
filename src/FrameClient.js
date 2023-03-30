@@ -3,6 +3,7 @@ const Utils = require("./Utils");
 const permissionLevels = require("./client/ContentAccess").permissionLevels;
 const {LogMessage} = require("./LogMessage");
 const Crypto = require("./Crypto");
+const { ElvWalletClient } = require("./walletClient/index");
 
 class FrameClient {
   Log(message, error = false) {
@@ -83,6 +84,26 @@ class FrameClient {
             calledMethod: methodName,
             args: this.utils.MakeClonable(args),
             prompted: FrameClient.PromptedMethods().includes(methodName)
+          },
+          callback
+        });
+      };
+    }
+
+    this.walletClient = {};
+    const forbiddenMethods = ElvWalletClient.ForbiddenMethods();
+    for(const methodName of Object.getOwnPropertyNames(ElvWalletClient.prototype)) {
+      if(forbiddenMethods.includes(methodName)) { continue; }
+
+      this.walletClient[methodName] = async (args) => {
+        let callback = args && args.callback;
+        if(callback) { delete args.callback; }
+
+        return await this.SendMessage({
+          options: {
+            module: "walletClient",
+            calledMethod: methodName,
+            args: this.utils.MakeClonable(args)
           },
           callback
         });
