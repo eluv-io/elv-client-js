@@ -1134,7 +1134,17 @@ class ElvClient {
       const method = message.calledMethod;
 
       let methodResults;
-      if(message.module === "userProfileClient") {
+      if(message.module === "walletClient") {
+        if(!this.walletClient) {
+          throw Error("Wallet client not set");
+        }
+
+        if(this.walletClient.ForbiddenMethods().includes(method)) {
+          throw Error("Invalid user profile method: " + method);
+        }
+
+        methodResults = await this.walletClient[method](message.args);
+      } else if(message.module === "userProfileClient") {
         if(!this.userProfileClient.FrameAllowedMethods().includes(method)) {
           throw Error("Invalid user profile method: " + method);
         }
