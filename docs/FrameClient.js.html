@@ -68,7 +68,6 @@ const Utils = require("./Utils");
 const permissionLevels = require("./client/ContentAccess").permissionLevels;
 const {LogMessage} = require("./LogMessage");
 const Crypto = require("./Crypto");
-const { ElvWalletClient } = require("./walletClient/index");
 
 class FrameClient {
   Log(message, error = false) {
@@ -156,10 +155,8 @@ class FrameClient {
     }
 
     this.walletClient = {};
-    const forbiddenMethods = ElvWalletClient.ForbiddenMethods();
-    for(const methodName of Object.getOwnPropertyNames(ElvWalletClient.prototype)) {
-      if(forbiddenMethods.includes(methodName)) { continue; }
-
+    // Dynamically defined wallet client methods defined in AllowedWalletClientMethods
+    for(const methodName of this.AllowedWalletClientMethods()) {
       this.walletClient[methodName] = async (args) => {
         let callback = args &amp;&amp; args.callback;
         if(callback) { delete args.callback; }
@@ -567,6 +564,76 @@ class FrameClient {
       "UserWalletAddress",
       "UserWalletObjectInfo",
       "WalletAddress"
+    ];
+  }
+
+  AllowedWalletClientMethods() {
+    return [
+      "AcceptMarketplaceOffer",
+      "AddNotificationListener",
+      "AvailableMarketplaces",
+      "CanSign",
+      "CastVote",
+      "ClaimItem",
+      "ClaimStatus",
+      "CollectionRedemptionStatus",
+      "CreateListing",
+      "CreateMarketplaceOffer",
+      "DropStatus",
+      "ExchangeRate",
+      "FilteredQuery",
+      "LatestMarketplaceHash",
+      "Leaderboard",
+      "Listing",
+      "ListingAttributes",
+      "ListingEditionNames",
+      "ListingNames",
+      "ListingPurchaseStatus",
+      "ListingStats",
+      "ListingStatus",
+      "Listings",
+      "LoadAvailableMarketplaces",
+      "LoadDrop",
+      "LoadMarketplace",
+      "Marketplace",
+      "MarketplaceCSS",
+      "MarketplaceInfo",
+      "MarketplaceOffers",
+      "MarketplaceStock",
+      "MintingStatus",
+      "NFT",
+      "NFTContractStats",
+      "Notifications",
+      "PackOpenStatus",
+      "Profile",
+      "ProfileMetadata",
+      "PurchaseStatus",
+      "PushNotification",
+      "RejectMarketplaceOffer",
+      "RemoveListing",
+      "RemoveMarketplaceOffer",
+      "RemoveProfileMetadata",
+      "RevokeVote",
+      "Sales",
+      "SalesNames",
+      "SalesStats",
+      "SetProfileMetadata",
+      "SubmitDropVote",
+      "TenantConfiguration",
+      "TransferNFT",
+      "Transfers",
+      "UserAddress",
+      "UserInfo",
+      "UserItemAttributes",
+      "UserItemEditionNames",
+      "UserItemNames",
+      "UserItems",
+      "UserListings",
+      "UserNameToAddress",
+      "UserSales",
+      "UserTransfers",
+      "UserWalletBalance",
+      "VoteStatus"
     ];
   }
 }

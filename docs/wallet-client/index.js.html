@@ -150,6 +150,14 @@ class ElvWalletClient {
     ];
   }
 
+  // Used to generate AllowedWalletClientMethods for FrameClient
+  // Note: Do not import ElvWalletClient in FrameClient directly
+  static AllowedMethods() {
+    return Object.getOwnPropertyNames(ElvWalletClient.prototype)
+      .filter(methodName => !ElvWalletClient.ForbiddenMethods().includes(methodName))
+      .sort();
+  }
+
   /**
    * Initialize the wallet client.
    *
