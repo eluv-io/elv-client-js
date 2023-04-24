@@ -1099,10 +1099,14 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
   } catch(error) {}
 
   if(!latestHash) {
-    const versionCount = await this.CallContractMethod({
-      contractAddress: this.utils.HashToAddress(objectId),
-      methodName: "countVersionHashes"
-    });
+    let versionCount;
+    try {
+      versionCount = await this.CallContractMethod({
+        contractAddress: this.utils.HashToAddress(objectId),
+        methodName: "countVersionHashes"
+      });
+    // eslint-disable-next-line no-empty
+    } catch(error) {}
 
     if(!versionCount.toNumber()) {
       throw Error(`Unable to determine latest version hash for ${versionHash || objectId} - Item deleted?`);
