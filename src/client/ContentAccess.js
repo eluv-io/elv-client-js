@@ -1108,7 +1108,7 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
     // eslint-disable-next-line no-empty
     } catch(error) {}
 
-    if(!versionCount.toNumber()) {
+    if(!versionCount || !versionCount.toNumber()) {
       throw Error(`Unable to determine latest version hash for ${versionHash || objectId} - Item deleted?`);
     }
 
