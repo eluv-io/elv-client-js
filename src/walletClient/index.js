@@ -1178,7 +1178,7 @@ class ElvWalletClient {
             extra: status.extra && typeof status.extra === "object" ? Object.values(status.extra) : status.extra,
             confirmationId,
             op,
-            address,
+            address: Utils.FormatAddress(address),
             tokenId
           };
         })
