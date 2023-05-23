@@ -1227,6 +1227,37 @@ exports.CollectionRedemptionStatus = async function({marketplaceParams, confirma
   }
 };
 
+/**
+ * Return status of the specified redeemable offer
+ *
+ * @methodGroup Status
+ * @namedParams
+ * @param {string=} tenantId - ID of the tenant for this NFT (not required if `marketplaceParams` is specified)
+ * @param {Object=} marketplaceParams - Parameters of the marketplace for this NFT (not required if `tenantId` is specified)
+ * @param {string} contractAddress - The address of the NFT contract
+ * @param {string} tokenId - The token ID of the NFT
+ * @param {string} offerId - The ID of the offer
+ *
+ * @returns {Promise<Object>} - The status of the offer redemption
+ */
+exports.RedeemableOfferStatus = async function({tenantId, marketplaceParams, contractAddress, tokenId, offerId}) {
+  try {
+    const statuses = await this.MintingStatus({marketplaceParams, tenantId});
+    contractAddress = Utils.FormatAddress(contractAddress);
+
+    return statuses.find(status =>
+      status.op === "nft-offer-redeem" &&
+      Utils.EqualAddress(status.address, contractAddress) &&
+      status.tokenId === (tokenId || "").toString() &&
+      status.extra && typeof status.extra[0] !== "undefined" && status.extra[0].toString() === (offerId || "").toString()
+    ) || { status: "none" };
+  } catch(error) {
+    this.Log(error, true);
+    return { status: "unknown" };
+  }
+};
+
+
 /* EVENTS */
 
 
