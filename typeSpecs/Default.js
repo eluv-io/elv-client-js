@@ -74,6 +74,12 @@ const defaultSpec = {
       defaultable: false,
       orderable: true
     }
+  ],
+  searchable_links: [
+    {target: "/public/asset_metadata", link_key: "asset_metadata"},
+    {target: "/public/assets", link_key: "assets"},
+    {target: "/offerings", link_key: "offerings"},
+    {target: "/video_tags", link_key: "video_tags"}
   ]
 };
 

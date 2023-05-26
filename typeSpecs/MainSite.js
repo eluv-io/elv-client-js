@@ -6,6 +6,7 @@ const mainSiteSelectorSpec = {
     version: "0.1",
   },
   manageApp: "default",
+  show_searchables_tab: true,
   controls: [
     "images",
   ],
