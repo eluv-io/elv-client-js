@@ -1257,6 +1257,18 @@ exports.RedeemableOfferStatus = async function({tenantId, marketplaceParams, con
   }
 };
 
+exports.RedeemableCustomFulfillmentInfo = async function({redeemableTransactionId}) {
+  return await Utils.ResponseToJson(
+    this.stateStoreClient.Request({
+      method: "GET",
+      path: UrlJoin("code-fulfillment", this.network === "main" ? "main" : "demov3", "fulfill", redeemableTransactionId),
+      headers: {
+        Authorization: `Bearer ${this.AuthToken()}`
+      }
+    })
+  );
+};
+
 
 /* EVENTS */
 
