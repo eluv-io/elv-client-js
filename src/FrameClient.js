@@ -88,6 +88,24 @@ class FrameClient {
         });
       };
     }
+
+    this.walletClient = {};
+    // Dynamically defined wallet client methods defined in AllowedWalletClientMethods
+    for(const methodName of this.AllowedWalletClientMethods()) {
+      this.walletClient[methodName] = async (args) => {
+        let callback = args && args.callback;
+        if(callback) { delete args.callback; }
+
+        return await this.SendMessage({
+          options: {
+            module: "walletClient",
+            calledMethod: methodName,
+            args: this.utils.MakeClonable(args)
+          },
+          callback
+        });
+      };
+    }
   }
 
   /**
@@ -481,6 +499,76 @@ class FrameClient {
       "UserWalletAddress",
       "UserWalletObjectInfo",
       "WalletAddress"
+    ];
+  }
+
+  AllowedWalletClientMethods() {
+    return [
+      "AcceptMarketplaceOffer",
+      "AddNotificationListener",
+      "AvailableMarketplaces",
+      "CanSign",
+      "CastVote",
+      "ClaimItem",
+      "ClaimStatus",
+      "CollectionRedemptionStatus",
+      "CreateListing",
+      "CreateMarketplaceOffer",
+      "DropStatus",
+      "ExchangeRate",
+      "FilteredQuery",
+      "LatestMarketplaceHash",
+      "Leaderboard",
+      "Listing",
+      "ListingAttributes",
+      "ListingEditionNames",
+      "ListingNames",
+      "ListingPurchaseStatus",
+      "ListingStats",
+      "ListingStatus",
+      "Listings",
+      "LoadAvailableMarketplaces",
+      "LoadDrop",
+      "LoadMarketplace",
+      "Marketplace",
+      "MarketplaceCSS",
+      "MarketplaceInfo",
+      "MarketplaceOffers",
+      "MarketplaceStock",
+      "MintingStatus",
+      "NFT",
+      "NFTContractStats",
+      "Notifications",
+      "PackOpenStatus",
+      "Profile",
+      "ProfileMetadata",
+      "PurchaseStatus",
+      "PushNotification",
+      "RejectMarketplaceOffer",
+      "RemoveListing",
+      "RemoveMarketplaceOffer",
+      "RemoveProfileMetadata",
+      "RevokeVote",
+      "Sales",
+      "SalesNames",
+      "SalesStats",
+      "SetProfileMetadata",
+      "SubmitDropVote",
+      "TenantConfiguration",
+      "TransferNFT",
+      "Transfers",
+      "UserAddress",
+      "UserInfo",
+      "UserItemAttributes",
+      "UserItemEditionNames",
+      "UserItemNames",
+      "UserItems",
+      "UserListings",
+      "UserNameToAddress",
+      "UserSales",
+      "UserTransfers",
+      "UserWalletBalance",
+      "VoteStatus"
     ];
   }
 }

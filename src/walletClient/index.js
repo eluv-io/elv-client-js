@@ -58,6 +58,8 @@ class ElvWalletClient {
     this.cachedCSS = {};
 
     this.utils = client.utils;
+
+    this.ForbiddenMethods = ElvWalletClient.ForbiddenMethods;
   }
 
   Log(message, error=false, errorObject) {
@@ -73,6 +75,33 @@ class ElvWalletClient {
       // eslint-disable-next-line no-console
       console.error(errorObject);
     }
+  }
+
+  // Methods forbidden from usage by FrameClient
+  static ForbiddenMethods() {
+    return [
+      "constructor",
+      "Authenticate",
+      "AuthenticateOAuth",
+      "AuthenticateExternalWallet",
+      "AuthToken",
+      "ClientAuthToken",
+      "Initialize",
+      "Log",
+      "LogIn",
+      "LogOut",
+      "PersonalSign",
+      "SetAuthorization",
+      "SignMetamask"
+    ];
+  }
+
+  // Used to generate AllowedWalletClientMethods for FrameClient
+  // Note: Do not import ElvWalletClient in FrameClient directly
+  static AllowedMethods() {
+    return Object.getOwnPropertyNames(ElvWalletClient.prototype)
+      .filter(methodName => !ElvWalletClient.ForbiddenMethods().includes(methodName))
+      .sort();
   }
 
   /**
@@ -100,7 +129,8 @@ class ElvWalletClient {
     localization,
     marketplaceParams,
     previewMarketplaceId,
-    storeAuthToken=true
+    storeAuthToken=true,
+    skipMarketplaceLoad=false
   }) {
     let { tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash } = (marketplaceParams || {});
 
@@ -155,7 +185,9 @@ class ElvWalletClient {
       }
     }
 
-    await walletClient.LoadAvailableMarketplaces();
+    if(!skipMarketplaceLoad) {
+      await walletClient.LoadAvailableMarketplaces();
+    }
 
     return walletClient;
   }
@@ -1146,7 +1178,7 @@ class ElvWalletClient {
             extra: status.extra && typeof status.extra === "object" ? Object.values(status.extra) : status.extra,
             confirmationId,
             op,
-            address,
+            address: Utils.FormatAddress(address),
             tokenId
           };
         })
