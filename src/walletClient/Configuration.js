@@ -29,6 +29,7 @@ let WalletConfiguration = {
   },
   __MARKETPLACE_ORDER: [
     "PREVIEW",
+    "b63413a5-ce07-4848-b763-b4d97f4870ec",
     "masked-singer-brazil-marketplace",
     "eluvio-live-marketplace-globo-taf",
     "de228e92-ed45-4fe0-8e52-658cf366e962",
