@@ -642,6 +642,7 @@ class ElvWalletClient {
       noAuth: true,
       select: [
         "*/.",
+        "*/info/branding",
         "*/marketplaces/*/.",
         "*/marketplaces/*/info/tenant_id",
         "*/marketplaces/*/info/tenant_name",
@@ -650,6 +651,7 @@ class ElvWalletClient {
         "*/marketplaces/*/info/storefront/background_mobile"
       ],
       remove: [
+        "*/info/branding/wallet_css",
         "*/marketplaces/*/info/branding/custom_css"
       ]
     });
@@ -736,6 +738,7 @@ class ElvWalletClient {
               marketplaceSlug,
               marketplaceId: objectId,
               marketplaceHash: versionHash,
+              tenantBranding: (metadata[tenantSlug].info || {}).branding || {},
               order: Configuration.__MARKETPLACE_ORDER.findIndex(slug => slug === marketplaceSlug)
             };
 
@@ -804,6 +807,16 @@ class ElvWalletClient {
         produceLinkUrls: true,
         authorizationToken: this.publicStaticToken
       });
+
+      if(marketplace.branding.use_tenant_styling) {
+        marketplace.tenantBranding = (await this.client.ContentObjectMetadata({
+          libraryId: this.mainSiteLibraryId,
+          objectId: this.mainSiteId,
+          metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", marketplaceInfo.tenantSlug, "info", "branding"),
+          authorizationToken: this.publicStaticToken,
+          produceLinkUrls: true
+        })) || {};
+      }
 
       marketplace.items = await Promise.all(
         marketplace.items.map(async (item, index) => {

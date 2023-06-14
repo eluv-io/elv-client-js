@@ -400,7 +400,27 @@ exports.ExchangeRate = async function({currency}) {
   );
 };
 
+/**
+ * Retrieve custom CSS for the specified tenant
+ *
+ * @methodGroup Tenants
+ * @namedParams
+ * @param {Object} tenantSlug
+ *
+ * @returns {Promise<string>} - The CSS of the tenant
+ */
+exports.TenantCSS = async function ({tenantSlug}) {
+  if(!this.cachedCSS[tenantSlug]) {
+    this.cachedCSS[tenantSlug] = await this.client.ContentObjectMetadata({
+      libraryId: this.mainSiteLibraryId,
+      objectId: this.mainSiteId,
+      metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", tenantSlug, "info", "branding", "wallet_css"),
+      authorizationToken: this.publicStaticToken
+    });
+  }
 
+  return this.cachedCSS[tenantSlug] || "";
+};
 
 /* MARKETPLACE */
 
