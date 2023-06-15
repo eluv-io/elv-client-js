@@ -1126,6 +1126,71 @@ exports.ClaimItem = async function({marketplaceParams, sku, email}) {
   });
 };
 
+/**
+ * Redirect to the wallet app to purchase the specified item from the specified marketplace
+ *
+ * Use the <a href="#.PurchaseStatus">PurchaseStatus</a> method to check minting status after purchasing
+ *
+ * @methodGroup Purchase
+ * @namedParams
+ * @param {Object} marketplaceParams - Parameters of the marketplace
+ * @param {string} sku - The SKU of the item to claim
+ * @param {string=} confirmationId - Confirmation ID with which to reference this purchase. If not specified, a confirmation ID will be automatically generated. On success, the user will be returned to `successUrl` with the `confirmationId` as a URL parameter.
+ * @param {string} successUrl - The URL to redirect back to upon successful purchase
+ * @param {string} cancelUrl - The URL to redirect back to upon cancellation of purchase
+ */
+exports.PurchaseItem = async function({marketplaceParams, sku, confirmationId, successUrl, cancelUrl}) {
+  const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
+
+  window.location.href = this.FlowURL({
+    type: "action",
+    flow: "purchase",
+    marketplaceId: marketplaceInfo.marketplaceId,
+    parameters: {
+      sku,
+      confirmationId,
+      successUrl,
+      cancelUrl,
+      login: true,
+      auth: this.ClientAuthToken(),
+    }
+  });
+};
+
+/**
+ * Redirect to the wallet app to purchase the specified listing
+ *
+ * Use the <a href="#.PurchaseStatus">ListingPurchaseStatus</a> method to check minting status after purchasing
+ *
+ * @methodGroup Purchase
+ * @namedParams
+ * @param {Object=} marketplaceParams - Parameters of the marketplace
+ * @param {string} listingId - The SKU of the item to claim
+ * @param {string=} confirmationId - Confirmation ID with which to reference this purchase. If not specified, a confirmation ID will be automatically generated. On success, the user will be returned to `successUrl` with the `confirmationId` as a URL parameter.
+ * @param {string} successUrl - The URL to redirect back to upon successful purchase
+ * @param {string} cancelUrl - The URL to redirect back to upon cancellation of purchase
+ */
+exports.PurchaseListing = async function({marketplaceParams, listingId, confirmationId, successUrl, cancelUrl}) {
+  let marketplaceInfo;
+  if(marketplaceParams) {
+    marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
+  }
+
+  window.location.href = this.FlowURL({
+    type: "action",
+    flow: "purchase",
+    marketplaceId: marketplaceInfo && marketplaceInfo.marketplaceId,
+    parameters: {
+      listingId,
+      confirmationId,
+      successUrl,
+      cancelUrl,
+      login: true,
+      auth: this.ClientAuthToken(),
+    }
+  });
+};
+
 /* MINTING STATUS */
 
 /**

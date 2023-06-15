@@ -619,6 +619,19 @@ class ElvWalletClient {
     });
   }
 
+  FlowURL({type="flow", flow, marketplaceId, parameters={}}) {
+    const url = new URL(this.appUrl);
+    if(marketplaceId) {
+      url.hash = UrlJoin("/", type, flow, "marketplace", marketplaceId, Utils.B58(JSON.stringify(parameters)));
+    } else {
+      url.hash = UrlJoin("/", type, flow, Utils.B58(JSON.stringify(parameters)));
+    }
+
+    url.searchParams.set("origin", window.location.origin);
+
+    return url.toString();
+  }
+
 
   // Internal loading methods
 
