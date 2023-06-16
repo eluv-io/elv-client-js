@@ -258,9 +258,10 @@ exports.CreateContentLibrary = async function({
   tenantId
 }) {
   const signerAddress = this.currentAccountAddress();
+  const signerId = "iten" + Utils.AddressToHash(signerAddress);
 
   //Library can only be created by tenant admins or content admins
-  if(!IsOwnTenantAdmin && !isOwnContentAdmin) {
+  if(!this.IsOwnTenantAdmin(signerId) && !this.isOwnContentAdmin(signerId)) {
     throw Error("Invalid operation: Library can only be created by tenant admins or content admins");
   }
 
@@ -274,7 +275,7 @@ exports.CreateContentLibrary = async function({
   const { contractAddress } = await this.authClient.CreateContentLibrary({kmsId});
 
 
-  // Legacy: Set tenant ID on the library if the user is associated with a tenant admin group
+  // Legacy: Set tenant ID on the library if the user is associated with a tenant admins' group
   if(!tenantId) {
     tenantId = await this.userProfileClient.TenantId();
   }
@@ -295,7 +296,6 @@ exports.CreateContentLibrary = async function({
   }
 
   // NG Tenant: Set _ELV_TEANT_ID on the library to the library creator's tenant id
-  const signerId = "iten" + Utils.AddressToHash(signerAddress);
   await this.callContractMethod({
     contractAddress,
     methodName: "putMeta",
