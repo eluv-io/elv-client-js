@@ -1554,7 +1554,7 @@ exports.SetAuthPolicy = async function({objectId, policyId}) {
  * @namedParams
  * @param {string} tenantId - The ID of the tenant
  */
-IsOwnTenantAdmin = async function({ tenantId }) {
+exports.IsOwnTenantAdmin = async function({ tenantId }) {
   const tenantAddr = Utils.HashToAddress(tenantId);
 
   let tenantAdminAddr = await this.client.CallContractMethod({
@@ -1575,7 +1575,7 @@ IsOwnTenantAdmin = async function({ tenantId }) {
  * @namedParams
  * @param {string} tenantId - The ID of the tenant
  */
-IsOwnContentAdmin = async function({ tenantId }) {
+exports.IsOwnContentAdmin = async function({ tenantId }) {
   const tenantAddr = Utils.HashToAddress(tenantId);
 
   for (let i = 0; i < Number.MAX_SAFE_INTEGER; i++) {

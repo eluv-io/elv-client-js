@@ -14,6 +14,27 @@ exports.ValidateLibrary = (libraryId) => {
   }
 };
 
+//New Gen: Support new tenant object
+exports.ValidateLibraryNG = async (libraryId) => {
+  if(!libraryId) {
+    throw Error("Library ID not specified");
+  } else if(!libraryId.toString().startsWith("i")) {
+    throw Error(`Invalid library ID: ${libraryId}`);
+  }
+
+  try {
+    await client.CallContractMethod({
+      contractAddress: client.utils.HashToAddress(libraryId),
+      methodName: "getMeta",
+      methodArgs: [
+        " _ELV_TENANT_ID"
+      ]
+    });
+  } catch(e) {
+    throw Error(`The library with id: ${libraryId} doesn't have an _ELV_TENANT_ID tag`)
+  }
+};
+
 exports.ValidateObject = (objectId) => {
   if(!objectId) {
     throw Error("Object ID not specified");
