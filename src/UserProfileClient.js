@@ -420,7 +420,7 @@ await client.userProfileClient.UserMetadata()
   }
 
   /**
-   * Return the ID of the tenant this user belongs to, if set.
+   * Return the ID of the tenant admins group this user belongs to, if set.
    *
    * @return {Promise<string>} - Tenant ID
    */
@@ -433,7 +433,7 @@ await client.userProfileClient.UserMetadata()
   }
 
   /**
-   * Set the current user's tenant
+   * Set the current user's tenant admins group.
    *
    * Note: This method is not accessible to applications. Eluvio core will drop the request.
    *
@@ -467,6 +467,54 @@ await client.userProfileClient.UserMetadata()
     await this.ReplaceUserMetadata({metadataSubtree: "tenantId", metadata: id});
 
     this.tenantId = id;
+  }
+
+  /**
+   * Return the ID of the tenant contract this user belongs to, if set.
+   *
+   * @return {Promise<string>} - Tenant ID
+   */
+  async TenantContractId() {
+    if(!this._ELV_TENANT_ID) {
+      this._ELV_TENANT_ID = await this.UserMetadata({metadataSubtree: "_ELV_TENANT_ID"});
+    }
+
+    return this.tenantId;
+  }
+
+  /**
+   * Set the current user's tenant contract.
+   *
+   * Note: This method is not accessible to applications. Eluvio core will drop the request.
+   *
+   * @namedParams
+   * @param {string} id - The tenant contract ID in hash format
+   * @param {string} address - The group address to use in the hash if id is not provided
+   */
+  async SetTenantContractId({id, address}) {
+    if(id && (!id.startsWith("iten") || !Utils.ValidHash(id))) {
+      throw Error(`Invalid tenant ID: ${id}`);
+    }
+
+    if(address) {
+      if(!Utils.ValidAddress(address)) {
+        throw Error(`Invalid address: ${address}`);
+      }
+
+      id = `iten${Utils.AddressToHash(address)}`;
+    }
+
+    try {
+      const version = await this.client.AccessType({id});
+
+      if(version !== this.client.authClient.ACCESS_TYPES.TENANT) {
+        throw Error("Invalid tenant ID: " + id);
+      }
+    } catch(error) {
+      throw Error("Invalid tenant ID: " + id);
+    }
+
+    await this.ReplaceUserMetadata({metadataSubtree: "_ELV_TENANT_ID", metadata: id});
   }
 
   /**

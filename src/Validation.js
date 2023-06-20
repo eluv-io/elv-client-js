@@ -24,7 +24,7 @@ exports.ValidateLibraryNG = async (libraryId) => {
 
   try {
     await client.CallContractMethod({
-      contractAddress: client.utils.HashToAddress(libraryId),
+      contractAddress: client.utils.HashToAddress(libraryId).toLowerCase(),
       methodName: "getMeta",
       methodArgs: [
         " _ELV_TENANT_ID"
