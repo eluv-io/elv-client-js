@@ -438,7 +438,7 @@ await client.userProfileClient.UserMetadata()
    * Note: This method is not accessible to applications. Eluvio core will drop the request.
    *
    * @namedParams
-   * @param {string} id - The tenant ID in hash format
+   * @param {string} id - The tenant admins ID in hash format
    * @param {string} address - The group address to use in the hash if id is not provided
    */
   async SetTenantId({id, address}) {
@@ -475,11 +475,11 @@ await client.userProfileClient.UserMetadata()
    * @return {Promise<string>} - Tenant ID
    */
   async TenantContractId() {
-    if(!this._ELV_TENANT_ID) {
-      this._ELV_TENANT_ID = await this.UserMetadata({metadataSubtree: "_ELV_TENANT_ID"});
+    if(!this.tenantContractId) {
+      this.tenantContractId = await this.UserMetadata({metadataSubtree: "_ELV_TENANT_ID"});
     }
 
-    return this.tenantId;
+    return this.tenantContractId;
   }
 
   /**
@@ -488,11 +488,11 @@ await client.userProfileClient.UserMetadata()
    * Note: This method is not accessible to applications. Eluvio core will drop the request.
    *
    * @namedParams
-   * @param {string} id - The tenant contract ID in hash format
+   * @param {string} tenantContractID - The tenant contract ID in hash format
    * @param {string} address - The group address to use in the hash if id is not provided
    */
-  async SetTenantContractId({id, address}) {
-    if(id && (!id.startsWith("iten") || !Utils.ValidHash(id))) {
+  async SetTenantContractId({tenantContractID, address}) {
+    if(tenantContractID && (!tenantContractID.startsWith("iten") || !Utils.ValidHash(tenantContractID))) {
       throw Error(`Invalid tenant ID: ${id}`);
     }
 
@@ -501,20 +501,20 @@ await client.userProfileClient.UserMetadata()
         throw Error(`Invalid address: ${address}`);
       }
 
-      id = `iten${Utils.AddressToHash(address)}`;
+      tenantContractID = `iten${Utils.AddressToHash(address)}`;
     }
 
     try {
-      const version = await this.client.AccessType({id});
+      const version = await this.client.AccessType({tenantContractID});
 
       if(version !== this.client.authClient.ACCESS_TYPES.TENANT) {
-        throw Error("Invalid tenant ID: " + id);
+        throw Error("Invalid tenant ID: " + tenantContractID);
       }
     } catch(error) {
-      throw Error("Invalid tenant ID: " + id);
+      throw Error("Invalid tenant ID: " + tenantContractID);
     }
 
-    await this.ReplaceUserMetadata({metadataSubtree: "_ELV_TENANT_ID", metadata: id});
+    await this.ReplaceUserMetadata({metadataSubtree: "_ELV_TENANT_ID", metadata: tenantContractID});
   }
 
   /**

@@ -637,7 +637,7 @@ class ElvClient {
    * @namedParams
    * @param {string=} idToken - OAuth ID token
    * @param {string=} authToken - Eluvio authorization token previously issued from OAuth ID token
-   * @param {string=} tenantId - If specified, user will be associated with the tenant
+   * @param {string=} tenantId - If specified, user will be associated with the tenant admins group
    * @param {Object=} extraData - Additional data to pass to the login API
    * @param {Array<string>=} signerURIs - (Only if using custom OAuth) - URIs corresponding to the key server(s) to use
    * @param {boolean=} unsignedPublicAuth=false - If specified, the client will use an unsigned static token for calls that don't require authorization (reduces remote signature calls)
@@ -716,7 +716,7 @@ class ElvClient {
     await this.userProfileClient.CreateWallet();
 
     await this.userProfileClient.ReplaceUserMetadata({
-      metadataSubtree: "tenantContractId",
+      metadataSubtree: "_ELV_TENANT_ID",
       metadata: tenantId
     });
 

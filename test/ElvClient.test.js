@@ -321,7 +321,7 @@ describe("Test ElvClient", () => {
 
       expect(privateMetadata).toEqual({meta: "data"});
 
-      const libraryTenant = await client.CallContractMethod({
+      const libraryAdminGroupAddr = await client.CallContractMethod({
         contractAddress: client.utils.HashToAddress(libraryId),
         methodName: "getMeta",
         methodArgs: [
@@ -330,9 +330,21 @@ describe("Test ElvClient", () => {
       });
 
       const tenantId = `iten${client.utils.AddressToHash(accessGroupAddress)}`;
-      const libraryTenantId = Buffer.from(libraryTenant.replace("0x", ""), "hex").toString("utf8");
+      const libraryAdminGroupId = Buffer.from(libraryAdminGroupAddr.replace("0x", ""), "hex").toString("utf8");
 
-      expect(libraryTenantId).toEqual(tenantId);
+      expect(libraryAdminGroupId).toEqual(tenantId);
+
+      const libraryOwner = await client.CallContractMethod({
+        contractAddress: client.utils.HashToAddress(libraryId),
+        methodName: "getMeta",
+        methodArgs: [
+          "_ELV_TENANT_ID"
+        ]
+      });
+
+      const ownerId = `iten${client.utils.AddressToHash(client.signer.address)}`;
+
+      expect(libraryOwnerId).toEqual(ownerId);
 
       console.log(`\n\nLibraryId: ${libraryId}\nTenant ID: ${tenantId}\n`);
     });
