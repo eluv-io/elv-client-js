@@ -257,9 +257,7 @@ exports.CreateContentLibrary = async function({
   kmsId,
   tenantId
 }) {
-  const signerAddress = this.currentAccountAddress();
-  const signerId = "iten" + Utils.AddressToHash(signerAddress);
-
+  
   let tenantContractId;
   try {
   tenantContractId = this.userProfileClient.tenantContractId();
@@ -306,7 +304,7 @@ exports.CreateContentLibrary = async function({
     methodName: "putMeta",
     methodArgs: [
       "_ELV_TENANT_ID",
-      signerId
+      tenantContractId
     ]
   })
 
