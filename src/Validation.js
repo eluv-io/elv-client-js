@@ -22,9 +22,10 @@ exports.ValidateLibraryNG = async (libraryId) => {
     throw Error(`Invalid library ID: ${libraryId}`);
   }
 
+  let libraryAddress = client.utils.HashToAddress(libraryId).toLowerCase();
   try {
     await client.CallContractMethod({
-      contractAddress: client.utils.HashToAddress(libraryId).toLowerCase(),
+      contractAddress: libraryAddress,
       methodName: "getMeta",
       methodArgs: [
         " _ELV_TENANT_ID"

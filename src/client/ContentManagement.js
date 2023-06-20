@@ -244,7 +244,7 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
  * @param {Object=} metadata - Metadata of library object
  * @param {string=} kmsId - ID of the KMS to use for content in this library. If not specified,
  * the default KMS will be used.
- * @param {string=} tenantId - ID of the tenant to use for this library
+ * @param {string=} tenantId - ID of the tenant admins group to use for this library
  *
  * @returns {Promise<string>} - Library ID of created library
  */
@@ -260,8 +260,14 @@ exports.CreateContentLibrary = async function({
   const signerAddress = this.currentAccountAddress();
   const signerId = "iten" + Utils.AddressToHash(signerAddress);
 
+  let tenantContractId;
+  try {
+  tenantContractId = this.userProfileClient.tenantContractId();
+  } catch (e) {
+    throw(e, "ERROR: Can not find metadata _ELV_TENANT_ID that belongs to this user");
+  }
   //Library can only be created by tenant admins or content admins
-  if(!this.IsOwnTenantAdmin(signerId) && !this.isOwnContentAdmin(signerId)) {
+  if(!this.TenantAdmin(tenantContractId) && !this.isContentAdmin(tenantContractId)) {
     throw Error("Invalid operation: Library can only be created by tenant admins or content admins");
   }
 
@@ -274,8 +280,7 @@ exports.CreateContentLibrary = async function({
 
   const { contractAddress } = await this.authClient.CreateContentLibrary({kmsId});
 
-
-  // Legacy: Set tenant ID on the library if the user is associated with a tenant admins' group
+  // Legacy: Set tenant admins ID on the library if the user is associated with a tenant admins' group
   if(!tenantId) {
     tenantId = await this.userProfileClient.TenantId();
   }
@@ -1550,33 +1555,33 @@ exports.SetAuthPolicy = async function({objectId, policyId}) {
 };
 
 /**
- * Check if the tenant is its own tenant admin
+ * Check if the user is a tenant admin of the tenant with tenantId
  * @namedParams
- * @param {string} tenantId - The ID of the tenant
+ * @param {string} tenantContractId - The ID of the tenant
  */
-exports.IsTenantAdmin = async function({ tenantId }) {
-  const tenantAddr = Utils.HashToAddress(tenantId);
+exports.IsTenantAdmin = async function({ tenantContractId }) {
+  const tenantAddr = Utils.HashToAddress(tenantContractId);
 
-  let tenantAdminAddr = await this.client.CallContractMethod({
+  let isAdmin = await this.client.CallContractMethod({
     contractAddress: tenantAddr,
     methodName: "isAdmin",
-    methodArgs: [tenantAddr],
+    methodArgs: [this.signerAddress],
     formatArguments: true,
   });
 
-  if (Utils.EqualHash(tenantAdminAddr, tenantAddr)) {
+  if (isAdmin) {
     return true;
   }
   return false;
 };
 
 /**
- * Check if the tenant is its own content admin
+ * Check if the user is a content admin of the tenant with tenantId
  * @namedParams
- * @param {string} tenantId - The ID of the tenant
+ * @param {string} tenantContractId - The ID of the tenant
  */
-exports.IsContentAdmin = async function({ tenantId }) {
-  const tenantAddr = Utils.HashToAddress(tenantId);
+exports.IsContentAdmin = async function({ tenantContractId }) {
+  const tenantAddr = Utils.HashToAddress(tenantContractId);
 
   for (let i = 0; i < Number.MAX_SAFE_INTEGER; i++) {
     let ordinal = BigNumber(i).toString(16);
@@ -1589,7 +1594,7 @@ exports.IsContentAdmin = async function({ tenantId }) {
         formatArguments: true,
       });
 
-      if (Utils.EqualHash(ContentAdminAddr, tenantAddr)) {
+      if (this.utils.EqualAddress(ContentAdminAddr, this.signerAddress)) {
         return true;
       }
     } catch (e) {

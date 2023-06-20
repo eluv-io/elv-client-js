@@ -321,7 +321,7 @@ describe("Test ElvClient", () => {
 
       expect(privateMetadata).toEqual({meta: "data"});
 
-      const libraryAdminGroupAddr = await client.CallContractMethod({
+      const libraryAdminsGroupAddr = await client.CallContractMethod({
         contractAddress: client.utils.HashToAddress(libraryId),
         methodName: "getMeta",
         methodArgs: [
@@ -330,11 +330,11 @@ describe("Test ElvClient", () => {
       });
 
       const tenantId = `iten${client.utils.AddressToHash(accessGroupAddress)}`;
-      const libraryAdminGroupId = Buffer.from(libraryAdminGroupAddr.replace("0x", ""), "hex").toString("utf8");
+      const libraryAdminsGroupId = Buffer.from(libraryAdminsGroupAddr.replace("0x", ""), "hex").toString("utf8");
 
-      expect(libraryAdminGroupId).toEqual(tenantId);
+      expect(libraryAdminsGroupId).toEqual(tenantId);
 
-      const libraryOwner = await client.CallContractMethod({
+      const libraryOwnerId = await client.CallContractMethod({
         contractAddress: client.utils.HashToAddress(libraryId),
         methodName: "getMeta",
         methodArgs: [
@@ -350,7 +350,7 @@ describe("Test ElvClient", () => {
     });
 
     test("Clear Tenancy", async () => {
-      // Remove the tenant ID from the library
+      // Remove the tenant admins group ID from the library
       await client.CallContractMethodAndWait({
         contractAddress: client.utils.HashToAddress(libraryId),
         methodName: "putMeta",
