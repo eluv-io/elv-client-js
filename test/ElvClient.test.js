@@ -329,12 +329,12 @@ describe("Test ElvClient", () => {
         ]
       });
 
-      const tenantId = `iten${client.utils.AddressToHash(accessGroupAddress)}`;
+      const tenantAdminsGroupId = `iten${client.utils.AddressToHash(accessGroupAddress)}`;
       const libraryAdminsGroupId = Buffer.from(libraryAdminsGroupAddr.replace("0x", ""), "hex").toString("utf8");
 
-      expect(libraryAdminsGroupId).toEqual(tenantId);
+      expect(libraryAdminsGroupId).toEqual(tenantAdminsGroupId);
 
-      const libraryOwnerId = await client.CallContractMethod({
+      const tenantContractId = await client.CallContractMethod({
         contractAddress: client.utils.HashToAddress(libraryId),
         methodName: "getMeta",
         methodArgs: [
@@ -342,11 +342,11 @@ describe("Test ElvClient", () => {
         ]
       });
 
-      const ownerId = `iten${client.utils.AddressToHash(client.signer.address)}`;
+      const libraryTenantContractId = `iten${client.userProfileClient.tenantContractId()}`;
 
-      expect(libraryOwnerId).toEqual(ownerId);
+      expect(libraryTenantContractId).toEqual(tenantContractId);
 
-      console.log(`\n\nLibraryId: ${libraryId}\nTenant ID: ${tenantId}\n`);
+      console.log(`\n\nLibraryId: ${libraryId}\nTenant Admins Group ID: ${libraryAdminsGroupId}\nTenant Contract ID: ${tenantContractId}\n`);
     });
 
     test("Clear Tenancy", async () => {
