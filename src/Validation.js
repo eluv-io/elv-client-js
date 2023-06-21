@@ -36,6 +36,9 @@ exports.ValidateLibraryNG = async (libraryId) => {
   }
 };
 
+//New Gen: Support new content type object
+exports.ValidateContentType = async (libraryId) => {}
+
 exports.ValidateObject = (objectId) => {
   if(!objectId) {
     throw Error("Object ID not specified");
