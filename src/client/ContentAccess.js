@@ -163,7 +163,7 @@ exports.Permission = async function({objectId, clearCache}) {
  *
  * @returns {Promise<string>} - Address of the KMS
  */
-exports.DefaultKMSAddress = async function({tenantId}={}) {
+exports.DefaultKMSAddress = async function({tenantContractId}={}) {
   // Ensure tenant ID, if specified, is a tenant contract and not a group contract
   if(tenantContractId && (await this.AccessType({id: tenantContractId})) === this.authClient.ACCESS_TYPES.TENANT) {
     const kmsAddress = await this.CallContractMethod({
