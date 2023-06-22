@@ -161,7 +161,7 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
     throw(e, "ERROR: Can not find metadata _ELV_TENANT_ID that belongs to this user");
   }
   //Content Type can only be created by tenant admins or content admins
-  if(!this.TenantAdmin(tenantContractId) && !this.isContentAdmin(tenantContractId)) {
+  if(!this.isTenantAdmin(tenantContractId) && !this.isContentAdmin(tenantContractId)) {
     throw Error("Invalid operation: Content Type can only be created by tenant admins or content admins");
   }
 

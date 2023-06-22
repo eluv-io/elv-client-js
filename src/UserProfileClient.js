@@ -472,7 +472,7 @@ await client.userProfileClient.UserMetadata()
   /**
    * Return the ID of the tenant contract this user belongs to, if set.
    *
-   * @return {Promise<string>} - Tenant ID
+   * @return {Promise<string>} - Tenant Contract ID
    */
   async TenantContractId() {
     if(!this.tenantContractId) {

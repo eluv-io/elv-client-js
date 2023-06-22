@@ -14,31 +14,6 @@ exports.ValidateLibrary = (libraryId) => {
   }
 };
 
-//New Gen: Support new tenant object
-exports.ValidateLibraryNG = async (libraryId) => {
-  if(!libraryId) {
-    throw Error("Library ID not specified");
-  } else if(!libraryId.toString().startsWith("i")) {
-    throw Error(`Invalid library ID: ${libraryId}`);
-  }
-
-  let libraryAddress = client.utils.HashToAddress(libraryId).toLowerCase();
-  try {
-    await client.CallContractMethod({
-      contractAddress: libraryAddress,
-      methodName: "getMeta",
-      methodArgs: [
-        " _ELV_TENANT_ID"
-      ]
-    });
-  } catch(e) {
-    throw Error(`The library with id: ${libraryId} doesn't have an _ELV_TENANT_ID tag`)
-  }
-};
-
-//New Gen: Support new content type object
-exports.ValidateContentType = async (libraryId) => {}
-
 exports.ValidateObject = (objectId) => {
   if(!objectId) {
     throw Error("Object ID not specified");
