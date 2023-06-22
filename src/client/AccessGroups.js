@@ -422,6 +422,7 @@ exports.RemoveAccessGroupManager = async function({contractAddress, memberAddres
  */
 exports.ContentLibraryGroupPermissions = async function({libraryId, permissions=[]}) {
   ValidateLibrary(libraryId);
+  VerifyLibrary(libraryId);
 
   let libraryPermissions = {};
 
@@ -491,6 +492,7 @@ exports.ContentLibraryGroupPermissions = async function({libraryId, permissions=
  */
 exports.AddContentLibraryGroup = async function({libraryId, groupAddress, permission}) {
   ValidateLibrary(libraryId);
+  VerifyLibrary(libraryId);
   groupAddress = ValidateAddress(groupAddress);
 
   if(!["accessor", "contributor", "reviewer"].includes(permission.toLowerCase())) {
@@ -535,6 +537,7 @@ exports.AddContentLibraryGroup = async function({libraryId, groupAddress, permis
  */
 exports.RemoveContentLibraryGroup = async function({libraryId, groupAddress, permission}) {
   ValidateLibrary(libraryId);
+  VerifyLibrary(libraryId);
   groupAddress = ValidateAddress(groupAddress);
 
   if(!["accessor", "contributor", "reviewer"].includes(permission.toLowerCase())) {

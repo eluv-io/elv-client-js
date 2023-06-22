@@ -161,7 +161,8 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
     throw(e, "ERROR: Can not find metadata _ELV_TENANT_ID that belongs to this user");
   }
   //Content Type can only be created by tenant admins or content admins
-  if(!this.isTenantAdmin(tenantContractId) && !this.isContentAdmin(tenantContractId)) {
+  let curAccountId = "iten" + this.utils.AddressToHash(this.currentAccountAddress)
+  if(!this.isTenantAdmin(curAccountId, tenantContractId) && !this.isContentAdmin(curAccountId, tenantContractId)) {
     throw Error("Invalid operation: Content Type can only be created by tenant admins or content admins");
   }
 
@@ -300,7 +301,7 @@ exports.CreateContentLibrary = async function({
 
   const { contractAddress } = await this.authClient.CreateContentLibrary({kmsId});
 
-  // Legacy: Set tenant admins ID on the library if the user is associated with a tenant admins' group
+  // Set tenant admins ID on the library if the user is associated with a tenant admins' group
   if(!tenantId) {
     tenantId = await this.userProfileClient.TenantId();
   }
@@ -320,7 +321,7 @@ exports.CreateContentLibrary = async function({
     });
   }
 
-  // NG Tenant: Set _ELV_TEANT_ID on the library to the library creator's tenant id
+  // Set _ELV_TEANT_ID on the library to the library creator's tenant id
   await this.callContractMethod({
     contractAddress,
     methodName: "putMeta",
@@ -393,6 +394,7 @@ exports.CreateContentLibrary = async function({
  */
 exports.SetContentLibraryImage = async function({libraryId, writeToken, image, imageName}) {
   ValidateLibrary(libraryId);
+  VerifyLibrary(libraryId);
 
   const objectId = libraryId.replace("ilib", "iq__");
 
@@ -467,6 +469,7 @@ exports.DeleteContentLibrary = async function({libraryId}) {
 
   // eslint-disable-next-line no-unreachable
   ValidateLibrary(libraryId);
+  VerifyLibrary(libraryId);
 
   let path = UrlJoin("qlibs", libraryId);
 
@@ -503,6 +506,8 @@ exports.DeleteContentLibrary = async function({libraryId}) {
  */
 exports.AddLibraryContentType = async function({libraryId, typeId, typeName, typeHash, customContractAddress}) {
   ValidateLibrary(libraryId);
+  VerifyLibrary(libraryId);
+  VerifyContentType(typeId);
 
   this.Log(`Adding library content type to ${libraryId}: ${typeId || typeHash || typeName}`);
 
@@ -542,6 +547,7 @@ exports.AddLibraryContentType = async function({libraryId, typeId, typeName, typ
  */
 exports.RemoveLibraryContentType = async function({libraryId, typeId, typeName, typeHash}) {
   ValidateLibrary(libraryId);
+  VerifyLibrary(libraryId);
 
   this.Log(`Removing library content type from ${libraryId}: ${typeId || typeHash || typeName}`);
 
@@ -589,6 +595,7 @@ exports.RemoveLibraryContentType = async function({libraryId, typeId, typeName, 
  */
 exports.CreateContentObject = async function({libraryId, objectId, options={}}) {
   ValidateLibrary(libraryId);
+  VerifyLibrary(libraryId);
   if(objectId) { ValidateObject(objectId); }
 
   this.Log(`Creating content object: ${libraryId} ${objectId || ""}`);
@@ -794,6 +801,7 @@ exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, writ
  */
 exports.EditContentObject = async function({libraryId, objectId, options={}}) {
   ValidateParameters({libraryId, objectId});
+  VerifyLibrary(libraryId);
 
   this.Log(`Opening content draft: ${libraryId} ${objectId}`);
 
