@@ -716,7 +716,7 @@ class ElvClient {
     await this.userProfileClient.CreateWallet();
 
     await this.userProfileClient.ReplaceUserMetadata({
-      metadataSubtree: "_ELV_TENANT_ID",
+      metadataSubtree: "tenantContractId",
       metadata: tenantId
     });
 

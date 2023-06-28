@@ -476,7 +476,7 @@ await client.userProfileClient.UserMetadata()
    */
   async TenantContractId() {
     if(!this.tenantContractId) {
-      this.tenantContractId = await this.UserMetadata({metadataSubtree: "_ELV_TENANT_ID"});
+      this.tenantContractId = await this.UserMetadata({metadataSubtree: "tenantContractId"});
     }
 
     return this.tenantContractId;
@@ -488,12 +488,12 @@ await client.userProfileClient.UserMetadata()
    * Note: This method is not accessible to applications. Eluvio core will drop the request.
    *
    * @namedParams
-   * @param {string} tenantContractID - The tenant contract ID in hash format
+   * @param {string} tenantContractId - The tenant contract ID in hash format
    * @param {string} address - The group address to use in the hash if id is not provided
    */
-  async SetTenantContractId({tenantContractID, address}) {
-    if(tenantContractID && (!tenantContractID.startsWith("iten") || !Utils.ValidHash(tenantContractID))) {
-      throw Error(`Invalid tenant ID: ${id}`);
+  async SetTenantContractId({tenantContractId, address}) {
+    if(tenantContractId && (!tenantContractId.startsWith("iten") || !Utils.ValidHash(tenantContractId))) {
+      throw Error(`Invalid tenant ID: ${tenantContractId}`);
     }
 
     if(address) {
@@ -501,20 +501,20 @@ await client.userProfileClient.UserMetadata()
         throw Error(`Invalid address: ${address}`);
       }
 
-      tenantContractID = `iten${Utils.AddressToHash(address)}`;
+      tenantContractId = `iten${Utils.AddressToHash(address)}`;
     }
 
     try {
-      const version = await this.client.AccessType({tenantContractID});
+      const version = await this.client.AccessType({tenantContractId});
 
       if(version !== this.client.authClient.ACCESS_TYPES.TENANT) {
-        throw Error("Invalid tenant ID: " + tenantContractID);
+        throw Error("Invalid tenant ID: " + tenantContractId);
       }
     } catch(error) {
-      throw Error("Invalid tenant ID: " + tenantContractID);
+      throw Error("Invalid tenant ID: " + tenantContractId);
     }
 
-    await this.ReplaceUserMetadata({metadataSubtree: "_ELV_TENANT_ID", metadata: tenantContractID});
+    await this.ReplaceUserMetadata({metadataSubtree: "tenantContractId", metadata: tenantContractId});
   }
 
   /**

@@ -154,14 +154,11 @@ exports.SetPermission = async function({objectId, permission, writeToken}) {
  * @returns {Promise<string>} - Object ID of created content type
  */
 exports.CreateContentType = async function({name, metadata={}, bitcode}) {
-  let tenantContractId;
-  try {
-  tenantContractId = this.userProfileClient.tenantContractId();
-  } catch (e) {
+  let tenantContractId = this.userProfileClient.TenantContractId();
+  if (!tenantContractId) {
     throw(e, "ERROR: Can not find metadata _ELV_TENANT_ID that belongs to this user");
   }
   //Content Type can only be created by tenant admins or content admins
-  let curAccountId = "iten" + this.utils.AddressToHash(this.currentAccountAddress)
   if(!this.isTenantAdmin(curAccountId, tenantContractId) && !this.isContentAdmin(curAccountId, tenantContractId)) {
     throw Error("Invalid operation: Content Type can only be created by tenant admins or content admins");
   }
@@ -280,15 +277,13 @@ exports.CreateContentLibrary = async function({
   tenantId
 }) {
   
-  let tenantContractId;
-  try {
-  tenantContractId = this.userProfileClient.tenantContractId();
-  } catch (e) {
+  let tenantContractId = this.userProfileClient.TenantContractId();
+  if (!tenantContractId) {
     throw(e, "ERROR: Can not find metadata _ELV_TENANT_ID that belongs to this user");
   }
   //Library can only be created by tenant admins or content admins
-  let curAccountId = "iten" + this.utils.AddressToHash(this.currentAccountAddress)
-  if(!this.isTenantAdmin(curAccountId, tenantContractId) && !this.isContentAdmin(curAccountId, tenantContractId)) {
+  let addr = this.CurrentAccountAddress();
+  if(!this.isTenantAdmin(addr, tenantContractId) && !this.isContentAdmin(addr, tenantContractId)) {
     throw Error("Invalid operation: Library can only be created by tenant admins or content admins");
   }
 
@@ -1585,11 +1580,10 @@ exports.SetAuthPolicy = async function({objectId, policyId}) {
 /**
  * Check if the account is a tenant admin of the tenant with tenantId
  * @namedParams
- * @param {string} accountId - The ID of the account
+ * @param {string} accountAddr - The address of the account
  * @param {string} tenantContractId - The ID of the tenant
  */
-exports.IsTenantAdmin = async function({ accountId, tenantContractId }) {
-  const accountAddr = this.utils.HashToAddress(accountId);
+exports.IsTenantAdmin = async function({ accountAddress, tenantContractId }) {
   const tenantAddr = this.utils.HashToAddress(tenantContractId);
 
   let isAdmin = await this.client.CallContractMethod({
@@ -1608,11 +1602,10 @@ exports.IsTenantAdmin = async function({ accountId, tenantContractId }) {
 /**
  * Check if the account is a content admin of the tenant with tenantId
  * @namedParams
- * @param {string} accountId - The ID of the account
+ * @param {string} accountAddr - The address of the account
  * @param {string} tenantContractId - The ID of the tenant
  */
-exports.IsContentAdmin = async function({ accountId, tenantContractId }) {
-  const accountAddr = this.utils.HashToAddress(accountId);
+exports.IsContentAdmin = async function({ accountAddr, tenantContractId }) {
   const tenantAddr = this.utils.HashToAddress(tenantContractId);
 
   for (let i = 0; i < Number.MAX_SAFE_INTEGER; i++) {
@@ -1659,8 +1652,7 @@ exports.VerifyLibrary = async function({ libraryId }) {
     methodName: "creator",
     methodArgs: []
   });
-  creatorId = "iten" + this.utils.AddressToHash(creatorAddress);
-  if(!this.isTenantAdmin(creatorId, tenantContractId) && !this.isContentAdmin(creatorId, tenantContractId)) {
+  if(!this.isTenantAdmin(creatorAddress, tenantContractId) && !this.isContentAdmin(creatorAddress, tenantContractId)) {
     throw Error(`The creator of the library withid: ${libraryId} is not part of tenant ${tenantContractId} admins groups`);
   }
 
