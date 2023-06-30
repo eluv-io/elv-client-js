@@ -628,6 +628,9 @@ class ElvClient {
     if(reset) {
       this.InitializeClients();
     }
+
+    if (!this.client.userProfileCLient.TenantContractId()) {
+      throw Error("Error: The user doesn't have an associated tenant contract id");
   }
 
   /**
