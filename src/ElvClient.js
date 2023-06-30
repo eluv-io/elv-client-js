@@ -619,6 +619,12 @@ class ElvClient {
    * @param {object} signer - The ethers.js signer object
    */
   SetSigner({signer, reset=true}) {
+    //Check if tenant contract id exists before connecting to ethClient.
+    this.signer = signer;
+    if (!this.client.userProfileCLient.TenantContractId()) {
+      throw Error("Error: The account associated to this signer doesn't have an associated tenant contract id");
+    }
+
     this.staticToken = undefined;
 
     signer.connect(this.ethClient.Provider());
@@ -628,9 +634,6 @@ class ElvClient {
     if(reset) {
       this.InitializeClients();
     }
-
-    if (!this.client.userProfileCLient.TenantContractId()) {
-      throw Error("Error: The user doesn't have an associated tenant contract id");
   }
 
   /**
