@@ -386,6 +386,7 @@ exports.ContentLibraries = async function() {
  */
 exports.ContentLibrary = async function({libraryId}) {
   ValidateLibrary(libraryId);
+  VerifyLibrary(libraryid);
 
   const path = UrlJoin("qlibs", libraryId);
 
@@ -414,6 +415,7 @@ exports.ContentLibrary = async function({libraryId}) {
  */
 exports.ContentLibraryOwner = async function({libraryId}) {
   ValidateLibrary(libraryId);
+  VerifyLibrary(libraryId);
 
   return this.utils.FormatAddress(
     await this.ethClient.CallContractMethod({
@@ -439,6 +441,7 @@ exports.ContentLibraryOwner = async function({libraryId}) {
  */
 exports.LibraryContentTypes = async function({libraryId}) {
   ValidateLibrary(libraryId);
+  VerifyLibrary(libraryId);
 
   this.Log(`Retrieving library content types for ${libraryId}`);
 
@@ -498,6 +501,7 @@ exports.LibraryContentTypes = async function({libraryId}) {
  */
 exports.ContentObjects = async function({libraryId, filterOptions={}}) {
   ValidateLibrary(libraryId);
+  VerifyLibrary(libraryId);
 
   this.Log(`Retrieving content objects from ${libraryId}`);
 

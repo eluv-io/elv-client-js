@@ -173,7 +173,7 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
       memberAddress: client.utils.HashToAddress(kmsId)
     });
 
-    console.log("\nTenant ID:\n");
+    console.log("\nTenant Admins ID:\n");
     console.log("\t", await client.userProfileClient.TenantId());
 
     console.log("\nAccess Groups:\n");
