@@ -211,7 +211,9 @@ const Popup = ({url, title, w, h}) => {
     `
   );
 
-  if(window.focus) newWindow.focus();
+  if(newWindow && window.focus) {
+    newWindow.focus();
+  }
 
   return newWindow;
 };
