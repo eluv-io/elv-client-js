@@ -283,6 +283,42 @@ class ElvWalletClient {
     });
   }
 
+  async LogInURL({
+    mode="login",
+    provider,
+    marketplaceParams,
+    clearLogin
+  }) {
+    let loginUrl = new URL(this.appUrl);
+    loginUrl.hash = "/login";
+
+    loginUrl.searchParams.set("action", "login");
+
+    if(typeof window !== "undefined") {
+      loginUrl.searchParams.set("origin", window.location.origin);
+    }
+
+    if(provider) {
+      loginUrl.searchParams.set("provider", provider);
+    }
+
+    if(mode) {
+      loginUrl.searchParams.set("mode", mode);
+    }
+
+    if(marketplaceParams) {
+      loginUrl.searchParams.set("mid", (await this.MarketplaceInfo({marketplaceParams})).marketplaceHash);
+    } else if((this.selectedMarketplaceInfo || {}).marketplaceHash) {
+      loginUrl.searchParams.set("mid", this.selectedMarketplaceInfo.marketplaceHash);
+    }
+
+    if(clearLogin) {
+      loginUrl.searchParams.set("clear", "");
+    }
+
+    return loginUrl;
+  }
+
   /**
    * Direct the user to the Eluvio Media Wallet login page.
    *
@@ -313,29 +349,7 @@ class ElvWalletClient {
     clearLogin=false,
     callback
   }) {
-    let loginUrl = new URL(this.appUrl);
-    loginUrl.hash = "/login";
-
-    loginUrl.searchParams.set("origin", window.location.origin);
-    loginUrl.searchParams.set("action", "login");
-
-    if(provider) {
-      loginUrl.searchParams.set("provider", provider);
-    }
-
-    if(mode) {
-      loginUrl.searchParams.set("mode", mode);
-    }
-
-    if(marketplaceParams) {
-      loginUrl.searchParams.set("mid", (await this.MarketplaceInfo({marketplaceParams})).marketplaceHash);
-    } else if((this.selectedMarketplaceInfo || {}).marketplaceHash) {
-      loginUrl.searchParams.set("mid", this.selectedMarketplaceInfo.marketplaceHash);
-    }
-
-    if(clearLogin) {
-      loginUrl.searchParams.set("clear", "");
-    }
+    let loginUrl = await this.LogInURL({mode, provider, marketplaceParams, clearLogin});
 
     if(method === "redirect") {
       loginUrl.searchParams.set("response", "redirect");
@@ -632,10 +646,66 @@ class ElvWalletClient {
     return url.toString();
   }
 
+  async GenerateCodeAuth({url}={}) {
+    if(!url) {
+      url = await this.LogInURL({mode: "login"});
+
+      url.searchParams.set("response", "code");
+      url.searchParams.set("source", "code");
+    }
+
+    const response = await Utils.ResponseToJson(
+      this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "login", "redirect", "metamask"),
+        method: "POST",
+        body: {
+          op: "create",
+          dest: url.toString()
+        }
+      })
+    );
+
+    response.code = response.id;
+    response.url = response.url.startsWith("https://") ? response.url : `https://${response.url}`;
+    response.metamask_url = response.metamask_url.startsWith("https://") ? response.metamask_url : `https://${response.metamask_url}`;
+
+    return response;
+  }
+
+  async SetCodeAuth({code, authToken}) {
+    await Utils.ResponseToJson(
+      this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "login", "session", code),
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.AuthToken()}`
+        },
+        body: {
+          op: "set",
+          id: code,
+          format: "auth_token",
+          payload: authToken
+        }
+      })
+    );
+  }
+
+  async GetCodeAuth({code, passcode}) {
+    try {
+      return await Utils.ResponseToJson(
+        this.client.authClient.MakeAuthServiceRequest({
+          path: UrlJoin("as", "wlt", "login", "redirect", "metamask", code, passcode),
+          method: "GET",
+        })
+      );
+    } catch(error) {
+      if(error && error.status === 404) { return undefined; }
+
+      throw error;
+    }
+  }
 
   // Internal loading methods
-
-
 
   async LoadAvailableMarketplaces(forceReload=false) {
     if(!forceReload && Object.keys(this.availableMarketplaces) > 0) {
