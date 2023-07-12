@@ -672,7 +672,7 @@ class ElvWalletClient {
     return response;
   }
 
-  async SetCodeAuth({code, authToken}) {
+  async SetCodeAuth({code, address, authToken}) {
     await Utils.ResponseToJson(
       this.client.authClient.MakeAuthServiceRequest({
         path: UrlJoin("as", "wlt", "login", "session", code),
@@ -684,7 +684,11 @@ class ElvWalletClient {
           op: "set",
           id: code,
           format: "auth_token",
-          payload: authToken
+          payload: JSON.stringify({
+            addr: Utils.FormatAddress(address),
+            eth: address ? `ikms${Utils.AddressToHash(address)}` : "",
+            token: authToken
+          })
         }
       })
     );
