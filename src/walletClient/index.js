@@ -720,7 +720,7 @@ class ElvWalletClient {
     let metadata = await this.client.ContentObjectMetadata({
       libraryId: this.mainSiteLibraryId,
       objectId: this.mainSiteId,
-      metadataSubtree: "public/asset_metadata/tenants",
+      metadataSubtree: "public/asset_metadata",
       resolveLinks: true,
       linkDepthLimit: 2,
       resolveIncludeSource: true,
@@ -729,20 +729,24 @@ class ElvWalletClient {
       authorizationToken: this.publicStaticToken,
       noAuth: true,
       select: [
-        "*/.",
-        "*/info/branding",
-        "*/marketplaces/*/.",
-        "*/marketplaces/*/info/tenant_id",
-        "*/marketplaces/*/info/tenant_name",
-        "*/marketplaces/*/info/branding",
-        "*/marketplaces/*/info/storefront/background",
-        "*/marketplaces/*/info/storefront/background_mobile"
+        "info/marketplace_order",
+        "tenants/*/.",
+        "tenants/*/info/branding",
+        "tenants/*/marketplaces/*/.",
+        "tenants/*/marketplaces/*/info/tenant_id",
+        "tenants/*/marketplaces/*/info/tenant_name",
+        "tenants/*/marketplaces/*/info/branding",
+        "tenants/*/marketplaces/*/info/storefront/background",
+        "tenants/*/marketplaces/*/info/storefront/background_mobile"
       ],
       remove: [
-        "*/info/branding/wallet_css",
-        "*/marketplaces/*/info/branding/custom_css"
+        "tenants/*/info/branding/wallet_css",
+        "tenants/*/marketplaces/*/info/branding/custom_css"
       ]
     });
+
+    const marketplaceOrder = ((metadata || {}).info || {}).marketplace_order || [];
+    metadata = (metadata || {}).tenants || {};
 
     // If preview marketplace is specified, load it appropriately
     if(this.previewMarketplaceId) {
@@ -827,7 +831,7 @@ class ElvWalletClient {
               marketplaceId: objectId,
               marketplaceHash: versionHash,
               tenantBranding: (metadata[tenantSlug].info || {}).branding || {},
-              order: Configuration.__MARKETPLACE_ORDER.findIndex(slug => slug === marketplaceSlug)
+              order: marketplaceOrder.findIndex(slug => slug === marketplaceSlug)
             };
 
             availableMarketplacesById[objectId] = availableMarketplaces[tenantSlug][marketplaceSlug];
