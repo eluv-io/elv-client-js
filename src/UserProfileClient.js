@@ -505,7 +505,7 @@ await client.userProfileClient.UserMetadata()
     }
 
     try {
-      const version = await this.client.AccessType({tenantContractId});
+      const version = await this.client.AccessType({id: tenantContractId});
 
       if(version !== this.client.authClient.ACCESS_TYPES.TENANT) {
         throw Error("Invalid tenant ID: " + tenantContractId);
