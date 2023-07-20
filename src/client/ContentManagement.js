@@ -156,7 +156,7 @@ exports.SetPermission = async function({objectId, permission, writeToken}) {
 exports.CreateContentType = async function({name, metadata={}, bitcode}) {
   let tenantContractId = await this.userProfileClient.TenantContractId();
   if (!tenantContractId) {
-    throw(e, "ERROR: Can not find metadata tenantContractId that belongs to this user");
+    throw("ERROR: Can not find metadata tenantContractId that belongs to this user");
   }
   //Content Type can only be created by tenant admins or content admins
   if(!this.IsTenantAdmin({accountAddr, tenantContractId}) && !this.IsContentAdmin({accountAddr, tenantContractId})) {
@@ -280,7 +280,7 @@ exports.CreateContentLibrary = async function({
 
   let tenantContractId = await this.userProfileClient.TenantContractId();
   if (!tenantContractId) {
-    throw(e, "ERROR: Can not find metadata tenantContractId that belongs to this user");
+    throw("ERROR: Can not find metadata tenantContractId that belongs to this user");
   }
   //Library can only be created by tenant admins or content admins
   let accountAddr = this.CurrentAccountAddress();
