@@ -159,7 +159,6 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
     throw(e, "ERROR: Can not find metadata tenantContractId that belongs to this user");
   }
   //Content Type can only be created by tenant admins or content admins
-  let accountAddr = this.CurrentAccountAddress();
   if(!this.IsTenantAdmin({accountAddr, tenantContractId}) && !this.IsContentAdmin({accountAddr, tenantContractId})) {
     throw Error("Invalid operation: Content Type can only be created by tenant admins or content admins");
   }
