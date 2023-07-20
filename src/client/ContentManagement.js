@@ -156,7 +156,7 @@ exports.SetPermission = async function({objectId, permission, writeToken}) {
 exports.CreateContentType = async function({name, metadata={}, bitcode}) {
   let tenantContractId = await this.userProfileClient.TenantContractId();
   if (!tenantContractId) {
-    throw(e, "ERROR: Can not find metadata _ELV_TENANT_ID that belongs to this user");
+    throw(e, "ERROR: Can not find metadata tenantContractId that belongs to this user");
   }
   //Content Type can only be created by tenant admins or content admins
   let accountAddr = this.CurrentAccountAddress();
@@ -281,7 +281,7 @@ exports.CreateContentLibrary = async function({
 
   let tenantContractId = await this.userProfileClient.TenantContractId();
   if (!tenantContractId) {
-    throw(e, "ERROR: Can not find metadata _ELV_TENANT_ID that belongs to this user");
+    throw(e, "ERROR: Can not find metadata tenantContractId that belongs to this user");
   }
   //Library can only be created by tenant admins or content admins
   let accountAddr = this.CurrentAccountAddress();
@@ -319,7 +319,7 @@ exports.CreateContentLibrary = async function({
   }
 
   // Set _ELV_TEANT_ID on the library to the library creator's tenant id
-  await this.callContractMethod({
+  await this.CallContractMethod({
     contractAddress,
     methodName: "putMeta",
     methodArgs: [
@@ -1614,7 +1614,7 @@ exports.IsContentAdmin = async function({ accountAddr, tenantContractId }) {
   for (let i = 0; i < Number.MAX_SAFE_INTEGER; i++) {
     let ordinal = BigNumber(i).toString(16);
     try {
-      let ContentAdminAddr = await this.client.CallContractMethod({
+      let ContentAdminAddr = await this.CallContractMethod({
         contractAddress: tenantAddr,
         abi: JSON.parse(abi),
         methodName: "groupsMapping",
@@ -1639,10 +1639,10 @@ exports.VerifyLibrary = async function(libraryId) {
   }
 
   let libraryAddress = this.utils.HashToAddress(libraryId).toLowerCase();
-  let tenantContractId;
+  let tenantContractIdHex;
   //Library must be linked to a tenant
   try {
-    tenantContractId = await client.CallContractMethod({
+    tenantContractIdHex = await this.CallContractMethod({
       contractAddress: libraryAddress,
       methodName: "getMeta",
       methodArgs: [
@@ -1650,6 +1650,9 @@ exports.VerifyLibrary = async function(libraryId) {
       ]
     });
   } catch (e) {
+    throw e;
+  }
+  if (tenantContractIdHex == "0x") {
     throw Error(`The library with id: ${libraryId} doesn't have an _ELV_TENANT_ID tag`);
   }
 
@@ -1659,6 +1662,8 @@ exports.VerifyLibrary = async function(libraryId) {
     methodName: "creator",
     methodArgs: []
   });
+  let tenantContractId = Ethers.utils.toUtf8String(tenantContractIdHex);
+
   if(!this.IsTenantAdmin({accountAddr, tenantContractId}) && !this.isContentAdmin({accountAddr, tenantContractId})) {
     throw Error(`The creator of the library withid: ${libraryId} is not part of tenant ${tenantContractId} admins groups`);
   }
@@ -1666,17 +1671,20 @@ exports.VerifyLibrary = async function(libraryId) {
 
 exports.VerifyContentType = async function(typeId) {
   let typeAddress = this.utils.HashToAddress(typeId).toLowerCase();
-  let tenantContractId;
+  let tenantContractIdHex;
   //Library must be linked to a tenant
   try {
-    tenantContractId = await client.CallContractMethod({
+    tenantContractIdHex = await this.CallContractMethod({
       contractAddress: typeAddress,
       methodName: "getMeta",
       methodArgs: [
-        " _ELV_TENANT_ID"
+        "_ELV_TENANT_ID"
       ]
     });
   } catch (e) {
+    throw e;
+  }
+  if (tenantContractIdHex == "0x") {
     throw Error(`The content type with id: ${typeId} doesn't have an _ELV_TENANT_ID tag`);
   }
 }
