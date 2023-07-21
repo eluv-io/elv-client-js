@@ -88,6 +88,7 @@ const SetObjectPermissions = async (client, objectId, tenantAdmins, contentAdmin
   await Promise.all(promises);
 };
 
+//Deprecated: doesn't support the new tenant system
 const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
   try {
     if(!process.env.PRIVATE_KEY) {
