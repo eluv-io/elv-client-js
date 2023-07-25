@@ -159,6 +159,7 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
     throw("User address is not associated with a tenant");
   }
   //Content Type can only be created by tenant admins or content admins
+  let accountAddr = this.CurrentAccountAddress();
   if(!this.IsTenantAdmin({accountAddr, tenantContractId}) && !this.IsContentAdmin({accountAddr, tenantContractId})) {
     throw Error("Invalid operation: Content Type can only be created by tenant admins or content admins");
   }
