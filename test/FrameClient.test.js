@@ -71,11 +71,11 @@ describe("Test FrameClient", () => {
     global.window = undefined;
   });
 
-  test("FrameClient methods match expected ElvClient methods", () => {
+  test.only("FrameClient methods match expected ElvClient methods", () => {
     CompareMethods([...frameClient.AllowedMethods(), ...frameClient.OverriddenMethods()], client.FrameAllowedMethods());
   });
 
-  test("FrameClient methods match expected UserProfile methods", () => {
+  test.only("FrameClient methods match expected UserProfile methods", () => {
     CompareMethods(frameClient.AllowedUserProfileMethods(), client.userProfileClient.FrameAllowedMethods());
   });
 

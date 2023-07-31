@@ -604,6 +604,29 @@ exports.CreateFileDirectories = async function({libraryId, objectId, writeToken,
 };
 
 /**
+ * Move or rename the specified list of files/directories
+ *
+ * @memberof module:ElvClient/Files+Parts
+ * @methodGroup Files
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string} writeToken - Write token of the draft
+ * @param {Array<string>} filePaths - List of file paths to move. Format: ```[ { "path": "original/path", to: "new/path" } ]```
+ */
+exports.MoveFiles = async function({libraryId, objectId, writeToken, filePaths}) {
+  ValidateParameters({libraryId, objectId});
+  ValidateWriteToken(writeToken);
+
+  this.Log(`Moving Files: ${libraryId} ${objectId} ${writeToken}`);
+  this.Log(filePaths);
+
+  const ops = filePaths.map(({path, to}) => ({op: "move", copy_move_source_path: path, path: to}));
+
+  await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops});
+};
+
+/**
  * Delete the specified list of files/directories
  *
  * @memberof module:ElvClient/Files+Parts
