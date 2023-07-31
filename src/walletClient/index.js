@@ -1000,6 +1000,8 @@ class ElvWalletClient {
     userAddress,
     sellerAddress,
     lastNDays=-1,
+    startTime,
+    endTime,
     includeCheckoutLocked=false,
     start=0,
     limit=50
@@ -1116,7 +1118,15 @@ class ElvWalletClient {
         filters.push("link_type:eq:sol");
       }
 
-      if(lastNDays && lastNDays > 0) {
+      if(startTime || endTime) {
+        if(startTime) {
+          filters.push(`created:gt:${startTime}`);
+        }
+
+        if(endTime) {
+          filters.push(`created:lt:${endTime}`);
+        }
+      } else if(lastNDays && lastNDays > 0) {
         filters.push(`created:gt:${((Date.now() / 1000) - ( lastNDays * 24 * 60 * 60 )).toFixed(0)}`);
       }
 
