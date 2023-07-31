@@ -1120,11 +1120,11 @@ class ElvWalletClient {
 
       if(startTime || endTime) {
         if(startTime) {
-          filters.push(`created:gt:${startTime}`);
+          filters.push(`created:gt:${parseInt(startTime) / 1000}`);
         }
 
         if(endTime) {
-          filters.push(`created:lt:${endTime}`);
+          filters.push(`created:lt:${parseInt(endTime) / 1000}`);
         }
       } else if(lastNDays && lastNDays > 0) {
         filters.push(`created:gt:${((Date.now() / 1000) - ( lastNDays * 24 * 60 * 60 )).toFixed(0)}`);
