@@ -291,11 +291,13 @@ exports.UserListings = async function({userAddress, sortBy="created", sortDesc=f
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {string=} contractAddress - Filter results by the address of the NFT contract
  * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ * @param {integer=} startTime - Filter by results listed after the specified time (in milliseconds since epoch)
+ * @param {integer=} endTime - Filter by results listed before the specified time (in milliseconds since epoch)
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Array<Object>>} - List of current user's sales
  */
-exports.UserSales = async function({userAddress, sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
+exports.UserSales = async function({userAddress, sortBy="created", sortDesc=false, contractAddress, tokenId, startTime, endTime, lastNDays, marketplaceParams}={}) {
   return (
     await this.FilteredQuery({
       mode: "sales",
@@ -304,6 +306,9 @@ exports.UserSales = async function({userAddress, sortBy="created", sortDesc=fals
       sortBy,
       sortDesc,
       sellerAddress: userAddress || this.UserAddress(),
+      startTime,
+      endTime,
+      lastNDays,
       marketplaceParams,
       contractAddress,
       tokenId
@@ -322,11 +327,13 @@ exports.UserSales = async function({userAddress, sortBy="created", sortDesc=fals
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {string=} contractAddress - Filter results by the address of the NFT contract
  * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ * @param {integer=} startTime - Filter by results listed after the specified time (in milliseconds since epoch)
+ * @param {integer=} endTime - Filter by results listed before the specified time (in milliseconds since epoch)
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Array<Object>>} - List of current user's sales
  */
-exports.UserTransfers = async function({userAddress, sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
+exports.UserTransfers = async function({userAddress, sortBy="created", sortDesc=false, contractAddress, tokenId, startTime, endTime, lastNDays, marketplaceParams}={}) {
   return (
     await this.FilteredQuery({
       mode: "transfers",
@@ -337,7 +344,10 @@ exports.UserTransfers = async function({userAddress, sortBy="created", sortDesc=
       sellerAddress: userAddress || this.UserAddress(),
       marketplaceParams,
       contractAddress,
-      tokenId
+      tokenId,
+      startTime,
+      endTime,
+      lastNDays
     })
   ).results;
 };
@@ -724,6 +734,8 @@ exports.Listing = async function({listingId}) {
  * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
+ * @param {integer=} startTime - Filter by results listed after the specified time (in milliseconds since epoch)
+ * @param {integer=} endTime - Filter by results listed before the specified time (in milliseconds since epoch)
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  * @param {boolean=} includeCheckoutLocked - If specified, listings which are currently in the checkout process (and not so currently purchasable) will be included in the results. By default they are excluded.
  *
@@ -761,6 +773,8 @@ exports.Listings = async function() {
  * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
+ * @param {integer=} startTime - Filter by results listed after the specified time (in milliseconds since epoch)
+ * @param {integer=} endTime - Filter by results listed before the specified time (in milliseconds since epoch)
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Object>} - Statistics about listings. All prices in USD.
@@ -796,6 +810,8 @@ exports.ListingStats = async function() {
  * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
+ * @param {integer=} startTime - Filter by results listed after the specified time (in milliseconds since epoch)
+ * @param {integer=} endTime - Filter by results listed before the specified time (in milliseconds since epoch)
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Object>} - Results of the query and pagination info
@@ -831,6 +847,8 @@ exports.Sales = async function() {
  * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
+ * @param {integer=} startTime - Filter by results listed after the specified time (in milliseconds since epoch)
+ * @param {integer=} endTime - Filter by results listed before the specified time (in milliseconds since epoch)
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Object>} - Results of the query and pagination info
@@ -866,6 +884,8 @@ exports.Transfers = async function() {
  * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
+ * @param {integer=} startTime - Filter by results listed after the specified time (in milliseconds since epoch)
+ * @param {integer=} endTime - Filter by results listed before the specified time (in milliseconds since epoch)
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Object>} - Statistics about sales. All prices in USD.
