@@ -50,6 +50,7 @@ const New = context => {
       const mimeType = mime.lookup(fullPath) || "video/mp4";
 
       return {
+        fullPath,
         path: path.basename(fullPath),
         type: "file",
         mime_type: mimeType,

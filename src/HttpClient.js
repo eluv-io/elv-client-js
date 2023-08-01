@@ -12,6 +12,7 @@ class HttpClient {
     this.uriIndex = 0;
     this.debug = debug;
     this.draftURIs = {};
+    this.retries = Math.max(3, uris.length);
   }
 
   BaseURI() {
@@ -23,7 +24,9 @@ class HttpClient {
   }
 
   RecordWriteToken(writeToken, nodeUrlStr) {
-    this.draftURIs[writeToken] = nodeUrlStr ? new URI(nodeUrlStr) : this.BaseURI();
+    if(!nodeUrlStr) throw Error("RecordWriteToken() - nodeUrlStr not supplied");
+    if(!writeToken) throw Error("RecordWriteToken() - writeToken not supplied");
+    this.draftURIs[writeToken] = new URI(nodeUrlStr);
   }
 
   RequestHeaders(bodyType, headers={}) {
@@ -48,8 +51,9 @@ class HttpClient {
     bodyType="JSON",
     headers={},
     attempts=0,
-    failover=true,
-    forceFailover=false
+    allowFailover=true,
+    forceFailover=false,
+    allowRetry=true
   }) {
     let baseURI = this.BaseURI();
 
@@ -58,6 +62,8 @@ class HttpClient {
     const writeToken = writeTokenMatch ? writeTokenMatch[2] : undefined;
 
     if(writeToken) {
+      allowFailover = false;
+
       if(this.draftURIs[writeToken]) {
         // Use saved write token URI
         baseURI = this.draftURIs[writeToken];
@@ -86,7 +92,7 @@ class HttpClient {
     }
 
     let response;
-
+    this.Log(`${method} - ${uri.toString()}`);
     try {
       response =
         await HttpClient.Fetch(
@@ -105,10 +111,21 @@ class HttpClient {
 
     if(!response.ok) {
       // Fail over if not a write token request, the response was a server error, and we haven't tried all available nodes
-      if(!writeToken && ((failover && parseInt(response.status) >= 500) || forceFailover) && attempts < this.uris.length) {
-        // Server error - Try next node
-        this.Log(`HttpClient failing over from ${this.BaseURI()}: ${attempts + 1} attempts`, true);
-        this.uriIndex = (this.uriIndex + 1) % this.uris.length;
+      if(
+        (parseInt(response.status) >= 500 || forceFailover) &&
+        allowRetry &&
+        attempts < this.retries
+      ) {
+        // Server error
+        if(allowFailover) {
+          // Fail over to alternate node
+          this.uriIndex = (this.uriIndex + 1) % this.uris.length;
+          this.Log(`HttpClient failing over from ${baseURI.toString()}: ${attempts + 1} attempts`, true);
+        } else {
+          // Wait and retry
+          this.Log(`HttpClient retrying request from ${baseURI.toString()}: ${attempts + 1} attempts`, true);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
 
         return await this.Request({
           method,

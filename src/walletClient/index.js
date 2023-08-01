@@ -23,15 +23,18 @@ try {
  * See the Modules section on the sidebar for all client methods unrelated to login and authorization
  */
 class ElvWalletClient {
-  constructor({appId, client, network, mode, marketplaceInfo, previewMarketplaceHash, storeAuthToken}) {
+  constructor({appId, client, network, mode, localization, marketplaceInfo, previewMarketplaceHash, storeAuthToken}) {
     this.appId = appId;
 
     this.client = client;
     this.loggedIn = false;
 
+    this.localization = localization;
+
     this.network = network;
     this.mode = mode;
     this.purchaseMode = Configuration[network][mode].purchaseMode;
+    this.mainSiteLibraryId = Configuration[network][mode].siteLibraryId;
     this.mainSiteId = Configuration[network][mode].siteId;
     this.appUrl = Configuration[network][mode].appUrl;
     this.publicStaticToken = client.staticToken;
@@ -44,15 +47,19 @@ class ElvWalletClient {
     this.availableMarketplaces = {};
     this.availableMarketplacesById = {};
     this.marketplaceHashes = {};
+    this.tenantConfigs = {};
 
     this.stateStoreUrls = Configuration[network].stateStoreUrls;
     this.stateStoreClient = new HTTPClient({uris: this.stateStoreUrls});
+    this.badgerAddress = Configuration[network].badgerAddress;
 
     // Caches
     this.cachedMarketplaces = {};
     this.cachedCSS = {};
 
     this.utils = client.utils;
+
+    this.ForbiddenMethods = ElvWalletClient.ForbiddenMethods;
   }
 
   Log(message, error=false, errorObject) {
@@ -68,6 +75,33 @@ class ElvWalletClient {
       // eslint-disable-next-line no-console
       console.error(errorObject);
     }
+  }
+
+  // Methods forbidden from usage by FrameClient
+  static ForbiddenMethods() {
+    return [
+      "constructor",
+      "Authenticate",
+      "AuthenticateOAuth",
+      "AuthenticateExternalWallet",
+      "AuthToken",
+      "ClientAuthToken",
+      "Initialize",
+      "Log",
+      "LogIn",
+      "LogOut",
+      "PersonalSign",
+      "SetAuthorization",
+      "SignMetamask"
+    ];
+  }
+
+  // Used to generate AllowedWalletClientMethods for FrameClient
+  // Note: Do not import ElvWalletClient in FrameClient directly
+  static AllowedMethods() {
+    return Object.getOwnPropertyNames(ElvWalletClient.prototype)
+      .filter(methodName => !ElvWalletClient.ForbiddenMethods().includes(methodName))
+      .sort();
   }
 
   /**
@@ -92,9 +126,11 @@ class ElvWalletClient {
     appId="general",
     network="main",
     mode="production",
+    localization,
     marketplaceParams,
     previewMarketplaceId,
-    storeAuthToken=true
+    storeAuthToken=true,
+    skipMarketplaceLoad=false
   }) {
     let { tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash } = (marketplaceParams || {});
 
@@ -118,6 +154,7 @@ class ElvWalletClient {
       client,
       network,
       mode,
+      localization,
       marketplaceInfo: {
         tenantSlug,
         marketplaceSlug,
@@ -148,7 +185,9 @@ class ElvWalletClient {
       }
     }
 
-    await walletClient.LoadAvailableMarketplaces();
+    if(!skipMarketplaceLoad) {
+      await walletClient.LoadAvailableMarketplaces();
+    }
 
     return walletClient;
   }
@@ -244,6 +283,42 @@ class ElvWalletClient {
     });
   }
 
+  async LogInURL({
+    mode="login",
+    provider,
+    marketplaceParams,
+    clearLogin
+  }) {
+    let loginUrl = new URL(this.appUrl);
+    loginUrl.hash = "/login";
+
+    loginUrl.searchParams.set("action", "login");
+
+    if(typeof window !== "undefined") {
+      loginUrl.searchParams.set("origin", window.location.origin);
+    }
+
+    if(provider) {
+      loginUrl.searchParams.set("provider", provider);
+    }
+
+    if(mode) {
+      loginUrl.searchParams.set("mode", mode);
+    }
+
+    if(marketplaceParams) {
+      loginUrl.searchParams.set("mid", (await this.MarketplaceInfo({marketplaceParams})).marketplaceHash);
+    } else if((this.selectedMarketplaceInfo || {}).marketplaceHash) {
+      loginUrl.searchParams.set("mid", this.selectedMarketplaceInfo.marketplaceHash);
+    }
+
+    if(clearLogin) {
+      loginUrl.searchParams.set("clear", "");
+    }
+
+    return loginUrl;
+  }
+
   /**
    * Direct the user to the Eluvio Media Wallet login page.
    *
@@ -274,29 +349,7 @@ class ElvWalletClient {
     clearLogin=false,
     callback
   }) {
-    let loginUrl = new URL(this.appUrl);
-    loginUrl.hash = "/login";
-
-    loginUrl.searchParams.set("origin", window.location.origin);
-    loginUrl.searchParams.set("action", "login");
-
-    if(provider) {
-      loginUrl.searchParams.set("provider", provider);
-    }
-
-    if(mode) {
-      loginUrl.searchParams.set("mode", mode);
-    }
-
-    if(marketplaceParams) {
-      loginUrl.searchParams.set("mid", (await this.MarketplaceInfo({marketplaceParams})).marketplaceHash);
-    } else if((this.selectedMarketplaceInfo || {}).marketplaceHash) {
-      loginUrl.searchParams.set("mid", this.selectedMarketplaceInfo.marketplaceHash);
-    }
-
-    if(clearLogin) {
-      loginUrl.searchParams.set("clear", "");
-    }
+    let loginUrl = await this.LogInURL({mode, provider, marketplaceParams, clearLogin});
 
     if(method === "redirect") {
       loginUrl.searchParams.set("response", "redirect");
@@ -580,20 +633,94 @@ class ElvWalletClient {
     });
   }
 
+  FlowURL({type="flow", flow, marketplaceId, parameters={}}) {
+    const url = new URL(this.appUrl);
+    if(marketplaceId) {
+      url.hash = UrlJoin("/", type, flow, "marketplace", marketplaceId, Utils.B58(JSON.stringify(parameters)));
+    } else {
+      url.hash = UrlJoin("/", type, flow, Utils.B58(JSON.stringify(parameters)));
+    }
+
+    url.searchParams.set("origin", window.location.origin);
+
+    return url.toString();
+  }
+
+  async GenerateCodeAuth({url}={}) {
+    if(!url) {
+      url = await this.LogInURL({mode: "login"});
+
+      url.searchParams.set("response", "code");
+      url.searchParams.set("source", "code");
+    }
+
+    const response = await Utils.ResponseToJson(
+      this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "login", "redirect", "metamask"),
+        method: "POST",
+        body: {
+          op: "create",
+          dest: url.toString()
+        }
+      })
+    );
+
+    response.code = response.id;
+    response.url = response.url.startsWith("https://") ? response.url : `https://${response.url}`;
+    response.metamask_url = response.metamask_url.startsWith("https://") ? response.metamask_url : `https://${response.metamask_url}`;
+
+    return response;
+  }
+
+  async SetCodeAuth({code, address, type, authToken}) {
+    await Utils.ResponseToJson(
+      this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "login", "session", code),
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.AuthToken()}`
+        },
+        body: {
+          op: "set",
+          id: code,
+          format: "auth_token",
+          payload: JSON.stringify({
+            addr: Utils.FormatAddress(address),
+            eth: address ? `ikms${Utils.AddressToHash(address)}` : "",
+            type,
+            token: authToken
+          })
+        }
+      })
+    );
+  }
+
+  async GetCodeAuth({code, passcode}) {
+    try {
+      return await Utils.ResponseToJson(
+        this.client.authClient.MakeAuthServiceRequest({
+          path: UrlJoin("as", "wlt", "login", "redirect", "metamask", code, passcode),
+          method: "GET",
+        })
+      );
+    } catch(error) {
+      if(error && error.status === 404) { return undefined; }
+
+      throw error;
+    }
+  }
 
   // Internal loading methods
-
-
 
   async LoadAvailableMarketplaces(forceReload=false) {
     if(!forceReload && Object.keys(this.availableMarketplaces) > 0) {
       return;
     }
 
-    const mainSiteHash = await this.client.LatestVersionHash({objectId: this.mainSiteId});
     let metadata = await this.client.ContentObjectMetadata({
-      versionHash: mainSiteHash,
-      metadataSubtree: "public/asset_metadata/tenants",
+      libraryId: this.mainSiteLibraryId,
+      objectId: this.mainSiteId,
+      metadataSubtree: "public/asset_metadata",
       resolveLinks: true,
       linkDepthLimit: 2,
       resolveIncludeSource: true,
@@ -602,18 +729,24 @@ class ElvWalletClient {
       authorizationToken: this.publicStaticToken,
       noAuth: true,
       select: [
-        "*/.",
-        "*/marketplaces/*/.",
-        "*/marketplaces/*/info/tenant_id",
-        "*/marketplaces/*/info/tenant_name",
-        "*/marketplaces/*/info/branding",
-        "*/marketplaces/*/info/storefront/background",
-        "*/marketplaces/*/info/storefront/background_mobile"
+        "info/marketplace_order",
+        "tenants/*/.",
+        "tenants/*/info/branding",
+        "tenants/*/marketplaces/*/.",
+        "tenants/*/marketplaces/*/info/tenant_id",
+        "tenants/*/marketplaces/*/info/tenant_name",
+        "tenants/*/marketplaces/*/info/branding",
+        "tenants/*/marketplaces/*/info/storefront/background",
+        "tenants/*/marketplaces/*/info/storefront/background_mobile"
       ],
       remove: [
-        "*/marketplaces/*/info/branding/custom_css"
+        "tenants/*/info/branding/wallet_css",
+        "tenants/*/marketplaces/*/info/branding/custom_css"
       ]
     });
+
+    const marketplaceOrder = ((metadata || {}).info || {}).marketplace_order || [];
+    metadata = (metadata || {}).tenants || {};
 
     // If preview marketplace is specified, load it appropriately
     if(this.previewMarketplaceId) {
@@ -697,7 +830,8 @@ class ElvWalletClient {
               marketplaceSlug,
               marketplaceId: objectId,
               marketplaceHash: versionHash,
-              order: Configuration.__MARKETPLACE_ORDER.findIndex(slug => slug === marketplaceSlug)
+              tenantBranding: (metadata[tenantSlug].info || {}).branding || {},
+              order: marketplaceOrder.findIndex(slug => slug === marketplaceSlug)
             };
 
             availableMarketplacesById[objectId] = availableMarketplaces[tenantSlug][marketplaceSlug];
@@ -731,11 +865,12 @@ class ElvWalletClient {
       return this.availableMarketplaces[marketplaceInfo.tenantSlug][marketplaceInfo.marketplaceSlug]["."].source;
     }
 
-    const mainSiteHash = await this.client.LatestVersionHash({objectId: this.mainSiteId});
     const marketplaceLink = await this.client.ContentObjectMetadata({
-      versionHash: mainSiteHash,
+      libraryId: this.mainSiteLibraryId,
+      objectId: this.mainSiteId,
       metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", marketplaceInfo.tenantSlug, "marketplaces", marketplaceInfo.marketplaceSlug),
-      resolveLinks: false
+      resolveLinks: false,
+      noAuth: true
     });
 
     return LinkTargetHash(marketplaceLink);
@@ -753,8 +888,10 @@ class ElvWalletClient {
 
     if(!this.cachedMarketplaces[marketplaceId]) {
       let marketplace = await this.client.ContentObjectMetadata({
-        versionHash: marketplaceHash,
-        metadataSubtree: "public/asset_metadata/info",
+        libraryId: this.mainSiteLibraryId,
+        objectId: this.mainSiteId,
+        metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", marketplaceInfo.tenantSlug, "marketplaces", marketplaceInfo.marketplaceSlug, "info"),
+        localizationSubtree: this.localization ? UrlJoin("public", "asset_metadata", "localizations", this.localization, "info") : "",
         linkDepthLimit: 1,
         resolveLinks: true,
         resolveIgnoreErrors: true,
@@ -762,6 +899,16 @@ class ElvWalletClient {
         produceLinkUrls: true,
         authorizationToken: this.publicStaticToken
       });
+
+      if(marketplace.branding.use_tenant_styling) {
+        marketplace.tenantBranding = (await this.client.ContentObjectMetadata({
+          libraryId: this.mainSiteLibraryId,
+          objectId: this.mainSiteId,
+          metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", marketplaceInfo.tenantSlug, "info", "branding"),
+          authorizationToken: this.publicStaticToken,
+          produceLinkUrls: true
+        })) || {};
+      }
 
       marketplace.items = await Promise.all(
         marketplace.items.map(async (item, index) => {
@@ -809,7 +956,7 @@ class ElvWalletClient {
       }
 
       // Generate embed URLs for pack opening animations
-      ["purchase_animation", "purchase_animation__mobile", "reveal_animation", "reveal_animation_mobile"].forEach(key => {
+      ["purchase_animation", "purchase_animation_mobile", "reveal_animation", "reveal_animation_mobile"].forEach(key => {
         try {
           if(marketplace.storefront[key]) {
             let embedUrl = new URL("https://embed.v3.contentfabric.io");
@@ -857,6 +1004,8 @@ class ElvWalletClient {
     userAddress,
     sellerAddress,
     lastNDays=-1,
+    startTime,
+    endTime,
     includeCheckoutLocked=false,
     start=0,
     limit=50
@@ -973,7 +1122,15 @@ class ElvWalletClient {
         filters.push("link_type:eq:sol");
       }
 
-      if(lastNDays && lastNDays > 0) {
+      if(startTime || endTime) {
+        if(startTime) {
+          filters.push(`created:gt:${parseInt(startTime) / 1000}`);
+        }
+
+        if(endTime) {
+          filters.push(`created:lt:${parseInt(endTime) / 1000}`);
+        }
+      } else if(lastNDays && lastNDays > 0) {
         filters.push(`created:gt:${((Date.now() / 1000) - ( lastNDays * 24 * 60 * 60 )).toFixed(0)}`);
       }
 
@@ -1136,7 +1293,7 @@ class ElvWalletClient {
             extra: status.extra && typeof status.extra === "object" ? Object.values(status.extra) : status.extra,
             confirmationId,
             op,
-            address,
+            address: Utils.FormatAddress(address),
             tokenId
           };
         })

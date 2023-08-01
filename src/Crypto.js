@@ -1,4 +1,4 @@
-if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
+if(typeof globalThis.Buffer === "undefined") { globalThis.Buffer = require("buffer/").Buffer; }
 
 const bs58 = require("bs58");
 const Stream = require("stream");
@@ -7,7 +7,7 @@ const Utils = require("./Utils");
 if(typeof crypto === "undefined") {
   const crypto = require("crypto");
   crypto.getRandomValues = arr => crypto.randomBytes(arr.length);
-  global.crypto = crypto;
+  globalThis.crypto = crypto;
 }
 
 let ElvCrypto;

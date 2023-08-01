@@ -54,7 +54,6 @@ class FrameClient {
     this.Crypto = Crypto;
     this.Crypto.ElvCrypto();
 
-
     // Dynamically defined methods defined in AllowedMethods
     for(const methodName of this.AllowedMethods()){
       this[methodName] = async (args) => {
@@ -84,6 +83,24 @@ class FrameClient {
             calledMethod: methodName,
             args: this.utils.MakeClonable(args),
             prompted: FrameClient.PromptedMethods().includes(methodName)
+          },
+          callback
+        });
+      };
+    }
+
+    this.walletClient = {};
+    // Dynamically defined wallet client methods defined in AllowedWalletClientMethods
+    for(const methodName of this.AllowedWalletClientMethods()) {
+      this.walletClient[methodName] = async (args) => {
+        let callback = args && args.callback;
+        if(callback) { delete args.callback; }
+
+        return await this.SendMessage({
+          options: {
+            module: "walletClient",
+            calledMethod: methodName,
+            args: this.utils.MakeClonable(args)
           },
           callback
         });
@@ -258,13 +275,19 @@ class FrameClient {
 
   static FileMethods() {
     return [
+      "CreateFileUploadJob",
+      "DownloadEncrypted",
       "DownloadFile",
       "DownloadPart",
+      "FinalizeUploadJob",
       "UpdateContentObjectGraph",
+      "UploadFileData",
       "UploadFiles",
       "UploadFilesFromS3",
+      "UploadJobStatus",
       "UploadPart",
-      "UploadPartChunk"
+      "UploadPartChunk",
+      "UploadStatus"
     ];
   }
 
@@ -399,11 +422,13 @@ class FrameClient {
       "ListAccessGroups",
       "ListFiles",
       "ListNTPInstances",
+      "LRODraftInfo",
       "LROStatus",
       "MergeContractMetadata",
       "MergeMetadata",
       "MetadataAuth",
       "MintNFT",
+      "MoveFiles",
       "NetworkInfo",
       "NodeId",
       "Nodes",
@@ -416,6 +441,7 @@ class FrameClient {
       "PublicRep",
       "PublishContentVersion",
       "QParts",
+      "RecordWriteToken",
       "RedeemCode",
       "RemoveAccessGroupManager",
       "RemoveAccessGroupMember",
@@ -477,9 +503,79 @@ class FrameClient {
       "WalletAddress"
     ];
   }
+
+  AllowedWalletClientMethods() {
+    return [
+      "AcceptMarketplaceOffer",
+      "AddNotificationListener",
+      "AvailableMarketplaces",
+      "CanSign",
+      "CastVote",
+      "ClaimItem",
+      "ClaimStatus",
+      "CollectionRedemptionStatus",
+      "CreateListing",
+      "CreateMarketplaceOffer",
+      "DropStatus",
+      "ExchangeRate",
+      "FilteredQuery",
+      "LatestMarketplaceHash",
+      "Leaderboard",
+      "Listing",
+      "ListingAttributes",
+      "ListingEditionNames",
+      "ListingNames",
+      "ListingPurchaseStatus",
+      "ListingStats",
+      "ListingStatus",
+      "Listings",
+      "LoadAvailableMarketplaces",
+      "LoadDrop",
+      "LoadMarketplace",
+      "Marketplace",
+      "MarketplaceCSS",
+      "MarketplaceInfo",
+      "MarketplaceOffers",
+      "MarketplaceStock",
+      "MintingStatus",
+      "NFT",
+      "NFTContractStats",
+      "Notifications",
+      "PackOpenStatus",
+      "Profile",
+      "ProfileMetadata",
+      "PurchaseStatus",
+      "PushNotification",
+      "RejectMarketplaceOffer",
+      "RemoveListing",
+      "RemoveMarketplaceOffer",
+      "RemoveProfileMetadata",
+      "RevokeVote",
+      "Sales",
+      "SalesNames",
+      "SalesStats",
+      "SetProfileMetadata",
+      "SubmitDropVote",
+      "TenantConfiguration",
+      "TransferNFT",
+      "Transfers",
+      "UserAddress",
+      "UserInfo",
+      "UserItemAttributes",
+      "UserItemEditionNames",
+      "UserItemNames",
+      "UserItems",
+      "UserListings",
+      "UserNameToAddress",
+      "UserSales",
+      "UserTransfers",
+      "UserWalletBalance",
+      "VoteStatus"
+    ];
+  }
 }
 
 const { UploadFiles } = require("./client/Files");
-FrameClient.prototype.UploadFiles=UploadFiles;
+FrameClient.prototype.UploadFiles = UploadFiles;
 
 exports.FrameClient = FrameClient;

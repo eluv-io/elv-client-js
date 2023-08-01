@@ -116,7 +116,7 @@ exports.RemoveProfileMetadata = async function({type="app", mode="public", appId
 };
 
 /**
- * Retrieve profile info for the specified user, including address, username and profile image (if set)
+ * Retrieve profile info for the specified user, including address, username, profile image (if set) and badges (if any)
  *
  * @methodGroup Profile
  * @param {string=} userAddress - Address of the user
@@ -139,10 +139,33 @@ exports.Profile = async function({userAddress, userName}) {
 
   const imageUrl = await this.ProfileMetadata({type: "user", userAddress, key: "icon_url"});
 
+  let badgeData = await this.ProfileMetadata({
+    type: "app",
+    mode: "public",
+    appId: "elv-badge-srv",
+    userAddress: this.badgerAddress,
+    key: `badges_${Utils.FormatAddress(userAddress)}`
+  });
+
+  let badges = [];
+  if(badgeData) {
+    try {
+      badgeData = (JSON.parse(badgeData)).badges;
+      badges = Object.keys(badgeData).map(badgeName => ({
+        ...badgeData[badgeName],
+        name: badgeName
+      }));
+    } catch(error) {
+      this.Log(`Failed to load badge info for ${userName || userAddress}`, true);
+      this.Log(error, true);
+    }
+  }
+
   return {
     userAddress: Utils.FormatAddress(userAddress),
     userName,
-    imageUrl
+    imageUrl,
+    badges
   };
 };
 

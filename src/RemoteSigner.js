@@ -78,11 +78,6 @@ class RemoteSigner extends Ethers.Signer {
     return this.address;
   }
 
-  /**
-   * Sign a hashed piece of data
-   * @param {String} digest - Hex string of hashed data
-   * @returns - the signed message as a hex string
-   */
   async signDigest(digest) {
     if(!this.signatureCache[digest]) {
       this.signatureCache[digest] = new Promise(async (resolve, reject) => {
@@ -135,7 +130,7 @@ class RemoteSigner extends Ethers.Signer {
       transaction.nonce = await this.provider.getTransactionCount(this.address, "pending");
     }
 
-    return Ethers.utils.populateTransaction(transaction, this.provider, this.address).then((tx) => {
+    return this.populateTransaction(transaction, this.provider, this.address).then((tx) => {
       return this.sign(tx).then((signedTransaction) => {
         return this.provider.sendTransaction(signedTransaction);
       });

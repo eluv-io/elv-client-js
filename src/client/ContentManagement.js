@@ -5,7 +5,6 @@
  */
 
 const UrlJoin = require("url-join");
-const ImageType = require("image-type");
 const Ethers = require("ethers");
 const Pako = require("pako");
 
@@ -174,20 +173,21 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
   this.Log(`Created type: ${contractAddress} ${objectId}`);
 
   /* Create object, upload bitcode and finalize */
-  const createResponse = await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({
-        libraryId: this.contentSpaceLibraryId,
-        objectId,
-        update: true
-      }),
-      method: "POST",
-      path: path
-    })
-  );
+  const rawCreateResponse = await this.HttpClient.Request({
+    headers: await this.authClient.AuthorizationHeader({
+      libraryId: this.contentSpaceLibraryId,
+      objectId,
+      update: true
+    }),
+    method: "POST",
+    path: path
+  });
+  // extract the url for the node that handled the request
+  const nodeUrl = (new URL(rawCreateResponse.url)).origin;
+  const createResponse = await this.utils.ResponseToJson(rawCreateResponse);
 
   // Record the node used in creating this write token
-  this.HttpClient.RecordWriteToken(createResponse.write_token);
+  this.RecordWriteToken({writeToken: createResponse.write_token, fabricNodeUrl: nodeUrl});
 
   await this.ReplaceMetadata({
     libraryId: this.contentSpaceLibraryId,
@@ -385,10 +385,6 @@ exports.SetContentObjectImage = async function({libraryId, objectId, writeToken,
     image = await new Response(image).arrayBuffer();
   }
 
-  // Determine image type
-  const type = ImageType(image);
-  let mimeType = ["jpg", "jpeg", "png", "gif", "webp"].includes(type.ext) ? type.mime : "image/*";
-
   await this.UploadFiles({
     libraryId,
     objectId,
@@ -397,7 +393,7 @@ exports.SetContentObjectImage = async function({libraryId, objectId, writeToken,
     fileInfo: [
       {
         path: imageName,
-        mime_type: mimeType,
+        mime_type: "image/*",
         size: image.size || image.length || image.byteLength,
         data: image
       }
@@ -605,20 +601,21 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
 
   const path = UrlJoin("qid", objectId);
 
-  let createResponse = await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-      method: "POST",
-      path: path,
-      body: options
-    })
-  );
+  const rawCreateResponse = await this.HttpClient.Request({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "POST",
+    path: path,
+    body: options
+  });
+  const nodeUrl = (new URL(rawCreateResponse.url)).origin;
+  const createResponse = await this.utils.ResponseToJson(rawCreateResponse);
 
   // Record the node used in creating this write token
-  this.HttpClient.RecordWriteToken(createResponse.write_token);
+  this.RecordWriteToken({writeToken: createResponse.write_token, fabricNodeUrl: nodeUrl});
 
   createResponse.writeToken = createResponse.write_token;
   createResponse.objectId = createResponse.id;
+  createResponse.nodeUrl = nodeUrl;
 
   return createResponse;
 };
@@ -747,8 +744,8 @@ exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, writ
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
  * @param {object=} options -
- * meta: New metadata for the object - will be merged into existing metadata if specified
- * type: New type for the object - Object ID, version hash or name of type
+ * @param {object=} options.meta - New metadata for the object - will be merged into existing metadata if specified
+ * @param {string=} options.type - New type for the object - Object ID, version hash or name of type
  *
  * @returns {Promise<object>} - Response containing the object ID and write token of the draft, as well as URL of node handling the draft
  */
@@ -780,17 +777,12 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
     path: path,
     body: options
   });
-
-  const actualUrl = new URL(rawEditResponse.url);
-  actualUrl.pathname = "";
-  actualUrl.search = "";
-  actualUrl.hash = "";
-  const nodeUrl = actualUrl.href;
-
-  let editResponse = await this.utils.ResponseToJson(rawEditResponse);
+  // extract the url for the node that handled the request
+  const nodeUrl = (new URL(rawEditResponse.url)).origin;
+  const editResponse = await this.utils.ResponseToJson(rawEditResponse);
 
   // Record the node used in creating this write token
-  this.HttpClient.RecordWriteToken(editResponse.write_token, nodeUrl);
+  this.RecordWriteToken({writeToken: editResponse.write_token, fabricNodeUrl: nodeUrl});
 
   editResponse.writeToken = editResponse.write_token;
   editResponse.objectId = editResponse.id;
@@ -975,7 +967,7 @@ exports.FinalizeContentObject = async function({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "POST",
       path: path,
-      failover: false
+      allowFailover: false
     })
   );
 
@@ -1135,7 +1127,7 @@ exports.MergeMetadata = async function({libraryId, objectId, writeToken, metadat
     method: "POST",
     path: path,
     body: metadata,
-    failover: false
+    allowFailover: false
   });
 };
 
@@ -1167,7 +1159,7 @@ exports.ReplaceMetadata = async function({libraryId, objectId, writeToken, metad
     method: "PUT",
     path: path,
     body: metadata,
-    failover: false
+    allowFailover: false
   });
 };
 
@@ -1198,7 +1190,7 @@ exports.DeleteMetadata = async function({libraryId, objectId, writeToken, metada
     headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
     method: "DELETE",
     path: path,
-    failover: false
+    allowFailover: false
   });
 };
 
@@ -1357,7 +1349,7 @@ exports.GenerateSignedLinkToken = async function({
     sub: `iusr${this.utils.AddressToHash(signerAddress)}`,
     gra: "read",
     iat: Date.now(),
-    exp: duration ? (Date.now() + duration) : "",
+    exp: duration ? (Date.now() + duration) : undefined,
     ctx: {
       elv: {
         lnk: link,

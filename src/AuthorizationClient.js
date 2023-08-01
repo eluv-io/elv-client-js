@@ -116,6 +116,7 @@ class AuthorizationClient {
     audienceData,
     context,
     update=false,
+    makeAccessRequest=false,
     channelAuth=false,
     oauthToken,
     noCache=false,
@@ -171,7 +172,7 @@ class AuthorizationClient {
           partHash,
           encryption,
           update,
-          noAuth
+          makeAccessRequest
         });
       }
 
@@ -183,7 +184,7 @@ class AuthorizationClient {
     }
   }
 
-  async GenerateAuthorizationToken({libraryId, objectId, versionHash, partHash, encryption, update=false, noAuth=false}) {
+  async GenerateAuthorizationToken({libraryId, objectId, versionHash, partHash, encryption, update=false, makeAccessRequest=false}) {
     if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
 
     // Generate AFGH public key if encryption is specified
@@ -191,7 +192,7 @@ class AuthorizationClient {
     if(encryption && encryption !== "none" && objectId && await this.AccessType(objectId) === ACCESS_TYPES.OBJECT) {
       const owner = await this.Owner({id: objectId});
       const ownerCapKey = `eluv.caps.iusr${Utils.AddressToHash(this.client.signer.address)}`;
-      const ownerCap = await this.client.ContentObjectMetadata({libraryId, objectId, metadataSubtree: ownerCapKey});
+      const ownerCap = await this.client.ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree: ownerCapKey});
 
       if(!Utils.EqualAddress(owner, this.client.signer.address) && !ownerCap) {
         const cap = await this.ReEncryptionConk({libraryId, objectId});
@@ -204,15 +205,14 @@ class AuthorizationClient {
       addr: Utils.FormatAddress(((this.client.signer && this.client.signer.address) || ""))
     };
 
-    if(update) {
+    if(update || makeAccessRequest) {
       const { transactionHash } =  await this.MakeAccessRequest({
         libraryId,
         objectId,
         versionHash,
         update,
         publicKey,
-        noCache: this.noCache,
-        noAuth: this.noAuth || noAuth
+        noCache: this.noCache
       });
 
       if(transactionHash) {

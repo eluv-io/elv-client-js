@@ -1,6 +1,4 @@
-if(typeof Buffer === "undefined") {
-  Buffer = require("buffer/").Buffer;
-}
+if(typeof globalThis.Buffer === "undefined") { globalThis.Buffer = require("buffer/").Buffer; }
 
 const URI = require("urijs");
 const Ethers = require("ethers");
@@ -34,7 +32,7 @@ const networks = {
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
   // eslint-disable-next-line no-global-assign
-  global.Response = (require("node-fetch")).Response;
+  globalThis.Response = (require("node-fetch")).Response;
 }
 
 /**
@@ -127,16 +125,21 @@ class ElvClient {
    *
    * @namedParams
    * @param {string} contentSpaceId - ID of the content space
-   * @param {string} contentSpaceId - ID of the blockchain network
+   * @param {string} networkId - ID of the blockchain network
+   * @param {string} networkName - Name of the blockchain network
    * @param {number} fabricVersion - The version of the target content fabric
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
-   * @param {Array<string>} ethereumURIs - A list of full URIs to auth service endpoints
+   * @param {Array<string>} authServiceURIs - A list of full URIs to auth service endpoints
+   * @param {Array<string>=} searchURIs - A list of full URIs to search service endpoints
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+   * @param {boolean=} assumeV3=false - If enabled, V3 fabric will be assumed
+   * @param {string=} service=default - The mode that determines how HttpClient will be initialized.
+   * If 'default' is set, HttpClient uris will use fabricUris. If 'search' is used, searchUris will be used
    *
    * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
    */
@@ -148,12 +151,14 @@ class ElvClient {
     fabricURIs,
     ethereumURIs,
     authServiceURIs,
+    searchURIs,
     ethereumContractTimeout = 10,
     trustAuthorityId,
     staticToken,
     noCache=false,
     noAuth=false,
-    assumeV3=false
+    assumeV3=false,
+    service="default"
   }) {
     this.utils = Utils;
 
@@ -170,6 +175,7 @@ class ElvClient {
     this.fabricURIs = fabricURIs;
     this.authServiceURIs = authServiceURIs;
     this.ethereumURIs = ethereumURIs;
+    this.searchURIs = searchURIs;
     this.ethereumContractTimeout = ethereumContractTimeout;
 
     this.trustAuthorityId = trustAuthorityId;
@@ -177,6 +183,12 @@ class ElvClient {
     this.noCache = noCache;
     this.noAuth = noAuth;
     this.assumeV3 = assumeV3;
+
+    if(!["search", "default"].includes(service)) {
+      throw Error(`Invalid service: ${service}`);
+    }
+
+    this.service = service;
 
     this.debug = false;
 
@@ -192,14 +204,15 @@ class ElvClient {
    * @param {string} configUrl - Full URL to the config endpoint
    * @param {Array<string>} kmsUrls - List of KMS urls to use for OAuth authentication
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
-   *
+   * - Available regions: as-east, au-east, eu-east-north, eu-west-north, na-east-north, na-east-south, na-west-north, na-west-south, eu-east-south, eu-west-south
+   * @param {string=} clientIP - IP address to use in determining the region to use
    * @return {Promise<Object>} - Object containing content space ID and fabric and ethereum URLs
    */
   static async Configuration({
     configUrl,
     kmsUrls=[],
-    region
+    region,
+    clientIP
   }) {
     try {
       const uri = new URI(configUrl);
@@ -207,6 +220,10 @@ class ElvClient {
 
       if(region) {
         uri.addSearch("elvgeo", region);
+      }
+
+      if(clientIP) {
+        uri.addSearch("client_ip", clientIP);
       }
 
       const fabricInfo = await Utils.ResponseToJson(
@@ -231,6 +248,8 @@ class ElvClient {
         authServiceURIs = authServiceURIs.filter(filterHTTPS);
       }
 
+      const searchURIs = fabricInfo.network.services.search || [];
+
       const fabricVersion = Math.max(...(fabricInfo.network.api_versions || [2]));
 
       return {
@@ -242,6 +261,7 @@ class ElvClient {
         ethereumURIs,
         authServiceURIs,
         kmsURIs: kmsUrls,
+        searchURIs,
         fabricVersion
       };
     } catch(error) {
@@ -261,9 +281,9 @@ class ElvClient {
    * @namedParams
    * @param {string} networkName - Name of the network to connect to ("main", "demo", "test)
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
-   * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
-   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+   * - Available regions: as-east, au-east, eu-east-north, eu-west-north, na-east-north, na-east-south, na-west-north, na-west-south, eu-east-south, eu-west-south
+   * @param {string=} clientIP - IP address to use in determining the region to use
+   * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
@@ -273,6 +293,7 @@ class ElvClient {
   static async FromNetworkName({
     networkName,
     region,
+    clientIP,
     trustAuthorityId,
     staticToken,
     ethereumContractTimeout=10,
@@ -287,6 +308,7 @@ class ElvClient {
     return await this.FromConfigurationUrl({
       configUrl,
       region,
+      clientIP,
       trustAuthorityId,
       staticToken,
       ethereumContractTimeout,
@@ -303,9 +325,9 @@ class ElvClient {
    * @namedParams
    * @param {string} configUrl - Full URL to the config endpoint
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
-   * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
-   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+   * - Available regions: as-east, au-east, eu-east-north, eu-west-north, na-east-north, na-east-south, na-west-north, na-west-south, eu-east-south, eu-west-south
+   * @param {string=} clientIP - IP address to use in determining the region to use
+   * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
@@ -315,6 +337,7 @@ class ElvClient {
   static async FromConfigurationUrl({
     configUrl,
     region,
+    clientIP,
     trustAuthorityId,
     staticToken,
     ethereumContractTimeout=10,
@@ -329,9 +352,11 @@ class ElvClient {
       fabricURIs,
       ethereumURIs,
       authServiceURIs,
+      searchURIs,
       fabricVersion
     } = await ElvClient.Configuration({
       configUrl,
+      clientIP,
       region
     });
 
@@ -343,6 +368,7 @@ class ElvClient {
       fabricURIs,
       ethereumURIs,
       authServiceURIs,
+      searchURIs,
       ethereumContractTimeout,
       trustAuthorityId,
       staticToken,
@@ -367,8 +393,10 @@ class ElvClient {
     this.visibilityInfo = {};
     this.inaccessibleLibraries = {};
 
-    this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
+    const uris = this.service === "search" ? this.searchURIs : this.fabricURIs;
+    this.HttpClient = new HttpClient({uris, debug: this.debug});
     this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, debug: this.debug});
+    this.SearchHttpClient = new HttpClient({uris: this.searchURIs || [], debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, networkId: this.networkId, debug: this.debug, timeout: this.ethereumContractTimeout});
 
     if(!this.signer) {
@@ -416,21 +444,21 @@ class ElvClient {
   /**
    * Update fabric URLs to prefer the specified region.
    *
-   * Note: Client must have been initialized with FromConfiguration
+   * Note: Client must have been initialized with FromConfigurationUrl or FromNetworkName
    *
    * @methodGroup Nodes
    * @namedParams
    * @param {string} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
+   * - Available regions: as-east, au-east, eu-east-north, eu-west-north, na-east-north, na-east-south, na-west-north, na-west-south, eu-east-south, eu-west-south
    *
-   * @return {Promise<Object>} - An object containing the updated fabric and ethereum URLs in order of preference
+   * @return {Promise<Object>} - An object containing the updated fabric, ethereum, auth service, and search URLs in order of preference
    */
   async UseRegion({region}) {
     if(!this.configUrl) {
       throw Error("Unable to change region: Configuration URL not set");
     }
 
-    const {fabricURIs, ethereumURIs, authServiceURIs} = await ElvClient.Configuration({
+    const {fabricURIs, ethereumURIs, authServiceURIs, searchURIs} = await ElvClient.Configuration({
       configUrl: this.configUrl,
       region
     });
@@ -438,6 +466,7 @@ class ElvClient {
     this.authServiceURIs = authServiceURIs;
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
+    this.searchURIs = searchURIs;
 
     this.HttpClient.uris = fabricURIs;
     this.HttpClient.uriIndex = 0;
@@ -447,14 +476,15 @@ class ElvClient {
 
     return {
       fabricURIs,
-      ethereumURIs
+      ethereumURIs,
+      searchURIs
     };
   }
 
   /**
    * Reset fabric URLs to prefer the best region auto-detected by the fabric.
    *
-   * Note: Client must have been initialized with FromConfiguration
+   * Note: Client must have been initialized with FromConfigurationUrl or FromNetworkName
    *
    * @methodGroup Nodes
    *
@@ -471,7 +501,7 @@ class ElvClient {
   /**
    * Retrieve the node ID reported by the fabric for the specified region
    *
-   * Note: Client must have been initialized with FromConfiguration
+   * Note: Client must have been initialized with FromConfigurationUrl or FromNetworkName
    *
    * @methodGroup Nodes
    *
@@ -490,31 +520,33 @@ class ElvClient {
   }
 
   /**
-   * Retrieve the fabric and ethereum nodes currently used by the client, in preference order
+   * Retrieve the fabric, ethereum, auth service, and search nodes currently used by the client, in preference order
    *
    * @methodGroup Nodes
    *
-   * @return {Promise<Object>} - An object containing the lists of fabric and ethereum urls in use by the client
+   * @return {Promise<Object>} - An object containing the lists of fabric, ethereum, auth service, and search urls in use by the client
    */
   Nodes() {
     return {
       fabricURIs: this.fabricURIs,
       ethereumURIs: this.ethereumURIs,
-      authServiceURIs: this.authServiceURIs
+      authServiceURIs: this.authServiceURIs,
+      searchURIs: this.searchURIs
     };
   }
 
   /**
-   * Set the client to use the specified fabric and ethereum nodes, in preference order
+   * Set the client to use the specified fabric, ethereum, auth service, and search nodes, in preference order
    *
    * @namedParams
    * @param {Array<string>=} fabricURIs - A list of URLs for the fabric, in preference order
    * @param {Array<string>=} ethereumURIs - A list of URLs for the blockchain, in preference order
    * @param {Array<string>=} authServiceURIs - A list of URLs for the auth service, in preference order
+   * @param {Array<string>=} searchURIs - A list of URLs for the search nodes, in preference order
    *
    * @methodGroup Nodes
    */
-  SetNodes({fabricURIs, ethereumURIs, authServiceURIs}) {
+  SetNodes({fabricURIs, ethereumURIs, authServiceURIs, searchURIs}) {
     if(fabricURIs) {
       this.fabricURIs = fabricURIs;
 
@@ -534,6 +566,10 @@ class ElvClient {
       this.AuthHttpClient.uris = authServiceURIs;
       this.AuthHttpClient.uriIndex = 0;
     }
+
+    if(searchURIs) {
+      this.searchURIs = searchURIs;
+    }
   }
 
   /**
@@ -548,6 +584,10 @@ class ElvClient {
       id: this.networkId,
       configUrl: this.configUrl
     };
+  }
+
+  RecordWriteToken({writeToken, fabricNodeUrl}) {
+    this.HttpClient.RecordWriteToken(writeToken, fabricNodeUrl);
   }
 
   /* Wallet and signers */
@@ -914,7 +954,7 @@ class ElvClient {
    * Set the signer for this client via OAuth token. The client will exchange the given token
    * for the user's private key using the KMS specified in the configuration.
    *
-   * NOTE: The KMS URL(s) must be set in the initial configuration of the client (FromConfigurationUrl)
+   * NOTE: The KMS URL(s) must be set in the initial configuration of the client (FromConfigurationUrl or FromNetworkName)
    *
    * @methodGroup Authorization
    * @namedParams
@@ -1139,7 +1179,17 @@ class ElvClient {
       const method = message.calledMethod;
 
       let methodResults;
-      if(message.module === "userProfileClient") {
+      if(message.module === "walletClient") {
+        if(!this.walletClient) {
+          throw Error("Wallet client not set");
+        }
+
+        if(this.walletClient.ForbiddenMethods().includes(method)) {
+          throw Error("Invalid user profile method: " + method);
+        }
+
+        methodResults = await this.walletClient[method](message.args);
+      } else if(message.module === "userProfileClient") {
         if(!this.userProfileClient.FrameAllowedMethods().includes(method)) {
           throw Error("Invalid user profile method: " + method);
         }

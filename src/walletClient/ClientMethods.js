@@ -1,6 +1,7 @@
 const Utils = require("../Utils");
 const UrlJoin = require("url-join");
 const {FormatNFTDetails, FormatNFTMetadata, FormatNFT} = require("./Utils");
+const MergeWith = require("lodash/mergeWith");
 
 /**
  * Methods
@@ -66,7 +67,7 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
   if(!this.loggedIn) { return; }
 
   // eslint-disable-next-line no-unused-vars
-  const { balance, usage_hold, payout_hold, stripe_id, stripe_payouts_enabled } = await this.client.utils.ResponseToJson(
+  const { balance, usage_hold, payout_hold, locked_offer_balance, stripe_id, stripe_payouts_enabled } = await this.client.utils.ResponseToJson(
     await this.client.authClient.MakeAuthServiceRequest({
       path: UrlJoin("as", "wlt", "mkt", "bal"),
       method: "GET",
@@ -79,9 +80,10 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
   const userStripeId = stripe_id;
   const userStripeEnabled = stripe_payouts_enabled;
   const totalWalletBalance = parseFloat(balance || 0);
-  const availableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(usage_hold || 0));
+  const lockedWalletBalance = parseFloat(locked_offer_balance || 0);
+  const availableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(usage_hold || 0) - lockedWalletBalance);
   const pendingWalletBalance = Math.max(0, totalWalletBalance - availableWalletBalance);
-  const withdrawableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(payout_hold || 0));
+  const withdrawableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(Math.max(payout_hold, lockedWalletBalance) || 0));
 
   if(checkOnboard && stripe_id && !stripe_payouts_enabled) {
     // Refresh stripe enabled flag
@@ -106,6 +108,7 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
   let balances = {
     totalWalletBalance,
     availableWalletBalance,
+    lockedWalletBalance,
     pendingWalletBalance,
     withdrawableWalletBalance,
   };
@@ -288,11 +291,13 @@ exports.UserListings = async function({userAddress, sortBy="created", sortDesc=f
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {string=} contractAddress - Filter results by the address of the NFT contract
  * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ * @param {integer=} startTime - Filter by results listed after the specified time (in milliseconds since epoch)
+ * @param {integer=} endTime - Filter by results listed before the specified time (in milliseconds since epoch)
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Array<Object>>} - List of current user's sales
  */
-exports.UserSales = async function({userAddress, sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
+exports.UserSales = async function({userAddress, sortBy="created", sortDesc=false, contractAddress, tokenId, startTime, endTime, lastNDays, marketplaceParams}={}) {
   return (
     await this.FilteredQuery({
       mode: "sales",
@@ -301,6 +306,9 @@ exports.UserSales = async function({userAddress, sortBy="created", sortDesc=fals
       sortBy,
       sortDesc,
       sellerAddress: userAddress || this.UserAddress(),
+      startTime,
+      endTime,
+      lastNDays,
       marketplaceParams,
       contractAddress,
       tokenId
@@ -319,11 +327,13 @@ exports.UserSales = async function({userAddress, sortBy="created", sortDesc=fals
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {string=} contractAddress - Filter results by the address of the NFT contract
  * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ * @param {integer=} startTime - Filter by results listed after the specified time (in milliseconds since epoch)
+ * @param {integer=} endTime - Filter by results listed before the specified time (in milliseconds since epoch)
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Array<Object>>} - List of current user's sales
  */
-exports.UserTransfers = async function({userAddress, sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
+exports.UserTransfers = async function({userAddress, sortBy="created", sortDesc=false, contractAddress, tokenId, startTime, endTime, lastNDays, marketplaceParams}={}) {
   return (
     await this.FilteredQuery({
       mode: "transfers",
@@ -334,7 +344,10 @@ exports.UserTransfers = async function({userAddress, sortBy="created", sortDesc=
       sellerAddress: userAddress || this.UserAddress(),
       marketplaceParams,
       contractAddress,
-      tokenId
+      tokenId,
+      startTime,
+      endTime,
+      lastNDays
     })
   ).results;
 };
@@ -355,14 +368,20 @@ exports.UserTransfers = async function({userAddress, sortBy="created", sortDesc=
  */
 exports.TenantConfiguration = async function({tenantId, contractAddress}) {
   try {
-    return await Utils.ResponseToJson(
-      this.client.authClient.MakeAuthServiceRequest({
-        path: contractAddress ?
-          UrlJoin("as", "config", "nft", contractAddress) :
-          UrlJoin("as", "config", "tnt", tenantId),
-        method: "GET",
-      })
-    );
+    contractAddress = contractAddress ? Utils.FormatAddress(contractAddress) : undefined;
+
+    if(!this.tenantConfigs[contractAddress || tenantId]) {
+      this.tenantConfigs[contractAddress || tenantId] = await Utils.ResponseToJson(
+        this.client.authClient.MakeAuthServiceRequest({
+          path: contractAddress ?
+            UrlJoin("as", "config", "nft", contractAddress) :
+            UrlJoin("as", "config", "tnt", tenantId),
+          method: "GET",
+        })
+      );
+    }
+
+    return this.tenantConfigs[contractAddress || tenantId];
   } catch(error) {
     this.Log("Failed to load tenant configuration", true, error);
 
@@ -391,7 +410,27 @@ exports.ExchangeRate = async function({currency}) {
   );
 };
 
+/**
+ * Retrieve custom CSS for the specified tenant
+ *
+ * @methodGroup Tenants
+ * @namedParams
+ * @param {Object} tenantSlug
+ *
+ * @returns {Promise<string>} - The CSS of the tenant
+ */
+exports.TenantCSS = async function ({tenantSlug}) {
+  if(!this.cachedCSS[tenantSlug]) {
+    this.cachedCSS[tenantSlug] = await this.client.ContentObjectMetadata({
+      libraryId: this.mainSiteLibraryId,
+      objectId: this.mainSiteId,
+      metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", tenantSlug, "info", "branding", "wallet_css"),
+      authorizationToken: this.publicStaticToken
+    });
+  }
 
+  return this.cachedCSS[tenantSlug] || "";
+};
 
 /* MARKETPLACE */
 
@@ -563,16 +602,23 @@ exports.NFT = async function({tokenId, contractAddress}) {
     )
   );
 
-  nft.metadata = {
-    ...(
-      (await this.client.ContentObjectMetadata({
-        versionHash: nft.details.VersionHash,
-        metadataSubtree: "public/asset_metadata/nft",
-        produceLinkUrls: true
-      })) || {}
-    ),
-    ...(nft.metadata || {})
-  };
+  const assetMetadata = (await this.client.ContentObjectMetadata({
+    versionHash: nft.details.VersionHash,
+    metadataSubtree: "public/asset_metadata/nft",
+    produceLinkUrls: true
+  })) || {};
+
+  nft.metadata = MergeWith({}, assetMetadata, nft.metadata, (a, b) => b === null || b === "" ? a : undefined);
+
+  if(this.localization) {
+    const localizedMetadata = (await this.client.ContentObjectMetadata({
+      versionHash: nft.details.VersionHash,
+      metadataSubtree: UrlJoin("public", "asset_metadata", "localizations", this.localization, "nft"),
+      produceLinkUrls: true
+    })) || {};
+
+    nft.metadata = MergeWith({}, nft.metadata, localizedMetadata, (a, b) => b === null || b === "" ? a : undefined);
+  }
 
   nft.config = await this.TenantConfiguration({contractAddress});
 
@@ -688,6 +734,8 @@ exports.Listing = async function({listingId}) {
  * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
+ * @param {integer=} startTime - Filter by results listed after the specified time (in milliseconds since epoch)
+ * @param {integer=} endTime - Filter by results listed before the specified time (in milliseconds since epoch)
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  * @param {boolean=} includeCheckoutLocked - If specified, listings which are currently in the checkout process (and not so currently purchasable) will be included in the results. By default they are excluded.
  *
@@ -725,6 +773,8 @@ exports.Listings = async function() {
  * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
+ * @param {integer=} startTime - Filter by results listed after the specified time (in milliseconds since epoch)
+ * @param {integer=} endTime - Filter by results listed before the specified time (in milliseconds since epoch)
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Object>} - Statistics about listings. All prices in USD.
@@ -760,6 +810,8 @@ exports.ListingStats = async function() {
  * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
+ * @param {integer=} startTime - Filter by results listed after the specified time (in milliseconds since epoch)
+ * @param {integer=} endTime - Filter by results listed before the specified time (in milliseconds since epoch)
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Object>} - Results of the query and pagination info
@@ -795,6 +847,8 @@ exports.Sales = async function() {
  * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
+ * @param {integer=} startTime - Filter by results listed after the specified time (in milliseconds since epoch)
+ * @param {integer=} endTime - Filter by results listed before the specified time (in milliseconds since epoch)
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Object>} - Results of the query and pagination info
@@ -830,6 +884,8 @@ exports.Transfers = async function() {
  * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
+ * @param {integer=} startTime - Filter by results listed after the specified time (in milliseconds since epoch)
+ * @param {integer=} endTime - Filter by results listed before the specified time (in milliseconds since epoch)
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Object>} - Statistics about sales. All prices in USD.
@@ -1090,6 +1146,71 @@ exports.ClaimItem = async function({marketplaceParams, sku, email}) {
   });
 };
 
+/**
+ * Redirect to the wallet app to purchase the specified item from the specified marketplace
+ *
+ * Use the <a href="#.PurchaseStatus">PurchaseStatus</a> method to check minting status after purchasing
+ *
+ * @methodGroup Purchase
+ * @namedParams
+ * @param {Object} marketplaceParams - Parameters of the marketplace
+ * @param {string} sku - The SKU of the item to claim
+ * @param {string=} confirmationId - Confirmation ID with which to reference this purchase. If not specified, a confirmation ID will be automatically generated. On success, the user will be returned to `successUrl` with the `confirmationId` as a URL parameter.
+ * @param {string} successUrl - The URL to redirect back to upon successful purchase
+ * @param {string} cancelUrl - The URL to redirect back to upon cancellation of purchase
+ */
+exports.PurchaseItem = async function({marketplaceParams, sku, confirmationId, successUrl, cancelUrl}) {
+  const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
+
+  window.location.href = this.FlowURL({
+    type: "action",
+    flow: "purchase",
+    marketplaceId: marketplaceInfo.marketplaceId,
+    parameters: {
+      sku,
+      confirmationId,
+      successUrl,
+      cancelUrl,
+      login: true,
+      auth: this.ClientAuthToken(),
+    }
+  });
+};
+
+/**
+ * Redirect to the wallet app to purchase the specified listing
+ *
+ * Use the <a href="#.PurchaseStatus">ListingPurchaseStatus</a> method to check minting status after purchasing
+ *
+ * @methodGroup Purchase
+ * @namedParams
+ * @param {Object=} marketplaceParams - Parameters of the marketplace
+ * @param {string} listingId - The SKU of the item to claim
+ * @param {string=} confirmationId - Confirmation ID with which to reference this purchase. If not specified, a confirmation ID will be automatically generated. On success, the user will be returned to `successUrl` with the `confirmationId` as a URL parameter.
+ * @param {string} successUrl - The URL to redirect back to upon successful purchase
+ * @param {string} cancelUrl - The URL to redirect back to upon cancellation of purchase
+ */
+exports.PurchaseListing = async function({marketplaceParams, listingId, confirmationId, successUrl, cancelUrl}) {
+  let marketplaceInfo;
+  if(marketplaceParams) {
+    marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
+  }
+
+  window.location.href = this.FlowURL({
+    type: "action",
+    flow: "purchase",
+    marketplaceId: marketplaceInfo && marketplaceInfo.marketplaceId,
+    parameters: {
+      listingId,
+      confirmationId,
+      successUrl,
+      cancelUrl,
+      login: true,
+      auth: this.ClientAuthToken(),
+    }
+  });
+};
+
 /* MINTING STATUS */
 
 /**
@@ -1211,6 +1332,49 @@ exports.CollectionRedemptionStatus = async function({marketplaceParams, confirma
   }
 };
 
+/**
+ * Return status of the specified redeemable offer
+ *
+ * @methodGroup Status
+ * @namedParams
+ * @param {string=} tenantId - ID of the tenant for this NFT (not required if `marketplaceParams` is specified)
+ * @param {Object=} marketplaceParams - Parameters of the marketplace for this NFT (not required if `tenantId` is specified)
+ * @param {string} contractAddress - The address of the NFT contract
+ * @param {string} tokenId - The token ID of the NFT
+ * @param {string} offerId - The ID of the offer
+ *
+ * @returns {Promise<Object>} - The status of the offer redemption
+ */
+exports.RedeemableOfferStatus = async function({tenantId, marketplaceParams, contractAddress, tokenId, offerId}) {
+  try {
+    const statuses = await this.MintingStatus({marketplaceParams, tenantId});
+    contractAddress = Utils.FormatAddress(contractAddress);
+
+    return statuses.find(status =>
+      status.op === "nft-offer-redeem" &&
+      Utils.EqualAddress(status.address, contractAddress) &&
+      status.tokenId === (tokenId || "").toString() &&
+      status.extra && typeof status.extra[0] !== "undefined" && status.extra[0].toString() === (offerId || "").toString()
+    ) || { status: "none" };
+  } catch(error) {
+    this.Log(error, true);
+    return { status: "unknown" };
+  }
+};
+
+exports.RedeemableCustomFulfillmentInfo = async function({redeemableTransactionId}) {
+  return await Utils.ResponseToJson(
+    this.stateStoreClient.Request({
+      method: "GET",
+      path: UrlJoin("code-fulfillment", this.network === "main" ? "main" : "demov3", "fulfill", redeemableTransactionId),
+      headers: {
+        Authorization: `Bearer ${this.AuthToken()}`
+      }
+    })
+  );
+};
+
+
 /* EVENTS */
 
 
@@ -1228,9 +1392,9 @@ exports.LoadDrop = async function({tenantSlug, eventSlug, dropId}) {
   }
 
   if(!this.drops[tenantSlug][eventSlug][dropId]) {
-    const mainSiteHash = await this.client.LatestVersionHash({objectId: this.mainSiteId});
     const event = (await this.client.ContentObjectMetadata({
-      versionHash: mainSiteHash,
+      libraryId: this.mainSiteLibraryId,
+      objectId: this.mainSiteId,
       metadataSubtree: UrlJoin("public", "asset_metadata", "tenants", tenantSlug, "sites", eventSlug, "info"),
       resolveLinks: true,
       linkDepthLimit: 2,
@@ -1290,4 +1454,247 @@ exports.DropStatus = async function({marketplace, eventId, dropId}) {
     this.Log(error, true);
     return "";
   }
+};
+
+
+/* OFFERS */
+
+/**
+ * Retrieve offers for the specified parameters
+ *
+ * @methodGroup Offers
+ * @namedParams
+ * @param {string=} contractAddress - The address of an NFT contract
+ * @param {string=} tokenId - The token ID of an NFT
+ * @param {string=} buyerAddress - The address of the offerrer
+ * @param {string=} sellerAddress - The address of the offerree
+ * @param {Array<String>=} statuses - Status to filter results by. Allowed values: "ACTIVE", "ACCEPTED", "CANCELLED", "DECLINED", "INVALID"
+ * @param {number} start=0 - The index to start from
+ * @param {number=} limit=10 - The maximum number of results to return
+ *
+ * @returns {Promise<Array<Object>>} - Offers matching the specified filters
+ */
+exports.MarketplaceOffers = async function({contractAddress, tokenId, buyerAddress, sellerAddress, statuses, start=0, limit=10}) {
+  let path = UrlJoin("as", "mkt", "offers", "ls");
+  if(buyerAddress) {
+    path = UrlJoin(path, "b", Utils.FormatAddress(buyerAddress));
+  } else if(sellerAddress) {
+    path = UrlJoin(path, "s", Utils.FormatAddress(sellerAddress));
+  }
+
+  if(contractAddress) {
+    path = UrlJoin(path, "c", Utils.FormatAddress(contractAddress));
+
+    if(tokenId) {
+      path = UrlJoin(path, "t", tokenId);
+    }
+  }
+
+  let queryParams = {
+    start,
+    limit
+  };
+
+  if(statuses && statuses.length > 0) {
+    queryParams.include = statuses.join(",");
+  }
+
+  const offers = await Utils.ResponseToJson(
+    this.client.authClient.MakeAuthServiceRequest({
+      path: path,
+      method: "GET",
+      queryParams
+    })
+  );
+
+  return offers
+    .map(offer => ({
+      ...offer,
+      created: offer.created * 1000,
+      updated: offer.updated * 1000,
+      expiration: offer.expiration * 1000
+    }));
+};
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Create or update an offer on the specified NFT
+ *
+ * @methodGroup Offers
+ * @namedParams
+ * @param {string} contractAddress - The contract address of the NFT
+ * @param {string} tokenId - The token ID of the NFT
+ * @param {string=} offerId - IF modifying an existing offer, the ID of the offer
+ * @param {number} price - The amount to offer
+ * @param {number=} expiresAt - The time (in epoch ms) the offer will expire
+ *
+ * @returns {Promise<Object>} - Info about the created/updated offer
+ */
+exports.CreateMarketplaceOffer = async function({contractAddress, tokenId, offerId, price, expiresAt}) {
+  let response;
+  if(offerId) {
+    response = await Utils.ResponseToJson(
+      this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "mkt", "offers", offerId),
+        method: "PUT",
+        body: {
+          price,
+          expiration: Math.floor(expiresAt / 1000)
+        },
+        headers: {
+          Authorization: `Bearer ${this.AuthToken()}`
+        }
+      })
+    );
+  } else {
+    response = await Utils.ResponseToJson(
+      this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "mkt", "offers", contractAddress, tokenId),
+        method: "POST",
+        body: {
+          contract: contractAddress,
+          token: tokenId,
+          price,
+          expiration: Math.floor(expiresAt / 1000)
+        },
+        headers: {
+          Authorization: `Bearer ${this.AuthToken()}`
+        }
+      })
+    );
+  }
+
+  return response.offer_id;
+};
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Cancel the specified offer
+ *
+ * @methodGroup Offers
+ * @namedParams
+ * @param {string} offerId - The ID of the offer
+ */
+exports.RemoveMarketplaceOffer = async function({offerId}) {
+  return await this.client.authClient.MakeAuthServiceRequest({
+    path: UrlJoin("as", "wlt", "mkt", "offers", offerId),
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${this.AuthToken()}`
+    }
+  });
+};
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Accept the specified offer
+ *
+ * @methodGroup Offers
+ * @namedParams
+ * @param {string} offerId - The ID of the offer
+ */
+exports.AcceptMarketplaceOffer = async function({offerId}) {
+  return await this.client.authClient.MakeAuthServiceRequest({
+    path: UrlJoin("as", "wlt", "mkt", "offers", "accept", offerId),
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${this.AuthToken()}`
+    }
+  });
+};
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Reject the specified offer
+ *
+ * @methodGroup Offers
+ * @namedParams
+ * @param {string} offerId - The ID of the offer
+ */
+exports.RejectMarketplaceOffer = async function({offerId}) {
+  return await this.client.authClient.MakeAuthServiceRequest({
+    path: UrlJoin("as", "wlt", "mkt", "offers", "decline", offerId),
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${this.AuthToken()}`
+    }
+  });
+};
+
+
+/* Voting */
+
+/**
+ * Retrieve the current status of the specified voting event
+ *
+ * @methodGroup Voting
+ * @namedParams
+ * @param {string} tenantId - The tenant ID of the marketplace in which the voting event is specified
+ * @param {string} votingEventId - The ID of the voting event
+ *
+ * @returns {Promise<Object>} - Info about the voting event, including the current user's votes and the current total voting tally
+ */
+exports.VoteStatus = async function ({tenantId, votingEventId}) {
+  return await Utils.ResponseToJson(
+    this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "votes", tenantId, votingEventId),
+      headers: {
+        Authorization: `Bearer ${this.AuthToken()}`
+      }
+    })
+  );
+};
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Cast a vote for the specified item in the specified voting event
+ *
+ * @methodGroup Voting
+ * @namedParams
+ * @param {string} tenantId - The tenant ID of the marketplace in which the voting event is specified
+ * @param {string} votingEventId - The ID of the voting event
+ * @param {string} sku - The SKU of the item to vote for
+ *
+ * @returns {Promise<Object>} - Info about the voting event, including the current user's votes and the current total voting tally
+ */
+exports.CastVote = async function ({tenantId, votingEventId, sku}) {
+  return await Utils.ResponseToJson(
+    this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "votes", tenantId, votingEventId, sku),
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.AuthToken()}`
+      }
+    })
+  );
+};
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Revoke a previously cast vote for the specified item in the specified voting event
+ *
+ * @methodGroup Voting
+ * @namedParams
+ * @param {string} tenantId - The tenant ID of the marketplace in which the voting event is specified
+ * @param {string} votingEventId - The ID of the voting event
+ * @param {string} sku - The SKU of the item to vote for
+ *
+ * @returns {Promise<Object>} - Info about the voting event, including the current user's votes and the current total voting tally
+ */
+exports.RevokeVote = async function ({tenantId, votingEventId, sku}) {
+  return await Utils.ResponseToJson(
+    this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "votes", tenantId, votingEventId, sku),
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${this.AuthToken()}`
+      }
+    })
+  );
 };

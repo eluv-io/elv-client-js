@@ -104,6 +104,7 @@ exports.Visibility = async function({id, clearCache}) {
  *
  * @methodGroup Content Objects
  * @param {string} objectId - The ID of the object
+ * @param {boolean=} clearCache - Clear any Visibility info cached by client for this object (forces new Ethereum calls)
  *
  * @return {string} - Key for the permission of the object - Use this to retrieve more details from client.permissionLevels
  */
@@ -746,7 +747,7 @@ exports.ProduceMetadataLinks = async function({
     // Is file or rep link - produce a url
     return {
       ...metadata,
-      url: await this.LinkUrl({libraryId, objectId, versionHash, linkPath: path, authorizationToken})
+      url: await this.LinkUrl({libraryId, objectId, versionHash, linkPath: path, authorizationToken, noAuth})
     };
   }
 
@@ -782,7 +783,8 @@ exports.MetadataAuth = async function({
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-  noAuth = this.noAuth || noAuth;
+  noAuth = this.noAuth || noAuth || this.staticToken;
+
   let isPublic = noAuth;
   let accessType;
   if(!noAuth) {
@@ -874,6 +876,7 @@ exports.ContentObjectMetadata = async function({
   versionHash,
   writeToken,
   metadataSubtree="/",
+  localizationSubtree,
   queryParams={},
   select=[],
   remove=[],
@@ -897,6 +900,14 @@ exports.ContentObjectMetadata = async function({
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
   let path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
+
+  if(!versionHash) {
+    if(!libraryId) {
+      libraryId = await this.ContentObjectLibraryId({objectId});
+    }
+
+    path = UrlJoin("qlibs", libraryId, path);
+  }
 
   // Main authorization
   let defaultAuthToken = await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree, noAuth});
@@ -940,17 +951,33 @@ exports.ContentObjectMetadata = async function({
     }
   }
 
-  if(!produceLinkUrls) { return metadata; }
+  if(produceLinkUrls) {
+    metadata = await this.ProduceMetadataLinks({
+      libraryId,
+      objectId,
+      versionHash,
+      path: metadataSubtree,
+      metadata,
+      authorizationToken,
+      noAuth
+    });
+  }
 
-  return await this.ProduceMetadataLinks({
-    libraryId,
-    objectId,
-    versionHash,
-    path: metadataSubtree,
-    metadata,
-    authorizationToken,
-    noAuth
-  });
+  if(!localizationSubtree) { return metadata; }
+
+  try {
+    const localizedMetadata = await this.ContentObjectMetadata({
+      ...arguments[0],
+      metadataSubtree: localizationSubtree,
+      localizationSubtree: undefined
+    });
+
+    return MergeWith({}, metadata, localizedMetadata, (a, b) => b === null || b === "" ? a : undefined);
+  } catch(error) {
+    this.Log(error, true);
+
+    return metadata;
+  }
 };
 
 
@@ -1072,12 +1099,16 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
   } catch(error) {}
 
   if(!latestHash) {
-    const versionCount = await this.CallContractMethod({
-      contractAddress: this.utils.HashToAddress(objectId),
-      methodName: "countVersionHashes"
-    });
+    let versionCount;
+    try {
+      versionCount = await this.CallContractMethod({
+        contractAddress: this.utils.HashToAddress(objectId),
+        methodName: "countVersionHashes"
+      });
+    // eslint-disable-next-line no-empty
+    } catch(error) {}
 
-    if(!versionCount.toNumber()) {
+    if(!versionCount || !versionCount.toNumber()) {
       throw Error(`Unable to determine latest version hash for ${versionHash || objectId} - Item deleted?`);
     }
 
@@ -1804,7 +1835,7 @@ exports.CallBitcodeMethod = async function({
       method: constant ? "GET" : "POST",
       path,
       queryParams,
-      failover: false
+      allowFailover: false
     })
   );
 };
@@ -1821,21 +1852,23 @@ exports.CallBitcodeMethod = async function({
  * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
  * @param {string} rep - Representation to use
  * @param {Object=} queryParams - Query params to add to the URL
+ * @param {string=} service=fabric - The service to use. By default, will use a fabric node. Options: "fabric", "search", "auth"
  * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
  * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
  * token. This is useful for accessing public assets.
  * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
  * whether such a request exists in the client cache. This request will not be cached. This option has no effect if noAuth is true.
+ * @param {boolean=} makeAccessRequest=false - If using auth, will make a full access request
  *
  * @see <a href="#FabricUrl">FabricUrl</a> for creating arbitrary fabric URLs
  *
  * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
  */
-exports.Rep = async function({libraryId, objectId, versionHash, rep, queryParams={}, channelAuth=false, noAuth=false, noCache=false}) {
+exports.Rep = async function({libraryId, objectId, versionHash, rep, queryParams={}, service="fabric", makeAccessRequest=false, channelAuth=false, noAuth=false, noCache=false}) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(!rep) { throw "Rep not specified"; }
 
-  return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, channelAuth, noAuth, noCache});
+  return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, service, makeAccessRequest, channelAuth, noAuth, noCache});
 };
 
 /**
@@ -1855,11 +1888,11 @@ exports.Rep = async function({libraryId, objectId, versionHash, rep, queryParams
  *
  * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
  */
-exports.PublicRep = async function({libraryId, objectId, versionHash, rep, queryParams={}}) {
+exports.PublicRep = async function({libraryId, objectId, versionHash, rep, queryParams={}, service="fabric"}) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(!rep) { throw "Rep not specified"; }
 
-  return this.FabricUrl({libraryId, objectId, versionHash, publicRep: rep, queryParams, noAuth: true});
+  return this.FabricUrl({libraryId, objectId, versionHash, publicRep: rep, queryParams, service, noAuth: true});
 };
 
 /**
@@ -1876,11 +1909,13 @@ exports.PublicRep = async function({libraryId, objectId, versionHash, rep, query
  * @param {string=} publicRep - Public rep parameter of the url
  * @param {string=} call - Bitcode method to call
  * @param {Object=} queryParams - Query params to add to the URL
+ * @param {string=} service=fabric - The service to use. By default, will use a fabric node. Options: "fabric", "search", "auth"
  * @param {boolean=} channelAuth=false - If specified, state channel authorization will be used instead of access request authorization
  * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
  * token. This is useful for accessing public assets.
  * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
  * whether such a request exists in the client cache. This request will not be cached. This option has no effect if noAuth is true.
+ * @param {boolean=} makeAccessRequest=false - If using auth, will make a full access request
  *
  * @returns {Promise<string>} - URL to the specified endpoint with authorization token
  */
@@ -1894,7 +1929,9 @@ exports.FabricUrl = async function({
   publicRep,
   call,
   queryParams={},
+  service="fabric",
   channelAuth=false,
+  makeAccessRequest=false,
   noAuth=false,
   noCache=false
 }) {
@@ -1933,6 +1970,7 @@ exports.FabricUrl = async function({
         objectId,
         versionHash,
         channelAuth,
+        makeAccessRequest,
         noAuth,
         noCache
       })
@@ -1970,7 +2008,14 @@ exports.FabricUrl = async function({
     path = UrlJoin(path, "call", call);
   }
 
-  return this.HttpClient.URL({
+  let httpClient = this.HttpClient;
+  if(service === "search") {
+    httpClient = this.SearchHttpClient;
+  } else if(service === "auth") {
+    httpClient = this.AuthHttpClient;
+  }
+
+  return httpClient.URL({
     path,
     queryParams
   });
@@ -2450,7 +2495,7 @@ exports.EncryptionConk = async function({libraryId, objectId, versionHash, write
   const owner = await this.authClient.Owner({id: objectId});
 
   const ownerCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
-  const ownerCap = await this.ContentObjectMetadata({libraryId, objectId, metadataSubtree: ownerCapKey});
+  const ownerCap = await this.ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree: ownerCapKey});
 
   if(!this.utils.EqualAddress(owner, this.signer.address) && !ownerCap) {
     if(download) {

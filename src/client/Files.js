@@ -10,7 +10,7 @@ let fs;
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
   // eslint-disable-next-line no-global-assign
-  global.Response = (require("node-fetch")).Response;
+  globalThis.Response = (require("node-fetch")).Response;
   fs = require("fs");
 }
 
@@ -267,6 +267,7 @@ exports.UploadFilesFromS3 = async function({
 exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo, encryption="none", callback}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
+  ValidatePresence("fileInfo", fileInfo);
 
   this.Log(`Uploading files: ${libraryId} ${objectId} ${writeToken}`);
 
@@ -279,8 +280,10 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
   let progress = {};
   let fileDataMap = {};
 
-  for(let i = 0; i < fileInfo.length; i++) {
-    let entry = { ...fileInfo[i], data: undefined };
+  let originalFileInfo = fileInfo;
+  fileInfo = [];
+  for(let i = 0; i < originalFileInfo.length; i++) {
+    let entry = { ...originalFileInfo[i], data: undefined };
 
     entry.path = entry.path.replace(/^\/+/, "");
 
@@ -290,9 +293,8 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
       };
     }
 
-    fileDataMap[entry.path] = fileInfo[i].data;
+    fileDataMap[entry.path] = originalFileInfo[i].data;
 
-    delete entry.data;
     entry.type = "file";
 
     progress[entry.path] = {
@@ -300,7 +302,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
       total: entry.size
     };
 
-    fileInfo[i] = entry;
+    fileInfo.push(entry);
   }
 
   this.Log(fileInfo);
@@ -321,7 +323,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
   this.Log(jobs);
 
   // How far encryption can get ahead of upload
-  const bufferSize = 100 * 1024 * 1024;
+  const bufferSize = 500 * 1024 * 1024;
 
   let jobSpecs = [];
   let prepared = 0;
@@ -387,7 +389,34 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
     for(let f = 0; f < files.length; f++) {
       const fileInfo = files[f];
 
-      await this.UploadFileData({libraryId, objectId, writeToken, uploadId: id, jobId, fileData: fileInfo.data});
+      let retries = 0;
+      let succeeded = false;
+      do {
+        try {
+          await this.UploadFileData({
+            libraryId,
+            objectId,
+            writeToken,
+            uploadId: id,
+            jobId,
+            filePath: fileInfo.path,
+            fileData: fileInfo.data,
+            encryption
+          });
+
+          succeeded = true;
+        } catch(error) {
+          this.Log(error, true);
+
+          retries += 1;
+
+          if(retries >= 10) {
+            throw error;
+          }
+
+          await new Promise(resolve => setTimeout(resolve, 10 * retries * 1000));
+        }
+      } while(!succeeded && retries < 10);
 
       delete jobSpecs[j].files[f].data;
       uploaded += fileInfo.len;
@@ -403,8 +432,10 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
     }
   };
 
-  // Preparing jobs is done asyncronously
-  PrepareJobs();
+  // Preparing jobs is done asynchronously
+  PrepareJobs().catch(e => {
+    throw e;
+  });
 
   // Upload the first several chunks in sequence, to determine average upload rate
   const rateTestJobs = Math.min(3, jobs.length);
@@ -458,7 +489,7 @@ exports.CreateFileUploadJob = async function({libraryId, objectId, writeToken, o
       method: "POST",
       path: path,
       body,
-      failover: false
+      allowFailover: false
     })
   );
 };
@@ -474,7 +505,7 @@ exports.UploadStatus = async function({libraryId, objectId, writeToken, uploadId
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "GET",
       path: path,
-      failover: false
+      allowFailover: false
     })
   );
 };
@@ -485,23 +516,38 @@ exports.UploadJobStatus = async function({libraryId, objectId, writeToken, uploa
 
   const path = UrlJoin("q", writeToken, "file_jobs", uploadId, "uploads", jobId);
 
-  return this.utils.ResponseToJson(
+  return await this.utils.ResponseToJson(
     this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "GET",
       path: path,
-      failover: false
+      allowFailover: false
     })
   );
 };
 
-exports.UploadFileData = async function({libraryId, objectId, writeToken, uploadId, jobId, fileData}) {
+exports.UploadFileData = async function({libraryId, objectId, writeToken, encryption, uploadId, jobId, filePath, fileData}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
+  const jobStatus = await this.UploadJobStatus({libraryId, objectId, writeToken, uploadId, jobId});
+
+  // Find the status of this file
+  let fileStatus = jobStatus.files.find(item => item.path == filePath);
+  if(encryption && encryption !== "none") {
+    fileStatus = fileStatus.encrypted;
+  }
+
+  if(fileStatus.rem === 0) {
+    // Job is actually done
+    return;
+  } else if(fileStatus.skip) {
+    fileData = fileData.slice(fileStatus.skip);
+  }
+
   let path = UrlJoin("q", writeToken, "file_jobs", uploadId, jobId);
 
-  await this.utils.ResponseToJson(
+  return await this.utils.ResponseToJson(
     this.HttpClient.Request({
       method: "POST",
       path: path,
@@ -511,7 +557,8 @@ exports.UploadFileData = async function({libraryId, objectId, writeToken, upload
         "Content-type": "application/octet-stream",
         ...(await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}))
       },
-      failover: false
+      allowFailover: false,
+      allowRetry: false
     })
   );
 };
@@ -529,7 +576,7 @@ exports.FinalizeUploadJob = async function({libraryId, objectId, writeToken}) {
     path: path,
     bodyType: "BINARY",
     headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-    failover: false
+    allowFailover: false
   });
 };
 
@@ -552,6 +599,29 @@ exports.CreateFileDirectories = async function({libraryId, objectId, writeToken,
   this.Log(filePaths);
 
   const ops = filePaths.map(path => ({op: "add", type: "directory", path}));
+
+  await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops});
+};
+
+/**
+ * Move or rename the specified list of files/directories
+ *
+ * @memberof module:ElvClient/Files+Parts
+ * @methodGroup Files
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string} writeToken - Write token of the draft
+ * @param {Array<string>} filePaths - List of file paths to move. Format: ```[ { "path": "original/path", to: "new/path" } ]```
+ */
+exports.MoveFiles = async function({libraryId, objectId, writeToken, filePaths}) {
+  ValidateParameters({libraryId, objectId});
+  ValidateWriteToken(writeToken);
+
+  this.Log(`Moving Files: ${libraryId} ${objectId} ${writeToken}`);
+  this.Log(filePaths);
+
+  const ops = filePaths.map(({path, to}) => ({op: "move", copy_move_source_path: path, path: to}));
 
   await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops});
 };
@@ -590,7 +660,7 @@ exports.DeleteFiles = async function({libraryId, objectId, writeToken, filePaths
  * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
  * @param {string=} writeToken - Write token for the draft from which to download the file
  * @param {string} filePath - Path to the file to download
- * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer" | "buffer)
+ * @param {string=} format="arrayBuffer" - Format in which to return the data ("blob" | "arraybuffer" | "buffer")
  * @param {boolean=} chunked=false - If specified, file will be downloaded and decrypted in chunks. The
  * specified callback will be invoked on completion of each chunk. This is recommended for large files.
  * @param {number=} chunkSize=1000000 - Size of file chunks to request for download
@@ -637,12 +707,12 @@ exports.DownloadFile = async function({
       UrlJoin("q", writeToken || versionHash || objectId, "files", filePath);
 
 
-  const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
+  const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption, makeAccessRequest: encryption === "cgck"});
   headers.Accept = "*/*";
 
   // If not owner, indicate re-encryption
   const ownerCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
-  const ownerCap = await this.ContentObjectMetadata({libraryId, objectId, metadataSubtree: ownerCapKey});
+  const ownerCap = await this.ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree: ownerCapKey});
 
   if(encrypted && !this.utils.EqualAddress(this.signer.address, await this.ContentObjectOwner({objectId})) && !ownerCap) {
     headers["X-Content-Fabric-Decryption-Mode"] = "reencrypt";
@@ -809,7 +879,7 @@ exports.DownloadPart = async function({
   const encryption = encrypted ? "cgck" : undefined;
   const path = UrlJoin("q", writeToken || versionHash || objectId, "data", partHash);
 
-  let headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
+  let headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption, makeAccessRequest: true});
 
   const bytesTotal = (await this.ContentPart({libraryId, objectId, versionHash, partHash})).part.size;
 
@@ -993,7 +1063,7 @@ exports.CreatePart = async function({libraryId, objectId, writeToken, encryption
       path,
       bodyType: "BINARY",
       body: "",
-      failover: false
+      allowFailover: false
     })
   );
 
@@ -1032,7 +1102,7 @@ exports.UploadPartChunk = async function({libraryId, objectId, writeToken, partW
       path: UrlJoin(path, partWriteToken),
       body: chunk,
       bodyType: "BINARY",
-      failover: false
+      allowFailover: false
     })
   );
 };
@@ -1063,7 +1133,7 @@ exports.FinalizePart = async function({libraryId, objectId, writeToken, partWrit
       path: UrlJoin(path, partWriteToken),
       bodyType: "BINARY",
       body: "",
-      failover: false
+      allowFailover: false
     })
   );
 };
@@ -1142,6 +1212,6 @@ exports.DeletePart = async function({libraryId, objectId, writeToken, partHash})
     headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
     method: "DELETE",
     path: path,
-    failover: false
+    allowFailover: false
   });
 };
