@@ -579,6 +579,10 @@ class ElvClient {
     };
   }
 
+  RecordWriteToken({writeToken, fabricNodeUrl}) {
+    this.HttpClient.RecordWriteToken(writeToken, fabricNodeUrl);
+  }
+
   /* Wallet and signers */
 
   /**
