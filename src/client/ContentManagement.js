@@ -187,7 +187,7 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
   const createResponse = await this.utils.ResponseToJson(rawCreateResponse);
 
   // Record the node used in creating this write token
-  this.HttpClient.RecordWriteToken(createResponse.write_token, nodeUrl);
+  this.RecordWriteToken({writeToken: createResponse.write_token, fabricNodeUrl: nodeUrl});
 
   await this.ReplaceMetadata({
     libraryId: this.contentSpaceLibraryId,
@@ -611,7 +611,7 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
   const createResponse = await this.utils.ResponseToJson(rawCreateResponse);
 
   // Record the node used in creating this write token
-  this.HttpClient.RecordWriteToken(createResponse.write_token, nodeUrl);
+  this.RecordWriteToken({writeToken: createResponse.write_token, fabricNodeUrl: nodeUrl});
 
   createResponse.writeToken = createResponse.write_token;
   createResponse.objectId = createResponse.id;
@@ -782,7 +782,7 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
   const editResponse = await this.utils.ResponseToJson(rawEditResponse);
 
   // Record the node used in creating this write token
-  this.HttpClient.RecordWriteToken(editResponse.write_token, nodeUrl);
+  this.RecordWriteToken({writeToken: editResponse.write_token, fabricNodeUrl: nodeUrl});
 
   editResponse.writeToken = editResponse.write_token;
   editResponse.objectId = editResponse.id;
