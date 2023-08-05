@@ -5,9 +5,7 @@ const Source = require("../../src/ElvClient");
 const ClientConfiguration = require("../../TestConfiguration");
 const ElvCrypto = require("../../src/Crypto");
 
-if(process.env["CONFIG_URL"]) {
-  ClientConfiguration["config-url"] = process.env["CONFIG_URL"];
-}
+const configUrl = process.env["CONFIG_URL"] || ClientConfiguration["config-url"];
 
 // Uses source by default. If USE_BUILD is specified, uses the minified node version
 //const ElvClient = process.env["USE_BUILD"] ? Min.ElvClient : Source.ElvClient;
@@ -37,11 +35,11 @@ const RandomString = (size) => {
 const CreateClient = async (name, bux="2") => {
   try {
     // Un-initialize global.window so that elv-crypto knows it's running in node
-    const w = global.window;
-    global.window = undefined;
+    const w = globalThis.window;
+    globalThis.window = undefined;
 
-    const fundedClient = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
-    const client = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
+    const fundedClient = await ElvClient.FromConfigurationUrl({configUrl});
+    const client = await ElvClient.FromConfigurationUrl({configUrl});
 
     const wallet = client.GenerateWallet();
     const fundedSigner = wallet.AddAccount({privateKey});
@@ -84,9 +82,9 @@ const CreateClient = async (name, bux="2") => {
     await client.Crypto.ElvCrypto();
 
     // Re-initialize global.window for frame client and ensure that window.crypto is set for elv-crypto
-    global.window = w;
+    globalThis.window = w;
     if(typeof w !== "undefined") {
-      global.window.crypto = global.crypto;
+      globalThis.window.crypto = globalThis.crypto;
     }
 
     if(process.env["DEBUG"]) {
