@@ -14,21 +14,19 @@ const Utils = OutputLogger(require("../src/Utils"), require("../src/Utils"));
 const URI = require("urijs");
 
 const {RandomBytes, RandomString} = require("./utils/Utils");
+const ClientConfiguration = require("../TestConfiguration.json");
+const configUrl = process.env["CONFIG_URL"] || ClientConfiguration["config-url"];
 
 describe("Test Utils", () => {
-  test("ElvClient Utils", () => {
-    const w = global.window;
-    global.window = undefined;
+  test("ElvClient Utils", async () => {
+    const w = globalThis.window;
+    globalThis.window = undefined;
 
-    const client = new ElvClient({
-      contentSpaceId: "ispc2tNqMTr51szPGsttFQJSq6gRdKaZ",
-      fabricURIs: ["http://localhost:8008"],
-      ethereumURIs: ["http://localhost:8545"]
-    });
+    const client = await ElvClient.FromConfigurationUrl({configUrl});
 
     expect(client.utils).toBeDefined();
 
-    global.window = w;
+    globalThis.window = w;
   });
 
   test("FrameClient Utils", () => {
