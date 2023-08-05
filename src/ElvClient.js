@@ -579,6 +579,12 @@ class ElvClient {
     };
   }
 
+  WriteTokenNodeUrl({writeToken}) {
+    const nodeUrl = this.HttpClient.draftURIs[writeToken];
+
+    return nodeUrl ? nodeUrl.toString() : undefined;
+  }
+
   RecordWriteToken({writeToken, fabricNodeUrl}) {
     this.HttpClient.RecordWriteToken(writeToken, fabricNodeUrl);
   }
