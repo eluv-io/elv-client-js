@@ -1,4 +1,6 @@
 const {Initialize} = require("./utils/Utils");
+const fs = require("fs");
+const Path = require("path");
 const {
   afterAll,
   beforeAll,
@@ -10,8 +12,7 @@ const {
 } = Initialize();
 
 const ClientConfiguration = require("../TestConfiguration");
-const fs = require("fs");
-const Path = require("path");
+const configUrl = process.env["CONFIG_URL"] || ClientConfiguration["config-url"];
 
 const Fetch = (input, init={}) => {
   if(typeof fetch === "undefined") {
@@ -101,9 +102,7 @@ describe("Test ElvClient", () => {
 
   describe("Initialize From Configuration Url", () => {
     test("Initialization", async () => {
-      const bootstrapClient = await ElvClient.FromConfigurationUrl({
-        configUrl: ClientConfiguration["config-url"]
-      });
+      const bootstrapClient = await ElvClient.FromConfigurationUrl({configUrl});
 
       expect(bootstrapClient).toBeDefined();
       expect(bootstrapClient.fabricURIs).toBeDefined();
@@ -114,10 +113,7 @@ describe("Test ElvClient", () => {
     });
 
     test("Initialization With Region", async () => {
-      const bootstrapClient = await ElvClient.FromConfigurationUrl({
-        configUrl: ClientConfiguration["config-url"],
-        region: "eu-west"
-      });
+      const bootstrapClient = await ElvClient.FromConfigurationUrl({configUrl, region: "eu-west"});
 
       expect(bootstrapClient).toBeDefined();
       expect(bootstrapClient.fabricURIs).toBeDefined();
@@ -807,48 +803,48 @@ describe("Test ElvClient", () => {
         copy: "metadata"
       });
     });
-  });
 
-  test("Set Commit Message", async () => {
-    // Check automatic commit
-    const automaticCommit = await client.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      metadataSubtree: "commit"
+    test("Set Commit Message", async () => {
+      // Check automatic commit
+      const automaticCommit = await client.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        metadataSubtree: "commit"
+      });
+
+      expect(automaticCommit).toBeDefined();
+      expect(client.utils.EqualAddress(client.CurrentAccountAddress(), automaticCommit.author)).toBeTruthy();
+      expect(client.utils.EqualAddress(client.CurrentAccountAddress(), automaticCommit.author_address)).toBeTruthy();
+      expect(automaticCommit.message).toBeDefined();
+      expect(automaticCommit.timestamp).toBeDefined();
+      expect(isNaN((new Date(automaticCommit.timestamp)).getTime())).toBeFalsy();
+
+      // Create new commit with message and user name
+      await client.userProfileClient.ReplaceUserMetadata({
+        metadataSubtree: "public/name",
+        metadata: "Test User"
+      });
+
+      await client.EditAndFinalizeContentObject({
+        libraryId,
+        objectId,
+        commitMessage: "Test Commit Message",
+        callback: () => {}
+      });
+
+      const customCommit = await client.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        metadataSubtree: "commit"
+      });
+
+      expect(customCommit).toBeDefined();
+      expect(customCommit.author).toEqual("Test User");
+      expect(client.utils.EqualAddress(client.CurrentAccountAddress(), customCommit.author_address)).toBeTruthy();
+      expect(customCommit.timestamp).toBeDefined();
+      expect(isNaN((new Date(customCommit.timestamp)).getTime())).toBeFalsy();
+      expect(customCommit.message).toEqual("Test Commit Message");
     });
-
-    expect(automaticCommit).toBeDefined();
-    expect(client.utils.EqualAddress(client.CurrentAccountAddress(), automaticCommit.author)).toBeTruthy();
-    expect(client.utils.EqualAddress(client.CurrentAccountAddress(), automaticCommit.author_address)).toBeTruthy();
-    expect(automaticCommit.message).toBeDefined();
-    expect(automaticCommit.timestamp).toBeDefined();
-    expect(isNaN((new Date(automaticCommit.timestamp)).getTime())).toBeFalsy();
-
-    // Create new commit with message and user name
-    await client.userProfileClient.ReplaceUserMetadata({
-      metadataSubtree: "public/name",
-      metadata: "Test User"
-    });
-
-    await client.EditAndFinalizeContentObject({
-      libraryId,
-      objectId,
-      commitMessage: "Test Commit Message",
-      callback: () => {}
-    });
-
-    const customCommit = await client.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      metadataSubtree: "commit"
-    });
-
-    expect(customCommit).toBeDefined();
-    expect(customCommit.author).toEqual("Test User");
-    expect(client.utils.EqualAddress(client.CurrentAccountAddress(), customCommit.author_address)).toBeTruthy();
-    expect(customCommit.timestamp).toBeDefined();
-    expect(isNaN((new Date(customCommit.timestamp)).getTime())).toBeFalsy();
-    expect(customCommit.message).toEqual("Test Commit Message");
   });
 
   describe("Content Object Group Permissions", () => {

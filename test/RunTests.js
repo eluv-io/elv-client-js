@@ -2,6 +2,8 @@ const fs = require("fs");
 const { performance } = require("perf_hooks");
 const ClientConfiguration = require("../TestConfiguration");
 
+const configUrl = process.env["CONFIG_URL"] || ClientConfiguration["config-url"];
+
 const Tests = {
   Utils: require("./Utils.test"),
   Wallet: require("./ElvWallet.test"),
@@ -12,7 +14,7 @@ const Tests = {
 };
 
 const RunTests = async () => {
-  console.log(`\nUsing Configuration URL '${process.env["CONFIG_URL"] || ClientConfiguration["config-url"]}'\n`);
+  console.log(`\nUsing Configuration URL '${configUrl}'\n`);
 
   let keys = Object.keys(Tests);
 

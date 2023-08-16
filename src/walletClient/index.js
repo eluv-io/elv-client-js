@@ -283,6 +283,42 @@ class ElvWalletClient {
     });
   }
 
+  async LogInURL({
+    mode="login",
+    provider,
+    marketplaceParams,
+    clearLogin
+  }) {
+    let loginUrl = new URL(this.appUrl);
+    loginUrl.hash = "/login";
+
+    loginUrl.searchParams.set("action", "login");
+
+    if(typeof window !== "undefined") {
+      loginUrl.searchParams.set("origin", window.location.origin);
+    }
+
+    if(provider) {
+      loginUrl.searchParams.set("provider", provider);
+    }
+
+    if(mode) {
+      loginUrl.searchParams.set("mode", mode);
+    }
+
+    if(marketplaceParams) {
+      loginUrl.searchParams.set("mid", (await this.MarketplaceInfo({marketplaceParams})).marketplaceHash);
+    } else if((this.selectedMarketplaceInfo || {}).marketplaceHash) {
+      loginUrl.searchParams.set("mid", this.selectedMarketplaceInfo.marketplaceHash);
+    }
+
+    if(clearLogin) {
+      loginUrl.searchParams.set("clear", "");
+    }
+
+    return loginUrl;
+  }
+
   /**
    * Direct the user to the Eluvio Media Wallet login page.
    *
@@ -313,29 +349,7 @@ class ElvWalletClient {
     clearLogin=false,
     callback
   }) {
-    let loginUrl = new URL(this.appUrl);
-    loginUrl.hash = "/login";
-
-    loginUrl.searchParams.set("origin", window.location.origin);
-    loginUrl.searchParams.set("action", "login");
-
-    if(provider) {
-      loginUrl.searchParams.set("provider", provider);
-    }
-
-    if(mode) {
-      loginUrl.searchParams.set("mode", mode);
-    }
-
-    if(marketplaceParams) {
-      loginUrl.searchParams.set("mid", (await this.MarketplaceInfo({marketplaceParams})).marketplaceHash);
-    } else if((this.selectedMarketplaceInfo || {}).marketplaceHash) {
-      loginUrl.searchParams.set("mid", this.selectedMarketplaceInfo.marketplaceHash);
-    }
-
-    if(clearLogin) {
-      loginUrl.searchParams.set("clear", "");
-    }
+    let loginUrl = await this.LogInURL({mode, provider, marketplaceParams, clearLogin});
 
     if(method === "redirect") {
       loginUrl.searchParams.set("response", "redirect");
@@ -632,10 +646,71 @@ class ElvWalletClient {
     return url.toString();
   }
 
+  async GenerateCodeAuth({url}={}) {
+    if(!url) {
+      url = await this.LogInURL({mode: "login"});
+
+      url.searchParams.set("response", "code");
+      url.searchParams.set("source", "code");
+    }
+
+    const response = await Utils.ResponseToJson(
+      this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "login", "redirect", "metamask"),
+        method: "POST",
+        body: {
+          op: "create",
+          dest: url.toString()
+        }
+      })
+    );
+
+    response.code = response.id;
+    response.url = response.url.startsWith("https://") ? response.url : `https://${response.url}`;
+    response.metamask_url = response.metamask_url.startsWith("https://") ? response.metamask_url : `https://${response.metamask_url}`;
+
+    return response;
+  }
+
+  async SetCodeAuth({code, address, type, authToken}) {
+    await Utils.ResponseToJson(
+      this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "login", "session", code),
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.AuthToken()}`
+        },
+        body: {
+          op: "set",
+          id: code,
+          format: "auth_token",
+          payload: JSON.stringify({
+            addr: Utils.FormatAddress(address),
+            eth: address ? `ikms${Utils.AddressToHash(address)}` : "",
+            type,
+            token: authToken
+          })
+        }
+      })
+    );
+  }
+
+  async GetCodeAuth({code, passcode}) {
+    try {
+      return await Utils.ResponseToJson(
+        this.client.authClient.MakeAuthServiceRequest({
+          path: UrlJoin("as", "wlt", "login", "redirect", "metamask", code, passcode),
+          method: "GET",
+        })
+      );
+    } catch(error) {
+      if(error && error.status === 404) { return undefined; }
+
+      throw error;
+    }
+  }
 
   // Internal loading methods
-
-
 
   async LoadAvailableMarketplaces(forceReload=false) {
     if(!forceReload && Object.keys(this.availableMarketplaces) > 0) {
@@ -645,7 +720,7 @@ class ElvWalletClient {
     let metadata = await this.client.ContentObjectMetadata({
       libraryId: this.mainSiteLibraryId,
       objectId: this.mainSiteId,
-      metadataSubtree: "public/asset_metadata/tenants",
+      metadataSubtree: "public/asset_metadata",
       resolveLinks: true,
       linkDepthLimit: 2,
       resolveIncludeSource: true,
@@ -654,20 +729,24 @@ class ElvWalletClient {
       authorizationToken: this.publicStaticToken,
       noAuth: true,
       select: [
-        "*/.",
-        "*/info/branding",
-        "*/marketplaces/*/.",
-        "*/marketplaces/*/info/tenant_id",
-        "*/marketplaces/*/info/tenant_name",
-        "*/marketplaces/*/info/branding",
-        "*/marketplaces/*/info/storefront/background",
-        "*/marketplaces/*/info/storefront/background_mobile"
+        "info/marketplace_order",
+        "tenants/*/.",
+        "tenants/*/info/branding",
+        "tenants/*/marketplaces/*/.",
+        "tenants/*/marketplaces/*/info/tenant_id",
+        "tenants/*/marketplaces/*/info/tenant_name",
+        "tenants/*/marketplaces/*/info/branding",
+        "tenants/*/marketplaces/*/info/storefront/background",
+        "tenants/*/marketplaces/*/info/storefront/background_mobile"
       ],
       remove: [
-        "*/info/branding/wallet_css",
-        "*/marketplaces/*/info/branding/custom_css"
+        "tenants/*/info/branding/wallet_css",
+        "tenants/*/marketplaces/*/info/branding/custom_css"
       ]
     });
+
+    const marketplaceOrder = ((metadata || {}).info || {}).marketplace_order || [];
+    metadata = (metadata || {}).tenants || {};
 
     // If preview marketplace is specified, load it appropriately
     if(this.previewMarketplaceId) {
@@ -752,7 +831,7 @@ class ElvWalletClient {
               marketplaceId: objectId,
               marketplaceHash: versionHash,
               tenantBranding: (metadata[tenantSlug].info || {}).branding || {},
-              order: Configuration.__MARKETPLACE_ORDER.findIndex(slug => slug === marketplaceSlug)
+              order: marketplaceOrder.findIndex(slug => slug === marketplaceSlug)
             };
 
             availableMarketplacesById[objectId] = availableMarketplaces[tenantSlug][marketplaceSlug];
@@ -925,6 +1004,8 @@ class ElvWalletClient {
     userAddress,
     sellerAddress,
     lastNDays=-1,
+    startTime,
+    endTime,
     includeCheckoutLocked=false,
     start=0,
     limit=50
@@ -1041,7 +1122,15 @@ class ElvWalletClient {
         filters.push("link_type:eq:sol");
       }
 
-      if(lastNDays && lastNDays > 0) {
+      if(startTime || endTime) {
+        if(startTime) {
+          filters.push(`created:gt:${parseInt(startTime) / 1000}`);
+        }
+
+        if(endTime) {
+          filters.push(`created:lt:${parseInt(endTime) / 1000}`);
+        }
+      } else if(lastNDays && lastNDays > 0) {
         filters.push(`created:gt:${((Date.now() / 1000) - ( lastNDays * 24 * 60 * 60 )).toFixed(0)}`);
       }
 

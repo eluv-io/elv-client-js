@@ -1,26 +1,17 @@
 if(typeof globalThis.Buffer === "undefined") { globalThis.Buffer = require("buffer/").Buffer; }
 
 const bs58 = require("bs58");
-const Stream = require("stream");
+const Stream = require("readable-stream");
 const Utils = require("./Utils");
+
+if(!globalThis.process) {
+  globalThis.process = require("process/browser");
+}
 
 if(typeof crypto === "undefined") {
   const crypto = require("crypto");
   crypto.getRandomValues = arr => crypto.randomBytes(arr.length);
   globalThis.crypto = crypto;
-}
-
-let ElvCrypto;
-switch(Utils.Platform()) {
-  case Utils.PLATFORM_REACT_NATIVE:
-    ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.externals").default;
-    break;
-  case Utils.PLATFORM_WEB:
-    ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.externals").default;
-    break;
-  default:
-    ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.node").default;
-    break;
 }
 
 /**
@@ -32,6 +23,7 @@ const Crypto = {
   ElvCrypto: async () => {
     try {
       if(!Crypto.elvCrypto) {
+        const ElvCrypto = (await import("@eluvio/crypto")).default;
         Crypto.elvCrypto = await new ElvCrypto().init();
       }
 

@@ -34,8 +34,8 @@ const CompareMethods = (frameClientMethods, elvClientMethods) => {
 describe("Test FrameClient", () => {
   beforeAll(async () => {
     // Initialize fake window object to test the frame client
-    global.window = new (require("window"))();
-    global.document = global.window.document;
+    globalThis.window = new (require("window"))();
+    globalThis.document = globalThis.window.document;
 
     frameClient = OutputLogger(
       FrameClient,
@@ -68,7 +68,7 @@ describe("Test FrameClient", () => {
     await ReturnBalance(client);
 
     // Unset fake window object
-    global.window = undefined;
+    globalThis.window = undefined;
   });
 
   test("FrameClient methods match expected ElvClient methods", () => {

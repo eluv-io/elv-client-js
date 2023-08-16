@@ -1,6 +1,6 @@
 {
   "name": "@eluvio/elv-client-js",
-  "version": "4.0.12",
+  "version": "4.0.45",
   "description": "Javascript client for the Eluvio Content Fabric",
   "main": "src/index.js",
   "author": "Kevin Talmadge",
@@ -52,7 +52,7 @@
   ],
   "dependencies": {
     "@babel/runtime": "^7.8.4",
-    "@eluvio/crypto": ">=1.0.12",
+    "@eluvio/crypto": "^1.1.1",
     "@eluvio/elv-abr-profile": "^1.0.0",
     "@sindresorhus/slugify": "^1.1.0",
     "babel-loader": "^8.0.6",
@@ -84,6 +84,7 @@
     "path": "^0.12.7",
     "prompt": "^1.1.0",
     "ramda": "^0.27.1",
+    "readable-stream": "^4.4.2",
     "shell-escape": "^0.2.0",
     "sjcl": "^1.0.8",
     "typedarray": "0.0.6",

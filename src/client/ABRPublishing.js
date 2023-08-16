@@ -623,7 +623,7 @@ exports.LROStatus = async function({libraryId, objectId}) {
 
   const lroDraft = await this.LRODraftInfo({libraryId, objectId});
 
-  this.HttpClient.RecordWriteToken(lroDraft.write_token, lroDraft.node);
+  this.RecordWriteToken({writeToken: lroDraft.write_token, fabricNodeUrl: lroDraft.node});
 
   return await this.ContentObjectMetadata({
     libraryId,
@@ -652,7 +652,7 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeF
   const lroDraft = await this.LRODraftInfo({libraryId, objectId});
 
   // tell http client what node to contact for this write token
-  this.HttpClient.RecordWriteToken(lroDraft.write_token, lroDraft.node);
+  this.RecordWriteToken({writeToken: lroDraft.write_token, fabricNodeUrl: lroDraft.node});
 
   const lastJobOfferingsInfo = await this.ContentObjectMetadata({
     libraryId,
