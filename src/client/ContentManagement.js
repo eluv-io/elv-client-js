@@ -16,6 +16,8 @@ const EditableContract = require("../contracts/Editable");
 
  */
 
+const META_KEY_TENANT_ID = "_ELV_TENANT_ID";
+
 const {
   ValidateLibrary,
   ValidateObject,
@@ -183,12 +185,12 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
   this.Log(`Created type: ${contractAddress} ${objectId}`);
 
   // TODO: After content type contract is updated to be able to store Metadata.
-  // Set _ELV_TEANT_ID on the ContentType to the ContentType creator's tenant id
-  // await this.CallContractMethod({
+  // Set _ELV_TENANT_ID on the ContentType to the ContentType creator's tenant id
+  // await this.CallContractMethodAndWait({
   //   contractAddress,
   //   methodName: "putMeta",
   //   methodArgs: [
-  //     "_ELV_TENANT_ID",
+  //     META_KEY_TENANT_ID,
   //     tenantContractId
   //   ]
   // })
@@ -307,8 +309,7 @@ exports.CreateContentLibrary = async function({
     if(!this.utils.ValidHash(tenantId)) {
       throw Error(`Invalid tenant ID: ${tenantId}`);
     }
-
-    await this.CallContractMethod({
+    await this.CallContractMethodAndWait({
       contractAddress,
       methodName: "putMeta",
       methodArgs: [
@@ -318,12 +319,12 @@ exports.CreateContentLibrary = async function({
     });
   }
 
-  // Set _ELV_TEANT_ID on the library to the library creator's tenant id
-  await this.CallContractMethod({
+  // Set _ELV_TENANT_ID on the library to the library creator's tenant id
+  await this.CallContractMethodAndWait({
     contractAddress,
     methodName: "putMeta",
     methodArgs: [
-      "_ELV_TENANT_ID",
+      META_KEY_TENANT_ID,
       tenantContractId
     ]
   })
@@ -1646,7 +1647,7 @@ exports.VerifyLibrary = async function(libraryId) {
       contractAddress: libraryAddress,
       methodName: "getMeta",
       methodArgs: [
-        "_ELV_TENANT_ID"
+        META_KEY_TENANT_ID
       ]
     });
   } catch (e) {
@@ -1678,7 +1679,7 @@ exports.VerifyContentType = async function(typeId) {
       contractAddress: typeAddress,
       methodName: "getMeta",
       methodArgs: [
-        "_ELV_TENANT_ID"
+        META_KEY_TENANT_ID
       ]
     });
   } catch (e) {
