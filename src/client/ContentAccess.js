@@ -2139,10 +2139,24 @@ exports.ContentObjectImageUrl = async function({libraryId, objectId, versionHash
  * @param {string} objectId - ID of the object
  * @param {string} versionHash - Version hash of the object
  * @param {number} duration - Time until the token expires, in milliseconds (1 day = 24 * 60 * 60 * 1000 = 86400000)
- * @param {Object} options - Additional video options
- * offering - The offering to play
+ * @param {Object} options - Additional video/player options
  * autoplay - If enabled, video will autoplay
+ * capLevelToPlayerSize - Caps video quality to player size
+ * clipEnd - End time for the video
+ * clipStart - Start time for the video
+ * controls - Sets the player control visibility. Values: browserDefaul t | autoHide | show. Defaults to autoHide
+ * description - Sets the page description
+ * directLink - If enabled, sets direct link
+ * linkPath - Video link path
  * loop - If enabled, video will loop
+ * muted - Mutes the player
+ * offerings - Offerings to play, as an array
+ * posterUrl - URL of the player poster image
+ * protocols - Video protocols, as an array
+ * showShare - Show social media share buttons
+ * showTitle - Shows the video title, which is set from the title option (if set) or the metadata
+ * title - Sets the page title
+ * viewRecordKey - Contains record key
  *
  * @returns {Promise<string>} - Will return an embed URL
  */
@@ -2158,6 +2172,9 @@ exports.EmbedUrl = async function({
     ValidateObject(objectId);
   }
 
+  // Default options
+  options.controls = options.controls === undefined ? "autoHide" : options.controls;
+
   let embedUrl = new URL("https://embed.v3.contentfabric.io");
   const networkInfo = await this.NetworkInfo();
   const networkName = networkInfo.name === "demov3" ? "demo" : (networkInfo.name === "test" && networkInfo.id === 955205) ? "testv4" : networkInfo.name;
@@ -2167,7 +2184,6 @@ exports.EmbedUrl = async function({
 
   embedUrl.searchParams.set("p", "");
   embedUrl.searchParams.set("net", networkName);
-  embedUrl.searchParams.set("ct", "s");
 
   if(versionHash) {
     embedUrl.searchParams.set("vid", versionHash);
@@ -2175,16 +2191,65 @@ exports.EmbedUrl = async function({
     embedUrl.searchParams.set("oid", objectId);
   }
 
-  if(options.offering) {
-    embedUrl.searchParams.set("off", options.offering);
+  const data = {};
+  for(const option of Object.keys(options)) {
+    switch(option) {
+      case "autoplay":
+        embedUrl.searchParams.set("ap", "");
+        break;
+      case "capLevelToPlayerSize":
+        embedUrl.searchParams.set("cap", "");
+        break;
+      case "clipEnd":
+        embedUrl.searchParams.set("end", options.clipEnd);
+        break;
+      case "clipStart":
+        embedUrl.searchParams.set("start", options.clipStart);
+        break;
+      case "controls":
+        embedUrl.searchParams.set("ct", options.controls);
+        break;
+      case "description":
+        data["og:description"] = options.description;
+        break;
+      case "directLink":
+        embedUrl.searchParams.set("dr", "");
+        break;
+      case "linkPath":
+        embedUrl.searchParams.set("ln", this.utils.B64(options.linkPath));
+        break;
+      case "loop":
+        embedUrl.searchParams.set("lp", "");
+        break;
+      case "muted":
+        embedUrl.searchParams.set("m", "");
+        break;
+      case "offerings":
+        embedUrl.searchParams.set("off", options.offerings.join(","));
+        break;
+      case "posterUrl":
+        embedUrl.searchParams.set("pst", options.posterUrl);
+        break;
+      case "protocols":
+        embedUrl.searchParams.set("ptc", options.protocols.join(","));
+        break;
+      case "showShare":
+        embedUrl.searchParams.set("sh", "");
+        break;
+      case "showTitle":
+        embedUrl.searchParams.set("st", "");
+        break;
+      case "title":
+        data["og:title"] = options.title;
+        break;
+      case "viewRecordKey":
+        embedUrl.searchParams.set("vrk", options.viewRecordKey);
+        break;
+    }
   }
 
-  if(options.autoplay) {
-    embedUrl.searchParams.set("ap", "");
-  }
-
-  if(options.loop) {
-    embedUrl.searchParams.set("lp", "");
+  if(Object.keys(data).length > 0) {
+    embedUrl.searchParams.set("data", this.utils.B64(JSON.stringify({meta_tags: data})));
   }
 
   if(["owner", "editable", "viewable"].includes(permission)) {
