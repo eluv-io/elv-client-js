@@ -2131,6 +2131,75 @@ exports.ContentObjectImageUrl = async function({libraryId, objectId, versionHash
   return this.objectImageUrls[versionHash];
 };
 
+/**
+ * Get an embed URL for the specified object
+ *
+ * @methodGroup URL Generation
+ * @namedParams
+ * @param {string} objectId - ID of the object
+ * @param {string} versionHash - Version hash of the object
+ * @param {number} duration - Time until the token expires, in milliseconds (1 day = 24 * 60 * 60 * 1000 = 86400000)
+ * @param {Object} options - Additional video options
+ * offering - The offering to play
+ * autoplay - If enabled, video will autoplay
+ * loop - If enabled, video will loop
+ *
+ * @returns {Promise<string>} - Will return an embed URL
+ */
+exports.EmbedUrl = async function({
+  objectId,
+  versionHash,
+  duration=86400000,
+  options={}
+}) {
+  if(versionHash) {
+    ValidateVersion(versionHash);
+  } else if(objectId) {
+    ValidateObject(objectId);
+  }
+
+  let embedUrl = new URL("https://embed.v3.contentfabric.io");
+  const networkInfo = await this.NetworkInfo();
+  const networkName = networkInfo.name === "demov3" ? "demo" : (networkInfo.name === "test" && networkInfo.id === 955205) ? "testv4" : networkInfo.name;
+  const permission = await this.Permission({
+    objectId: objectId ? objectId : this.utils.DecodeVersionHash(versionHash).objectId
+  });
+
+  embedUrl.searchParams.set("p", "");
+  embedUrl.searchParams.set("net", networkName);
+  embedUrl.searchParams.set("ct", "s");
+
+  if(versionHash) {
+    embedUrl.searchParams.set("vid", versionHash);
+  } else if(objectId) {
+    embedUrl.searchParams.set("oid", objectId);
+  }
+
+  if(options.offering) {
+    embedUrl.searchParams.set("off", options.offering);
+  }
+
+  if(options.autoplay) {
+    embedUrl.searchParams.set("ap", "");
+  }
+
+  if(options.loop) {
+    embedUrl.searchParams.set("lp", "");
+  }
+
+  if(["owner", "editable", "viewable"].includes(permission)) {
+    const token = await this.CreateSignedToken({
+      objectId,
+      versionHash,
+      duration
+    });
+
+    embedUrl.searchParams.set("ath", token);
+  }
+
+  return embedUrl.toString();
+};
+
 /* Links */
 
 /**
