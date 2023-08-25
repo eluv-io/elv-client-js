@@ -2144,7 +2144,7 @@ exports.ContentObjectImageUrl = async function({libraryId, objectId, versionHash
  * capLevelToPlayerSize - Caps video quality to player size
  * clipEnd - End time for the video
  * clipStart - Start time for the video
- * controls - Sets the player control visibility. Values: browserDefaul t | autoHide | show | off. Defaults to autoHide
+ * controls - Sets the player control visibility. Values: browserDefault | autoHide | show | hide | hideWithVolume. Defaults to autoHide
  * description - Sets the page description
  * directLink - If enabled, sets direct link
  * linkPath - Video link path
@@ -2178,7 +2178,8 @@ exports.EmbedUrl = async function({
   const controlsMap = {
     autoHide: "h",
     browserDefault: "d",
-    show: "s"
+    show: "s",
+    hideWithVolume: "hv"
   };
 
   let embedUrl = new URL("https://embed.v3.contentfabric.io");
@@ -2213,7 +2214,7 @@ exports.EmbedUrl = async function({
         embedUrl.searchParams.set("start", options.clipStart);
         break;
       case "controls":
-        if(options.controls !== "off") {
+        if(options.controls !== "hide") {
           embedUrl.searchParams.set("ct", controlsMap[options.controls]);
         }
         break;
