@@ -41,7 +41,13 @@ exports.ValidateWriteToken = (writeToken) => {
 exports.ValidatePartHash = (partHash) => {
   if(!partHash) {
     throw Error("Part hash not specified");
-  } else if(!partHash.toString().startsWith("hqp_") && !partHash.toString().startsWith("hqpe")) {
+  }
+  else if(!partHash.toString().startsWith("hqp_") &&
+          !partHash.toString().startsWith("hqpe") &&
+          !partHash.toString().startsWith("hqt_") &&
+          !partHash.toString().startsWith("hqte") &&
+          !partHash.toString().startsWith("hql_") &&
+          !partHash.toString().startsWith("hqle")) {
     throw Error(`Invalid part hash: ${partHash}`);
   }
 };
