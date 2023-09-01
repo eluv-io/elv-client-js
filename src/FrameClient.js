@@ -393,6 +393,7 @@ class FrameClient {
       "DownloadPart",
       "EditAndFinalizeContentObject",
       "EditContentObject",
+      "EmbedUrl",
       "Encrypt",
       "EncryptECIES",
       "EncryptionConk",
