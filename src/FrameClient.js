@@ -470,6 +470,7 @@ class FrameClient {
       "SetStaticToken",
       "SetVisibility",
       "SetPermission",
+      "SpaceNodes",
       "StartABRMezzanineJobs",
       "SuspendNTPInstance",
       "UnlinkAccessGroupFromOauth",
