@@ -17,7 +17,7 @@ const HttpClient = require("../HttpClient");
 //   ValidateParameters
 // } = require("../Validation");
 
-const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
+const MakeTxLessToken = async({libraryId, objectId, versionHash}) => {
   const tok = await this.authClient.AuthorizationToken({libraryId, objectId,
     versionHash, channelAuth: false, noCache: true,
     noAuth: true});
@@ -47,7 +47,7 @@ function sleep(ms) {
  *
  * @return {Object} - The status response for the object, as well as logs, warnings and errors from the master initialization
  */
-exports.Status = async function({name, stopLro=false, showParams=false}) {
+exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
   let conf = await this.LoadConf({name});
 
   let status = {name: name};
@@ -169,7 +169,7 @@ exports.Status = async function({name, stopLro=false, showParams=false}) {
       });
 
       try {
-        stop = await this.HttpClient.Fetch(lroStopUrl);
+        await this.HttpClient.Fetch(lroStopUrl);
         console.log("LRO Stop: ", lroStatus.body);
       } catch(error) {
         console.log("LRO Stop (failed): ", error.response.statusCode);
@@ -273,7 +273,7 @@ exports.Status = async function({name, stopLro=false, showParams=false}) {
 */
 exports.StreamCreate = async function({name, start = false}) {
 
-  let status = await this.Status({name});
+  let status = await this.StreamStatus({name});
   if(status.state != "inactive" && status.state != "terminated") {
     return {
       state: status.state,
@@ -359,12 +359,11 @@ exports.StreamCreate = async function({name, start = false}) {
   };
 
   if(start) {
-    status = this.StartOrStopOrReset({name, op: start});
+    status = this.StreamStartOrStopOrReset({name, op: start});
   }
 
   return status;
-}
-
+};
 
 /**
  * Start, stop or reset a stream within the current session (current edge write token)
@@ -382,10 +381,10 @@ exports.StreamCreate = async function({name, start = false}) {
  * @return {Object} - The status response for the stream
  *
 */
-exports.StartOrStopOrReset = async function({name, op}) {
+exports.StreamStartOrStopOrReset = async function({name, op}) {
   try {
     console.log("Stream ", op, ": ", name);
-    let status = await this.Status({name});
+    let status = await this.StreamStatus({name});
     if(status.state != "terminated" && status.state != "inactive") {
       if(op === "start") {
         return status;
@@ -409,7 +408,7 @@ exports.StartOrStopOrReset = async function({name, op}) {
       while (status.state != "terminated" && tries-- > 0) {
         console.log("Wait to terminate - ", status.state);
         await sleep(1000);
-        status = await this.Status({name});
+        status = await this.StreamStatus({name});
       }
       console.log("Status after terminate - ", status.state);
 
@@ -446,7 +445,7 @@ exports.StartOrStopOrReset = async function({name, op}) {
     while (status.state != "starting" && tries-- > 0) {
       console.log("Wait to start - ", status.state);
       await sleep(1000);
-      status = await this.Status({name});
+      status = await this.StreamStatus({name});
     }
 
     console.log("Status after restart - ", status.state);
