@@ -189,7 +189,12 @@ exports.Status = async function({name, stopLro=false, showParams=false}) {
         linkPath: "public/asset_metadata/sources/default"
       });
 
-      let hls_clear_enabled = playout_options?.hls?.playoutMethods?.clear != undefined;
+      let hls_clear_enabled = (
+        playout_options &&
+        playout_options.hls &&
+        playout_options.hls.playoutMethods &&
+        playout_options.hls.playoutMethods.clear !== undefined
+      );
       if(hls_clear_enabled) {
         playout_urls.hls_clear = await this.FabricUrl({
           libraryId: libraryId,
@@ -198,7 +203,12 @@ exports.Status = async function({name, stopLro=false, showParams=false}) {
         });
       }
 
-      let hls_aes128_enabled = playout_options?.hls?.playoutMethods?.["aes-128"] != undefined;
+      let hls_aes128_enabled = (
+        playout_options &&
+        playout_options.hls &&
+        playout_options.hls.playoutMethods &&
+        playout_options.hls.playoutMethods["aes-128"] !== undefined
+      );
       if(hls_aes128_enabled) {
         playout_urls.hls_aes128 = await this.FabricUrl({
           libraryId: libraryId,
@@ -207,7 +217,12 @@ exports.Status = async function({name, stopLro=false, showParams=false}) {
         });
       }
 
-      let hls_sample_aes_enabled = playout_options?.hls?.playoutMethods?.["sample-aes"] != undefined;
+      let hls_sample_aes_enabled = (
+        playout_options &&
+        playout_options.hls &&
+        playout_options.hls.playoutMethods &&
+        playout_options.hls.playoutMethods["sample-aes"] !== undefined
+      );
       if(hls_sample_aes_enabled) {
         playout_urls.hls_sample_aes = await this.FabricUrl({
           libraryId: libraryId,
