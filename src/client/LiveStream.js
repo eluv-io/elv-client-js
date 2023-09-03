@@ -4,23 +4,18 @@
  * @module ElvClient/LiveStream
  */
 
-const { ElvClient } = require("@eluvio/elv-client-js");
 const {LiveConf} = require("./LiveConf");
-const { execSync } = require("child_process");
+const path = require("path");
 
 const fs = require("fs");
-const path = require("path");
-const got = require("got");
 
-const R = require("ramda");
-const UrlJoin = require("url-join");
 const HttpClient = require("../HttpClient");
-
-const {
-  ValidateLibrary,
-  ValidateVersion,
-  ValidateParameters
-} = require("../Validation");
+//
+// const {
+//   ValidateLibrary,
+//   ValidateVersion,
+//   ValidateParameters
+// } = require("../Validation");
 
 const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   const tok = await this.authClient.AuthorizationToken({libraryId, objectId,
