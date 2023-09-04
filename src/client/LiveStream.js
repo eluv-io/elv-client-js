@@ -1067,7 +1067,7 @@ exports.LoadConf = async function({name}) {
  * @return {Object} - The status response for the stream
  *
  */
-exports.StreamConfig = async function({name, space}) {
+exports.StreamConfig = async function({name}) {
   let conf = await this.LoadConf({name});
   let status = {name};
 
@@ -1108,16 +1108,18 @@ exports.StreamConfig = async function({name, space}) {
         rep: "probe"
       });
       console.log("Probe URL", probeUrl);
-      let res = await HttpClient.Fetch(probeUrl, {
-        json: {
-          "filename": streamUrl.href,
-          "listen": true
-        },
-        timeout: {
-          response: 60 * 1000 // millisec
-        },
-        method: "POST"
-      });
+      let res = await this.utils.ResponseToJson(
+        await HttpClient.Fetch(probeUrl, {
+          body: {
+            "filename": streamUrl.href,
+            "listen": true
+          },
+          // timeout: {
+          //   response: 60 * 1000 // millisec
+          // },
+          method: "POST"
+        })
+      );
 
       const probeBuf = await res.body;
       probe = JSON.parse(probeBuf);
