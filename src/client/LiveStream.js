@@ -1085,12 +1085,13 @@ exports.StreamConfig = async function({name}) {
     status.user_config = userConfig;
 
     // Get node URI from user config
+    const hostName = userConfig.url.replace("udp://", "").split(":")[0];
     const streamUrl = new URL(userConfig.url);
 
-    let nodes = await this.SpaceNodes({matchEndpoint: streamUrl.hostname});
+    let nodes = await this.SpaceNodes({matchEndpoint: hostName});
     if(nodes.length < 1) {
       status.error = "No node matching stream URL " + streamUrl.href;
-      return;
+      return status;
     }
     const node = nodes[0];
     status.node = node;
@@ -1100,6 +1101,10 @@ exports.StreamConfig = async function({name}) {
 
     // Probe the stream
     let probe = {};
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 60 * 1000); // milliseconds
     try {
 
       let probeUrl = await this.Rep({
@@ -1107,23 +1112,19 @@ exports.StreamConfig = async function({name}) {
         objectId: conf.objectId,
         rep: "probe"
       });
-      console.log("Probe URL", probeUrl);
-      let res = await this.utils.ResponseToJson(
+
+      probe = await this.utils.ResponseToJson(
         await HttpClient.Fetch(probeUrl, {
-          body: {
+          body: JSON.stringify({
             "filename": streamUrl.href,
             "listen": true
-          },
-          // timeout: {
-          //   response: 60 * 1000 // millisec
-          // },
-          method: "POST"
+          }),
+          method: "POST",
+          signal: controller.signal
         })
       );
 
-      const probeBuf = await res.body;
-      probe = JSON.parse(probeBuf);
-
+      if(probe) { clearTimeout(timeoutId); }
     } catch(error) {
       if(error.code === "ETIMEDOUT") {
         status.error = "Stream probe time out - make sure the stream source is available";
