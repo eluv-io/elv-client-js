@@ -227,8 +227,7 @@ class LiveConf {
     let videoStream = this.getStreamDataForCodecType("video");
     switch (this.probeKind()) {
       case "udp":
-        let video_id_hex = videoStream.stream_id;
-        sync_id = parseInt(video_id_hex, 16);
+        sync_id = videoStream.stream_id;
         break;
       case "rtmp":
         sync_id = -1; // Pending fabric API: videoStream.stream_index
