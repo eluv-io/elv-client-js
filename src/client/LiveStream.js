@@ -148,8 +148,10 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     let state = "stopped";
     let lroStatus = "";
     try {
-      lroStatus = await this.HttpClient.Fetch(status.lro_status_url);
-      state = JSON.parse(lroStatus.body).state;
+      lroStatus = await this.utils.ResponseToJson(
+        await HttpClient.Fetch(status.lro_status_url)
+      );
+      state = lroStatus.state;
     } catch(error) {
       console.log("LRO Status (failed): ", error.response.statusCode);
     }
@@ -169,7 +171,9 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       });
 
       try {
-        await this.HttpClient.Fetch(lroStopUrl);
+        await this.utils.ResponseToJson(
+          await HttpClient.Fetch(lroStopUrl)
+        );
         console.log("LRO Stop: ", lroStatus.body);
       } catch(error) {
         console.log("LRO Stop (failed): ", error.response.statusCode);
@@ -282,7 +286,7 @@ exports.StreamCreate = async function({name, start = false}) {
   }
 
   let objectId = status.object_id;
-  console.log("START: ", name, "start", start, "show_curl", show_curl);
+  console.log("START: ", name, "start", start);
 
   let libraryId = await this.ContentObjectLibraryId({objectId: objectId});
 
@@ -1172,7 +1176,7 @@ exports.StreamConfig = async function({name}) {
   } catch(e) {
     console.log("ERROR", e);
   }
-}
+};
 
 // const ChannelStatus = async ({client, name}) => {
 //
