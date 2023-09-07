@@ -313,7 +313,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
 exports.StreamCreate = async function({name, start = false}) {
 
   let status = await this.StreamStatus({name});
-  if(status.state != "inactive" && status.state != "terminated") {
+  if(status.state !== "inactive" && status.state !== "terminated" && status.state !== "stopped") {
     return {
       state: status.state,
       error: "stream still active - must terminate first"
