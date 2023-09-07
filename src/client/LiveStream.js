@@ -17,8 +17,8 @@ const HttpClient = require("../HttpClient");
 //   ValidateParameters
 // } = require("../Validation");
 
-const MakeTxLessToken = async({libraryId, objectId, versionHash}) => {
-  const tok = await this.authClient.AuthorizationToken({libraryId, objectId,
+const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
+  const tok = await client.authClient.AuthorizationToken({libraryId, objectId,
     versionHash, channelAuth: false, noCache: true,
     noAuth: true});
 
@@ -230,9 +230,17 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
         });
       }
 
-      let token = await MakeTxLessToken({client: this.client, libraryId: libraryId});
+      const networkInfo = await this.NetworkInfo();
+      let token = await this.authClient.AuthorizationToken({
+        libraryId,
+        objectId,
+        channelAuth: false,
+        noCache: true,
+        noAuth: true
+      });
+
       let embed_net = "main";
-      if(this.configUrl.includes("demo")) {
+      if(networkInfo.name.includes("demo")) {
         embed_net = "demo";
       }
       let embed_url = `https://embed.v3.contentfabric.io/?net=${embed_net}&p&ct=h&oid=${conf.objectId}&mt=v&ath=${token}`;
