@@ -6,15 +6,25 @@ const Utils = require("./Utils");
 
 const ContentObjectVerification = {
   async VerifyContentObject({client, libraryId, objectId, versionHash}) {
+    if(!versionHash) {
+      versionHash = await client.LatestVersionHash({objectId});
+    } else if(!objectId) {
+      objectId = Utils.DecodeVersionHash(versionHash).objectId;
+    }
+
+    if(!libraryId) {
+      libraryId = await client.ContentObjectLibraryId({versionHash});
+    }
+
     let response = {
       hash: versionHash
     };
 
     const partHash = Utils.DecodeVersionHash(versionHash).partHash;
 
-    const qpartsResponse = await client.QParts({libraryId, objectId, partHash, format: "arrayBuffer"})
+    const qpartsResponse = await client.QParts({libraryId, objectId, versionHash, partHash, format: "arrayBuffer"})
       .then(response => Buffer.from(response));
-    const partVerification = ContentObjectVerification._VerifyPart({partHash: partHash, qpartsResponse: qpartsResponse});
+    const partVerification = ContentObjectVerification._VerifyPart({partHash, qpartsResponse});
 
     if(partVerification.valid) {
       response.qref = { valid: true };

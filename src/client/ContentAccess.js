@@ -3030,22 +3030,26 @@ exports.Proofs = async function({libraryId, objectId, versionHash, partHash}) {
  * @param {string} libraryId - ID of the library - required for authentication
  * @param {string} objectId - ID of the object - required for authentication
  * @param {string} partHash - Hash of the part
+ * @param {string=} versionHash - Hash of the object version - If not specified, latest version will be used
  * @param {string} format - Format to retrieve the response - defaults to Blob
  *
  * @returns {Promise<Format>} - Response containing the CBOR response in the specified format
  */
-exports.QParts = async function({libraryId, objectId, partHash, format="blob"}) {
-  ValidateParameters({libraryId, objectId, versionHash});
+exports.QParts = async function({libraryId, objectId, versionHash, partHash, format="blob"}) {
+  ValidateParameters({libraryId, objectId});
   ValidatePartHash(partHash);
 
-  let path = UrlJoin("qparts", partHash);
+  let path = UrlJoin("/q", versionHash || objectId, "data", partHash);
 
   return this.utils.ResponseToFormat(
     format,
     this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, partHash}),
       method: "GET",
-      path: path
+      path: path,
+      queryParams: {
+        raw: true
+      }
     })
   );
 };
