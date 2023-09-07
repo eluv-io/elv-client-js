@@ -424,10 +424,14 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
   try {
     console.log("Stream ", op, ": ", name);
     let status = await this.StreamStatus({name});
-    if(status.state != "terminated" && status.state != "inactive") {
+    if(status.state != "stopped") {
       if(op === "start") {
+        status.error = "Unable to start stream - state: " + status.state;
         return status;
       }
+    }
+
+    if(status.state == "running" || status.state == "starting" || status.state == "stalled") {
       console.log("STOPPING");
       try {
         await this.CallBitcodeMethod({
@@ -444,7 +448,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
 
       // Wait until LRO is terminated
       let tries = 10;
-      while (status.state != "terminated" && tries-- > 0) {
+      while(status.state != "stopped" && tries-- > 0) {
         console.log("Wait to terminate - ", status.state);
         await sleep(1000);
         status = await this.StreamStatus({name});
@@ -461,7 +465,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
       return status;
     }
 
-    console.log("STARTING");
+    console.log("STARTING", "edge_write_token", status.edge_write_token);
 
     try {
       await this.CallBitcodeMethod({
