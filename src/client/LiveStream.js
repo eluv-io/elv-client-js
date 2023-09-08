@@ -61,7 +61,11 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
 
     let mainMeta = await this.ContentObjectMetadata({
       libraryId: libraryId,
-      objectId: conf.objectId
+      objectId: conf.objectId,
+      select: [
+        "live_recording_config",
+        "live_recording"
+      ]
     });
 
     if (mainMeta.live_recording_config == undefined || mainMeta.live_recording_config.url == undefined) {
@@ -87,7 +91,6 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       // Assume https
       fabURI = "https://" + fabURI;
     }
-    this.SetNodes({fabricURIs: [fabURI]});
 
     status.fabric_api = fabURI;
     status.url = mainMeta.live_recording.recording_config.recording_params.origin_url;
@@ -98,12 +101,17 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       return status;
     }
 
+    this.RecordWriteToken({writeToken: edgeWriteToken, fabricNodeUrl: fabURI});
+
     status.edge_write_token = edgeWriteToken;
     status.stream_id = edgeWriteToken; // By convention the stream ID is its write token
     let edgeMeta = await this.ContentObjectMetadata({
       libraryId: libraryId,
       objectId: conf.objectId,
-      writeToken: edgeWriteToken
+      writeToken: edgeWriteToken,
+      select: [
+        "live_recording"
+      ]
     });
 
     // If a stream has never been started return state 'inactive'
