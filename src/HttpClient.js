@@ -171,8 +171,19 @@ class HttpClient {
   }
 
   URL({path, queryParams={}}) {
+    let baseURI = this.BaseURI();
+
+    // If URL contains a write token, it must go to the correct server and can not fail over
+    const writeTokenMatch = path.replace(/^\//, "").match(/(qlibs\/ilib[a-zA-Z0-9]+|q|qid)\/(tqw__[a-zA-Z0-9]+)/);
+    const writeToken = writeTokenMatch ? writeTokenMatch[2] : undefined;
+
+    if(writeToken && this.draftURIs[writeToken]) {
+      // Use saved write token URI
+      baseURI = this.draftURIs[writeToken];
+    }
+
     return (
-      this.BaseURI()
+      baseURI
         .path(path)
         .query(queryParams)
         .hash("")

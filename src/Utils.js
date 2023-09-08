@@ -316,6 +316,17 @@ const Utils = {
   },
 
   /**
+   * Convert contract address to node ID
+   *
+   * @param {string} address - Address of contract
+   *
+   * @returns {string} - Node ID from contract address
+   */
+  AddressToNodeId: (address) => {
+    return "inod" + Utils.AddressToHash(address);
+  },
+
+  /**
    * Convert contract address to content library ID
    *
    * @param {string} address - Address of contract
