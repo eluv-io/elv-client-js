@@ -470,6 +470,19 @@ await client.userProfileClient.UserMetadata()
   }
 
   /**
+   * Return the ID of the tenant contract this user belongs to, if set.
+   *
+   * @return {Promise<string>} - Tenant Contract ID
+   */
+  async TenantContractId() {
+    if(!this.tenantContractId) {
+      this.tenantContractId = await this.UserMetadata({metadataSubtree: "tenantContractId"});
+    }
+
+    return this.tenantContractId;
+  }
+
+  /**
    * Get the URL of the current user's profile image
    *
    * Note: Part hash of profile image will be appended to the URL as a query parameter to invalidate
