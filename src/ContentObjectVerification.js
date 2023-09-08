@@ -2,6 +2,7 @@ const CBOR = require("cbor");
 const SJCL = require("sjcl");
 const MultiHash = require("multihashes");
 const DeepEqual = require("deep-equal");
+const VarInt = require("varint");
 const Utils = require("./Utils");
 
 const ContentObjectVerification = {
@@ -135,10 +136,10 @@ const ContentObjectVerification = {
     }
 
     let digest = SJCL.hash.sha256.hash(toBits(thing));
-    let bytes = fromBits(digest);
-    let out = Buffer.from(bytes, "binary");
+    let bytes = MultiHash.encode(Buffer.from(fromBits(digest), "binary"), "sha2-256");
+    let out = Buffer.concat([bytes, new Buffer(VarInt.encode(thing.length))]);
 
-    return MultiHash.toB58String(MultiHash.encode(out, "sha2-256"));
+    return MultiHash.toB58String(out);
   },
 
   _ParseCBOR(cborResponse) {
@@ -149,6 +150,7 @@ const ContentObjectVerification = {
 
   _VerifyPart({partHash, qpartsResponse}) {
     try {
+      console.log(ContentObjectVerification._Hash(qpartsResponse), partHash.replace("hqp_", ""))
       if(ContentObjectVerification._Hash(qpartsResponse) !== partHash.replace("hqp_", "")) {
         throw Error("Hashes do not match");
       }

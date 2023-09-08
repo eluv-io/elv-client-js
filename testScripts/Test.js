@@ -18,7 +18,6 @@ const Test = async () => {
     });
 
     client.SetSigner({signer});
-    client.ToggleLogging(true)
 
     console.log(
       await ContentObjectVerification.VerifyContentObject({
