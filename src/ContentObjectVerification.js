@@ -37,8 +37,7 @@ const ContentObjectVerification = {
 
     if(response.qref.valid) {
       // Validate Metadata
-      const qmdHash = partVerification.cbor.QmdHash.value;
-      const metadataPartHash = "hqp_" + MultiHash.toB58String(qmdHash.slice(1, qmdHash.length));
+      const metadataPartHash = partVerification.cbor.QmdHash.value.toString();
       const metadataPartResponse = await client.QParts({libraryId, objectId, partHash: metadataPartHash, format: "arrayBuffer"})
         .then(response => Buffer.from(response));
 
@@ -66,8 +65,7 @@ const ContentObjectVerification = {
 
       // Validate Qstruct
 
-      const qstructHash = partVerification.cbor.QstructHash.value;
-      const structPartHash = "hqp_" + MultiHash.toB58String(qstructHash.slice(1, qstructHash.length));
+      const structPartHash = partVerification.cbor.QstructHash.value.toString();
       const structPartResponse = await client.QParts({libraryId, objectId, partHash: structPartHash, format: "arrayBuffer"})
         .then(response => Buffer.from(response));
       const structVerification = ContentObjectVerification._VerifyPart({partHash: structPartHash, qpartsResponse: structPartResponse});
@@ -101,7 +99,7 @@ const ContentObjectVerification = {
 
     return structParts.map(structPart => {
       return {
-        hash: "hqp_" + MultiHash.toB58String(structPart.Hash.value.slice(1, structPart.Hash.length)),
+        hash: structPart.hash.value.toString(),
         size: structPart.Size
       };
     });
@@ -136,8 +134,8 @@ const ContentObjectVerification = {
     }
 
     let digest = SJCL.hash.sha256.hash(toBits(thing));
-    let bytes = MultiHash.encode(Buffer.from(fromBits(digest), "binary"), "sha2-256");
-    let out = Buffer.concat([bytes, new Buffer(VarInt.encode(thing.length))]);
+    let bytes = Buffer.from(fromBits(digest), "binary");
+    let out = Buffer.concat([bytes, Buffer.from(VarInt.encode(thing.length))]);
 
     return MultiHash.toB58String(out);
   },
@@ -150,7 +148,6 @@ const ContentObjectVerification = {
 
   _VerifyPart({partHash, qpartsResponse}) {
     try {
-      console.log(ContentObjectVerification._Hash(qpartsResponse), partHash.replace("hqp_", ""))
       if(ContentObjectVerification._Hash(qpartsResponse) !== partHash.replace("hqp_", "")) {
         throw Error("Hashes do not match");
       }
