@@ -1122,108 +1122,105 @@ exports.StreamConfig = async function({name}) {
   let conf = await this.LoadConf({name});
   let status = {name};
 
-  try {
-    let libraryId = await this.ContentObjectLibraryId({objectId: conf.objectId});
-    status.library_id = libraryId;
-    status.object_id = conf.objectId;
+  let libraryId = await this.ContentObjectLibraryId({objectId: conf.objectId});
+  status.library_id = libraryId;
+  status.object_id = conf.objectId;
 
-    let mainMeta = await this.ContentObjectMetadata({
-      libraryId: libraryId,
-      objectId: conf.objectId
-    });
+  let mainMeta = await this.ContentObjectMetadata({
+    libraryId: libraryId,
+    objectId: conf.objectId
+  });
 
-    let userConfig = mainMeta.live_recording_config;
-    status.user_config = userConfig;
+  let userConfig = mainMeta.live_recording_config;
+  status.user_config = userConfig;
 
-    // Get node URI from user config
-    const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").split(":")[0];
-    const streamUrl = new URL(userConfig.url);
+  // Get node URI from user config
+  const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").split(":")[0];
+  const streamUrl = new URL(userConfig.url);
 
-    console.log("Retrieving nodes...");
-    let nodes = await this.SpaceNodes({matchEndpoint: hostName});
-    if(nodes.length < 1) {
-      status.error = "No node matching stream URL " + streamUrl.href;
-      return status;
-    }
-    const node = nodes[0];
-    status.node = node;
-
-    let endpoint = node.endpoints[0];
-    this.SetNodes({fabricURIs: [endpoint]});
-
-    // Probe the stream
-    let probe = {};
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, 60 * 1000); // milliseconds
-    try {
-
-      let probeUrl = await this.Rep({
-        libraryId,
-        objectId: conf.objectId,
-        rep: "probe"
-      });
-
-      probe = await this.utils.ResponseToJson(
-        await HttpClient.Fetch(probeUrl, {
-          body: JSON.stringify({
-            "filename": streamUrl.href,
-            "listen": true
-          }),
-          method: "POST",
-          signal: controller.signal
-        })
-      );
-
-      if(probe) { clearTimeout(timeoutId); }
-    } catch(error) {
-      if(error.code === "ETIMEDOUT") {
-        status.error = "Stream probe time out - make sure the stream source is available";
-      } else {
-        console.log("Stream probe failed", error);
-      }
-    }
-
-    probe.format.filename = streamUrl.href;
-    console.log("PROBE", probe);
-
-    // Create live reocording config
-    let lc = new LiveConf(probe, node.id, endpoint, false, false, true);
-
-    const liveRecordingConfigStr = lc.generateLiveConf();
-    let liveRecordingConfig = JSON.parse(liveRecordingConfigStr);
-    console.log("CONFIG", JSON.stringify(liveRecordingConfig.live_recording));
-
-    // Store live recording config into the stream object
-    let e = await this.EditContentObject({
-      libraryId,
-      objectId: conf.objectId
-    });
-    let writeToken = e.write_token;
-
-    await this.ReplaceMetadata({
-      libraryId,
-      objectId: conf.objectId,
-      writeToken,
-      metadataSubtree: "live_recording",
-      metadata: liveRecordingConfig.live_recording
-    });
-
-    let fin = await this.FinalizeContentObject({
-      libraryId,
-      objectId: conf.objectId,
-      writeToken,
-      commitMessage: "Apply live stream configuration"
-    });
-
-    status.fin = fin;
-
+  console.log("Retrieving nodes...");
+  let nodes = await this.SpaceNodes({matchEndpoint: hostName});
+  if(nodes.length < 1) {
+    status.error = "No node matching stream URL " + streamUrl.href;
     return status;
-
-  } catch(e) {
-    console.log("ERROR", e);
   }
+  const node = nodes[0];
+  status.node = node;
+
+  let endpoint = node.endpoints[0];
+  this.SetNodes({fabricURIs: [endpoint]});
+
+  // Probe the stream
+  let probe = {};
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, 60 * 1000); // milliseconds
+  try {
+
+    let probeUrl = await this.Rep({
+      libraryId,
+      objectId: conf.objectId,
+      rep: "probe"
+    });
+
+    probe = await this.utils.ResponseToJson(
+      await HttpClient.Fetch(probeUrl, {
+        body: JSON.stringify({
+          "filename": streamUrl.href,
+          "listen": true
+        }),
+        method: "POST",
+        signal: controller.signal
+      })
+    );
+
+    if(probe) { clearTimeout(timeoutId); }
+
+    if(probe.errors) {
+      throw probe.errors[0];
+    }
+  } catch(error) {
+    if(error.code === "ETIMEDOUT") {
+      throw "Stream probe time out - make sure the stream source is available";
+    } else {
+      throw error;
+    }
+  }
+
+  console.log("PROBE", probe);
+  probe.format.filename = streamUrl.href;
+
+  // Create live reocording config
+  let lc = new LiveConf(probe, node.id, endpoint, false, false, true);
+
+  const liveRecordingConfigStr = lc.generateLiveConf();
+  let liveRecordingConfig = JSON.parse(liveRecordingConfigStr);
+  console.log("CONFIG", JSON.stringify(liveRecordingConfig.live_recording));
+
+  // Store live recording config into the stream object
+  let e = await this.EditContentObject({
+    libraryId,
+    objectId: conf.objectId
+  });
+  let writeToken = e.write_token;
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId: conf.objectId,
+    writeToken,
+    metadataSubtree: "live_recording",
+    metadata: liveRecordingConfig.live_recording
+  });
+
+  status.fin = await this.FinalizeContentObject({
+    libraryId,
+    objectId: conf.objectId,
+    writeToken,
+    commitMessage: "Apply live stream configuration"
+  });
+
+  return status;
 };
 
 // const ChannelStatus = async ({client, name}) => {
