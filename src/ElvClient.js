@@ -571,78 +571,78 @@ class ElvClient {
    *
    * @methodGroup Nodes
    * @namedParams
-   * @param {string} - matchEndpoint
-   * @param {string} - matchNodeId
+   * @param {string=} matchEndpoint - Return node(s) matching the specified endpoint
+   * @param {string=} matchNodeId - Return node(s) matching the specified node ID
    *
-   * @return {Array<Object>} - A list of nodes in the space
+   * @return {Array<Object>} - A list of nodes in the space matching the parameters
    */
-  async SpaceNodes({matchEndpoint, matchNodeId}) {
+  async SpaceNodes({matchEndpoint, matchNodeId}={}) {
     let bign = await this.CallContractMethod({
       contractAddress: this.contentSpaceAddress,
       methodName: "numActiveNodes",
     });
     let n = bign.toNumber();
-    let nodes = [];
 
-    for (let i = 0; i < n; i ++) {
+    return (await Utils.LimitedMap(
+      5,
+      [...new Array(n)],
+      async (_, index) => {
+        let bigi = Ethers.BigNumber.from(index);
+        let addr = await this.CallContractMethod({
+          contractAddress: this.contentSpaceAddress,
+          methodName: "activeNodeAddresses",
+          methodArgs: [bigi],
+          formatArguments: true
+        });
 
-      let bigi = Ethers.BigNumber.from(i);
-      let addr = await this.CallContractMethod({
-        contractAddress: this.contentSpaceAddress,
-        methodName: "activeNodeAddresses",
-        methodArgs: [bigi],
-        formatArguments: true
-      });
+        let locatorsHex = await this.CallContractMethod({
+          contractAddress: this.contentSpaceAddress,
+          methodName: "activeNodeLocators",
+          methodArgs: [bigi]
+        });
 
-      let locatorsHex = await this.CallContractMethod({
-        contractAddress: this.contentSpaceAddress,
-        methodName: "activeNodeLocators",
-        methodArgs: [bigi]
-      });
+        let nodeId = this.utils.AddressToNodeId(addr);
 
-      let nodeId = this.utils.AddressToNodeId(addr);
+        if(matchNodeId &&nodeId !== matchNodeId) {
+          return;
+        }
 
-      if (matchNodeId != undefined && nodeId != matchNodeId) {
-        continue; // Not a match
-      }
+        let node = {id: nodeId, endpoints: []};
 
-      let node = {id: nodeId, endpoints: []};
+        // Parse locators CBOR
+        let buffer = locatorsHex.slice(2, locatorsHex.length); // Skip "0x"
+        let hex = buffer.toString("hex");
+        let locators = CBOR.decodeAllSync(hex);
 
-      // Parse locators CBOR
-      let buffer = locatorsHex.slice(2, locatorsHex.length); // Skip "0x"
-      let hex = buffer.toString("hex");
-      let locators = CBOR.decodeAllSync(hex);
+        let match = false;
 
-      let match = false;
+        if(locators.length >= 5) {
+          let fabArray = locators[4].fab;
+          if(fabArray) {
+            for(let i = 0; i < fabArray.length; i ++) {
+              let host = fabArray[i].host;
 
-      if(locators.length >= 5) {
-        let fabArray = locators[4].fab;
-        if(fabArray != undefined) {
-          for(let i = 0; i < fabArray.length; i ++) {
-            let host = fabArray[i].host;
+              if(matchEndpoint && !matchEndpoint.includes(host)) {
+                continue; // Not a match
+              }
 
-            if(matchEndpoint != undefined && !host.includes(matchEndpoint)) {
-              continue; // Not a match
+              match = true;
+              let endpoint = fabArray[i].scheme + "://" + host;
+
+              if(fabArray[i].port) {
+                endpoint = endpoint + ":" + fabArray[i].port;
+              }
+
+              endpoint = endpoint + "/" + fabArray[i].path;
+              node.endpoints.push(endpoint);
             }
-
-            match = true;
-            let endpoint = fabArray[i].scheme + "://" + host;
-
-            if(fabArray[i].port != "") {
-              endpoint = endpoint + ":" + fabArray[i].port;
-            }
-
-            endpoint = endpoint + "/" + fabArray[i].path;
-            node.endpoints.push(endpoint);
           }
         }
-      }
-      if(match) {
-        nodes.push(node);
-      }
-    }
 
-    return nodes;
+        return match ? node : undefined;
+      }
+    ))
+      .filter(n => n);
   }
 
   /**
