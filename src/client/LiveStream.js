@@ -68,12 +68,12 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       ]
     });
 
-    if (mainMeta.live_recording_config == undefined || mainMeta.live_recording_config.url == undefined) {
+    if(mainMeta.live_recording_config == undefined || mainMeta.live_recording_config.url == undefined) {
       status.state = "unconfigured";
       return status;
     }
 
-    if (mainMeta.live_recording == undefined || mainMeta.live_recording.fabric_config == undefined ||
+    if(mainMeta.live_recording == undefined || mainMeta.live_recording.fabric_config == undefined ||
       mainMeta.live_recording.playout_config == undefined || mainMeta.live_recording.recording_config == undefined) {
       status.state = "uninitialized";
       return status;
@@ -96,7 +96,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     status.url = mainMeta.live_recording.recording_config.recording_params.origin_url;
 
     let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
-    if (edgeWriteToken == undefined) {
+    if(edgeWriteToken == undefined) {
       status.state = "inactive";
       return status;
     }
@@ -157,7 +157,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     if((edgeMeta.live_recording.playout_config.interleaves != undefined) &&
       (edgeMeta.live_recording.playout_config.interleaves[sequence] != undefined)) {
       let insertions = edgeMeta.live_recording.playout_config.interleaves[sequence];
-      for (let i = 0; i < insertions.length; i ++) {
+      for(let i = 0; i < insertions.length; i ++) {
         let insertionTimeSinceEpoch = recording_period.start_time_epoch_sec + insertions[i].insertion_time;
         status.insertions[i] = {
           insertion_time_since_start: insertions[i].insertion_time,
@@ -190,7 +190,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       state = "starting";
     } else if(state === "running" && sinceLastFinalize > 32.9) {
       state = "stalled";
-    } else if (state == "terminated") {
+    } else if(state == "terminated") {
       state = "stopped";
     }
     status.state = state;
@@ -493,7 +493,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
 
     // Wait until LRO is 'starting'
     let tries = 10;
-    while (status.state != "starting" && tries-- > 0) {
+    while(status.state != "starting" && tries-- > 0) {
       console.log("Wait to start - ", status.state);
       await sleep(1000);
       status = await this.StreamStatus({name});
@@ -505,7 +505,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
   } catch(error) {
     console.error(error);
   }
-}
+};
 
 /*
  * Stop the live stream session and close the edge write token.
@@ -943,7 +943,7 @@ exports.LoadConf = async function({name}) {
   }
 
   return conf;
-}
+};
 
 /*
  * Read a playable contnet object and get information about a particular offering
@@ -1136,7 +1136,7 @@ exports.StreamConfig = async function({name}) {
     status.user_config = userConfig;
 
     // Get node URI from user config
-    const hostName = userConfig.url.replace("udp://", "").split(":")[0];
+    const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").split(":")[0];
     const streamUrl = new URL(userConfig.url);
 
     console.log("Retrieving nodes...");

@@ -131,7 +131,7 @@ class LiveConf {
 
   getStreamDataForCodecType(codecType) {
     let stream = null;
-    for (let index = 0; index < this.probeData.streams.length; index++) {
+    for(let index = 0; index < this.probeData.streams.length; index++) {
       if(this.probeData.streams[index].codec_type == codecType) {
         stream = this.probeData.streams[index];
       }
@@ -166,7 +166,7 @@ class LiveConf {
     let frameRate = videoStream.frame_rate;
 
     let seg ={};
-    switch (frameRate) {
+    switch(frameRate) {
       case "24":
         seg.video = 30 * sourceTimescale;
         seg.audio = 30 * 48000;
@@ -225,7 +225,7 @@ class LiveConf {
   syncAudioToStreamIdValue() {
     let sync_id = -1;
     let videoStream = this.getStreamDataForCodecType("video");
-    switch (this.probeKind()) {
+    switch(this.probeKind()) {
       case "udp":
         sync_id = videoStream.stream_id;
         break;
