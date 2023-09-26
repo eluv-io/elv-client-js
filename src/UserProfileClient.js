@@ -483,6 +483,53 @@ await client.userProfileClient.UserMetadata()
   }
 
   /**
+   * Set the current user's tenant contract.
+   *
+   * Note: This method is not accessible to applications. Eluvio core will drop the request.
+   *
+   * @namedParams
+   * @param {string} tenantContractId - The tenant contract ID in hash format
+   * @param {string} address - The group address to use in the hash if id is not provided
+   */
+  async SetTenantContractId({tenantContractId, address}) {
+    if(tenantContractId && (!tenantContractId.startsWith("iten") || !Utils.ValidHash(tenantContractId))) {
+      throw Error(`Invalid tenant ID: ${tenantContractId}`);
+    }
+
+    if(address) {
+      if(!Utils.ValidAddress(address)) {
+        throw Error(`Invalid address: ${address}`);
+      }
+
+      tenantContractId = `iten${Utils.AddressToHash(address)}`;
+    }
+
+    try {
+      const version = await this.client.AccessType({id: tenantContractId});
+
+      if(version !== this.client.authClient.ACCESS_TYPES.TENANT) {
+        throw Error("Invalid tenant ID: " + tenantContractId);
+      }
+    } catch(error) {
+      throw Error("Invalid tenant ID: " + tenantContractId);
+    }
+
+    const tenantAdminGroupAddress = await this.client.CallContractMethod({
+      contractAddress: address || Utils.HashToAddress(tenantContractId),
+      methodName: "groupsMapping",
+      methodArgs : ["tenant_admin", 0],
+      formatArguments: true,
+    });
+
+    await this.MergeUserMetadata({
+      metadata: {
+        tenantContractId,
+        tenantId: !tenantAdminGroupAddress ? undefined : `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
+      }
+    });
+  }
+
+  /**
    * Get the URL of the current user's profile image
    *
    * Note: Part hash of profile image will be appended to the URL as a query parameter to invalidate
