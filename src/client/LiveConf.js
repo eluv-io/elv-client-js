@@ -238,7 +238,7 @@ class LiveConf {
 
   generateLiveConf() {
     // gather required data
-    const conf = LiveconfTemplate;
+    const conf = JSON.parse(JSON.stringify(LiveconfTemplate));
     const fileName = this.overwriteOriginUrl || this.probeData.format.filename;
     const audioStream = this.getStreamDataForCodecType("audio");
     const sampleRate = parseInt(audioStream.sample_rate);
