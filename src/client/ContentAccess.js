@@ -2140,23 +2140,23 @@ exports.ContentObjectImageUrl = async function({libraryId, objectId, versionHash
  * @param {string} versionHash - Version hash of the object
  * @param {number} duration - Time until the token expires, in milliseconds (1 day = 24 * 60 * 60 * 1000 = 86400000)
  * @param {Object} options - Additional video/player options
- * autoplay - If enabled, video will autoplay
- * capLevelToPlayerSize - Caps video quality to player size
- * clipEnd - End time for the video
- * clipStart - Start time for the video
- * controls - Sets the player control visibility. Values: browserDefault | autoHide | show | hide | hideWithVolume. Defaults to autoHide
- * description - Sets the page description
- * directLink - If enabled, sets direct link
- * linkPath - Video link path
- * loop - If enabled, video will loop
- * muted - Mutes the player
- * offerings - Offerings to play, as an array
- * posterUrl - URL of the player poster image
- * protocols - Video protocols, as an array
- * showShare - Show social media share buttons
- * showTitle - Shows the video title, which is set from the title option (if set) or the metadata
- * title - Sets the page title
- * viewRecordKey - Contains record key
+  - `autoplay` - If enabled, video will autoplay. Note that videos block autoplay of videos with audio by default
+  - `capLevelToPlayerSize` - Caps video quality to player size
+  - `clipEnd` - End time for the video
+  - `clipStart` - Start time for the video
+  - `controls` - Sets the player control visibility. Values: browserDefault | autoHide | show | hide | hideWithVolume. Defaults to autoHide
+  - `description` - Sets the page description
+  - `directLink` - If enabled, sets direct link
+  - `linkPath` - Video link path
+  - `loop` - If enabled, video will loop
+  - `muted` - Mutes the player
+  - `offerings` - Offerings to play, as an array
+  - `posterUrl` - URL of the player poster image
+  - `protocols` - Video protocols, as an array
+  - `showShare` - Show social media share buttons
+  - `showTitle` - Shows the video title, which is set from the title option (if set) or the metadata
+  - `title` - Sets the page title
+  - `viewRecordKey` - Contains record key
  *
  * @returns {Promise<string>} - Will return an embed URL
  */
