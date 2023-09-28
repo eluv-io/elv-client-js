@@ -236,7 +236,7 @@ class LiveConf {
     return sync_id;
   }
 
-  generateLiveConf() {
+  generateLiveConf({audioBitrate, audioIndex, partTtl}) {
     // gather required data
     const conf = JSON.parse(JSON.stringify(LiveconfTemplate));
     const fileName = this.overwriteOriginUrl || this.probeData.format.filename;
@@ -255,13 +255,21 @@ class LiveConf {
     conf.live_recording.recording_config.recording_params.origin_url = fileName;
     conf.live_recording.recording_config.recording_params.description = `Ingest stream ${fileName}`;
     conf.live_recording.recording_config.recording_params.name = `Ingest stream ${fileName}`;
-    conf.live_recording.recording_config.recording_params.xc_params.audio_index[0] = audioStream.stream_index;
+    conf.live_recording.recording_config.recording_params.xc_params.audio_index[0] = audioIndex === undefined ? audioStream.stream_index : audioIndex;
     conf.live_recording.recording_config.recording_params.xc_params.sample_rate = sampleRate;
     conf.live_recording.recording_config.recording_params.xc_params.enc_height = videoStream.height;
     conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;
 
     if(this.syncAudioToVideo) {
       conf.live_recording.recording_config.recording_params.xc_params.sync_audio_to_stream_id = this.syncAudioToStreamIdValue();
+    }
+
+    if(audioBitrate) {
+      conf.live_recording.recording_config.recording_params.xc_params.audio_bitrate = audioBitrate;
+    }
+
+    if(partTtl) {
+      conf.live_recording.recording_config.recording_params.part_ttl = partTtl;
     }
 
     // Fill in specifics for protocol

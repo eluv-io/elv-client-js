@@ -1118,7 +1118,7 @@ exports.LoadConf = async function({name}) {
  * @return {Object} - The status response for the stream
  *
  */
-exports.StreamConfig = async function({name}) {
+exports.StreamConfig = async function({name, customSettings}) {
   let conf = await this.LoadConf({name});
   let status = {name};
 
@@ -1191,10 +1191,14 @@ exports.StreamConfig = async function({name}) {
   console.log("PROBE", probe);
   probe.format.filename = streamUrl.href;
 
-  // Create live reocording config
+  // Create live recording config
   let lc = new LiveConf(probe, node.id, endpoint, false, false, true);
 
-  const liveRecordingConfigStr = lc.generateLiveConf();
+  const liveRecordingConfigStr = lc.generateLiveConf({
+    audioBitrate: customSettings.audioBitrate,
+    audioIndex: customSettings.audioIndex,
+    partTtl: customSettings.partTtl
+  });
   let liveRecordingConfig = JSON.parse(liveRecordingConfigStr);
   console.log("CONFIG", JSON.stringify(liveRecordingConfig.live_recording));
 
