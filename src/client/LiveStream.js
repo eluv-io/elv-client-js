@@ -1197,7 +1197,8 @@ exports.StreamConfig = async function({name, customSettings}) {
   const liveRecordingConfigStr = lc.generateLiveConf({
     audioBitrate: customSettings.audioBitrate,
     audioIndex: customSettings.audioIndex,
-    partTtl: customSettings.partTtl
+    partTtl: customSettings.partTtl,
+    channelLayout: customSettings.channelLayout
   });
   let liveRecordingConfig = JSON.parse(liveRecordingConfigStr);
   console.log("CONFIG", JSON.stringify(liveRecordingConfig.live_recording));

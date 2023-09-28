@@ -236,7 +236,7 @@ class LiveConf {
     return sync_id;
   }
 
-  generateLiveConf({audioBitrate, audioIndex, partTtl}) {
+  generateLiveConf({audioBitrate, audioIndex, partTtl, channelLayout}) {
     // gather required data
     const conf = JSON.parse(JSON.stringify(LiveconfTemplate));
     const fileName = this.overwriteOriginUrl || this.probeData.format.filename;
@@ -262,10 +262,6 @@ class LiveConf {
 
     if(this.syncAudioToVideo) {
       conf.live_recording.recording_config.recording_params.xc_params.sync_audio_to_stream_id = this.syncAudioToStreamIdValue();
-    }
-
-    if(audioBitrate) {
-      conf.live_recording.recording_config.recording_params.xc_params.audio_bitrate = audioBitrate;
     }
 
     if(partTtl) {
@@ -351,6 +347,20 @@ class LiveConf {
         break;
       default:
         throw new Error("ERROR: Probed stream does not conform to one of the following built in resolution ladders [4096, 2160], [1920, 1080] [1280, 720], [960, 540], [640, 360]");
+    }
+
+    if(audioBitrate || channelLayout) {
+      const audioLadderSpec = conf.live_recording.recording_config.recording_params.ladder_specs.find(spec => spec.stream_name === "audio");
+
+      if(audioBitrate) {
+        conf.live_recording.recording_config.recording_params.xc_params.audio_bitrate = audioBitrate;
+        audioLadderSpec.bit_rate = audioBitrate;
+        audioLadderSpec.representation = `audioaudio_aac@${audioBitrate}`;
+      }
+
+      if(channelLayout) {
+        audioLadderSpec.channels = channelLayout;
+      }
     }
 
     return JSON.stringify(conf, null, 2);
