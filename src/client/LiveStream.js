@@ -1218,6 +1218,14 @@ exports.StreamConfig = async function({name, customSettings}) {
     metadata: liveRecordingConfig.live_recording
   });
 
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId: conf.objectId,
+    writeToken,
+    metadataSubtree: "probe",
+    metadata: probe
+  });
+
   status.fin = await this.FinalizeContentObject({
     libraryId,
     objectId: conf.objectId,
