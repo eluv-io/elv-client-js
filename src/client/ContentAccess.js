@@ -2131,6 +2131,17 @@ exports.ContentObjectImageUrl = async function({libraryId, objectId, versionHash
   return this.objectImageUrls[versionHash];
 };
 
+const EmbedMediaTypes = {
+  "video": "v",
+  "live_video": "lv",
+  "audio": "a",
+  "image": "i",
+  "html": "h",
+  "ebook": "b",
+  "gallery": "g",
+  "link": "l"
+};
+
 /**
  * Get an embed URL for the specified object
  *
@@ -2139,6 +2150,14 @@ exports.ContentObjectImageUrl = async function({libraryId, objectId, versionHash
  * @param {string} objectId - ID of the object
  * @param {string} versionHash - Version hash of the object
  * @param {number} duration - Time until the token expires, in milliseconds (1 day = 24 * 60 * 60 * 1000 = 86400000)
+ * @param {string=} mediaType=video - The type of the media. Available options:
+  - `video`
+  - `live_video`
+  - `audio`
+  - `image`
+  - `gallery`
+  - `ebook`
+  - `html`
  * @param {Object} options - Additional video/player options
   - `autoplay` - If enabled, video will autoplay. Note that videos block autoplay of videos with audio by default
   - `capLevelToPlayerSize` - Caps video quality to player size
@@ -2164,6 +2183,7 @@ exports.EmbedUrl = async function({
   objectId,
   versionHash,
   duration=86400000,
+  mediaType="video",
   options={}
 }) {
   if(versionHash) {
@@ -2197,6 +2217,8 @@ exports.EmbedUrl = async function({
   } else if(objectId) {
     embedUrl.searchParams.set("oid", objectId);
   }
+
+  embedUrl.searchParams.set("mt", EmbedMediaTypes[mediaType.toLowerCase()] || "v");
 
   const data = {};
   for(const option of Object.keys(options)) {
