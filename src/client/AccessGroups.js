@@ -137,17 +137,29 @@ exports.AccessGroupMembers = async function({contractAddress}) {
     methodName: "membersNum"
   })).toNumber();
 
-  return await Promise.all(
-    [...Array(length)].map(async (_, i) =>
-      this.utils.FormatAddress(
-        await this.CallContractMethod({
-          contractAddress,
-          methodName: "membersList",
-          methodArgs: [i]
-        })
+  try {
+    return await Promise.all(
+      [...Array(length)].map(async (_, i) =>
+        this.utils.FormatAddress(
+          await this.CallContractMethod({
+            contractAddress,
+            methodName: "membersList",
+            methodArgs: [i]
+          })
+        )
       )
-    )
-  );
+    );
+  } catch(e) {
+    response = this.utils.HexToString(
+      await this.CallContractMethod({
+        contractAddress,
+        methodName: "getMeta",
+        methodArgs: ["members"]
+      })
+    );
+
+    return response ? JSON.parse(response).split(",") : [];
+  }
 };
 
 /**
@@ -170,17 +182,29 @@ exports.AccessGroupManagers = async function({contractAddress}) {
     methodName: "managersNum"
   })).toNumber();
 
-  return await Promise.all(
-    [...Array(length)].map(async (_, i) =>
-      this.utils.FormatAddress(
-        await this.CallContractMethod({
-          contractAddress,
-          methodName: "managersList",
-          methodArgs: [i]
-        })
+  try {
+    return await Promise.all(
+      [...Array(length)].map(async (_, i) =>
+        this.utils.FormatAddress(
+          await this.CallContractMethod({
+            contractAddress,
+            methodName: "managersList",
+            methodArgs: [i]
+          })
+        )
       )
-    )
-  );
+    );
+  } catch(e) {
+    response = this.utils.HexToString(
+      await this.CallContractMethod({
+        contractAddress,
+        methodName: "getMeta",
+        methodArgs: ["managers"]
+      })
+    );
+
+    return response ? JSON.parse(response).split(",") : [];
+  }
 };
 
 /**
@@ -327,13 +351,30 @@ exports.AccessGroupMembershipMethod = async function({
 exports.AddAccessGroupMember = async function({contractAddress, memberAddress}) {
   contractAddress = ValidateAddress(contractAddress);
   memberAddress = ValidateAddress(memberAddress);
+  let response;
 
-  return await this.AccessGroupMembershipMethod({
-    contractAddress,
-    memberAddress,
-    methodName: "grantAccess",
-    eventName: "MemberAdded"
-  });
+  try {
+    response = await this.AccessGroupMembershipMethod({
+      contractAddress,
+      memberAddress,
+      methodName: "grantAccess",
+      eventName: "MemberAdded"
+    });
+  } catch(e) {
+    const memberList = await this.AccessGroupMembers({
+      contractAddress
+    });
+
+    memberList.push(memberAddress);
+
+    response = await this.ReplaceContractMetadata({
+      contractAddress,
+      metadataKey: "members",
+      metadata: memberList.join(",")
+    });
+  }
+
+  return response;
 };
 
 /**
@@ -375,13 +416,29 @@ exports.RemoveAccessGroupMember = async function({contractAddress, memberAddress
 exports.AddAccessGroupManager = async function({contractAddress, memberAddress}) {
   contractAddress = ValidateAddress(contractAddress);
   memberAddress = ValidateAddress(memberAddress);
+  let response;
 
-  return await this.AccessGroupMembershipMethod({
-    contractAddress,
-    memberAddress,
-    methodName: "grantManagerAccess",
-    eventName: "ManagerAccessGranted"
-  });
+  try {
+    response = await this.AccessGroupMembershipMethod({
+      contractAddress,
+      memberAddress,
+      methodName: "grantManagerAccess",
+      eventName: "ManagerAccessGranted"
+    });
+  } catch(e) {
+    const managerList = await this.AccessGroupManagers({
+      contractAddress
+    });
+
+    managerList.push(memberAddress);
+    response = await this.ReplaceContractMetadata({
+      contractAddress,
+      metadataKey: "managers",
+      metadata: managerList.join(",")
+    });
+  }
+
+  return response;
 };
 
 /**

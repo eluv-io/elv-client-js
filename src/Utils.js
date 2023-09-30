@@ -725,6 +725,23 @@ const Utils = {
     return Utils.FormatAddress(address);
   },
 
+  /**
+   * Converts a hex value to a string
+   *
+   * @param hex - Hex value to convert
+   *
+   * @returns {string} - a user address
+   */
+  HexToString: (hex) => {
+    let rawHex = hex.replace(/^0x/,"");
+    let result = "";
+    for (let i=0, strLen=rawHex.length / 2; i < strLen; i++) {
+      result = result + String.fromCharCode(parseInt("0x" + rawHex.substr(i * 2, 2)));
+    }
+
+    return result;
+  },
+
   PLATFORM_NODE: "node",
   PLATFORM_WEB: "web",
   PLATFORM_REACT_NATIVE: "react-native",
