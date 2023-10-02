@@ -755,7 +755,7 @@ const Utils = {
       "maxBufferLength": 5,
       "backBufferLength": 5,
       "liveSyncDuration": 5,
-      "liveMaxLatencyDuration": !lowLatency || isSafari ? 15 : 6,
+      "liveMaxLatencyDuration": !lowLatency || isSafari ? 15 : 10,
       "liveDurationInfinity": false,
       "highBufferWatchdogPeriod": 1
     };
