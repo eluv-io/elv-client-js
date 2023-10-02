@@ -132,12 +132,17 @@ exports.AccessGroupMembers = async function({contractAddress}) {
 
   this.Log(`Retrieving members for group ${contractAddress}`);
 
-  const length = (await this.CallContractMethod({
+  const hasMethod = await this.authClient.ContractHasMethod({
     contractAddress,
-    methodName: "membersNum"
-  })).toNumber();
+    methodName: "membersList"
+  });
 
-  try {
+  if(hasMethod) {
+    const length = (await this.CallContractMethod({
+      contractAddress,
+      methodName: "membersNum"
+    })).toNumber();
+
     return await Promise.all(
       [...Array(length)].map(async (_, i) =>
         this.utils.FormatAddress(
@@ -149,8 +154,8 @@ exports.AccessGroupMembers = async function({contractAddress}) {
         )
       )
     );
-  } catch(e) {
-    response = this.utils.HexToString(
+  } else {
+    const response = this.utils.FromHex(
       await this.CallContractMethod({
         contractAddress,
         methodName: "getMeta",
@@ -177,12 +182,17 @@ exports.AccessGroupManagers = async function({contractAddress}) {
 
   this.Log(`Retrieving managers for group ${contractAddress}`);
 
-  const length = (await this.CallContractMethod({
+  const hasMethod = await this.authClient.ContractHasMethod({
     contractAddress,
-    methodName: "managersNum"
-  })).toNumber();
+    methodName: "managersList"
+  });
 
-  try {
+  if(hasMethod) {
+    const length = (await this.CallContractMethod({
+      contractAddress,
+      methodName: "managersNum"
+    })).toNumber();
+
     return await Promise.all(
       [...Array(length)].map(async (_, i) =>
         this.utils.FormatAddress(
@@ -194,8 +204,8 @@ exports.AccessGroupManagers = async function({contractAddress}) {
         )
       )
     );
-  } catch(e) {
-    response = this.utils.HexToString(
+  } else {
+    const response = this.utils.FromHex(
       await this.CallContractMethod({
         contractAddress,
         methodName: "getMeta",
@@ -351,21 +361,30 @@ exports.AccessGroupMembershipMethod = async function({
 exports.AddAccessGroupMember = async function({contractAddress, memberAddress}) {
   contractAddress = ValidateAddress(contractAddress);
   memberAddress = ValidateAddress(memberAddress);
-  let response;
 
-  try {
+  let response;
+  const hasMethod = await this.authClient.ContractHasMethod({
+    contractAddress,
+    methodName: "membersList"
+  });
+
+  if(hasMethod) {
     response = await this.AccessGroupMembershipMethod({
       contractAddress,
       memberAddress,
       methodName: "grantAccess",
       eventName: "MemberAdded"
     });
-  } catch(e) {
-    const memberList = await this.AccessGroupMembers({
+  } else {
+    let memberList = await this.AccessGroupMembers({
       contractAddress
     });
 
     memberList.push(memberAddress);
+
+    memberList = memberList.filter((value, index, self) => {
+      return self.indexOf(value) === index;
+    });
 
     response = await this.ReplaceContractMetadata({
       contractAddress,
@@ -393,12 +412,31 @@ exports.RemoveAccessGroupMember = async function({contractAddress, memberAddress
   contractAddress = ValidateAddress(contractAddress);
   memberAddress = ValidateAddress(memberAddress);
 
-  return await this.AccessGroupMembershipMethod({
+  const hasMethod = await this.authClient.ContractHasMethod({
     contractAddress,
-    memberAddress,
-    methodName: "revokeAccess",
-    eventName: "MemberRevoked"
+    methodName: "membersList"
   });
+
+  if(hasMethod) {
+    return await this.AccessGroupMembershipMethod({
+      contractAddress,
+      memberAddress,
+      methodName: "revokeAccess",
+      eventName: "MemberRevoked"
+    });
+  } else {
+    let memberList = await this.AccessGroupMembers({
+      contractAddress
+    });
+
+    memberList = memberList.filter(element => element !== memberAddress);
+
+    return await this.ReplaceContractMetadata({
+      contractAddress,
+      metadataKey: "members",
+      metadata: memberList.join(",")
+    });
+  }
 };
 
 /**
@@ -416,21 +454,31 @@ exports.RemoveAccessGroupMember = async function({contractAddress, memberAddress
 exports.AddAccessGroupManager = async function({contractAddress, memberAddress}) {
   contractAddress = ValidateAddress(contractAddress);
   memberAddress = ValidateAddress(memberAddress);
-  let response;
 
-  try {
+  let response;
+  const hasMethod = await this.authClient.ContractHasMethod({
+    contractAddress,
+    methodName: "membersList"
+  });
+
+  if(hasMethod) {
     response = await this.AccessGroupMembershipMethod({
       contractAddress,
       memberAddress,
       methodName: "grantManagerAccess",
       eventName: "ManagerAccessGranted"
     });
-  } catch(e) {
-    const managerList = await this.AccessGroupManagers({
+  } else {
+    let managerList = await this.AccessGroupManagers({
       contractAddress
     });
 
     managerList.push(memberAddress);
+
+    managerList = managerList.filter((value, index, self) => {
+      return self.indexOf(value) === index;
+    });
+
     response = await this.ReplaceContractMetadata({
       contractAddress,
       metadataKey: "managers",
@@ -457,12 +505,31 @@ exports.RemoveAccessGroupManager = async function({contractAddress, memberAddres
   contractAddress = ValidateAddress(contractAddress);
   memberAddress = ValidateAddress(memberAddress);
 
-  return await this.AccessGroupMembershipMethod({
+  const hasMethod = await this.authClient.ContractHasMethod({
     contractAddress,
-    memberAddress,
-    methodName: "revokeManagerAccess",
-    eventName: "ManagerAccessRevoked"
+    methodName: "membersList"
   });
+
+  if(hasMethod) {
+    return await this.AccessGroupMembershipMethod({
+      contractAddress,
+      memberAddress,
+      methodName: "revokeManagerAccess",
+      eventName: "ManagerAccessRevoked"
+    });
+  } else {
+    let managerList = await this.AccessGroupManagers({
+      contractAddress
+    });
+
+    managerList = managerList.filter(element => element !== memberAddress);
+
+    return await this.ReplaceContractMetadata({
+      contractAddress,
+      metadataKey: "managers",
+      metadata: managerList.join(",")
+    });
+  }
 };
 
 /**

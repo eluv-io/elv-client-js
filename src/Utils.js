@@ -444,6 +444,11 @@ const Utils = {
     return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
   },
 
+  FromHex: str => {
+    str = str.replace(/^0x/, "");
+    return Buffer.from(str, "hex").toString();
+  },
+
   B64: (str, encoding="utf-8") => {
     return Buffer.from(str, encoding).toString("base64");
   },
@@ -723,23 +728,6 @@ const Utils = {
     const address = "0x" + keccakHash.slice(26);
 
     return Utils.FormatAddress(address);
-  },
-
-  /**
-   * Converts a hex value to a string
-   *
-   * @param hex - Hex value to convert
-   *
-   * @returns {string} - a user address
-   */
-  HexToString: (hex) => {
-    let rawHex = hex.replace(/^0x/,"");
-    let result = "";
-    for (let i=0, strLen=rawHex.length / 2; i < strLen; i++) {
-      result = result + String.fromCharCode(parseInt("0x" + rawHex.substr(i * 2, 2)));
-    }
-
-    return result;
   },
 
   PLATFORM_NODE: "node",
