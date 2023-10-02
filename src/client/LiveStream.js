@@ -278,7 +278,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       if(networkInfo.name.includes("demo")) {
         embed_net = "demo";
       }
-      let embed_url = `https://embed.v3.contentfabric.io/?net=${embed_net}&p&ct=h&oid=${conf.objectId}&mt=v&ath=${token}`;
+      let embed_url = `https://embed.v3.contentfabric.io/?net=${embed_net}&p&ct=h&oid=${conf.objectId}&mt=lv&ath=${token}`;
       playout_urls.embed_url = embed_url;
 
       status.playout_urls = playout_urls;
