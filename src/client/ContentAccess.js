@@ -2223,6 +2223,9 @@ exports.EmbedUrl = async function({
   const data = {};
   for(const option of Object.keys(options)) {
     switch(option) {
+      case "accountWatermark":
+        embedUrl.searchParams.set("awm", "");
+        break;
       case "autoplay":
         embedUrl.searchParams.set("ap", "");
         break;
