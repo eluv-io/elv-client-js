@@ -742,6 +742,24 @@ const Utils = {
       return Utils.PLATFORM_WEB;
     }
   },
+
+  LiveHLSJSSettings({lowLatency=false}) {
+    const isSafari =
+      typeof window !== "undefined" &&
+      typeof window.navigator !== "undefined" &&
+      /^((?!chrome|android).)*safari/i.test(window.navigator.userAgent);
+
+    return {
+      "enableWorker": true,
+      "lowLatencyMode": true,
+      "maxBufferLength": 5,
+      "backBufferLength": 5,
+      "liveSyncDuration": 5,
+      "liveMaxLatencyDuration": !lowLatency || isSafari ? 15 : 10,
+      "liveDurationInfinity": false,
+      "highBufferWatchdogPeriod": 1
+    };
+  }
 };
 
 module.exports = Utils;

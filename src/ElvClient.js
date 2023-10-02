@@ -20,6 +20,7 @@ const Pako = require("pako");
 const {
   ValidatePresence
 } = require("./Validation");
+const CBOR = require("cbor");
 
 const networks = {
   "main": "https://main.net955305.contentfabric.io",
@@ -563,6 +564,85 @@ class ElvClient {
     if(searchURIs) {
       this.searchURIs = searchURIs;
     }
+  }
+
+  /**
+   * Return a list of nodes in the content space, optionally filtered by node ID or endpoint.
+   *
+   * @methodGroup Nodes
+   * @namedParams
+   * @param {string=} matchEndpoint - Return node(s) matching the specified endpoint
+   * @param {string=} matchNodeId - Return node(s) matching the specified node ID
+   *
+   * @return {Array<Object>} - A list of nodes in the space matching the parameters
+   */
+  async SpaceNodes({matchEndpoint, matchNodeId}={}) {
+    let bign = await this.CallContractMethod({
+      contractAddress: this.contentSpaceAddress,
+      methodName: "numActiveNodes",
+    });
+    let n = bign.toNumber();
+
+    return (await Utils.LimitedMap(
+      5,
+      [...new Array(n)],
+      async (_, index) => {
+        let bigi = Ethers.BigNumber.from(index);
+        let addr = await this.CallContractMethod({
+          contractAddress: this.contentSpaceAddress,
+          methodName: "activeNodeAddresses",
+          methodArgs: [bigi],
+          formatArguments: true
+        });
+
+        let locatorsHex = await this.CallContractMethod({
+          contractAddress: this.contentSpaceAddress,
+          methodName: "activeNodeLocators",
+          methodArgs: [bigi]
+        });
+
+        let nodeId = this.utils.AddressToNodeId(addr);
+
+        if(matchNodeId &&nodeId !== matchNodeId) {
+          return;
+        }
+
+        let node = {id: nodeId, endpoints: []};
+
+        // Parse locators CBOR
+        let buffer = locatorsHex.slice(2, locatorsHex.length); // Skip "0x"
+        let hex = buffer.toString("hex");
+        let locators = CBOR.decodeAllSync(hex);
+
+        let match = false;
+
+        if(locators.length >= 5) {
+          let fabArray = locators[4].fab;
+          if(fabArray) {
+            for(let i = 0; i < fabArray.length; i ++) {
+              let host = fabArray[i].host;
+
+              if(matchEndpoint && !matchEndpoint.includes(host)) {
+                continue; // Not a match
+              }
+
+              match = true;
+              let endpoint = fabArray[i].scheme + "://" + host;
+
+              if(fabArray[i].port) {
+                endpoint = endpoint + ":" + fabArray[i].port;
+              }
+
+              endpoint = endpoint + "/" + fabArray[i].path;
+              node.endpoints.push(endpoint);
+            }
+          }
+        }
+
+        return match ? node : undefined;
+      }
+    ))
+      .filter(n => n);
   }
 
   /**
@@ -1201,6 +1281,7 @@ Object.assign(ElvClient.prototype, require("./client/ContentAccess"));
 Object.assign(ElvClient.prototype, require("./client/Contracts"));
 Object.assign(ElvClient.prototype, require("./client/Files"));
 Object.assign(ElvClient.prototype, require("./client/ABRPublishing"));
+Object.assign(ElvClient.prototype, require("./client/LiveStream"));
 Object.assign(ElvClient.prototype, require("./client/ContentManagement"));
 Object.assign(ElvClient.prototype, require("./client/NTP"));
 Object.assign(ElvClient.prototype, require("./client/NFT"));

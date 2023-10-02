@@ -2135,6 +2135,17 @@ exports.ContentObjectImageUrl = async function({libraryId, objectId, versionHash
   return this.objectImageUrls[versionHash];
 };
 
+const EmbedMediaTypes = {
+  "video": "v",
+  "live_video": "lv",
+  "audio": "a",
+  "image": "i",
+  "html": "h",
+  "ebook": "b",
+  "gallery": "g",
+  "link": "l"
+};
+
 /**
  * Get an embed URL for the specified object
  *
@@ -2143,24 +2154,32 @@ exports.ContentObjectImageUrl = async function({libraryId, objectId, versionHash
  * @param {string} objectId - ID of the object
  * @param {string} versionHash - Version hash of the object
  * @param {number} duration - Time until the token expires, in milliseconds (1 day = 24 * 60 * 60 * 1000 = 86400000)
+ * @param {string=} mediaType=video - The type of the media. Available options:
+  - `video`
+  - `live_video`
+  - `audio`
+  - `image`
+  - `gallery`
+  - `ebook`
+  - `html`
  * @param {Object} options - Additional video/player options
- * autoplay - If enabled, video will autoplay
- * capLevelToPlayerSize - Caps video quality to player size
- * clipEnd - End time for the video
- * clipStart - Start time for the video
- * controls - Sets the player control visibility. Values: browserDefault | autoHide | show | hide | hideWithVolume. Defaults to autoHide
- * description - Sets the page description
- * directLink - If enabled, sets direct link
- * linkPath - Video link path
- * loop - If enabled, video will loop
- * muted - Mutes the player
- * offerings - Offerings to play, as an array
- * posterUrl - URL of the player poster image
- * protocols - Video protocols, as an array
- * showShare - Show social media share buttons
- * showTitle - Shows the video title, which is set from the title option (if set) or the metadata
- * title - Sets the page title
- * viewRecordKey - Contains record key
+  - `autoplay` - If enabled, video will autoplay. Note that videos block autoplay of videos with audio by default
+  - `capLevelToPlayerSize` - Caps video quality to player size
+  - `clipEnd` - End time for the video
+  - `clipStart` - Start time for the video
+  - `controls` - Sets the player control visibility. Values: browserDefault | autoHide | show | hide | hideWithVolume. Defaults to autoHide
+  - `description` - Sets the page description
+  - `directLink` - If enabled, sets direct link
+  - `linkPath` - Video link path
+  - `loop` - If enabled, video will loop
+  - `muted` - Mutes the player
+  - `offerings` - Offerings to play, as an array
+  - `posterUrl` - URL of the player poster image
+  - `protocols` - Video protocols, as an array
+  - `showShare` - Show social media share buttons
+  - `showTitle` - Shows the video title, which is set from the title option (if set) or the metadata
+  - `title` - Sets the page title
+  - `viewRecordKey` - Contains record key
  *
  * @returns {Promise<string>} - Will return an embed URL
  */
@@ -2168,6 +2187,7 @@ exports.EmbedUrl = async function({
   objectId,
   versionHash,
   duration=86400000,
+  mediaType="video",
   options={}
 }) {
   if(versionHash) {
@@ -2202,9 +2222,14 @@ exports.EmbedUrl = async function({
     embedUrl.searchParams.set("oid", objectId);
   }
 
+  embedUrl.searchParams.set("mt", EmbedMediaTypes[mediaType.toLowerCase()] || "v");
+
   const data = {};
   for(const option of Object.keys(options)) {
     switch(option) {
+      case "accountWatermark":
+        embedUrl.searchParams.set("awm", "");
+        break;
       case "autoplay":
         embedUrl.searchParams.set("ap", "");
         break;

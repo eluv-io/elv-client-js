@@ -1,0 +1,1632 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="images/favicon.png" >
+
+  <title>
+    client/LiveStream.js - Documentation
+  </title>
+
+  <script src="scripts/prettify/prettify.js"></script>
+  <script src="scripts/prettify/lang-css.js"></script>
+
+  <link type="text/css" rel="stylesheet" href="styles/elv-jsdoc.css">
+  <link type="text/css" rel="stylesheet" href="styles/elv-prettify-jsdoc.css">
+</head>
+
+<body>
+  <div class="layout-container">
+    <nav class="nav-container">
+      <div class="header">
+        <a href="index.html">
+          <img class="logo" src="images/logo-dark.png" />
+        </a>
+        <div class="title">
+          Eluvio Javascript Client
+        </div>
+      </div>
+      <div class="nav-content">
+        <h3>Classes</h3><ul><li id="ElvClient-nav">
+          <div data-name="ElvClient" class="class-link-container"><a class="class-link">ElvClient</a></div><ul class='methods'><h4 class="methodGroupHeader">Constructor</h4><li data-type="method" id="ElvClient-ElvClient-nav"><a href="ElvClient.html" class="method-link">ElvClient</a></li><li data-type="method" id="ElvClient-Configuration-nav"><a href="ElvClient.html#.Configuration" class="method-link">Configuration</a></li><li data-type="method" id="ElvClient-FromConfigurationUrl-nav"><a href="ElvClient.html#.FromConfigurationUrl" class="method-link">FromConfigurationUrl</a></li><li data-type="method" id="ElvClient-FromNetworkName-nav"><a href="ElvClient.html#.FromNetworkName" class="method-link">FromNetworkName</a></li><h4 class="methodGroupHeader">Access Requests</h4><li data-type="method" id="ElvClient-ClearCache-nav"><a href="ElvClient.html#ClearCache" class="method-link">ClearCache</a></li><h4 class="methodGroupHeader">Authorization</h4><li data-type="method" id="ElvClient-CreateFabricToken-nav"><a href="ElvClient.html#CreateFabricToken" class="method-link">CreateFabricToken</a></li><li data-type="method" id="ElvClient-CreateSignedToken-nav"><a href="ElvClient.html#CreateSignedToken" class="method-link">CreateSignedToken</a></li><li data-type="method" id="ElvClient-SetOauthToken-nav"><a href="ElvClient.html#SetOauthToken" class="method-link">SetOauthToken</a></li><li data-type="method" id="ElvClient-SetPolicyAuthorization-nav"><a href="ElvClient.html#SetPolicyAuthorization" class="method-link">SetPolicyAuthorization</a></li><li data-type="method" id="ElvClient-SetSignerFromOauthToken-nav"><a href="ElvClient.html#SetSignerFromOauthToken" class="method-link">SetSignerFromOauthToken</a></li><li data-type="method" id="ElvClient-SetStaticToken-nav"><a href="ElvClient.html#SetStaticToken" class="method-link">SetStaticToken</a></li><h4 class="methodGroupHeader">Miscellaneous</h4><li data-type="method" id="ElvClient-ToggleLogging-nav"><a href="ElvClient.html#ToggleLogging" class="method-link">ToggleLogging</a></li><h4 class="methodGroupHeader">Nodes</h4><li data-type="method" id="ElvClient-NetworkInfo-nav"><a href="ElvClient.html#NetworkInfo" class="method-link">NetworkInfo</a></li><li data-type="method" id="ElvClient-NodeId-nav"><a href="ElvClient.html#NodeId" class="method-link">NodeId</a></li><li data-type="method" id="ElvClient-Nodes-nav"><a href="ElvClient.html#Nodes" class="method-link">Nodes</a></li><li data-type="method" id="ElvClient-ResetRegion-nav"><a href="ElvClient.html#ResetRegion" class="method-link">ResetRegion</a></li><li data-type="method" id="ElvClient-SetNodes-nav"><a href="ElvClient.html#SetNodes" class="method-link">SetNodes</a></li><li data-type="method" id="ElvClient-SpaceNodes-nav"><a href="ElvClient.html#SpaceNodes" class="method-link">SpaceNodes</a></li><li data-type="method" id="ElvClient-UseRegion-nav"><a href="ElvClient.html#UseRegion" class="method-link">UseRegion</a></li><h4 class="methodGroupHeader">Signers</h4><li data-type="method" id="ElvClient-ClearSigner-nav"><a href="ElvClient.html#ClearSigner" class="method-link">ClearSigner</a></li><li data-type="method" id="ElvClient-CreateAccount-nav"><a href="ElvClient.html#CreateAccount" class="method-link">CreateAccount</a></li><li data-type="method" id="ElvClient-CurrentAccountAddress-nav"><a href="ElvClient.html#CurrentAccountAddress" class="method-link">CurrentAccountAddress</a></li><li data-type="method" id="ElvClient-GenerateWallet-nav"><a href="ElvClient.html#GenerateWallet" class="method-link">GenerateWallet</a></li><li data-type="method" id="ElvClient-SetRemoteSigner-nav"><a href="ElvClient.html#SetRemoteSigner" class="method-link">SetRemoteSigner</a></li><li data-type="method" id="ElvClient-SetSigner-nav"><a href="ElvClient.html#SetSigner" class="method-link">SetSigner</a></li><li data-type="method" id="ElvClient-SetSignerFromWeb3Provider-nav"><a href="ElvClient.html#SetSignerFromWeb3Provider" class="method-link">SetSignerFromWeb3Provider</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="ElvClient-ClearStaticToken-nav"><a href="ElvClient.html#ClearStaticToken" class="method-link">ClearStaticToken</a></li><li data-type="method" id="ElvClient-DecryptECIES-nav"><a href="ElvClient.html#DecryptECIES" class="method-link">DecryptECIES</a></li><li data-type="method" id="ElvClient-EncryptECIES-nav"><a href="ElvClient.html#EncryptECIES" class="method-link">EncryptECIES</a></li><li data-type="method" id="ElvClient-Request-nav"><a href="ElvClient.html#Request" class="method-link">Request</a></li><li data-type="method" id="ElvClient-Sign-nav"><a href="ElvClient.html#Sign" class="method-link">Sign</a></li></ul></li><li id="ElvWallet-nav">
+          <div data-name="ElvWallet" class="class-link-container"><a class="class-link">ElvWallet</a></div><ul class='methods'><h4 class="methodGroupHeader">Constructor</h4><li data-type="method" id="ElvWallet-ElvWallet-nav"><a href="ElvWallet.html" class="method-link">ElvWallet</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="ElvWallet-AddAccount-nav"><a href="ElvWallet.html#AddAccount" class="method-link">AddAccount</a></li><li data-type="method" id="ElvWallet-AddAccountFromEncryptedPK-nav"><a href="ElvWallet.html#AddAccountFromEncryptedPK" class="method-link">AddAccountFromEncryptedPK</a></li><li data-type="method" id="ElvWallet-AddAccountFromMnemonic-nav"><a href="ElvWallet.html#AddAccountFromMnemonic" class="method-link">AddAccountFromMnemonic</a></li><li data-type="method" id="ElvWallet-GenerateEncryptedPrivateKey-nav"><a href="ElvWallet.html#GenerateEncryptedPrivateKey" class="method-link">GenerateEncryptedPrivateKey</a></li><li data-type="method" id="ElvWallet-GenerateMnemonic-nav"><a href="ElvWallet.html#GenerateMnemonic" class="method-link">GenerateMnemonic</a></li><li data-type="method" id="ElvWallet-GetAccount-nav"><a href="ElvWallet.html#GetAccount" class="method-link">GetAccount</a></li><li data-type="method" id="ElvWallet-GetAccountBalance-nav"><a href="ElvWallet.html#GetAccountBalance" class="method-link">GetAccountBalance</a></li><li data-type="method" id="ElvWallet-RemoveAccount-nav"><a href="ElvWallet.html#RemoveAccount" class="method-link">RemoveAccount</a></li></ul></li><li id="FrameClient-nav">
+          <div data-name="FrameClient" class="class-link-container"><a class="class-link">FrameClient</a></div><ul class='methods'><h4 class="methodGroupHeader">Constructor</h4><li data-type="method" id="FrameClient-FrameClient-nav"><a href="FrameClient.html" class="method-link">FrameClient</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="FrameClient-AllowedMethods-nav"><a href="FrameClient.html#AllowedMethods" class="method-link">AllowedMethods</a></li><li data-type="method" id="FrameClient-PassRequest-nav"><a href="FrameClient.html#PassRequest" class="method-link">PassRequest</a></li></ul></li><li id="PermissionsClient-nav">
+          <div data-name="PermissionsClient" class="class-link-container"><a class="class-link">PermissionsClient</a></div><ul class='methods'><h4 class="methodGroupHeader">Constructor</h4><li data-type="method" id="PermissionsClient-PermissionsClient-nav"><a href="PermissionsClient.html" class="method-link">PermissionsClient</a></li><h4 class="methodGroupHeader">OfflineDraft</h4><li data-type="method" id="PermissionsClient-CloseOfflineDraft-nav"><a href="PermissionsClient.html#CloseOfflineDraft" class="method-link">CloseOfflineDraft</a></li><li data-type="method" id="PermissionsClient-OpenOfflineDraft-nav"><a href="PermissionsClient.html#OpenOfflineDraft" class="method-link">OpenOfflineDraft</a></li><h4 class="methodGroupHeader">Permissions</h4><li data-type="method" id="PermissionsClient-ItemPermissions-nav"><a href="PermissionsClient.html#ItemPermissions" class="method-link">ItemPermissions</a></li><li data-type="method" id="PermissionsClient-RemovePermission-nav"><a href="PermissionsClient.html#RemovePermission" class="method-link">RemovePermission</a></li><li data-type="method" id="PermissionsClient-RemoveSubjectPermissions-nav"><a href="PermissionsClient.html#RemoveSubjectPermissions" class="method-link">RemoveSubjectPermissions</a></li><li data-type="method" id="PermissionsClient-SetPermission-nav"><a href="PermissionsClient.html#SetPermission" class="method-link">SetPermission</a></li><li data-type="method" id="PermissionsClient-SubjectPermissions-nav"><a href="PermissionsClient.html#SubjectPermissions" class="method-link">SubjectPermissions</a></li><h4 class="methodGroupHeader">Policies</h4><li data-type="method" id="PermissionsClient-CreateItemPolicy-nav"><a href="PermissionsClient.html#CreateItemPolicy" class="method-link">CreateItemPolicy</a></li><li data-type="method" id="PermissionsClient-ItemPolicy-nav"><a href="PermissionsClient.html#ItemPolicy" class="method-link">ItemPolicy</a></li><li data-type="method" id="PermissionsClient-PolicyItems-nav"><a href="PermissionsClient.html#PolicyItems" class="method-link">PolicyItems</a></li><li data-type="method" id="PermissionsClient-RemoveItemPolicy-nav"><a href="PermissionsClient.html#RemoveItemPolicy" class="method-link">RemoveItemPolicy</a></li><h4 class="methodGroupHeader">Profiles</h4><li data-type="method" id="PermissionsClient-ItemProfiles-nav"><a href="PermissionsClient.html#ItemProfiles" class="method-link">ItemProfiles</a></li><li data-type="method" id="PermissionsClient-RemoveProfile-nav"><a href="PermissionsClient.html#RemoveProfile" class="method-link">RemoveProfile</a></li><li data-type="method" id="PermissionsClient-SetProfile-nav"><a href="PermissionsClient.html#SetProfile" class="method-link">SetProfile</a></li></ul></li><li id="UserProfileClient-nav">
+          <div data-name="UserProfileClient" class="class-link-container"><a class="class-link">UserProfileClient</a></div><ul class='methods'><h4 class="methodGroupHeader">Constructor</h4><li data-type="method" id="UserProfileClient-UserProfileClient-nav"><a href="UserProfileClient.html" class="method-link">UserProfileClient</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="UserProfileClient-AccessLevel-nav"><a href="UserProfileClient.html#AccessLevel" class="method-link">AccessLevel</a></li><li data-type="method" id="UserProfileClient-CollectedTags-nav"><a href="UserProfileClient.html#CollectedTags" class="method-link">CollectedTags</a></li><li data-type="method" id="UserProfileClient-DeleteUserMetadata-nav"><a href="UserProfileClient.html#DeleteUserMetadata" class="method-link">DeleteUserMetadata</a></li><li data-type="method" id="UserProfileClient-MergeUserMetadata-nav"><a href="UserProfileClient.html#MergeUserMetadata" class="method-link">MergeUserMetadata</a></li><li data-type="method" id="UserProfileClient-PublicUserMetadata-nav"><a href="UserProfileClient.html#PublicUserMetadata" class="method-link">PublicUserMetadata</a></li><li data-type="method" id="UserProfileClient-ReplaceUserMetadata-nav"><a href="UserProfileClient.html#ReplaceUserMetadata" class="method-link">ReplaceUserMetadata</a></li><li data-type="method" id="UserProfileClient-SetAccessLevel-nav"><a href="UserProfileClient.html#SetAccessLevel" class="method-link">SetAccessLevel</a></li><li data-type="method" id="UserProfileClient-SetTenantContractId-nav"><a href="UserProfileClient.html#SetTenantContractId" class="method-link">SetTenantContractId</a></li><li data-type="method" id="UserProfileClient-SetTenantId-nav"><a href="UserProfileClient.html#SetTenantId" class="method-link">SetTenantId</a></li><li data-type="method" id="UserProfileClient-SetUserProfileImage-nav"><a href="UserProfileClient.html#SetUserProfileImage" class="method-link">SetUserProfileImage</a></li><li data-type="method" id="UserProfileClient-TenantContractId-nav"><a href="UserProfileClient.html#TenantContractId" class="method-link">TenantContractId</a></li><li data-type="method" id="UserProfileClient-TenantId-nav"><a href="UserProfileClient.html#TenantId" class="method-link">TenantId</a></li><li data-type="method" id="UserProfileClient-UserMetadata-nav"><a href="UserProfileClient.html#UserMetadata" class="method-link">UserMetadata</a></li><li data-type="method" id="UserProfileClient-UserProfileImage-nav"><a href="UserProfileClient.html#UserProfileImage" class="method-link">UserProfileImage</a></li><li data-type="method" id="UserProfileClient-UserWalletAddress-nav"><a href="UserProfileClient.html#UserWalletAddress" class="method-link">UserWalletAddress</a></li><li data-type="method" id="UserProfileClient-UserWalletObjectInfo-nav"><a href="UserProfileClient.html#UserWalletObjectInfo" class="method-link">UserWalletObjectInfo</a></li><li data-type="method" id="UserProfileClient-WalletAddress-nav"><a href="UserProfileClient.html#WalletAddress" class="method-link">WalletAddress</a></li></ul></li></ul><h3>Modules</h3><ul><li id="ElvClient_ABRPublishing-nav">
+          <div data-name="ElvClient/ABRPublishing" class="class-link-container"><a class="class-link">ElvClient/ABRPublishing</a></div><ul class='methods'><li data-type="method" id="ElvClient_ABRPublishing-ElvClient/ABRPublishing-nav"><a href="module-ElvClient_ABRPublishing.html" class="method-link">ElvClient/ABRPublishing</a></li><h4 class="methodGroupHeader">ABR Publishing</h4><li data-type="method" id="ElvClient_ABRPublishing-CreateABRMezzanine-nav"><a href="module-ElvClient_ABRPublishing.html#.CreateABRMezzanine" class="method-link">CreateABRMezzanine</a></li><li data-type="method" id="ElvClient_ABRPublishing-CreateProductionMaster-nav"><a href="module-ElvClient_ABRPublishing.html#.CreateProductionMaster" class="method-link">CreateProductionMaster</a></li><li data-type="method" id="ElvClient_ABRPublishing-FinalizeABRMezzanine-nav"><a href="module-ElvClient_ABRPublishing.html#.FinalizeABRMezzanine" class="method-link">FinalizeABRMezzanine</a></li><li data-type="method" id="ElvClient_ABRPublishing-LRODraftInfo-nav"><a href="module-ElvClient_ABRPublishing.html#.LRODraftInfo" class="method-link">LRODraftInfo</a></li><li data-type="method" id="ElvClient_ABRPublishing-LROStatus-nav"><a href="module-ElvClient_ABRPublishing.html#.LROStatus" class="method-link">LROStatus</a></li><li data-type="method" id="ElvClient_ABRPublishing-StartABRMezzanineJobs-nav"><a href="module-ElvClient_ABRPublishing.html#.StartABRMezzanineJobs" class="method-link">StartABRMezzanineJobs</a></li></ul></li><li id="ElvClient_AccessGroups-nav">
+          <div data-name="ElvClient/AccessGroups" class="class-link-container"><a class="class-link">ElvClient/AccessGroups</a></div><ul class='methods'><li data-type="method" id="ElvClient_AccessGroups-ElvClient/AccessGroups-nav"><a href="module-ElvClient_AccessGroups.html" class="method-link">ElvClient/AccessGroups</a></li><h4 class="methodGroupHeader">Access Groups</h4><li data-type="method" id="ElvClient_AccessGroups-ListAccessGroups-nav"><a href="module-ElvClient_AccessGroups.html#.ListAccessGroups" class="method-link">ListAccessGroups</a></li><li data-type="method" id="ElvClient_AccessGroups-AccessGroupManagers-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AccessGroupManagers" class="method-link">AccessGroupManagers</a></li><li data-type="method" id="ElvClient_AccessGroups-AccessGroupMembers-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AccessGroupMembers" class="method-link">AccessGroupMembers</a></li><li data-type="method" id="ElvClient_AccessGroups-AccessGroupOwner-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AccessGroupOwner" class="method-link">AccessGroupOwner</a></li><li data-type="method" id="ElvClient_AccessGroups-AddAccessGroupManager-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AddAccessGroupManager" class="method-link">AddAccessGroupManager</a></li><li data-type="method" id="ElvClient_AccessGroups-AddAccessGroupMember-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AddAccessGroupMember" class="method-link">AddAccessGroupMember</a></li><li data-type="method" id="ElvClient_AccessGroups-CreateAccessGroup-nav"><a href="module-ElvClient_AccessGroups.html#.exports.CreateAccessGroup" class="method-link">CreateAccessGroup</a></li><li data-type="method" id="ElvClient_AccessGroups-DeleteAccessGroup-nav"><a href="module-ElvClient_AccessGroups.html#.exports.DeleteAccessGroup" class="method-link">DeleteAccessGroup</a></li><li data-type="method" id="ElvClient_AccessGroups-RemoveAccessGroupManager-nav"><a href="module-ElvClient_AccessGroups.html#.exports.RemoveAccessGroupManager" class="method-link">RemoveAccessGroupManager</a></li><li data-type="method" id="ElvClient_AccessGroups-RemoveAccessGroupMember-nav"><a href="module-ElvClient_AccessGroups.html#.exports.RemoveAccessGroupMember" class="method-link">RemoveAccessGroupMember</a></li><h4 class="methodGroupHeader">Library Access Groups</h4><li data-type="method" id="ElvClient_AccessGroups-AddContentLibraryGroup-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AddContentLibraryGroup" class="method-link">AddContentLibraryGroup</a></li><li data-type="method" id="ElvClient_AccessGroups-ContentLibraryGroupPermissions-nav"><a href="module-ElvClient_AccessGroups.html#.exports.ContentLibraryGroupPermissions" class="method-link">ContentLibraryGroupPermissions</a></li><li data-type="method" id="ElvClient_AccessGroups-RemoveContentLibraryGroup-nav"><a href="module-ElvClient_AccessGroups.html#.exports.RemoveContentLibraryGroup" class="method-link">RemoveContentLibraryGroup</a></li><h4 class="methodGroupHeader">Object Access Groups</h4><li data-type="method" id="ElvClient_AccessGroups-AddContentObjectGroupPermission-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AddContentObjectGroupPermission" class="method-link">AddContentObjectGroupPermission</a></li><li data-type="method" id="ElvClient_AccessGroups-ContentObjectGroupPermissions-nav"><a href="module-ElvClient_AccessGroups.html#.exports.ContentObjectGroupPermissions" class="method-link">ContentObjectGroupPermissions</a></li><li data-type="method" id="ElvClient_AccessGroups-RemoveContentObjectGroupPermission-nav"><a href="module-ElvClient_AccessGroups.html#.exports.RemoveContentObjectGroupPermission" class="method-link">RemoveContentObjectGroupPermission</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="ElvClient_AccessGroups-LinkAccessGroupToOauth-nav"><a href="module-ElvClient_AccessGroups.html#.LinkAccessGroupToOauth" class="method-link">LinkAccessGroupToOauth</a></li><li data-type="method" id="ElvClient_AccessGroups-UnlinkAccessGroupFromOauth-nav"><a href="module-ElvClient_AccessGroups.html#.UnlinkAccessGroupFromOauth" class="method-link">UnlinkAccessGroupFromOauth</a></li></ul></li><li id="ElvClient_ContentAccess-nav">
+          <div data-name="ElvClient/ContentAccess" class="class-link-container"><a class="class-link">ElvClient/ContentAccess</a></div><ul class='methods'><li data-type="method" id="ElvClient_ContentAccess-ElvClient/ContentAccess-nav"><a href="module-ElvClient_ContentAccess.html" class="method-link">ElvClient/ContentAccess</a></li><h4 class="methodGroupHeader">Access Requests</h4><li data-type="method" id="ElvClient_ContentAccess-AccessInfo-nav"><a href="module-ElvClient_ContentAccess.html#.AccessInfo" class="method-link">AccessInfo</a></li><li data-type="method" id="ElvClient_ContentAccess-AccessRequest-nav"><a href="module-ElvClient_ContentAccess.html#.AccessRequest" class="method-link">AccessRequest</a></li><li data-type="method" id="ElvClient_ContentAccess-AccessType-nav"><a href="module-ElvClient_ContentAccess.html#.AccessType" class="method-link">AccessType</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjectAccessComplete-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectAccessComplete" class="method-link">ContentObjectAccessComplete</a></li><li data-type="method" id="ElvClient_ContentAccess-FinalizeStateChannelAccess-nav"><a href="module-ElvClient_ContentAccess.html#.FinalizeStateChannelAccess" class="method-link">FinalizeStateChannelAccess</a></li><li data-type="method" id="ElvClient_ContentAccess-GenerateStateChannelToken-nav"><a href="module-ElvClient_ContentAccess.html#.GenerateStateChannelToken" class="method-link">GenerateStateChannelToken</a></li><li data-type="method" id="ElvClient_ContentAccess-SetAuthContext-nav"><a href="module-ElvClient_ContentAccess.html#.SetAuthContext" class="method-link">SetAuthContext</a></li><h4 class="methodGroupHeader">Collections</h4><li data-type="method" id="ElvClient_ContentAccess-Collection-nav"><a href="module-ElvClient_ContentAccess.html#.Collection" class="method-link">Collection</a></li><h4 class="methodGroupHeader">Content Libraries</h4><li data-type="method" id="ElvClient_ContentAccess-ContentLibraries-nav"><a href="module-ElvClient_ContentAccess.html#.ContentLibraries" class="method-link">ContentLibraries</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentLibrary-nav"><a href="module-ElvClient_ContentAccess.html#.ContentLibrary" class="method-link">ContentLibrary</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentLibraryOwner-nav"><a href="module-ElvClient_ContentAccess.html#.ContentLibraryOwner" class="method-link">ContentLibraryOwner</a></li><li data-type="method" id="ElvClient_ContentAccess-LibraryContentTypes-nav"><a href="module-ElvClient_ContentAccess.html#.LibraryContentTypes" class="method-link">LibraryContentTypes</a></li><h4 class="methodGroupHeader">Content Objects</h4><li data-type="method" id="ElvClient_ContentAccess-AssetMetadata-nav"><a href="module-ElvClient_ContentAccess.html#.AssetMetadata" class="method-link">AssetMetadata</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObject-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObject" class="method-link">ContentObject</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjectLibraryId-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectLibraryId" class="method-link">ContentObjectLibraryId</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjectOwner-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectOwner" class="method-link">ContentObjectOwner</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjectTenantId-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectTenantId" class="method-link">ContentObjectTenantId</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjectVersions-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectVersions" class="method-link">ContentObjectVersions</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjects-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjects" class="method-link">ContentObjects</a></li><li data-type="method" id="ElvClient_ContentAccess-LatestVersionHash-nav"><a href="module-ElvClient_ContentAccess.html#.LatestVersionHash" class="method-link">LatestVersionHash</a></li><li data-type="method" id="ElvClient_ContentAccess-Permission-nav"><a href="module-ElvClient_ContentAccess.html#.Permission" class="method-link">Permission</a></li><li data-type="method" id="ElvClient_ContentAccess-Proofs-nav"><a href="module-ElvClient_ContentAccess.html#.Proofs" class="method-link">Proofs</a></li><li data-type="method" id="ElvClient_ContentAccess-QParts-nav"><a href="module-ElvClient_ContentAccess.html#.QParts" class="method-link">QParts</a></li><li data-type="method" id="ElvClient_ContentAccess-VerifyContentObject-nav"><a href="module-ElvClient_ContentAccess.html#.VerifyContentObject" class="method-link">VerifyContentObject</a></li><h4 class="methodGroupHeader">Content Space</h4><li data-type="method" id="ElvClient_ContentAccess-ContentSpaceId-nav"><a href="module-ElvClient_ContentAccess.html#.ContentSpaceId" class="method-link">ContentSpaceId</a></li><li data-type="method" id="ElvClient_ContentAccess-DefaultKMSAddress-nav"><a href="module-ElvClient_ContentAccess.html#.DefaultKMSAddress" class="method-link">DefaultKMSAddress</a></li><h4 class="methodGroupHeader">Content Types</h4><li data-type="method" id="ElvClient_ContentAccess-ContentType-nav"><a href="module-ElvClient_ContentAccess.html#.ContentType" class="method-link">ContentType</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentTypeOwner-nav"><a href="module-ElvClient_ContentAccess.html#.ContentTypeOwner" class="method-link">ContentTypeOwner</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentTypes-nav"><a href="module-ElvClient_ContentAccess.html#.ContentTypes" class="method-link">ContentTypes</a></li><h4 class="methodGroupHeader">Encryption</h4><li data-type="method" id="ElvClient_ContentAccess-Decrypt-nav"><a href="module-ElvClient_ContentAccess.html#.Decrypt" class="method-link">Decrypt</a></li><li data-type="method" id="ElvClient_ContentAccess-Encrypt-nav"><a href="module-ElvClient_ContentAccess.html#.Encrypt" class="method-link">Encrypt</a></li><li data-type="method" id="ElvClient_ContentAccess-EncryptionConk-nav"><a href="module-ElvClient_ContentAccess.html#.EncryptionConk" class="method-link">EncryptionConk</a></li><h4 class="methodGroupHeader">Links</h4><li data-type="method" id="ElvClient_ContentAccess-ContentObjectGraph-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectGraph" class="method-link">ContentObjectGraph</a></li><li data-type="method" id="ElvClient_ContentAccess-LinkData-nav"><a href="module-ElvClient_ContentAccess.html#.LinkData" class="method-link">LinkData</a></li><li data-type="method" id="ElvClient_ContentAccess-LinkTarget-nav"><a href="module-ElvClient_ContentAccess.html#.LinkTarget" class="method-link">LinkTarget</a></li><li data-type="method" id="ElvClient_ContentAccess-LinkUrl-nav"><a href="module-ElvClient_ContentAccess.html#.LinkUrl" class="method-link">LinkUrl</a></li><h4 class="methodGroupHeader">Media</h4><li data-type="method" id="ElvClient_ContentAccess-AvailableDRMs-nav"><a href="module-ElvClient_ContentAccess.html#.AvailableDRMs" class="method-link">AvailableDRMs</a></li><li data-type="method" id="ElvClient_ContentAccess-AvailableOfferings-nav"><a href="module-ElvClient_ContentAccess.html#.AvailableOfferings" class="method-link">AvailableOfferings</a></li><li data-type="method" id="ElvClient_ContentAccess-BitmovinPlayoutOptions-nav"><a href="module-ElvClient_ContentAccess.html#.BitmovinPlayoutOptions" class="method-link">BitmovinPlayoutOptions</a></li><li data-type="method" id="ElvClient_ContentAccess-PlayoutOptions-nav"><a href="module-ElvClient_ContentAccess.html#.PlayoutOptions" class="method-link">PlayoutOptions</a></li><h4 class="methodGroupHeader">Metadata</h4><li data-type="method" id="ElvClient_ContentAccess-ContentObjectMetadata-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectMetadata" class="method-link">ContentObjectMetadata</a></li><h4 class="methodGroupHeader">URL Generation</h4><li data-type="method" id="ElvClient_ContentAccess-CallBitcodeMethod-nav"><a href="module-ElvClient_ContentAccess.html#.CallBitcodeMethod" class="method-link">CallBitcodeMethod</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjectImageUrl-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectImageUrl" class="method-link">ContentObjectImageUrl</a></li><li data-type="method" id="ElvClient_ContentAccess-EmbedUrl-nav"><a href="module-ElvClient_ContentAccess.html#.EmbedUrl" class="method-link">EmbedUrl</a></li><li data-type="method" id="ElvClient_ContentAccess-FabricUrl-nav"><a href="module-ElvClient_ContentAccess.html#.FabricUrl" class="method-link">FabricUrl</a></li><li data-type="method" id="ElvClient_ContentAccess-FileUrl-nav"><a href="module-ElvClient_ContentAccess.html#.FileUrl" class="method-link">FileUrl</a></li><li data-type="method" id="ElvClient_ContentAccess-PublicRep-nav"><a href="module-ElvClient_ContentAccess.html#.PublicRep" class="method-link">PublicRep</a></li><li data-type="method" id="ElvClient_ContentAccess-Rep-nav"><a href="module-ElvClient_ContentAccess.html#.Rep" class="method-link">Rep</a></li></ul></li><li id="ElvClient_ContentManagement-nav">
+          <div data-name="ElvClient/ContentManagement" class="class-link-container"><a class="class-link">ElvClient/ContentManagement</a></div><ul class='methods'><li data-type="method" id="ElvClient_ContentManagement-ElvClient/ContentManagement-nav"><a href="module-ElvClient_ContentManagement.html" class="method-link">ElvClient/ContentManagement</a></li><h4 class="methodGroupHeader">Access Requests</h4><li data-type="method" id="ElvClient_ContentManagement-CreateNonOwnerCap-nav"><a href="module-ElvClient_ContentManagement.html#.CreateNonOwnerCap" class="method-link">CreateNonOwnerCap</a></li><li data-type="method" id="ElvClient_ContentManagement-SetAccessCharge-nav"><a href="module-ElvClient_ContentManagement.html#.SetAccessCharge" class="method-link">SetAccessCharge</a></li><h4 class="methodGroupHeader">Auth Policies</h4><li data-type="method" id="ElvClient_ContentManagement-InitializeAuthPolicy-nav"><a href="module-ElvClient_ContentManagement.html#.InitializeAuthPolicy" class="method-link">InitializeAuthPolicy</a></li><li data-type="method" id="ElvClient_ContentManagement-SetAuthPolicy-nav"><a href="module-ElvClient_ContentManagement.html#.SetAuthPolicy" class="method-link">SetAuthPolicy</a></li><h4 class="methodGroupHeader">Content Libraries</h4><li data-type="method" id="ElvClient_ContentManagement-AddLibraryContentType-nav"><a href="module-ElvClient_ContentManagement.html#.AddLibraryContentType" class="method-link">AddLibraryContentType</a></li><li data-type="method" id="ElvClient_ContentManagement-CreateContentLibrary-nav"><a href="module-ElvClient_ContentManagement.html#.CreateContentLibrary" class="method-link">CreateContentLibrary</a></li><li data-type="method" id="ElvClient_ContentManagement-DeleteContentLibrary-nav"><a href="module-ElvClient_ContentManagement.html#.DeleteContentLibrary" class="method-link">DeleteContentLibrary</a></li><li data-type="method" id="ElvClient_ContentManagement-RemoveLibraryContentType-nav"><a href="module-ElvClient_ContentManagement.html#.RemoveLibraryContentType" class="method-link">RemoveLibraryContentType</a></li><li data-type="method" id="ElvClient_ContentManagement-SetContentLibraryImage-nav"><a href="module-ElvClient_ContentManagement.html#.SetContentLibraryImage" class="method-link">SetContentLibraryImage</a></li><h4 class="methodGroupHeader">Content Objects</h4><li data-type="method" id="ElvClient_ContentManagement-CopyContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.CopyContentObject" class="method-link">CopyContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-CreateAndFinalizeContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.CreateAndFinalizeContentObject" class="method-link">CreateAndFinalizeContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-CreateContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.CreateContentObject" class="method-link">CreateContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-DeleteContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.DeleteContentObject" class="method-link">DeleteContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-DeleteContentVersion-nav"><a href="module-ElvClient_ContentManagement.html#.DeleteContentVersion" class="method-link">DeleteContentVersion</a></li><li data-type="method" id="ElvClient_ContentManagement-EditAndFinalizeContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.EditAndFinalizeContentObject" class="method-link">EditAndFinalizeContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-EditContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.EditContentObject" class="method-link">EditContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-FinalizeContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.FinalizeContentObject" class="method-link">FinalizeContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-PublishContentVersion-nav"><a href="module-ElvClient_ContentManagement.html#.PublishContentVersion" class="method-link">PublishContentVersion</a></li><li data-type="method" id="ElvClient_ContentManagement-SetContentObjectImage-nav"><a href="module-ElvClient_ContentManagement.html#.SetContentObjectImage" class="method-link">SetContentObjectImage</a></li><li data-type="method" id="ElvClient_ContentManagement-SetPermission-nav"><a href="module-ElvClient_ContentManagement.html#.SetPermission" class="method-link">SetPermission</a></li><h4 class="methodGroupHeader">Content Types</h4><li data-type="method" id="ElvClient_ContentManagement-CreateContentType-nav"><a href="module-ElvClient_ContentManagement.html#.CreateContentType" class="method-link">CreateContentType</a></li><h4 class="methodGroupHeader">Links</h4><li data-type="method" id="ElvClient_ContentManagement-CreateLinks-nav"><a href="module-ElvClient_ContentManagement.html#.CreateLinks" class="method-link">CreateLinks</a></li><li data-type="method" id="ElvClient_ContentManagement-GenerateSignedLinkToken-nav"><a href="module-ElvClient_ContentManagement.html#.GenerateSignedLinkToken" class="method-link">GenerateSignedLinkToken</a></li><li data-type="method" id="ElvClient_ContentManagement-UpdateContentObjectGraph-nav"><a href="module-ElvClient_ContentManagement.html#.UpdateContentObjectGraph" class="method-link">UpdateContentObjectGraph</a></li><h4 class="methodGroupHeader">Metadata</h4><li data-type="method" id="ElvClient_ContentManagement-DeleteMetadata-nav"><a href="module-ElvClient_ContentManagement.html#.DeleteMetadata" class="method-link">DeleteMetadata</a></li><li data-type="method" id="ElvClient_ContentManagement-MergeMetadata-nav"><a href="module-ElvClient_ContentManagement.html#.MergeMetadata" class="method-link">MergeMetadata</a></li><li data-type="method" id="ElvClient_ContentManagement-ReplaceMetadata-nav"><a href="module-ElvClient_ContentManagement.html#.ReplaceMetadata" class="method-link">ReplaceMetadata</a></li></ul></li><li id="ElvClient_Contracts-nav">
+          <div data-name="ElvClient/Contracts" class="class-link-container"><a class="class-link">ElvClient/Contracts</a></div><ul class='methods'><li data-type="method" id="ElvClient_Contracts-ElvClient/Contracts-nav"><a href="module-ElvClient_Contracts.html" class="method-link">ElvClient/Contracts</a></li><h4 class="methodGroupHeader">Blockchain</h4><li data-type="method" id="ElvClient_Contracts-BlockNumber-nav"><a href="module-ElvClient_Contracts.html#.BlockNumber" class="method-link">BlockNumber</a></li><li data-type="method" id="ElvClient_Contracts-Events-nav"><a href="module-ElvClient_Contracts.html#.Events" class="method-link">Events</a></li><li data-type="method" id="ElvClient_Contracts-GetBalance-nav"><a href="module-ElvClient_Contracts.html#.GetBalance" class="method-link">GetBalance</a></li><li data-type="method" id="ElvClient_Contracts-SendFunds-nav"><a href="module-ElvClient_Contracts.html#.SendFunds" class="method-link">SendFunds</a></li><h4 class="methodGroupHeader">Contracts</h4><li data-type="method" id="ElvClient_Contracts-CallContractMethod-nav"><a href="module-ElvClient_Contracts.html#.CallContractMethod" class="method-link">CallContractMethod</a></li><li data-type="method" id="ElvClient_Contracts-CallContractMethodAndWait-nav"><a href="module-ElvClient_Contracts.html#.CallContractMethodAndWait" class="method-link">CallContractMethodAndWait</a></li><li data-type="method" id="ElvClient_Contracts-ContractAbi-nav"><a href="module-ElvClient_Contracts.html#.ContractAbi" class="method-link">ContractAbi</a></li><li data-type="method" id="ElvClient_Contracts-ContractEvents-nav"><a href="module-ElvClient_Contracts.html#.ContractEvents" class="method-link">ContractEvents</a></li><li data-type="method" id="ElvClient_Contracts-ContractMetadata-nav"><a href="module-ElvClient_Contracts.html#.ContractMetadata" class="method-link">ContractMetadata</a></li><li data-type="method" id="ElvClient_Contracts-ContractName-nav"><a href="module-ElvClient_Contracts.html#.ContractName" class="method-link">ContractName</a></li><li data-type="method" id="ElvClient_Contracts-CustomContractAddress-nav"><a href="module-ElvClient_Contracts.html#.CustomContractAddress" class="method-link">CustomContractAddress</a></li><li data-type="method" id="ElvClient_Contracts-DeployContract-nav"><a href="module-ElvClient_Contracts.html#.DeployContract" class="method-link">DeployContract</a></li><li data-type="method" id="ElvClient_Contracts-ExtractEventFromLogs-nav"><a href="module-ElvClient_Contracts.html#.ExtractEventFromLogs" class="method-link">ExtractEventFromLogs</a></li><li data-type="method" id="ElvClient_Contracts-ExtractValueFromEvent-nav"><a href="module-ElvClient_Contracts.html#.ExtractValueFromEvent" class="method-link">ExtractValueFromEvent</a></li><li data-type="method" id="ElvClient_Contracts-FormatContractArguments-nav"><a href="module-ElvClient_Contracts.html#.FormatContractArguments" class="method-link">FormatContractArguments</a></li><li data-type="method" id="ElvClient_Contracts-MergeContractMetadata-nav"><a href="module-ElvClient_Contracts.html#.MergeContractMetadata" class="method-link">MergeContractMetadata</a></li><li data-type="method" id="ElvClient_Contracts-ReplaceContractMetadata-nav"><a href="module-ElvClient_Contracts.html#.ReplaceContractMetadata" class="method-link">ReplaceContractMetadata</a></li><li data-type="method" id="ElvClient_Contracts-SetCustomContentContract-nav"><a href="module-ElvClient_Contracts.html#.SetCustomContentContract" class="method-link">SetCustomContentContract</a></li></ul></li><li id="ElvClient_Files+Parts-nav">
+          <div data-name="ElvClient/Files+Parts" class="class-link-container"><a class="class-link">ElvClient/Files+Parts</a></div><ul class='methods'><li data-type="method" id="ElvClient_Files+Parts-ElvClient/Files+Parts-nav"><a href="module-ElvClient_Files+Parts.html" class="method-link">ElvClient/Files+Parts</a></li><h4 class="methodGroupHeader">Files</h4><li data-type="method" id="ElvClient_Files+Parts-CreateFileDirectories-nav"><a href="module-ElvClient_Files+Parts.html#.exports.CreateFileDirectories" class="method-link">CreateFileDirectories</a></li><li data-type="method" id="ElvClient_Files+Parts-DeleteFiles-nav"><a href="module-ElvClient_Files+Parts.html#.exports.DeleteFiles" class="method-link">DeleteFiles</a></li><li data-type="method" id="ElvClient_Files+Parts-DownloadFile-nav"><a href="module-ElvClient_Files+Parts.html#.exports.DownloadFile" class="method-link">DownloadFile</a></li><li data-type="method" id="ElvClient_Files+Parts-ListFiles-nav"><a href="module-ElvClient_Files+Parts.html#.exports.ListFiles" class="method-link">ListFiles</a></li><li data-type="method" id="ElvClient_Files+Parts-MoveFiles-nav"><a href="module-ElvClient_Files+Parts.html#.exports.MoveFiles" class="method-link">MoveFiles</a></li><li data-type="method" id="ElvClient_Files+Parts-UploadFiles-nav"><a href="module-ElvClient_Files+Parts.html#.exports.UploadFiles" class="method-link">UploadFiles</a></li><li data-type="method" id="ElvClient_Files+Parts-UploadFilesFromS3-nav"><a href="module-ElvClient_Files+Parts.html#.exports.UploadFilesFromS3" class="method-link">UploadFilesFromS3</a></li><h4 class="methodGroupHeader">Parts</h4><li data-type="method" id="ElvClient_Files+Parts-ContentPart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.ContentPart" class="method-link">ContentPart</a></li><li data-type="method" id="ElvClient_Files+Parts-ContentParts-nav"><a href="module-ElvClient_Files+Parts.html#.exports.ContentParts" class="method-link">ContentParts</a></li><li data-type="method" id="ElvClient_Files+Parts-CreatePart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.CreatePart" class="method-link">CreatePart</a></li><li data-type="method" id="ElvClient_Files+Parts-DeletePart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.DeletePart" class="method-link">DeletePart</a></li><li data-type="method" id="ElvClient_Files+Parts-DownloadPart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.DownloadPart" class="method-link">DownloadPart</a></li><li data-type="method" id="ElvClient_Files+Parts-FinalizePart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.FinalizePart" class="method-link">FinalizePart</a></li><li data-type="method" id="ElvClient_Files+Parts-UploadPart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.UploadPart" class="method-link">UploadPart</a></li><li data-type="method" id="ElvClient_Files+Parts-UploadPartChunk-nav"><a href="module-ElvClient_Files+Parts.html#.exports.UploadPartChunk" class="method-link">UploadPartChunk</a></li></ul></li><li id="ElvClient_LiveStream-nav">
+          <div data-name="ElvClient/LiveStream" class="class-link-container"><a class="class-link">ElvClient/LiveStream</a></div><ul class='methods'><li data-type="method" id="ElvClient_LiveStream-ElvClient/LiveStream-nav"><a href="module-ElvClient_LiveStream.html" class="method-link">ElvClient/LiveStream</a></li><h4 class="methodGroupHeader">Live Stream</h4><li data-type="method" id="ElvClient_LiveStream-StreamConfig-nav"><a href="module-ElvClient_LiveStream.html#.StreamConfig" class="method-link">StreamConfig</a></li><li data-type="method" id="ElvClient_LiveStream-StreamCreate-nav"><a href="module-ElvClient_LiveStream.html#.StreamCreate" class="method-link">StreamCreate</a></li><li data-type="method" id="ElvClient_LiveStream-StreamStartOrStopOrReset-nav"><a href="module-ElvClient_LiveStream.html#.StreamStartOrStopOrReset" class="method-link">StreamStartOrStopOrReset</a></li><li data-type="method" id="ElvClient_LiveStream-StreamStatus-nav"><a href="module-ElvClient_LiveStream.html#.StreamStatus" class="method-link">StreamStatus</a></li></ul></li><li id="ElvClient_NFT-nav">
+          <div data-name="ElvClient/NFT" class="class-link-container"><a class="class-link">ElvClient/NFT</a></div><ul class='methods'><li data-type="method" id="ElvClient_NFT-ElvClient/NFT-nav"><a href="module-ElvClient_NFT.html" class="method-link">ElvClient/NFT</a></li><h4 class="methodGroupHeader">Minting</h4><li data-type="method" id="ElvClient_NFT-MintNFT-nav"><a href="module-ElvClient_NFT.html#.MintNFT" class="method-link">MintNFT</a></li><h4 class="methodGroupHeader">Transactions</h4><li data-type="method" id="ElvClient_NFT-CollectionTransactions-nav"><a href="module-ElvClient_NFT.html#.CollectionTransactions" class="method-link">CollectionTransactions</a></li></ul></li><li id="ElvClient_NTP-nav">
+          <div data-name="ElvClient/NTP" class="class-link-container"><a class="class-link">ElvClient/NTP</a></div><ul class='methods'><li data-type="method" id="ElvClient_NTP-ElvClient/NTP-nav"><a href="module-ElvClient_NTP.html" class="method-link">ElvClient/NTP</a></li><h4 class="methodGroupHeader">NTP Instances</h4><li data-type="method" id="ElvClient_NTP-CreateNTPInstance-nav"><a href="module-ElvClient_NTP.html#.CreateNTPInstance" class="method-link">CreateNTPInstance</a></li><li data-type="method" id="ElvClient_NTP-DeleteNTPInstance-nav"><a href="module-ElvClient_NTP.html#.DeleteNTPInstance" class="method-link">DeleteNTPInstance</a></li><li data-type="method" id="ElvClient_NTP-ListNTPInstances-nav"><a href="module-ElvClient_NTP.html#.ListNTPInstances" class="method-link">ListNTPInstances</a></li><li data-type="method" id="ElvClient_NTP-NTPInstance-nav"><a href="module-ElvClient_NTP.html#.NTPInstance" class="method-link">NTPInstance</a></li><li data-type="method" id="ElvClient_NTP-SuspendNTPInstance-nav"><a href="module-ElvClient_NTP.html#.SuspendNTPInstance" class="method-link">SuspendNTPInstance</a></li><li data-type="method" id="ElvClient_NTP-UpdateNTPInstance-nav"><a href="module-ElvClient_NTP.html#.UpdateNTPInstance" class="method-link">UpdateNTPInstance</a></li><h4 class="methodGroupHeader">Tickets</h4><li data-type="method" id="ElvClient_NTP-IssueNTPCode-nav"><a href="module-ElvClient_NTP.html#.IssueNTPCode" class="method-link">IssueNTPCode</a></li><li data-type="method" id="ElvClient_NTP-IssueSignedNTPCode-nav"><a href="module-ElvClient_NTP.html#.IssueSignedNTPCode" class="method-link">IssueSignedNTPCode</a></li><li data-type="method" id="ElvClient_NTP-RedeemCode-nav"><a href="module-ElvClient_NTP.html#.RedeemCode" class="method-link">RedeemCode</a></li></ul></li></ul><h3>Namespaces</h3><ul><li id="Crypto-nav">
+          <div data-name="Crypto" class="class-link-container"><a class="class-link">Crypto</a></div><ul class='methods'><li data-type="method" id="Crypto-Crypto-nav"><a href="Crypto.html" class="method-link">Crypto</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="Crypto-Decrypt-nav"><a href="Crypto.html#.Decrypt" class="method-link">Decrypt</a></li><li data-type="method" id="Crypto-Encrypt-nav"><a href="Crypto.html#.Encrypt" class="method-link">Encrypt</a></li></ul></li><li id="Utils-nav">
+          <div data-name="Utils" class="class-link-container"><a class="class-link">Utils</a></div><ul class='methods'><li data-type="method" id="Utils-Utils-nav"><a href="Utils.html" class="method-link">Utils</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="Utils-AddressToHash-nav"><a href="Utils.html#.AddressToHash" class="method-link">AddressToHash</a></li><li data-type="method" id="Utils-AddressToLibraryId-nav"><a href="Utils.html#.AddressToLibraryId" class="method-link">AddressToLibraryId</a></li><li data-type="method" id="Utils-AddressToNodeId-nav"><a href="Utils.html#.AddressToNodeId" class="method-link">AddressToNodeId</a></li><li data-type="method" id="Utils-AddressToObjectId-nav"><a href="Utils.html#.AddressToObjectId" class="method-link">AddressToObjectId</a></li><li data-type="method" id="Utils-AddressToSpaceId-nav"><a href="Utils.html#.AddressToSpaceId" class="method-link">AddressToSpaceId</a></li><li data-type="method" id="Utils-DecodeAuthorizationToken-nav"><a href="Utils.html#.DecodeAuthorizationToken" class="method-link">DecodeAuthorizationToken</a></li><li data-type="method" id="Utils-DecodeSignedToken-nav"><a href="Utils.html#.DecodeSignedToken" class="method-link">DecodeSignedToken</a></li><li data-type="method" id="Utils-DecodeVersionHash-nav"><a href="Utils.html#.DecodeVersionHash" class="method-link">DecodeVersionHash</a></li><li data-type="method" id="Utils-DecodeWriteToken-nav"><a href="Utils.html#.DecodeWriteToken" class="method-link">DecodeWriteToken</a></li><li data-type="method" id="Utils-EqualAddress-nav"><a href="Utils.html#.EqualAddress" class="method-link">EqualAddress</a></li><li data-type="method" id="Utils-EqualHash-nav"><a href="Utils.html#.EqualHash" class="method-link">EqualHash</a></li><li data-type="method" id="Utils-EtherToWei-nav"><a href="Utils.html#.EtherToWei" class="method-link">EtherToWei</a></li><li data-type="method" id="Utils-FormatAddress-nav"><a href="Utils.html#.FormatAddress" class="method-link">FormatAddress</a></li><li data-type="method" id="Utils-FormatSignature-nav"><a href="Utils.html#.FormatSignature" class="method-link">FormatSignature</a></li><li data-type="method" id="Utils-HashToAddress-nav"><a href="Utils.html#.HashToAddress" class="method-link">HashToAddress</a></li><li data-type="method" id="Utils-IsCloneable-nav"><a href="Utils.html#.IsCloneable" class="method-link">IsCloneable</a></li><li data-type="method" id="Utils-MakeClonable-nav"><a href="Utils.html#.MakeClonable" class="method-link">MakeClonable</a></li><li data-type="method" id="Utils-PublicKeyToAddress-nav"><a href="Utils.html#.PublicKeyToAddress" class="method-link">PublicKeyToAddress</a></li><li data-type="method" id="Utils-ResizeImage-nav"><a href="Utils.html#.ResizeImage" class="method-link">ResizeImage</a></li><li data-type="method" id="Utils-ToBigNumber-nav"><a href="Utils.html#.ToBigNumber" class="method-link">ToBigNumber</a></li><li data-type="method" id="Utils-ToBytes32-nav"><a href="Utils.html#.ToBytes32" class="method-link">ToBytes32</a></li><li data-type="method" id="Utils-ValidAddress-nav"><a href="Utils.html#.ValidAddress" class="method-link">ValidAddress</a></li><li data-type="method" id="Utils-ValidHash-nav"><a href="Utils.html#.ValidHash" class="method-link">ValidHash</a></li><li data-type="method" id="Utils-WeiToEther-nav"><a href="Utils.html#.WeiToEther" class="method-link">WeiToEther</a></li></ul></li></ul>
+      </div>
+    </nav>
+
+    <div class="main">
+      <div class="header"></div>
+      <div class="main-content">
+        
+        <h1 class="page-title">
+          client/LiveStream.js
+        </h1>
+        
+
+        
+      
+
+<a class="button" href="client_LiveStream.html">Back</a>
+<div class="source-container">
+  <pre class="prettyprint source linenums"><code>/**
+ * Methods for Live Stream creation and management
+ *
+ * @module ElvClient/LiveStream
+ */
+
+const {LiveConf} = require("./LiveConf");
+const path = require("path");
+
+const fs = require("fs");
+
+const HttpClient = require("../HttpClient");
+//
+// const {
+//   ValidateLibrary,
+//   ValidateVersion,
+//   ValidateParameters
+// } = require("../Validation");
+
+const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
+  const tok = await client.authClient.AuthorizationToken({libraryId, objectId,
+    versionHash, channelAuth: false, noCache: true,
+    noAuth: true});
+
+  return tok;
+};
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Retrieve the status of the current live stream session
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name -
+ * @param {boolean} stopLro -
+ * @param {boolean} showParams -
+ * States:
+ * unconfigured    - no live_recording_config
+ * uninitialized   - no live_recording config generated
+ * inactive        - live_recording config initialized but no 'edge write token'
+ * stopped         - edge-write-token but not started
+ * starting        - LRO running but no source data yet
+ * running         - stream is running and producing output
+ * stalled         - LRO running but no source data (so not producing output)
+ *
+ * @return {Object} - The status response for the object, as well as logs, warnings and errors from the master initialization
+ */
+exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
+  let conf = await this.LoadConf({name});
+
+  let status = {name: name};
+
+  try {
+
+    let libraryId = await this.ContentObjectLibraryId({objectId: conf.objectId});
+    status.library_id = libraryId;
+    status.object_id = conf.objectId;
+
+    let mainMeta = await this.ContentObjectMetadata({
+      libraryId: libraryId,
+      objectId: conf.objectId,
+      select: [
+        "live_recording_config",
+        "live_recording"
+      ]
+    });
+
+    if(mainMeta.live_recording_config == undefined || mainMeta.live_recording_config.url == undefined) {
+      status.state = "unconfigured";
+      return status;
+    }
+
+    if(mainMeta.live_recording == undefined || mainMeta.live_recording.fabric_config == undefined ||
+      mainMeta.live_recording.playout_config == undefined || mainMeta.live_recording.recording_config == undefined) {
+      status.state = "uninitialized";
+      return status;
+    }
+
+    let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
+    if(fabURI === undefined) {
+      console.log("bad fabric config - missing ingress node API");
+      status.state = "uninitialized";
+      return status;
+    }
+
+    // Support both hostname and URL ingress_node_api
+    if(!fabURI.startsWith("http")) {
+      // Assume https
+      fabURI = "https://" + fabURI;
+    }
+
+    status.fabric_api = fabURI;
+    status.url = mainMeta.live_recording.recording_config.recording_params.origin_url;
+
+    let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
+    if(edgeWriteToken == undefined) {
+      status.state = "inactive";
+      return status;
+    }
+
+    this.RecordWriteToken({writeToken: edgeWriteToken, fabricNodeUrl: fabURI});
+
+    status.edge_write_token = edgeWriteToken;
+    status.stream_id = edgeWriteToken; // By convention the stream ID is its write token
+    let edgeMeta = await this.ContentObjectMetadata({
+      libraryId: libraryId,
+      objectId: conf.objectId,
+      writeToken: edgeWriteToken,
+      select: [
+        "live_recording"
+      ]
+    });
+
+    // If a stream has never been started return state 'inactive'
+    if(edgeMeta.live_recording === undefined ||
+      edgeMeta.live_recording.recordings === undefined ||
+      edgeMeta.live_recording.recordings.recording_sequence === undefined) {
+      status.state = "stopped";
+      return status;
+    }
+
+    let recordings = edgeMeta.live_recording.recordings;
+    status.recording_period_sequence = recordings.recording_sequence;
+
+    let sequence = recordings.recording_sequence;
+    let period = recordings.live_offering[sequence - 1];
+
+    let tlro = period.live_recording_handle;
+    status.tlro = tlro;
+
+    let sinceLastFinalize = Math.floor(new Date().getTime() / 1000) -
+      period.video_finalized_parts_info.last_finalization_time /1000000;
+
+    let recording_period = {
+      activation_time_epoch_sec: period.recording_start_time_epoch_sec,
+      start_time_epoch_sec: period.start_time_epoch_sec,
+      start_time_text: new Date(period.start_time_epoch_sec * 1000).toLocaleString(),
+      end_time_epoch_sec: period.end_time_epoch_sec,
+      end_time_text:  period.end_time_epoch_sec === 0 ? null : new Date(period.end_time_epoch_sec * 1000).toLocaleString(),
+      video_parts: period.video_finalized_parts_info.n_parts,
+      video_last_part_finalized_epoch_sec: period.video_finalized_parts_info.last_finalization_time / 1000000,
+      video_since_last_finalize_sec : sinceLastFinalize
+    };
+    status.recording_period = recording_period;
+
+    status.lro_status_url = await this.FabricUrl({
+      libraryId: libraryId,
+      objectId: conf.objectId,
+      writeToken: edgeWriteToken,
+      call: "live/status/" + tlro
+    });
+
+    status.insertions = [];
+    if((edgeMeta.live_recording.playout_config.interleaves != undefined) &amp;&amp;
+      (edgeMeta.live_recording.playout_config.interleaves[sequence] != undefined)) {
+      let insertions = edgeMeta.live_recording.playout_config.interleaves[sequence];
+      for(let i = 0; i &lt; insertions.length; i ++) {
+        let insertionTimeSinceEpoch = recording_period.start_time_epoch_sec + insertions[i].insertion_time;
+        status.insertions[i] = {
+          insertion_time_since_start: insertions[i].insertion_time,
+          insertion_time: new Date(insertionTimeSinceEpoch * 1000).toISOString(),
+          insertion_time_local: new Date(insertionTimeSinceEpoch * 1000).toLocaleString(),
+          target: insertions[i].playout};
+      }
+    }
+
+    if(showParams) {
+      status.recording_paramse = edgeMeta.live_recording.recording_config.recording_params;
+    }
+
+    let state = "stopped";
+    let lroStatus = "";
+    try {
+      lroStatus = await this.utils.ResponseToJson(
+        await HttpClient.Fetch(status.lro_status_url)
+      );
+      state = lroStatus.state;
+    } catch(error) {
+      console.log("LRO Status (failed): ", error.response.statusCode);
+      status.state = "stopped";
+      status.error = error.response;
+      return status;
+    }
+
+    // Convert LRO 'state' to desired 'state'
+    if(state === "running" &amp;&amp; period.video_finalized_parts_info.last_finalization_time === 0) {
+      state = "starting";
+    } else if(state === "running" &amp;&amp; sinceLastFinalize > 32.9) {
+      state = "stalled";
+    } else if(state == "terminated") {
+      state = "stopped";
+    }
+    status.state = state;
+
+    if((state === "running" || state === "stalled" || state === "starting") &amp;&amp; stopLro) {
+      lroStopUrl = await this.FabricUrl({
+        libraryId: libraryId,
+        objectId: conf.objectId,
+        writeToken: edgeWriteToken,
+        call: "live/stop/" + tlro
+      });
+
+      try {
+        await this.utils.ResponseToJson(
+          await HttpClient.Fetch(lroStopUrl)
+        );
+        console.log("LRO Stop: ", lroStatus.body);
+      } catch(error) {
+        console.log("LRO Stop (failed): ", error.response.statusCode);
+      }
+      state = "stopped";
+      status.state = state;
+    }
+
+    if(state === "running") {
+      let playout_urls = {};
+      let objectId = conf.objectId;
+      let playout_options = await this.PlayoutOptions({
+        objectId,
+        linkPath: "public/asset_metadata/sources/default"
+      });
+
+      let hls_clear_enabled = (
+        playout_options &amp;&amp;
+        playout_options.hls &amp;&amp;
+        playout_options.hls.playoutMethods &amp;&amp;
+        playout_options.hls.playoutMethods.clear !== undefined
+      );
+      if(hls_clear_enabled) {
+        playout_urls.hls_clear = await this.FabricUrl({
+          libraryId: libraryId,
+          objectId: objectId,
+          rep: "playout/default/hls-clear/playlist.m3u8",
+        });
+      }
+
+      let hls_aes128_enabled = (
+        playout_options &amp;&amp;
+        playout_options.hls &amp;&amp;
+        playout_options.hls.playoutMethods &amp;&amp;
+        playout_options.hls.playoutMethods["aes-128"] !== undefined
+      );
+      if(hls_aes128_enabled) {
+        playout_urls.hls_aes128 = await this.FabricUrl({
+          libraryId: libraryId,
+          objectId: objectId,
+          rep: "playout/default/hls-aes128/playlist.m3u8",
+        });
+      }
+
+      let hls_sample_aes_enabled = (
+        playout_options &amp;&amp;
+        playout_options.hls &amp;&amp;
+        playout_options.hls.playoutMethods &amp;&amp;
+        playout_options.hls.playoutMethods["sample-aes"] !== undefined
+      );
+      if(hls_sample_aes_enabled) {
+        playout_urls.hls_sample_aes = await this.FabricUrl({
+          libraryId: libraryId,
+          objectId: objectId,
+          rep: "playout/default/hls-sample-aes/playlist.m3u8",
+        });
+      }
+
+      const networkInfo = await this.NetworkInfo();
+      let token = await this.authClient.AuthorizationToken({
+        libraryId,
+        objectId,
+        channelAuth: false,
+        noCache: true,
+        noAuth: true
+      });
+
+      let embed_net = "main";
+      if(networkInfo.name.includes("demo")) {
+        embed_net = "demo";
+      }
+      let embed_url = `https://embed.v3.contentfabric.io/?net=${embed_net}&amp;p&amp;ct=h&amp;oid=${conf.objectId}&amp;mt=v&amp;ath=${token}`;
+      playout_urls.embed_url = embed_url;
+
+      status.playout_urls = playout_urls;
+    }
+  } catch(error) {
+    console.error(error);
+  }
+
+  return status;
+};
+
+// async StatusPrep({name}) {
+//
+//   let conf = await this.LoadConf({name});
+//
+//   try {
+//
+//     // Set static token - avoid individual auth for separate channels/streams
+//     let token = await MakeTxLessToken({client: this.client, libraryId: conf.libraryId});
+//     this.client.SetStaticToken({token});
+//
+//   } catch(error) {
+//     console.log("StatusPrep failed: ", error);
+//     return null;
+//   }
+//
+// }
+
+/**
+ * Create a new edge write token
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name -
+ * @param {boolean} start -
+ *
+ * @return {Object} - The status response for the object
+ *
+*/
+exports.StreamCreate = async function({name, start = false}) {
+
+  let status = await this.StreamStatus({name});
+  if(status.state !== "inactive" &amp;&amp; status.state !== "terminated" &amp;&amp; status.state !== "stopped") {
+    return {
+      state: status.state,
+      error: "stream still active - must terminate first"
+    };
+  }
+
+  let objectId = status.object_id;
+  console.log("START: ", name, "start", start);
+
+  let libraryId = await this.ContentObjectLibraryId({objectId: objectId});
+
+  // Read live recording parameters - determine ingest node
+  let liveRecording = await this.ContentObjectMetadata({
+    libraryId: libraryId,
+    objectId: objectId,
+    metadataSubtree: "/live_recording"
+  });
+
+  let fabURI = liveRecording.fabric_config.ingress_node_api;
+  // Support both hostname and URL ingress_node_api
+  if(!fabURI.startsWith("http")) {
+    // Assume https
+    fabURI = "https://" + fabURI;
+  }
+
+  this.SetNodes({fabricURIs: [fabURI]});
+
+  console.log("Node URI", fabURI, "ID", liveRecording.fabric_config.ingress_node_id);
+
+  let response = await this.EditContentObject({
+    libraryId: libraryId,
+    objectId: objectId
+  });
+  const edgeToken = response.write_token;
+  console.log("Edge token:", edgeToken);
+
+  /*
+  * Set the metadata, including the edge token.
+  */
+  response = await this.EditContentObject({
+    libraryId: libraryId,
+    objectId: objectId
+  });
+  let writeToken = response.write_token;
+
+  this.Log("Merging metadata: ", libraryId, objectId, writeToken);
+  await this.MergeMetadata({
+    libraryId: libraryId,
+    objectId: objectId,
+    writeToken: writeToken,
+    metadata: {
+      live_recording: {
+        status: {
+          edge_write_token: edgeToken,
+          state: "active"  // indicates there is an active session (set to 'closed' when done)
+        },
+        fabric_config: {
+          edge_write_token: edgeToken
+        }
+      }
+    }
+  });
+
+  this.Log("Finalizing content draft: ", libraryId, objectId, writeToken);
+  response = await this.FinalizeContentObject({
+    libraryId: libraryId,
+    objectId: objectId,
+    writeToken: writeToken,
+    commitMessage: "Create stream edge write token " + edgeToken
+  });
+  const objectHash = response.hash;
+  this.Log("Finalized object: ", objectHash);
+
+  status = {
+    object_id: objectId,
+    hash: objectHash,
+    library_id: libraryId,
+    stream_id: edgeToken,
+    edge_write_token: edgeToken,
+    fabric_api: fabURI,
+    state: "stopped"
+  };
+
+  if(start) {
+    status = this.StreamStartOrStopOrReset({name, op: start});
+  }
+
+  return status;
+};
+
+/**
+ * Start, stop or reset a stream within the current session (current edge write token)
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name -
+ * @param {string=} op - The operation to perform. Possible values:
+ * 'start'
+ * 'reset' - Stops current LRO recording and starts a new one.  Does
+ * not create a new edge write token (just creates a new recording
+ * period in the existing edge write token)
+ * - 'stop'
+ *
+ * @return {Object} - The status response for the stream
+ *
+*/
+exports.StreamStartOrStopOrReset = async function({name, op}) {
+  try {
+    console.log("Stream ", op, ": ", name);
+    let status = await this.StreamStatus({name});
+    if(status.state != "stopped") {
+      if(op === "start") {
+        status.error = "Unable to start stream - state: " + status.state;
+        return status;
+      }
+    }
+
+    if(status.state == "running" || status.state == "starting" || status.state == "stalled") {
+      console.log("STOPPING");
+      try {
+        await this.CallBitcodeMethod({
+          libraryId: status.library_id,
+          objectId: status.object_id,
+          writeToken: status.edge_write_token,
+          method: "/live/stop/" + status.tlro,
+          constant: false
+        });
+      } catch(error) {
+        // The /call/lro/stop API returns empty response
+        // console.log("LRO Stop (failed): ", error);
+      }
+
+      // Wait until LRO is terminated
+      let tries = 10;
+      while(status.state != "stopped" &amp;&amp; tries-- > 0) {
+        console.log("Wait to terminate - ", status.state);
+        await sleep(1000);
+        status = await this.StreamStatus({name});
+      }
+      console.log("Status after terminate - ", status.state);
+
+      if(tries &lt;= 0) {
+        console.log("Failed to terminate");
+        return status;
+      }
+    }
+
+    if(op === "stop") {
+      return status;
+    }
+
+    console.log("STARTING", "edge_write_token", status.edge_write_token);
+
+    try {
+      await this.CallBitcodeMethod({
+        libraryId: status.library_id,
+        objectId: status.object_id,
+        writeToken: status.edge_write_token,
+        method: "/live/start",
+        constant: false
+      });
+    } catch(error) {
+      console.log("LRO Start (failed): ", error);
+      return {
+        state: status.state,
+        error: "LRO start failed - must create a stream first"
+      };
+    }
+
+    // Wait until LRO is 'starting'
+    let tries = 10;
+    while(status.state != "starting" &amp;&amp; tries-- > 0) {
+      console.log("Wait to start - ", status.state);
+      await sleep(1000);
+      status = await this.StreamStatus({name});
+    }
+
+    console.log("Status after restart - ", status.state);
+    return status;
+
+  } catch(error) {
+    console.error(error);
+  }
+};
+
+/*
+ * Stop the live stream session and close the edge write token.
+ * Not implemented fully
+ */
+// async StopSession({name}) {
+//
+//   try {
+//
+//     console.log("TERMINATE: ", name);
+//
+//     let conf = await this.LoadConf({name});
+//
+//     let objectId = conf.objectId;
+//     let libraryId = await this.client.ContentObjectLibraryId({objectId: objectId});
+//
+//     let mainMeta = await this.client.ContentObjectMetadata({
+//       libraryId: libraryId,
+//       objectId: objectId
+//     });
+//
+//     let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
+//     // Support both hostname and URL ingress_node_api
+//     if(!fabURI.startsWith("http")) {
+//       // Assume https
+//       fabURI = "https://" + fabURI;
+//     }
+//
+//     this.client.SetNodes({fabricURIs: [fabURI]});
+//
+//     let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
+//
+//     if(edgeWriteToken === undefined || edgeWriteToken === "") {
+//       return {
+//         state: "inactive",
+//         error: "no active streams - must create a stream first"
+//       };
+//     }
+//     let edgeMeta = await this.client.ContentObjectMetadata({
+//       libraryId: libraryId,
+//       objectId: objectId,
+//       writeToken: edgeWriteToken
+//     });
+//
+//     // Stop the LRO if running
+//     let status = await this.Status({name});
+//     if(status.state != "terminated") {
+//       console.log("STOPPING");
+//       try {
+//         await this.client.CallBitcodeMethod({
+//           libraryId: status.library_id,
+//           objectId: status.object_id,
+//           writeToken: status.edge_write_token,
+//           method: "/live/stop/" + status.tlro,
+//           constant: false
+//         });
+//       } catch(error) {
+//         // The /call/lro/stop API returns empty response
+//         // console.log("LRO Stop (failed): ", error);
+//       }
+//
+//       // Wait until LRO is terminated
+//       let tries = 10;
+//       while (status.state != "terminated" &amp;&amp; tries-- > 0) {
+//         console.log("Wait to terminate - ", status.state);
+//         await sleep(1000);
+//         status = await this.Status({name});
+//       }
+//       console.log("Status after terminate - ", status.state);
+//
+//       if(tries &lt;= 0) {
+//         console.log("Failed to terminate");
+//         return status;
+//       }
+//     }
+//
+//     // Set stop time
+//     edgeMeta.recording_stop_time = Math.floor(new Date().getTime() / 1000);
+//     console.log("recording_start_time: ", edgeMeta.recording_start_time);
+//     console.log("recording_stop_time:  ", edgeMeta.recording_stop_time);
+//
+//     edgeMeta.live_recording.status = {
+//       state: "terminated",
+//       recording_stop_time: edgeMeta.recording_stop_time
+//     };
+//
+//     edgeMeta.live_recording.fabric_config.edge_write_token = "";
+//
+//     await this.client.ReplaceMetadata({
+//       libraryId: libraryId,
+//       objectId: objectId,
+//       writeToken: edgeWriteToken,
+//       metadata: edgeMeta
+//     });
+//
+//     let fin = await this.client.FinalizeContentObject({
+//       libraryId,
+//       objectId,
+//       writeToken: edgeWriteToken,
+//       commitMessage: "Finalize live stream - stop time " + edgeMeta.recording_stop_time,
+//       publish: false // Don't publish this version because it is not currently useful
+//     });
+//
+//     return {
+//       fin,
+//       name: name,
+//       edge_write_token: edgeWriteToken,
+//       state: "terminated"
+//     };
+//
+//   } catch(error) {
+//     console.error(error);
+//   }
+// }
+
+// async Initialize({name, drm=false, format}) {
+//
+//   const contentTypes = await this.client.ContentTypes();
+//
+//   let typeAbrMaster;
+//   let typeLiveStream;
+//   for (let i = 0; i &lt; Object.keys(contentTypes).length; i ++) {
+//     const key = Object.keys(contentTypes)[i];
+//     if(contentTypes[key].name.includes("ABR Master") || contentTypes[key].name.includes("Title")) {
+//       typeAbrMaster = contentTypes[key].hash;
+//     }
+//     if(contentTypes[key].name.includes("Live Stream")) {
+//       typeLiveStream = contentTypes[key].hash;
+//     }
+//   }
+//
+//   if(typeAbrMaster === undefined || typeLiveStream === undefined) {
+//     console.log("ERROR - unable to find content types", "ABR Master", typeAbrMaster, "Live Stream", typeLiveStream);
+//     return {};
+//   }
+//   let res = await this.SetOfferingAndDRM({name, typeAbrMaster, typeLiveStream, drm, format});
+//   return res;
+// }
+
+// async SetOfferingAndDRM({name, typeAbrMaster, typeLiveStream, drm=false, format}) {
+//
+//   let status = await this.Status({name});
+//   if(status.state != "inactive" &amp;&amp; status.state != "terminated") {
+//     return {
+//       state: status.state,
+//       error: "stream still active - must terminate first"
+//     };
+//   }
+//
+//   let objectId = status.object_id;
+//
+//   console.log("INIT: ", name, objectId);
+//
+//   const {GenerateOffering} = require("./LiveObjectSetupStepOne");
+//
+//   const aBitRate = 128000;
+//   const aChannels = 2;
+//   const aSampleRate = 48000;
+//   const aStreamIndex = 1;
+//   const aTimeBase = "1/48000";
+//   const aChannelLayout = "stereo";
+//
+//   const vBitRate = 14000000;
+//   const vHeight = 720;
+//   const vStreamIndex = 0;
+//   const vWidth = 1280;
+//   const vDisplayAspectRatio = "16/9";
+//   const vFrameRate = "30000/1001";
+//   const vTimeBase = "1/30000"; // "1/16000";
+//
+//   const abrProfile = require("./abr_profile_live_drm.json");
+//
+//   let playoutFormats = abrProfile.playout_formats;
+//   if(format) {
+//     drm = true; // Override DRM parameter
+//     playoutFormats = {};
+//     let formats = format.split(",");
+//     for (let i = 0; i &lt; formats.length; i++) {
+//       if(formats[i] === "hls-clear") {
+//         abrProfile.drm_optional = true;
+//         playoutFormats["hls-clear"] = {
+//           "drm": null,
+//           "protocol": {
+//             "type": "ProtoHls"
+//           }
+//         };
+//         continue;
+//       }
+//       playoutFormats[formats[i]] = abrProfile.playout_formats[formats[i]];
+//     }
+//   } else if(!drm) {
+//     abrProfile.drm_optional = true;
+//     playoutFormats = {
+//       "hls-clear": {
+//         "drm": null,
+//         "protocol": {
+//           "type": "ProtoHls"
+//         }
+//       }
+//     };
+//   }
+//
+//   abrProfile.playout_formats = playoutFormats;
+//
+//   let libraryId = await this.client.ContentObjectLibraryId({objectId});
+//
+//   try {
+//
+//     let mainMeta = await this.client.ContentObjectMetadata({
+//       libraryId: libraryId,
+//       objectId: objectId
+//     });
+//
+//     let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
+//     // Support both hostname and URL ingress_node_api
+//     if(!fabURI.startsWith("http")) {
+//       // Assume https
+//       fabURI = "https://" + fabURI;
+//     }
+//
+//     this.client.SetNodes({fabricURIs: [fabURI]});
+//
+//     let streamUrl = mainMeta.live_recording.recording_config.recording_params.origin_url;
+//
+//     await GenerateOffering({
+//       client: this.client,
+//       libraryId,
+//       objectId,
+//       typeAbrMaster, typeLiveStream,
+//       streamUrl,
+//       abrProfile,
+//       aBitRate, aChannels, aSampleRate, aStreamIndex,
+//       aTimeBase,
+//       aChannelLayout,
+//       vBitRate, vHeight, vStreamIndex, vWidth,
+//       vDisplayAspectRatio, vFrameRate, vTimeBase
+//     });
+//
+//     console.log("GenerateOffering - DONE");
+//
+//     return {
+//       name,
+//       object_id: objectId,
+//       state: "initialized"
+//     };
+//   } catch(error) {
+//     console.error(error);
+//   }
+// }
+
+// Add a content insertion entry
+// Parameters:
+// - insertionTime - seconds (float)
+// - sinceStart - true if time specified since stream start, false if since epoch
+// - duration - seconds (float, deafault 20.0)
+// - targetHash -  playable
+// - remove - flag to remove the insertion at that exact 'time' (instead of adding)
+// async Insertion({name, insertionTime, sinceStart, duration, targetHash, remove}) {
+//
+//   // Determine audio and video parameters of the insertion
+//   const insertionInfo = await this.getOfferingInfo({versionHash: targetHash});
+//   const audioAbrDuration = insertionInfo.audio.seg_duration_sec;
+//   const videoAbrDuration = insertionInfo.video.seg_duration_sec;
+//
+//   if(audioAbrDuration === 0 || videoAbrDuration === 0) {
+//     throw new Error("Bad segment duration hash:", targetHash);
+//   }
+//
+//   if(duration === undefined) {
+//     duration = insertionInfo.duration_sec;  // Use full duration of the insertion
+//   } else {
+//     if(duration > insertionInfo.duration_sec) {
+//       throw new Error("Bad duration - larger than insertion object duration", insertionInfo.duration_sec);
+//     }
+//   }
+//
+//   let conf = await this.LoadConf({name});
+//   let libraryId = await this.client.ContentObjectLibraryId({objectId: conf.objectId});
+//   let objectId = conf.objectId;
+//
+//   let mainMeta = await this.client.ContentObjectMetadata({
+//     libraryId: libraryId,
+//     objectId: conf.objectId
+//   });
+//
+//   let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
+//
+//   // Support both hostname and URL ingress_node_api
+//   if(!fabURI.startsWith("http")) {
+//     // Assume https
+//     fabURI = "https://" + fabURI;
+//   }
+//   this.client.SetNodes({fabricURIs: [fabURI]});
+//   let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
+//
+//   let edgeMeta = await this.client.ContentObjectMetadata({
+//     libraryId: libraryId,
+//     objectId: conf.objectId,
+//     writeToken: edgeWriteToken
+//   });
+//
+//   // Find stream start time (from the most recent recording section)
+//   let recordings = edgeMeta.live_recording.recordings;
+//   let sequence = 1;
+//   let streamStartTime = 0;
+//   if(recordings != undefined &amp;&amp; recordings.recording_sequence != undefined) {
+//     // We have at least one recording - check if still active
+//     sequence = recordings.recording_sequence;
+//     let period = recordings.live_offering[sequence - 1];
+//
+//     if(period.end_time_epoch_sec > 0) {
+//       // The last period is closed - apply insertions to the next period
+//       sequence ++;
+//     } else {
+//       // The period is active
+//       streamStartTime = period.start_time_epoch_sec;
+//     }
+//   }
+//
+//   if(streamStartTime === 0) {
+//     // There is no active period - must use absolute time
+//     if(sinceStart === false) {
+//       throw new Error("Stream not running - must use 'time since start'");
+//     }
+//   }
+//
+//   // Find the current period playout configuration
+//   if(edgeMeta.live_recording.playout_config.interleaves === undefined) {
+//     edgeMeta.live_recording.playout_config.interleaves = {};
+//   }
+//   if(edgeMeta.live_recording.playout_config.interleaves[sequence] === undefined) {
+//     edgeMeta.live_recording.playout_config.interleaves[sequence] = [];
+//   }
+//
+//   let playoutConfig = edgeMeta.live_recording.playout_config;
+//   let insertions = playoutConfig.interleaves[sequence];
+//
+//   let res = {};
+//
+//   if(!sinceStart) {
+//     insertionTime = insertionTime - streamStartTime;
+//   }
+//
+//   // Assume insertions are sorted by insertion time
+//   let errs = [];
+//   let currentTime = -1;
+//   let insertionDone = false;
+//   let newInsertion = {
+//     insertion_time: insertionTime,
+//     duration: duration,
+//     audio_abr_duration: audioAbrDuration,
+//     video_abr_duration: videoAbrDuration,
+//     playout: "/qfab/" + targetHash + "/rep/playout"  // TO FIX - should be a link
+//   };
+//
+//   for (let i = 0; i &lt; insertions.length; i ++) {
+//     if(insertions[i].insertion_time &lt;= currentTime) {
+//       // Bad insertion - must be later than current time
+//       append(errs, "Bad insertion - time:", insertions[i].insertion_time);
+//     }
+//     if(remove) {
+//       if(insertions[i].insertion_time === insertionTime) {
+//         insertions.splice(i, 1);
+//         break;
+//       }
+//     } else {
+//       if(insertions[i].insertion_time > insertionTime) {
+//         if(i > 0) {
+//           insertions = [
+//             ...insertions.splice(0, i),
+//             newInsertion,
+//             ...insertions.splice(i)
+//           ];
+//         } else {
+//           insertions = [
+//             newInsertion,
+//             ...insertions.splice(i)
+//           ];
+//         }
+//         insertionDone = true;
+//         break;
+//       }
+//     }
+//   }
+//
+//   if(!remove &amp;&amp; !insertionDone) {
+//     // Add to the end of the insertions list
+//     console.log("Add insertion at the end");
+//     insertions = [
+//       ...insertions,
+//       newInsertion
+//     ];
+//   }
+//
+//   playoutConfig.interleaves[sequence] = insertions;
+//
+//   // Store the new insertions in the write token
+//   await this.client.ReplaceMetadata({
+//     libraryId: libraryId,
+//     objectId: objectId,
+//     writeToken: edgeWriteToken,
+//     metadataSubtree: "/live_recording/playout_config",
+//     metadata: edgeMeta.live_recording.playout_config
+//   });
+//
+//   res.errors = errs;
+//   res.insertions = insertions;
+//   return res;
+// }
+
+
+exports.LoadConf = async function({name}) {
+  if(name.startsWith("iq__")) {
+    return {
+      name: name,
+      objectId: name
+    };
+  }
+
+  // If name is not a QID, load liveconf.json
+  let streamsBuf;
+  try {
+    streamsBuf = fs.readFileSync(
+      path.resolve(__dirname, "../liveconf.json")
+    );
+  } catch(error) {
+    console.log("Stream name must be a QID or a label in liveconf.json");
+    return {};
+  }
+  const streams = JSON.parse(streamsBuf);
+  const conf = streams[name];
+  if(conf === null) {
+    console.log("Bad name: ", name);
+    return {};
+  }
+
+  return conf;
+};
+
+/*
+ * Read a playable contnet object and get information about a particular offering
+ */
+// async getOfferingInfo({versionHash, offering = "default"}) {
+//
+//   // Content Type check is currently disabled due to permissions
+//   /*
+//   let ct = await this.client.ContentObject({versionHash});
+//   if(ct.type != undefined &amp;&amp; ct.type != "") {
+//     let typeMeta = await this.client.ContentObjectMetadata({
+//       versionHash: ct.type
+//     });
+//     if(typeMeta.bitcode_flags != "abrmaster") {
+//       throw new Error("Not a playable VoD object " + versionHash);
+//     }
+//   }
+//   */
+//   let offeringMeta = await this.client.ContentObjectMetadata({
+//     versionHash,
+//     metadataSubtree: "/offerings/" + offering
+//   });
+//
+//   var info = {
+//     duration_sec: 0 // Minimum of video and audio duration
+//   };
+//   ["video", "audio"].forEach(mt =>  {
+//     const stream = offeringMeta.media_struct.streams[mt];
+//     info[mt] = {
+//       seg_duration_sec: stream.optimum_seg_dur.float,
+//       duration_sec: stream.duration.float,
+//       frame_rate_rat: stream.rate,
+//     };
+//     if(info.duration_sec === 0 || stream.duration.float &lt; info.duration_sec) {
+//       info.duration_sec = stream.duration.float;
+//     }
+//   });
+//   return info;
+// }
+
+
+// async StreamDownload({name, period}) {
+//
+//   let conf = await this.LoadConf({name});
+//
+//   let status = {name};
+//
+//   try {
+//
+//     let libraryId = await this.client.ContentObjectLibraryId({objectId: conf.objectId});
+//     status.library_id = libraryId;
+//     status.object_id = conf.objectId;
+//
+//     let mainMeta = await this.client.ContentObjectMetadata({
+//       libraryId: libraryId,
+//       objectId: conf.objectId
+//     });
+//
+//     let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
+//     if(fabURI === undefined) {
+//       console.log("bad fabric config - missing ingress node API");
+//     }
+//
+//     // Support both hostname and URL ingress_node_api
+//     if(!fabURI.startsWith("http")) {
+//       // Assume https
+//       fabURI = "https://" + fabURI;
+//     }
+//     this.client.SetNodes({fabricURIs: [fabURI]});
+//
+//     let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
+//     let edgeMeta = await this.client.ContentObjectMetadata({
+//       libraryId: libraryId,
+//       objectId: conf.objectId,
+//       writeToken: edgeWriteToken
+//     });
+//
+//     // If a stream has never been started return state 'inactive'
+//     if(edgeMeta.live_recording === undefined ||
+//       edgeMeta.live_recording.recordings === undefined ||
+//       edgeMeta.live_recording.recordings.recording_sequence === undefined) {
+//       status.state = "no recordings";
+//       return status;
+//     }
+//
+//     let recordings = edgeMeta.live_recording.recordings;
+//     status.recording_period_sequence = recordings.recording_sequence;
+//
+//     let sequence = recordings.recording_sequence;
+//     if(period === undefined || period &lt; 0 || period > sequence - 1) {
+//       period = sequence - 1;
+//     }
+//
+//     console.log("Downloading stream", name, " period", period, " latest", sequence - 1);
+//
+//     let recording = recordings.live_offering[period];
+//     if(recording === undefined) {
+//       console.log("ERROR - recording period not found: ", period);
+//     }
+//
+//     let dpath = "DOWNLOAD/" + edgeWriteToken + "." + period;
+//     !fs.existsSync(dpath) &amp;&amp; fs.mkdirSync(dpath, {recursive: true});
+//
+//     let mts = ["audio", "video"];
+//     for (let mi = 0; mi &lt; mts.length; mi ++) {
+//       let mt = mts[mi];
+//       console.log("Downloading ", mt);
+//       let mtpath = dpath + "/" + mt;
+//       let partsfile = dpath + "/parts_" + mt + ".txt";
+//       !fs.existsSync(mtpath) &amp;&amp; fs.mkdirSync(mtpath);
+//       var sources = recording.sources[mt];
+//       for (let i = 0; i &lt; sources.length - 1; i++) {
+//         console.log(sources[i].hash);
+//         let partHash = sources[i].hash;
+//         let buf = await this.client.DownloadPart({
+//           libraryId,
+//           objectId: conf.objectId,
+//           partHash,
+//           format: "buffer",
+//           chunked: false,
+//           callback: ({bytesFinished, bytesTotal}) => {
+//             console.log("  progress: ", bytesFinished + "/" + bytesTotal);
+//           }
+//         });
+//
+//         let partfile = mtpath + "/" + partHash + ".mp4";
+//         fs.appendFile(partfile, buf, (err) => {
+//           if(err)
+//             console.log(err);
+//         });
+//         fs.appendFile(partsfile, "file '" + mt + "/" + partHash + ".mp4'\n", (err) => {
+//           if(err)
+//             console.log(err);
+//         });
+//       }
+//
+//       // Concatenate parts into one mp4
+//       let cmd = "ffmpeg -f concat -safe 0 -i " + partsfile + " -c copy " + dpath + "/" + mt + ".mp4";
+//       console.log("Running", cmd);
+//       execSync(cmd);
+//     }
+//
+//     // Create final mp4 file
+//     let f = dpath + "/download.mp4";
+//     let cmd = "ffmpeg -i " + dpath + "/video.mp4"  + "  -i " +  dpath + "/audio.mp4" + "  -map 0:v:0  -map 1:a:0  -c copy  -shortest " + f;
+//     console.log("Running", cmd);
+//     execSync(cmd);
+//
+//     status.file = f;
+//     status.state = "completed";
+//   } catch(e) {
+//     console.log("Download failed", e);
+//     throw e;
+//   }
+//
+//   return status;
+// }
+
+/**
+ * Configure the stream
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name -
+ * @param {string=} op - The operation to perform. Possible values:
+ * 'start'
+ * 'reset' - Stops current LRO recording and starts a new one.  Does
+ * not create a new edge write token (just creates a new recording
+ * period in the existing edge write token)
+ * - 'stop'
+ *
+ * @return {Object} - The status response for the stream
+ *
+ */
+exports.StreamConfig = async function({name}) {
+  let conf = await this.LoadConf({name});
+  let status = {name};
+
+  let libraryId = await this.ContentObjectLibraryId({objectId: conf.objectId});
+  status.library_id = libraryId;
+  status.object_id = conf.objectId;
+
+  let mainMeta = await this.ContentObjectMetadata({
+    libraryId: libraryId,
+    objectId: conf.objectId
+  });
+
+  let userConfig = mainMeta.live_recording_config;
+  status.user_config = userConfig;
+
+  // Get node URI from user config
+  const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").split(":")[0];
+  const streamUrl = new URL(userConfig.url);
+
+  console.log("Retrieving nodes...");
+  let nodes = await this.SpaceNodes({matchEndpoint: hostName});
+  if(nodes.length &lt; 1) {
+    status.error = "No node matching stream URL " + streamUrl.href;
+    return status;
+  }
+  const node = nodes[0];
+  status.node = node;
+
+  let endpoint = node.endpoints[0];
+  this.SetNodes({fabricURIs: [endpoint]});
+
+  // Probe the stream
+  let probe = {};
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, 60 * 1000); // milliseconds
+  try {
+
+    let probeUrl = await this.Rep({
+      libraryId,
+      objectId: conf.objectId,
+      rep: "probe"
+    });
+
+    probe = await this.utils.ResponseToJson(
+      await HttpClient.Fetch(probeUrl, {
+        body: JSON.stringify({
+          "filename": streamUrl.href,
+          "listen": true
+        }),
+        method: "POST",
+        signal: controller.signal
+      })
+    );
+
+    if(probe) { clearTimeout(timeoutId); }
+
+    if(probe.errors) {
+      throw probe.errors[0];
+    }
+  } catch(error) {
+    if(error.code === "ETIMEDOUT") {
+      throw "Stream probe time out - make sure the stream source is available";
+    } else {
+      throw error;
+    }
+  }
+
+  console.log("PROBE", probe);
+  probe.format.filename = streamUrl.href;
+
+  // Create live reocording config
+  let lc = new LiveConf(probe, node.id, endpoint, false, false, true);
+
+  const liveRecordingConfigStr = lc.generateLiveConf();
+  let liveRecordingConfig = JSON.parse(liveRecordingConfigStr);
+  console.log("CONFIG", JSON.stringify(liveRecordingConfig.live_recording));
+
+  // Store live recording config into the stream object
+  let e = await this.EditContentObject({
+    libraryId,
+    objectId: conf.objectId
+  });
+  let writeToken = e.write_token;
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId: conf.objectId,
+    writeToken,
+    metadataSubtree: "live_recording",
+    metadata: liveRecordingConfig.live_recording
+  });
+
+  status.fin = await this.FinalizeContentObject({
+    libraryId,
+    objectId: conf.objectId,
+    writeToken,
+    commitMessage: "Apply live stream configuration"
+  });
+
+  return status;
+};
+
+// const ChannelStatus = async ({client, name}) => {
+//
+//   let status = {name: name};
+//
+//   const conf = channels[name];
+//   if(conf === null) {
+//     console.log("Bad name: ", name);
+//     return;
+//   }
+//
+//   try {
+//
+//     let meta = await client.ContentObjectMetadata({
+//       libraryId: conf.libraryId,
+//       objectId: conf.objectId
+//     });
+//
+//     status.channel_title = meta.public.asset_metadata.title;
+//     let source = meta.channel.offerings.default.items[0].source["/"];
+//     let hash = source.split("/")[2];
+//     status.stream_hash = hash;
+//     latestHash = await client.LatestVersionHash({
+//       versionHash: hash
+//     });
+//     status.stream_latest_hash = latestHash;
+//
+//     if(hash != latestHash) {
+//       status.warnings = ["Stream version is not the latest"];
+//     }
+//
+//     let channelFormatsUrl = await client.FabricUrl({
+//       libraryId: conf.libraryId,
+//       objectId: conf.objectId,
+//       rep: "channel/options.json"
+//     });
+//
+//     try {
+//       let offerings = await got(channelFormatsUrl);
+//       status.offerings = JSON.parse(offerings.body);
+//     } catch(error) {
+//       console.log(error);
+//       status.offerings_error = "Failed to retrieve channel offerings";
+//     }
+//
+//     status.playout = await ChannelPlayout({client, libraryId: conf.libraryId, objectId: conf.objectId});
+//
+//   } catch(error) {
+//     console.error(error);
+//   }
+//
+//   return status;
+// };
+
+/*
+ * Performs client-side playout operations - open the channel, read offerings,
+ * retrieve playlist and one video init segment.
+ */
+// const ChannelPlayout = async({client, libraryId, objectId}) => {
+//
+//   let playout = {};
+//
+//   const offerings = await client.AvailableOfferings({
+//     libraryId,
+//     objectId,
+//     handler: "channel",
+//     linkPath: "/public/asset_metadata/offerings"
+//   });
+//
+//   // Choosing offering 'default'
+//   let offering = offerings.default;
+//
+//   const playoutOptions = await client.PlayoutOptions({
+//     libraryId,
+//     objectId,
+//     offeringURI: offering.uri
+//   });
+//
+//   // Retrieve master playlist
+//   let masterPlaylistUrl = playoutOptions["hls"]["playoutMethods"]["fairplay"]["playoutUrl"];
+//   playout.master_playlist_url = masterPlaylistUrl;
+//   try {
+//     //let masterPlaylist =  await got(masterPlaylistUrl);
+//     playout.master_playlist = "success";
+//   } catch(error) {
+//     playout.master_playlist = "fail";
+//   }
+//
+//   let url = new URL(masterPlaylistUrl);
+//   let p = url.pathname.split("/");
+//
+//   // Retrieve media playlist
+//   p[p.length - 1] = "video/720@14000000/live.m3u8";
+//   let pathMediaPlaylist = p.join("/");
+//   url.pathname = pathMediaPlaylist;
+//   let mediaPlaylistUrl = url.toString();
+//   playout.media_playlist_url = mediaPlaylistUrl;
+//   let mediaPlaylist;
+//   try {
+//     mediaPlaylist = await got(mediaPlaylistUrl);
+//     playout.media_playlist = "success";
+//   } catch(error) {
+//     playout.media_playlist = "fail";
+//   }
+//
+//   // Retrieve init segment
+//   var regex = new RegExp("^#EXT-X-MAP:URI=\"init.m4s.(.*)\"$", "m");
+//   var match = regex.exec(mediaPlaylist.body);
+//   let initQueryParams;
+//   if(match) {
+//     initQueryParams = match[1];
+//   }
+//
+//   p[p.length - 1] = "video/720@14000000/init.m4s";
+//   let pathInit = p.join("/");
+//   url.pathname = pathInit;
+//   url.search=initQueryParams;
+//   let initUrl = url.toString();
+//   playout.init_segment_url = initUrl;
+//   /*
+//   try {
+// 	let initSegment = await got(initUrl);
+// 	playout.init_segment = "success"
+//   } catch(error) {
+// 	playout.init_segment = "fail";
+//   }
+// */
+//   return playout;
+// };
+
+
+// const Summary = async ({client}) => {
+//
+//   let summary = {};
+//
+//   try {
+//     for (const [key] of Object.entries(streams)) {
+//       conf = streams[key];
+//       summary[key] = await Status({client, name: key, stopLro: false});
+//     }
+//
+//   } catch(error) {
+//     console.error(error);
+//   }
+//   return summary;
+// };
+
+// const ChannelSummary = async ({client}) => {
+//
+//   let summary = {};
+//
+//   try {
+//     for (const [key] of Object.entries(channels)) {
+//       conf = channels[key];
+//       summary[key] = await ChannelStatus({client, name: key});
+//     }
+//
+//   } catch(error) {
+//     console.error(error);
+//   }
+//   return summary;
+// };
+
+// const ConfigStreamRebroadcast = async () => {
+//
+//   const t = 1619850660;
+//
+//   try {
+//     let client;
+//     if(conf.clientConf.configUrl) {
+//       client = await ElvClient.FromConfigurationUrl({
+//         configUrl: conf.clientConf.configUrl
+//       });
+//     } else {
+//       client = new ElvClient(conf.clientConf);
+//     }
+//     const wallet = client.GenerateWallet();
+//     const signer = wallet.AddAccount({ privateKey: conf.signerPrivateKey });
+//     client.SetSigner({ signer });
+//     const fabURI = client.fabricURIs[0];
+//     console.log("Fabric URI: " + fabURI);
+//     const ethURI = client.ethereumURIs[0];
+//     console.log("Ethereum URI: " + ethURI);
+//
+//     client.ToggleLogging(false);
+//
+//     let mainMeta = await client.ContentObjectMetadata({
+//       libraryId: conf.libraryId,
+//       objectId: conf.objectId
+//     });
+//     console.log("Main meta:", mainMeta);
+//
+//     edgeWriteToken = mainMeta.edge_write_token;
+//     console.log("Edge: ", edgeWriteToken);
+//
+//     let edgeMeta = await client.ContentObjectMetadata({
+//       libraryId: conf.libraryId,
+//       objectId: conf.objectId,
+//       writeToken: edgeWriteToken
+//     });
+//     console.log("Edge meta:", edgeMeta);
+//
+//     //console.log("CONFIG: ", edgeMeta.live_recording_parameters.live_playout_config);
+//     console.log("recording_start_time: ", edgeMeta.recording_start_time);
+//     console.log("recording_stop_time:  ", edgeMeta.recording_stop_time);
+//
+//     // Set rebroadcast start
+//     edgeMeta.live_recording_parameters.live_playout_config.rebroadcast_start_time_sec_epoch = t;
+//
+//     if(PRINT_DEBUG) console.log("MergeMetadata", conf.libraryId, conf.objectId, writeToken);
+//     await client.MergeMetadata({
+//       libraryId: conf.libraryId,
+//       objectId: conf.objectId,
+//       writeToken: edgeWriteToken,
+//       metadata: {
+//         "live_recording_parameters": {
+//           "live_playout_config" : edgeMeta.live_recording_parameters.live_playout_config
+//         }
+//       }
+//     });
+//
+//   } catch(error) {
+//     console.error(error);
+//   }
+// };
+
+// async function EnsureAll() {
+//   client = await StatusPrep({name: null});
+//   let summary = await Summary({client});
+//
+//   var res = {
+//     running: 0,
+//     stalled: 0,
+//     terminated: 0
+//   };
+//
+//   try {
+//     for (const [key, value] of Object.entries(summary)) {
+//       if(value.state === "stalled") {
+//         console.log("Stream stalled: ", key, " - restarting");
+//         console.log("todo ...");
+//       }
+//       res[value.state] = res[value.state] + 1;
+//     }
+//   } catch(error) {
+//     console.error(error);
+//   }
+//
+//   return res;
+// }
+
+
+/*
+ * Original Run() function - kept for reference
+ */
+// async function Run() {
+//
+//   var client;
+//
+//   switch (command) {
+//
+//     case "start":
+//       StartStream({name});
+//       break;
+//
+//     case "status":
+//       client = await StatusPrep({name});
+//       let status = await Status({client, name, stopLro: false});
+//       console.log(JSON.stringify(status, null, 4));
+//       break;
+//
+//     case "stop":
+//       client = await UpdatePrep({name});
+//       Status({client, name, stopLro: true});
+//       break;
+//
+//     case "summary":
+//       client = await StatusPrep({name: null});
+//       let summary = await Summary({client});
+//       console.log(JSON.stringify(summary, null, 4));
+//       break;
+//
+//     case "init": // Set up DRM
+//       SetOfferingAndDRM();
+//       break;
+//
+//     case "reset": // Stop and start LRO recording (same edge write token)
+//       client = await StatusPrep({name});
+//       let reset = await Reset({client, name, stopLro: false});
+//       console.log(JSON.stringify(reset, null, 4));
+//       break;
+//
+//     case "channel":
+//       client = await StatusPrep({name});
+//       let channelStatus = await ChannelStatus({client, name});
+//       console.log(JSON.stringify(channelStatus, null, 4));
+//       break;
+//
+//     case "channel_summary":
+//       client = await StatusPrep({name});
+//       let channelSummary = await ChannelSummary({client, name});
+//       console.log(JSON.stringify(channelSummary, null, 4));
+//       break;
+//
+//     case "ensure_all": // Check all and restart stalled
+//       let ensureSummary = await EnsureAll();
+//       console.log(JSON.stringify(ensureSummary, null, 4));
+//       break;
+//
+//     case "future_use_config":
+//       ConfigStreamRebroadcast();
+//       break;
+//
+//     default:
+//       console.log("Bad command: ", command);
+//       break;
+//
+//   }
+// }
+</code></pre>
+</div>
+
+    
+
+
+
+        <footer class="footer">
+          Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.0</a>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Format and add line numbers to code
+    prettyPrint();
+  </script>
+
+  <script type="text/javascript" src="scripts/utils.js"></script>
+
+  </body>
+</html>

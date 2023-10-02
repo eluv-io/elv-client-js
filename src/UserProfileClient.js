@@ -514,7 +514,19 @@ await client.userProfileClient.UserMetadata()
       throw Error("Invalid tenant ID: " + tenantContractId);
     }
 
-    await this.ReplaceUserMetadata({metadataSubtree: "tenantContractId", metadata: tenantContractId});
+    const tenantAdminGroupAddress = await this.client.CallContractMethod({
+      contractAddress: address || Utils.HashToAddress(tenantContractId),
+      methodName: "groupsMapping",
+      methodArgs : ["tenant_admin", 0],
+      formatArguments: true,
+    });
+
+    await this.MergeUserMetadata({
+      metadata: {
+        tenantContractId,
+        tenantId: !tenantAdminGroupAddress ? undefined : `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
+      }
+    });
   }
 
   /**
