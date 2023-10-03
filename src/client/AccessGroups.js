@@ -163,7 +163,7 @@ exports.AccessGroupMembers = async function({contractAddress}) {
       })
     );
 
-    return response ? JSON.parse(response).split(",") : [];
+    return response && JSON.parse(response) ? JSON.parse(response) : [];
   }
 };
 
@@ -213,7 +213,7 @@ exports.AccessGroupManagers = async function({contractAddress}) {
       })
     );
 
-    return response ? JSON.parse(response).split(",") : [];
+    return response && JSON.parse(response) ? JSON.parse(response) : [];
   }
 };
 
@@ -362,20 +362,19 @@ exports.AddAccessGroupMember = async function({contractAddress, memberAddress}) 
   contractAddress = ValidateAddress(contractAddress);
   memberAddress = ValidateAddress(memberAddress);
 
-  let response;
   const hasMethod = await this.authClient.ContractHasMethod({
     contractAddress,
     methodName: "membersList"
   });
 
-  if(hasMethod) {
-    response = await this.AccessGroupMembershipMethod({
-      contractAddress,
-      memberAddress,
-      methodName: "grantAccess",
-      eventName: "MemberAdded"
-    });
-  } else {
+  const response = await this.AccessGroupMembershipMethod({
+    contractAddress,
+    memberAddress,
+    methodName: "grantAccess",
+    eventName: "MemberAdded"
+  });
+
+  if(!hasMethod) {
     let memberList = await this.AccessGroupMembers({
       contractAddress
     });
@@ -386,10 +385,10 @@ exports.AddAccessGroupMember = async function({contractAddress, memberAddress}) 
       return self.indexOf(value) === index;
     });
 
-    response = await this.ReplaceContractMetadata({
+    await this.ReplaceContractMetadata({
       contractAddress,
       metadataKey: "members",
-      metadata: memberList.join(",")
+      metadata: memberList
     });
   }
 
@@ -417,14 +416,14 @@ exports.RemoveAccessGroupMember = async function({contractAddress, memberAddress
     methodName: "membersList"
   });
 
-  if(hasMethod) {
-    return await this.AccessGroupMembershipMethod({
-      contractAddress,
-      memberAddress,
-      methodName: "revokeAccess",
-      eventName: "MemberRevoked"
-    });
-  } else {
+  const response = await this.AccessGroupMembershipMethod({
+    contractAddress,
+    memberAddress,
+    methodName: "revokeAccess",
+    eventName: "MemberRevoked"
+  });
+
+  if(!hasMethod) {
     let memberList = await this.AccessGroupMembers({
       contractAddress
     });
@@ -434,9 +433,11 @@ exports.RemoveAccessGroupMember = async function({contractAddress, memberAddress
     return await this.ReplaceContractMetadata({
       contractAddress,
       metadataKey: "members",
-      metadata: memberList.join(",")
+      metadata: memberList
     });
   }
+
+  return response;
 };
 
 /**
@@ -455,20 +456,19 @@ exports.AddAccessGroupManager = async function({contractAddress, memberAddress})
   contractAddress = ValidateAddress(contractAddress);
   memberAddress = ValidateAddress(memberAddress);
 
-  let response;
   const hasMethod = await this.authClient.ContractHasMethod({
     contractAddress,
     methodName: "membersList"
   });
 
-  if(hasMethod) {
-    response = await this.AccessGroupMembershipMethod({
-      contractAddress,
-      memberAddress,
-      methodName: "grantManagerAccess",
-      eventName: "ManagerAccessGranted"
-    });
-  } else {
+  const response = await this.AccessGroupMembershipMethod({
+    contractAddress,
+    memberAddress,
+    methodName: "grantManagerAccess",
+    eventName: "ManagerAccessGranted"
+  });
+
+  if(!hasMethod) {
     let managerList = await this.AccessGroupManagers({
       contractAddress
     });
@@ -479,10 +479,10 @@ exports.AddAccessGroupManager = async function({contractAddress, memberAddress})
       return self.indexOf(value) === index;
     });
 
-    response = await this.ReplaceContractMetadata({
+    await this.ReplaceContractMetadata({
       contractAddress,
       metadataKey: "managers",
-      metadata: managerList.join(",")
+      metadata: managerList
     });
   }
 
@@ -507,17 +507,17 @@ exports.RemoveAccessGroupManager = async function({contractAddress, memberAddres
 
   const hasMethod = await this.authClient.ContractHasMethod({
     contractAddress,
-    methodName: "membersList"
+    methodName: "managersList"
   });
 
-  if(hasMethod) {
-    return await this.AccessGroupMembershipMethod({
-      contractAddress,
-      memberAddress,
-      methodName: "revokeManagerAccess",
-      eventName: "ManagerAccessRevoked"
-    });
-  } else {
+  const response = await this.AccessGroupMembershipMethod({
+    contractAddress,
+    memberAddress,
+    methodName: "revokeManagerAccess",
+    eventName: "ManagerAccessRevoked"
+  });
+
+  if(!hasMethod) {
     let managerList = await this.AccessGroupManagers({
       contractAddress
     });
@@ -527,9 +527,11 @@ exports.RemoveAccessGroupManager = async function({contractAddress, memberAddres
     return await this.ReplaceContractMetadata({
       contractAddress,
       metadataKey: "managers",
-      metadata: managerList.join(",")
+      metadata: managerList
     });
   }
+
+  return response;
 };
 
 /**
