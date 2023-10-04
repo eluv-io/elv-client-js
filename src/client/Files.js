@@ -516,14 +516,35 @@ exports.UploadJobStatus = async function({libraryId, objectId, writeToken, uploa
 
   const path = UrlJoin("q", writeToken, "file_jobs", uploadId, "uploads", jobId);
 
-  return await this.utils.ResponseToJson(
+  let response = await this.utils.ResponseToJson(
     this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "GET",
       path: path,
-      allowFailover: false
+      allowFailover: false,
+      queryParams: { start: 0, limit: 10000 }
     })
   );
+
+  while(response.next !== response.total && response.next >= 0) {
+    const newResponse = await this.utils.ResponseToJson(
+      this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+        method: "GET",
+        path: path,
+        allowFailover: false,
+        queryParams: { start: response.next }
+      })
+    );
+
+    response.files = [
+      ...response.files,
+      ...newResponse.files
+    ];
+    response.next = newResponse.next;
+  }
+
+  return response;
 };
 
 exports.UploadFileData = async function({libraryId, objectId, writeToken, encryption, uploadId, jobId, filePath, fileData}) {
