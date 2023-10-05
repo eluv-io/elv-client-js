@@ -35,14 +35,14 @@ const LadderTemplate = {
     stream_name: "video",
     width: 960
   },
-  "360": {
-    bit_rate: 520000,
+  "540_low": {
+    bit_rate: 900000,
     codecs: "avc1.640028,mp4a.40.2",
-    height: 360,
+    height: 540,
     media_type: 1,
-    representation: "videovideo_640x360_h264@520000",
+    representation: "videovideo_960x540_h264@900000",
     stream_name: "video",
-    width: 640
+    width: 960
   }
 };
 
@@ -301,7 +301,7 @@ class LiveConf {
           LadderTemplate[1080],
           LadderTemplate[720],
           LadderTemplate[540],
-          LadderTemplate[360]
+          LadderTemplate["540_low"]
         );
         conf.live_recording.recording_config.recording_params.xc_params.video_bitrate = LadderTemplate[2160].bit_rate;
         conf.live_recording.recording_config.recording_params.xc_params.enc_height = 2160;
@@ -313,7 +313,7 @@ class LiveConf {
           LadderTemplate[1080],
           LadderTemplate[720],
           LadderTemplate[540],
-          LadderTemplate[360]
+          LadderTemplate["540_low"]
         );
         conf.live_recording.recording_config.recording_params.xc_params.video_bitrate = LadderTemplate[1080].bit_rate;
         conf.live_recording.recording_config.recording_params.xc_params.enc_height = 1080;
@@ -323,7 +323,7 @@ class LiveConf {
         conf.live_recording.recording_config.recording_params.ladder_specs.unshift(
           LadderTemplate[720],
           LadderTemplate[540],
-          LadderTemplate[360]
+          LadderTemplate["540_low"]
         );
         conf.live_recording.recording_config.recording_params.xc_params.video_bitrate = LadderTemplate[720].bit_rate;
         conf.live_recording.recording_config.recording_params.xc_params.enc_height = 720;
@@ -332,21 +332,14 @@ class LiveConf {
       case 540:
         conf.live_recording.recording_config.recording_params.ladder_specs.unshift(
           LadderTemplate[540],
-          LadderTemplate[360]
+          LadderTemplate["540_low"]
         );
         conf.live_recording.recording_config.recording_params.xc_params.video_bitrate = LadderTemplate[540].bit_rate;
         conf.live_recording.recording_config.recording_params.xc_params.enc_height = 540;
         conf.live_recording.recording_config.recording_params.xc_params.enc_width = 960;
         break;
-      case 360:
-        conf.live_recording.recording_config.recording_params.ladder_specs.unshift(LadderTemplate[360]);
-        conf.live_recording.recording_config.recording_params.ladder_specs.unshift(LadderTemplate[360]);
-        conf.live_recording.recording_config.recording_params.xc_params.video_bitrate = LadderTemplate[360].bit_rate;
-        conf.live_recording.recording_config.recording_params.xc_params.enc_height = 360;
-        conf.live_recording.recording_config.recording_params.xc_params.enc_width = 640;
-        break;
       default:
-        throw new Error("ERROR: Probed stream does not conform to one of the following built in resolution ladders [4096, 2160], [1920, 1080] [1280, 720], [960, 540], [640, 360]");
+        throw new Error("ERROR: Probed stream does not conform to one of the following built in resolution ladders [4096, 2160], [1920, 1080] [1280, 720], [960, 540]");
     }
 
     if(audioBitrate || channelLayout) {
