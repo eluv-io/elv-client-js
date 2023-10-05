@@ -236,9 +236,9 @@ class LiveConf {
     return sync_id;
   }
 
-  generateLiveConf() {
+  generateLiveConf({audioBitrate, audioIndex, partTtl, channelLayout}) {
     // gather required data
-    const conf = LiveconfTemplate;
+    const conf = JSON.parse(JSON.stringify(LiveconfTemplate));
     const fileName = this.overwriteOriginUrl || this.probeData.format.filename;
     const audioStream = this.getStreamDataForCodecType("audio");
     const sampleRate = parseInt(audioStream.sample_rate);
@@ -255,13 +255,17 @@ class LiveConf {
     conf.live_recording.recording_config.recording_params.origin_url = fileName;
     conf.live_recording.recording_config.recording_params.description = `Ingest stream ${fileName}`;
     conf.live_recording.recording_config.recording_params.name = `Ingest stream ${fileName}`;
-    conf.live_recording.recording_config.recording_params.xc_params.audio_index[0] = audioStream.stream_index;
+    conf.live_recording.recording_config.recording_params.xc_params.audio_index[0] = audioIndex === undefined ? audioStream.stream_index : audioIndex;
     conf.live_recording.recording_config.recording_params.xc_params.sample_rate = sampleRate;
     conf.live_recording.recording_config.recording_params.xc_params.enc_height = videoStream.height;
     conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;
 
     if(this.syncAudioToVideo) {
       conf.live_recording.recording_config.recording_params.xc_params.sync_audio_to_stream_id = this.syncAudioToStreamIdValue();
+    }
+
+    if(partTtl) {
+      conf.live_recording.recording_config.recording_params.part_ttl = partTtl;
     }
 
     // Fill in specifics for protocol
@@ -343,6 +347,20 @@ class LiveConf {
         break;
       default:
         throw new Error("ERROR: Probed stream does not conform to one of the following built in resolution ladders [4096, 2160], [1920, 1080] [1280, 720], [960, 540], [640, 360]");
+    }
+
+    if(audioBitrate || channelLayout) {
+      const audioLadderSpec = conf.live_recording.recording_config.recording_params.ladder_specs.find(spec => spec.stream_name === "audio");
+
+      if(audioBitrate) {
+        conf.live_recording.recording_config.recording_params.xc_params.audio_bitrate = audioBitrate;
+        audioLadderSpec.bit_rate = audioBitrate;
+        audioLadderSpec.representation = `audioaudio_aac@${audioBitrate}`;
+      }
+
+      if(channelLayout) {
+        audioLadderSpec.channels = channelLayout;
+      }
     }
 
     return JSON.stringify(conf, null, 2);
