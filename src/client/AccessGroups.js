@@ -231,12 +231,14 @@ exports.AccessGroupManagers = async function({contractAddress}) {
  *
  * @returns {Promise<string>} - Contract address of created access group
  */
-exports.CreateAccessGroup = async function({name, description, metadata={}}={}) {
+exports.CreateAccessGroup = async function({name, description, metadata={}, visibility=1}={}) {
   this.Log(`Creating access group: ${name || ""} ${description || ""}`);
   let { contractAddress } = await this.authClient.CreateAccessGroup();
   contractAddress = this.utils.FormatAddress(contractAddress);
 
   const objectId = this.utils.AddressToObjectId(contractAddress);
+  const tenantContractId = await this.userProfileClient.TenantContractId();
+  const tenantId = await this.userProfileClient.TenantId();
 
   this.Log(`Access group: ${contractAddress} ${objectId}`);
 
@@ -245,19 +247,51 @@ exports.CreateAccessGroup = async function({name, description, metadata={}}={}) 
     objectId: objectId
   });
 
+  const groupMetadata = {
+    public: {
+      name,
+      description
+    },
+    name,
+    description,
+    ...metadata
+  };
+
   await this.ReplaceMetadata({
     libraryId: this.contentSpaceLibraryId,
     objectId,
     writeToken: editResponse.write_token,
-    metadata: {
-      public: {
-        name,
-        description
-      },
-      name,
-      description,
-      ...metadata
-    }
+    metadata: groupMetadata
+  });
+
+  if(tenantId) {
+    let tenantAdminGroupAddress = this.utils.HashToAddress(tenantId.replace("iten", "iq__"));
+
+    await this.AddContentObjectGroupPermission({
+      objectId,
+      groupAddress: tenantAdminGroupAddress,
+      permission: "manage"
+    });
+  } else {
+    console.warn("No tenant ID associated with current tenant.");
+  }
+
+  if(tenantContractId) {
+    groupMetadata["tenantContractId"] = tenantContractId;
+
+    await this.ReplaceContractMetadata({
+      contractAddress,
+      metadataKey: "_ELV_TENANT_ID",
+      metadata: tenantContractId
+    });
+  } else {
+    console.warn("No tenant contract ID associated with current tenant.");
+  }
+
+  await this.CallContractMethodAndWait({
+    contractAddress,
+    methodName: "setVisibility",
+    methodArgs: [visibility],
   });
 
   await this.FinalizeContentObject({
