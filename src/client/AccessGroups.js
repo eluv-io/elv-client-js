@@ -237,7 +237,6 @@ exports.CreateAccessGroup = async function({name, description, metadata={}, visi
   contractAddress = this.utils.FormatAddress(contractAddress);
 
   const objectId = this.utils.AddressToObjectId(contractAddress);
-  const tenantContractId = await this.userProfileClient.TenantContractId();
   const tenantId = await this.userProfileClient.TenantId();
 
   this.Log(`Access group: ${contractAddress} ${objectId}`);
@@ -257,36 +256,32 @@ exports.CreateAccessGroup = async function({name, description, metadata={}, visi
     ...metadata
   };
 
-  await this.ReplaceMetadata({
-    libraryId: this.contentSpaceLibraryId,
-    objectId,
-    writeToken: editResponse.write_token,
-    metadata: groupMetadata
-  });
-
   if(tenantId) {
-    let tenantAdminGroupAddress = this.utils.HashToAddress(tenantId.replace("iten", "iq__"));
+    let tenantAdminGroupAddress = this.utils.HashToAddress(tenantId);
 
     await this.AddContentObjectGroupPermission({
       objectId,
       groupAddress: tenantAdminGroupAddress,
       permission: "manage"
     });
+
+    await this.ReplaceContractMetadata({
+      contractAddress,
+      metadataKey: "_tenantId",
+      metadata: tenantId
+    });
+
+    groupMetadata["tenantId"] = tenantId;
   } else {
     console.warn("No tenant ID associated with current tenant.");
   }
 
-  if(tenantContractId) {
-    groupMetadata["tenantContractId"] = tenantContractId;
-
-    await this.ReplaceContractMetadata({
-      contractAddress,
-      metadataKey: "_ELV_TENANT_ID",
-      metadata: tenantContractId
-    });
-  } else {
-    console.warn("No tenant contract ID associated with current tenant.");
-  }
+  await this.ReplaceMetadata({
+    libraryId: this.contentSpaceLibraryId,
+    objectId,
+    writeToken: editResponse.write_token,
+    metadata: groupMetadata
+  });
 
   await this.CallContractMethodAndWait({
     contractAddress,
