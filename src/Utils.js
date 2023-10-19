@@ -743,11 +743,25 @@ const Utils = {
     }
   },
 
-  LiveHLSJSSettings({lowLatency=false}) {
+  LiveHLSJSSettings({lowLatency=false, ultraLowLatency=false}) {
     const isSafari =
       typeof window !== "undefined" &&
       typeof window.navigator !== "undefined" &&
       /^((?!chrome|android).)*safari/i.test(window.navigator.userAgent);
+
+    if(ultraLowLatency && !isSafari) {
+      return {
+        "capLevelToPlayerSize": false,
+        "enableWorker": true,
+        "lowLatencyMode": true,
+        "maxBufferLength": 4,
+        "backBufferLength": 4,
+        "liveSyncDuration": 4,
+        "liveMaxLatencyDuration": 5,
+        "liveDurationInfinity": false,
+        "highBufferWatchdogPeriod": 1
+      };
+    }
 
     return {
       "enableWorker": true,
