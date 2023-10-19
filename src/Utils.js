@@ -754,7 +754,7 @@ const Utils = {
         "capLevelToPlayerSize": false,
         "enableWorker": true,
         "lowLatencyMode": true,
-        "maxBufferLength": 4,
+        "maxBufferLength": 8,
         "backBufferLength": 4,
         "liveSyncDuration": 4,
         "liveMaxLatencyDuration": 5,
