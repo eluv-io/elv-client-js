@@ -13,17 +13,18 @@ const NotificationPath = ({network, path}) => {
 };
 
 /**
- * Push a notification to the current user
+ * Push a notification to a user
  *
  * @methodGroup Notifications
  * @param {string} tenantId - The tenant associated with this notification
  * @param {string} eventType - The type of the notification
  * @param {(Object | string)=} data - Data associated with this notification
+ * @param {string=} userAddress - Address of the user to notify. If not specified, it will be sent to the current user.
  */
-exports.PushNotification = async function({tenantId, eventType, data}) {
+exports.PushNotification = async function({tenantId, eventType, data, userAddress}) {
   await this.stateStoreClient.Request({
     method: "POST",
-    path: NotificationPath({network: this.network, path: UrlJoin("notify_user", this.UserAddress(), tenantId, eventType)}),
+    path: NotificationPath({network: this.network, path: UrlJoin("notify_user", userAddress || this.UserAddress(), tenantId, eventType)}),
     body: data,
     headers: {
       Authorization: `Bearer ${this.AuthToken()}`
