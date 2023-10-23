@@ -20,7 +20,7 @@ const Pako = require("pako");
 const {
   ValidatePresence
 } = require("./Validation");
-const CBOR = require("cbor");
+const CBOR = require("cbor-web");
 
 const networks = {
   "main": "https://main.net955305.contentfabric.io",
