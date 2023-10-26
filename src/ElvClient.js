@@ -20,7 +20,7 @@ const Pako = require("pako");
 const {
   ValidatePresence
 } = require("./Validation");
-const CBOR = require("cbor");
+const CBOR = require("cbor-x");
 
 const networks = {
   "main": "https://main.net955305.contentfabric.io",
@@ -595,24 +595,27 @@ class ElvClient {
           formatArguments: true
         });
 
+        let nodeId = this.utils.AddressToNodeId(addr);
+
+        if(matchNodeId && nodeId !== matchNodeId) {
+          return;
+        }
+
         let locatorsHex = await this.CallContractMethod({
           contractAddress: this.contentSpaceAddress,
           methodName: "activeNodeLocators",
           methodArgs: [bigi]
         });
 
-        let nodeId = this.utils.AddressToNodeId(addr);
-
-        if(matchNodeId &&nodeId !== matchNodeId) {
-          return;
-        }
-
         let node = {id: nodeId, endpoints: []};
 
         // Parse locators CBOR
-        let buffer = locatorsHex.slice(2, locatorsHex.length); // Skip "0x"
-        let hex = buffer.toString("hex");
-        let locators = CBOR.decodeAllSync(hex);
+        let locators = CBOR.decodeMultiple(
+          Buffer.from(
+            locatorsHex.slice(2, locatorsHex.length),
+            "hex"
+          )
+        );
 
         let match = false;
 

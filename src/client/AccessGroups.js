@@ -33,21 +33,26 @@ exports.ListAccessGroups = async function() {
     5,
     addresses,
     async address => {
-      const id = this.utils.AddressToHash(address);
-      const meta = (await this.ContentObjectMetadata({
-        libraryId: this.contentSpaceLibraryId,
-        objectId: `iq__${id}`
-      })) || {};
+      try {
+        const id = this.utils.AddressToHash(address);
+        const meta = (await this.ContentObjectMetadata({
+          libraryId: this.contentSpaceLibraryId,
+          objectId: `iq__${id}`
+        })) || {};
 
-      return {
-        address,
-        id: `igrp${id}`,
-        meta
-      };
+        return {
+          address,
+          id: `igrp${id}`,
+          meta
+        };
+      } catch(error) {
+        this.Log(error, true);
+      }
     }
   );
 
   return groups
+    .filter(g => g)
     .sort((a, b) => {
       const name1 = (a.meta.public || {}).name || `zz__${a.address}`;
       const name2 = (b.meta.public || {}).name || `zz__${b.address}`;
