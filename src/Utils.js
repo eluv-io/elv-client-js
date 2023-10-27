@@ -444,6 +444,11 @@ const Utils = {
     return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
   },
 
+  FromHex: str => {
+    str = str.replace(/^0x/, "");
+    return Buffer.from(str, "hex").toString();
+  },
+
   B64: (str, encoding="utf-8") => {
     return Buffer.from(str, encoding).toString("base64");
   },
