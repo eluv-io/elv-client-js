@@ -92,6 +92,8 @@ exports.ValidateDate = (date) => {
 exports.ValidateUserWallet = async ({address, client}) => {
   if(!address) {
     throw Error("Address not specified");
+  } else if(!client) {
+    throw Error("Client not specified");
   }
 
   const walletAddress = await client.userProfileClient.UserWalletAddress({address});
