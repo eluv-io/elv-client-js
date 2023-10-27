@@ -510,6 +510,11 @@ const Utils = {
     return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
   },
 
+  FromHex: str => {
+    str = str.replace(/^0x/, "");
+    return Buffer.from(str, "hex").toString();
+  },
+
   B64: (str, encoding="utf-8") => {
     return Buffer.from(str, encoding).toString("base64");
   },
@@ -809,22 +814,47 @@ const Utils = {
     }
   },
 
-  LiveHLSJSSettings({lowLatency=false}) {
+  HLSJSSettings({profile="default"}={}) {
     const isSafari =
       typeof window !== "undefined" &amp;&amp;
       typeof window.navigator !== "undefined" &amp;&amp;
       /^((?!chrome|android).)*safari/i.test(window.navigator.userAgent);
 
-    return {
-      "enableWorker": true,
-      "lowLatencyMode": true,
-      "maxBufferLength": 5,
-      "backBufferLength": 5,
-      "liveSyncDuration": 5,
-      "liveMaxLatencyDuration": !lowLatency || isSafari ? 15 : 10,
-      "liveDurationInfinity": false,
+    const defaultSettings = {
+      "maxBufferHole": 2.2,
+      "nudgeOffset": 0.2,
+      "nudgeMaxRetry": 12,
       "highBufferWatchdogPeriod": 1
     };
+
+    if(!isSafari &amp;&amp; ["ull", "ultraLowLatency"].includes(profile)) {
+      return {
+        "lowLatencyMode": true,
+        "liveSyncDuration": 4,
+        "liveMaxLatencyDuration": 5,
+        "liveDurationInfinity": false,
+        "maxBufferLength": 8,
+        "backBufferLength": 4,
+        ...defaultSettings
+      };
+    } else if(["ll", "lowLatency", "ull", "ultraLowLatency"].includes(profile)) {
+      return {
+        "lowLatencyMode": true,
+        "liveSyncDuration": 5,
+        "liveMaxLatencyDuration": isSafari ? 15 : 10,
+        "liveDurationInfinity": false,
+        "maxBufferLength": 5,
+        "backBufferLength": 5,
+        ...defaultSettings
+      };
+    } else {
+      return defaultSettings;
+    }
+  },
+
+  // Alias for HLSJSSettings
+  LiveHLSJSSettings({lowLatency=false, ultraLowLatency=false}) {
+    return Utils.HLSJSSettings({profile: ultraLowLatency ? "ull" : lowLatency ? "ll" : "default"});
   }
 };
 

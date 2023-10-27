@@ -915,8 +915,8 @@ class ElvWalletClient {
   async LatestMarketplaceHash({marketplaceParams}) {
     const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
 
-    if(this.previewMarketplaceId &amp;&amp; this.previewMarketplaceId === marketplaceInfo.marketplaceId) {
-      return this.availableMarketplaces[marketplaceInfo.tenantSlug][marketplaceInfo.marketplaceSlug]["."].source;
+    if(this.previewMarketplaceId &amp;&amp; Utils.EqualHash(this.previewMarketplaceId, marketplaceInfo.marketplaceId)) {
+      return this.previewMarketplaceHash;
     }
 
     const marketplaceLink = await this.client.ContentObjectMetadata({
@@ -941,18 +941,37 @@ class ElvWalletClient {
     }
 
     if(!this.cachedMarketplaces[marketplaceId]) {
-      let marketplace = await this.client.ContentObjectMetadata({
-        libraryId: this.mainSiteLibraryId,
-        objectId: this.mainSiteId,
-        metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", marketplaceInfo.tenantSlug, "marketplaces", marketplaceInfo.marketplaceSlug, "info"),
-        localizationSubtree: this.localization ? UrlJoin("public", "asset_metadata", "localizations", this.localization, "info") : "",
-        linkDepthLimit: 1,
-        resolveLinks: true,
-        resolveIgnoreErrors: true,
-        resolveIncludeSource: true,
-        produceLinkUrls: true,
-        authorizationToken: this.publicStaticToken
-      });
+      let marketplace;
+      if(this.previewMarketplaceId &amp;&amp; Utils.EqualHash(marketplaceId, this.previewMarketplaceId)) {
+        // Load preview marketplace
+        marketplace = await this.client.ContentObjectMetadata({
+          versionHash: this.previewMarketplaceHash,
+          metadataSubtree: "/public/asset_metadata/info",
+          localizationSubtree: this.localization ? UrlJoin("public", "asset_metadata", "localizations", this.localization, "info") : undefined,
+          linkDepthLimit: 1,
+          resolveLinks: true,
+          resolveIgnoreErrors: true,
+          resolveIncludeSource: true,
+          produceLinkUrls: true,
+          authorizationToken: this.publicStaticToken
+        });
+      } else {
+        // Load marketplace from main site tree
+        marketplace = await this.client.ContentObjectMetadata({
+          libraryId: this.mainSiteLibraryId,
+          objectId: this.mainSiteId,
+          metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", marketplaceInfo.tenantSlug, "marketplaces", marketplaceInfo.marketplaceSlug, "info"),
+          localizationSubtree: this.localization ?
+            UrlJoin("/public", "asset_metadata", "tenants", marketplaceInfo.tenantSlug, "marketplaces", marketplaceInfo.marketplaceSlug, "localizations", this.localization, "info") :
+            undefined,
+          linkDepthLimit: 1,
+          resolveLinks: true,
+          resolveIgnoreErrors: true,
+          resolveIncludeSource: true,
+          produceLinkUrls: true,
+          authorizationToken: this.publicStaticToken
+        });
+      }
 
       if(marketplace.branding.use_tenant_styling) {
         marketplace.tenantBranding = (await this.client.ContentObjectMetadata({
