@@ -743,36 +743,47 @@ const Utils = {
     }
   },
 
-  LiveHLSJSSettings({lowLatency=false, ultraLowLatency=false}) {
+  HLSJSSettings({profile="default"}={}) {
     const isSafari =
       typeof window !== "undefined" &&
       typeof window.navigator !== "undefined" &&
       /^((?!chrome|android).)*safari/i.test(window.navigator.userAgent);
 
-    if(ultraLowLatency && !isSafari) {
+    const defaultSettings = {
+      "maxBufferHole": 2.2,
+      "nudgeOffset": 0.2,
+      "nudgeMaxRetry": 12,
+      "highBufferWatchdogPeriod": 1
+    };
+
+    if(!isSafari && ["ull", "ultraLowLatency"].includes(profile)) {
       return {
-        "capLevelToPlayerSize": false,
-        "enableWorker": true,
         "lowLatencyMode": true,
-        "maxBufferLength": 8,
-        "backBufferLength": 4,
         "liveSyncDuration": 4,
         "liveMaxLatencyDuration": 5,
         "liveDurationInfinity": false,
-        "highBufferWatchdogPeriod": 1
+        "maxBufferLength": 8,
+        "backBufferLength": 4,
+        ...defaultSettings
       };
+    } else if(["ll", "lowLatency", "ull", "ultraLowLatency"].includes(profile)) {
+      return {
+        "lowLatencyMode": true,
+        "liveSyncDuration": 5,
+        "liveMaxLatencyDuration": isSafari ? 15 : 10,
+        "liveDurationInfinity": false,
+        "maxBufferLength": 5,
+        "backBufferLength": 5,
+        ...defaultSettings
+      };
+    } else {
+      return defaultSettings;
     }
+  },
 
-    return {
-      "enableWorker": true,
-      "lowLatencyMode": true,
-      "maxBufferLength": 5,
-      "backBufferLength": 5,
-      "liveSyncDuration": 5,
-      "liveMaxLatencyDuration": !lowLatency || isSafari ? 15 : 10,
-      "liveDurationInfinity": false,
-      "highBufferWatchdogPeriod": 1
-    };
+  // Alias for HLSJSSettings
+  LiveHLSJSSettings({lowLatency=false, ultraLowLatency=false}) {
+    return Utils.HLSJSSettings({profile: ultraLowLatency ? "ull" : lowLatency ? "ll" : "default"});
   }
 };
 
