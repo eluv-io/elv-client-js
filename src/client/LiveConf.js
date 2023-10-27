@@ -161,57 +161,50 @@ class LiveConf {
   }
 
   calcSegDuration({sourceTimescale}) {
-
     let videoStream = this.getStreamDataForCodecType("video");
     let frameRate = videoStream.frame_rate;
 
-    let seg ={};
+    let seg = {};
+    seg.audio = 29.76 * 48000;
+
     switch(frameRate) {
       case "24":
         seg.video = 30 * sourceTimescale;
-        seg.audio = 30 * 48000;
         seg.keyint = 48;
         seg.duration = "30";
         break;
       case "25":
         seg.video = 30 * sourceTimescale;
-        seg.audio = 30 * 48000;
         seg.keyint = 50;
         seg.duration = "30";
         break;
       case "30":
         seg.video = 30 * sourceTimescale;
-        seg.audio = 30 * 48000;
         seg.keyint = 60;
         seg.duration = "30";
         break;
       case "30000/1001":
         seg.video = 30.03 * sourceTimescale;
-        seg.audio = 29.76 * 48000;
         seg.keyint = 60;
         seg.duration = "30.03";
         break;
       case "48":
         seg.video = 30 * sourceTimescale;
-        seg.audio = 30 * 48000;
         seg.keyint = 96;
         seg.duration = "30";
         break;
       case "50":
         seg.video = 30 * sourceTimescale;
-        seg.audio = 30 * 48000;
         seg.keyint = 100;
         seg.duration = "30";
         break;
       case "60":
         seg.video = 30 * sourceTimescale;
-        seg.audio = 30 * 48000;
         seg.keyint = 120;
         seg.duration = "30";
         break;
       case "60000/1001":
         seg.video = 30.03 * sourceTimescale;
-        seg.audio = 29.76 * 48000;
         seg.keyint = 120;
         seg.duration = "30.03";
         break;
