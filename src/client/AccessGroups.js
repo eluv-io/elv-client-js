@@ -15,7 +15,8 @@ const {
   ValidatePresence,
   ValidateLibrary,
   ValidateObject,
-  ValidateAddress
+  ValidateAddress,
+  ValidateUserWallet
 } = require("../Validation");
 
 
@@ -395,6 +396,7 @@ exports.AccessGroupMembershipMethod = async function({
 exports.AddAccessGroupMember = async function({contractAddress, memberAddress}) {
   contractAddress = ValidateAddress(contractAddress);
   memberAddress = ValidateAddress(memberAddress);
+  await ValidateUserWallet({address: memberAddress, client: this});
 
   const hasMethod = await this.authClient.ContractHasMethod({
     contractAddress,
@@ -489,6 +491,7 @@ exports.RemoveAccessGroupMember = async function({contractAddress, memberAddress
 exports.AddAccessGroupManager = async function({contractAddress, memberAddress}) {
   contractAddress = ValidateAddress(contractAddress);
   memberAddress = ValidateAddress(memberAddress);
+  await ValidateUserWallet({address: memberAddress, client: this});
 
   const hasMethod = await this.authClient.ContractHasMethod({
     contractAddress,
