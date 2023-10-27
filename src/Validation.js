@@ -88,3 +88,23 @@ exports.ValidateDate = (date) => {
 
   return new Date(date).getTime();
 };
+
+exports.ValidateUserWallet = async ({address, client}) => {
+  if(!address) {
+    throw Error("Address not specified");
+  } else if(!client) {
+    throw Error("Client not specified");
+  }
+
+  const walletAddress = await client.userProfileClient.UserWalletAddress({address});
+
+  if(!walletAddress) {
+    throw Error(`User address has no wallet: ${address}`);
+  }
+
+  const balance = await client.GetBalance({address});
+
+  if(balance < 0.1) {
+    throw Error(`User has no funds: ${address}`);
+  }
+};
