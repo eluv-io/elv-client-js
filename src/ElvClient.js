@@ -378,6 +378,10 @@ class ElvClient {
     });
 
     client.configUrl = configUrl;
+    client.region = region;
+    client.clientIP = clientIP;
+
+    client.Configuration = ElvClient.Configuration;
 
     return client;
   }
@@ -456,6 +460,8 @@ class ElvClient {
       configUrl: this.configUrl,
       region
     });
+
+    this.region = region;
 
     this.authServiceURIs = authServiceURIs;
     this.fabricURIs = fabricURIs;
