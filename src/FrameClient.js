@@ -572,7 +572,6 @@ class FrameClient {
       "UserItemEditionNames",
       "UserItemNames",
       "UserItems",
-      "UserNFTs",
       "UserListings",
       "UserNameToAddress",
       "UserSales",
