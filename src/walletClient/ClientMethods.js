@@ -232,6 +232,7 @@ exports.UserItemAttributes = async function({marketplaceParams, displayName, use
  *
  * @methodGroup User
  * @namedParams
+ * @param {boolean=} includeFullMetadata=false - If true, will include full metadata for each item. Ignored if not logged in.
  * @param {string=} userAddress - Address of a user. If not specified, will return results for current user
  * @param {integer=} start=0 - PAGINATION: Index from which the results should start
  * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
@@ -245,8 +246,12 @@ exports.UserItemAttributes = async function({marketplaceParams, displayName, use
  *
  * @returns {Promise<Object>} - Results of the query and pagination info
  */
-exports.UserItems = async function({sortBy="default"}={}) {
-  return this.FilteredQuery({mode: "owned", sortBy, ...(arguments[0] || {})});
+exports.UserItems = async function ({sortBy = "default", includeFullMetadata = false} = {}) {
+  if(includeFullMetadata && this.loggedIn) {
+    return this.FilteredQuery({mode: "owned-full-meta", sortBy, ...(arguments[0] || {})});
+  } else {
+    return this.FilteredQuery({mode: "owned", sortBy, ...(arguments[0] || {})});
+  }
 };
 
 /**

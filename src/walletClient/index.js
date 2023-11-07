@@ -1178,10 +1178,16 @@ class ElvWalletClient {
       }
 
 
+      let headers;
       let path;
       switch(mode) {
         case "owned":
           path = UrlJoin("as", "wlt", userAddress || this.UserAddress());
+          break;
+
+        case "owned-full-meta":
+          path = UrlJoin("as", "apigw", "nfts");
+          headers = { Authorization: `Bearer ${this.AuthToken()}` };
           break;
 
         case "listings":
@@ -1223,7 +1229,8 @@ class ElvWalletClient {
           this.client.authClient.MakeAuthServiceRequest({
             path,
             method: "GET",
-            queryParams: params
+            queryParams: params,
+            headers: headers
           })
         );
       }
@@ -1232,7 +1239,8 @@ class ElvWalletClient {
         await this.client.authClient.MakeAuthServiceRequest({
           path,
           method: "GET",
-          queryParams: params
+          queryParams: params,
+          headers: headers
         })
       ) || [];
 
