@@ -1244,6 +1244,7 @@ class ElvWalletClient {
         })
       ) || [];
 
+      const modesToFormat = ["owned", "listings", "owned-full-meta"];
       return {
         paging: {
           start: params.start,
@@ -1251,7 +1252,7 @@ class ElvWalletClient {
           total: paging.total,
           more: paging.total > start + limit
         },
-        results: (contents || []).map(item => ["owned", "listings"].includes(mode) ? FormatNFT(this, item) : item)
+        results: (contents || []).map(item => modesToFormat.includes(mode) ? FormatNFT(this, item) : item)
       };
     } catch(error) {
       if(error.status && error.status.toString() === "404") {
