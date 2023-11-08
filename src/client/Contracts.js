@@ -52,6 +52,33 @@ exports.ContractAbi = async function({contractAddress, id}) {
 };
 
 /**
+ * Retrieve the ABI, access type, and whether V3 is used for a given contract via its address or a Fabric ID.
+ *
+ * @methodGroup Contracts
+ * @namedParams
+ * @param {string=} id - The Fabric ID of the contract
+ * @param {string=} address - The address of the contract
+ *
+ * @return {Promise<Object>} - The ABI, access type, and isV3 for the given contract
+ */
+exports.ContractInfo = async function({id, address}) {
+  if(!address) { address = this.utils.HashToAddress(id); }
+  if(!id) { id = this.utils.AddressToObjectId(address); }
+
+  const isV3 = await this.authClient.IsV3({id});
+  const version = isV3 ? "v3" : "v2";
+  const accessType = await this.authClient.AccessType(id);
+
+  if(accessType === this.authClient.ACCESS_TYPES.OTHER) { return {}; }
+
+  return {
+    isV3,
+    accessType,
+    abi: this.authClient.CONTRACTS[version][accessType].abi
+  };
+};
+
+/**
  * Format the arguments to be used for the specified method of the contract
  *
  * @methodGroup Contracts
