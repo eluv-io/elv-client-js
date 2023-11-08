@@ -88,10 +88,16 @@ const FormatNFTDetails = function(entry) {
     details.Offers = info.offers || [];
   }
 
-  return {
+  const result = {
     metadata,
     details
   };
+
+  if(entry.nft_template) {
+    result.nft_template = entry.nft_template;
+  }
+
+  return result;
 };
 
 exports.FormatNFTDetails = FormatNFTDetails;
