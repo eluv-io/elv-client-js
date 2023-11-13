@@ -52,6 +52,20 @@ exports.ContractAbi = async function({contractAddress, id}) {
 };
 
 /**
+ * Retrieve the ABI, access type, and whether V3 is used for a given contract via its address or a Fabric ID.
+ *
+ * @methodGroup Contracts
+ * @namedParams
+ * @param {string=} id - The Fabric ID of the contract
+ * @param {string=} address - The address of the contract
+ *
+ * @return {Promise<Object>} - The ABI, access type, and isV3 for the given contract
+ */
+exports.ContractInfo = async function({id, address}) {
+  return this.authClient.ContractInfo({id, address});
+};
+
+/**
  * Format the arguments to be used for the specified method of the contract
  *
  * @methodGroup Contracts
