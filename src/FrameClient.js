@@ -354,6 +354,7 @@ class FrameClient {
       "ContentTypes",
       "ContractAbi",
       "ContractEvents",
+      "ContractInfo",
       "ContractMetadata",
       "ContractName",
       "CopyContentObject",
