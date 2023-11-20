@@ -526,6 +526,7 @@ class FrameClient {
       "CollectionRedemptionStatus",
       "CreateListing",
       "CreateMarketplaceOffer",
+      "DeployTenant",
       "DropStatus",
       "ExchangeRate",
       "FilteredQuery",
