@@ -1332,6 +1332,42 @@ class ElvWalletClient {
       return [];
     }
   }
+
+  async DeployTenant({tenantId, tenantSlug="", tenantHash}) {
+    if(!tenantHash) {
+      const tenantLink = await this.client.ContentObjectMetadata({
+        libraryId: this.mainSiteLibraryId,
+        objectId: this.mainSiteId,
+        metadataSubtree: UrlJoin("public/asset_metadata/tenants", tenantSlug),
+        resolveLinks: true,
+        linkDepthLimit: 1,
+        resolveIncludeSource: true,
+        resolveIgnoreErrors: true,
+        select: [
+          "."
+        ]
+      });
+
+      if(!tenantLink) {
+        throw Error(`Eluvio Wallet Client: Invalid or missing tenancy: ${tenantSlug}`);
+      }
+
+      const deployedTenantHash = tenantLink["."].source;
+
+      tenantHash = await this.client.LatestVersionHash({versionHash: deployedTenantHash});
+    }
+
+    const body = { content_hash: tenantHash, ts: Date.now() };
+    const token = await this.client.Sign(JSON.stringify(body));
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "tnt", "config", tenantId, "metadata"),
+      method: "POST",
+      body,
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+  }
 }
 
 Object.assign(ElvWalletClient.prototype, require("./ClientMethods"));
