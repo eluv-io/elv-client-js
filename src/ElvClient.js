@@ -1175,6 +1175,10 @@ class ElvClient {
     );
   }
 
+  async MakeAuthServiceRequest({kmsId, objectId, versionHash, method="GET", path, bodyType, body={}, queryParams={}, headers}) {
+    return this.authClient.MakeAuthServiceRequest({kmsId, objectId, versionHash, method, path, bodyType, body, queryParams, headers});
+  }
+
   /* FrameClient related */
 
   // Whitelist of methods allowed to be called using the frame API
