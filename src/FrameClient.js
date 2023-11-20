@@ -426,6 +426,7 @@ class FrameClient {
       "ListNTPInstances",
       "LRODraftInfo",
       "LROStatus",
+      "MakeAuthServiceRequest",
       "MergeContractMetadata",
       "MergeMetadata",
       "MetadataAuth",
@@ -489,7 +490,8 @@ class FrameClient {
       "UploadStatus",
       "UseRegion",
       "VerifyContentObject",
-      "Visibility"
+      "Visibility",
+      "WriteTokenNodeUrl"
     ];
   }
 
