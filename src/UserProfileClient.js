@@ -420,7 +420,7 @@ await client.userProfileClient.UserMetadata()
   }
 
   /**
-   * Return the ID of the tenant this user belongs to, if set.
+   * Return the ID of the tenant admins group this user belongs to, if set.
    *
    * @return {Promise<string>} - Tenant ID
    */
@@ -433,12 +433,12 @@ await client.userProfileClient.UserMetadata()
   }
 
   /**
-   * Set the current user's tenant
+   * Set the current user's tenant admins group.
    *
    * Note: This method is not accessible to applications. Eluvio core will drop the request.
    *
    * @namedParams
-   * @param {string} id - The tenant ID in hash format
+   * @param {string} id - The tenant admins ID in hash format
    * @param {string} address - The group address to use in the hash if id is not provided
    */
   async SetTenantId({id, address}) {

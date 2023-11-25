@@ -88,6 +88,7 @@ const SetObjectPermissions = async (client, objectId, tenantAdmins, contentAdmin
   await Promise.all(promises);
 };
 
+//Deprecated: doesn't support the new tenant system
 const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
   try {
     if(!process.env.PRIVATE_KEY) {
@@ -173,7 +174,7 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
       memberAddress: client.utils.HashToAddress(kmsId)
     });
 
-    console.log("\nTenant ID:\n");
+    console.log("\nTenant Admins ID:\n");
     console.log("\t", await client.userProfileClient.TenantId());
 
     console.log("\nAccess Groups:\n");

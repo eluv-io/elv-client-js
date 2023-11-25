@@ -16,6 +16,8 @@ const EditableContract = require("../contracts/Editable");
 
  */
 
+const META_KEY_TENANT_ID = "_ELV_TENANT_ID";
+
 const {
   ValidateLibrary,
   ValidateObject,
@@ -154,6 +156,16 @@ exports.SetPermission = async function({objectId, permission, writeToken}) {
  * @returns {Promise<string>} - Object ID of created content type
  */
 exports.CreateContentType = async function({name, metadata={}, bitcode}) {
+  let tenantContractId = await this.userProfileClient.TenantContractId();
+  if (!tenantContractId) {
+    throw("User address is not associated with a tenant");
+  }
+  //Content Type can only be created by tenant admins or content admins
+  let accountAddr = this.CurrentAccountAddress();
+  if(!this.IsTenantAdmin({accountAddr, tenantContractId}) && !this.IsContentAdmin({accountAddr, tenantContractId})) {
+    throw Error("Invalid operation: Content Type can only be created by tenant admins or content admins");
+  }
+
   this.Log(`Creating content type: ${name}`);
 
   metadata.name = name;
@@ -171,6 +183,17 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
   const path = UrlJoin("qlibs", this.contentSpaceLibraryId, "qid", objectId);
 
   this.Log(`Created type: ${contractAddress} ${objectId}`);
+
+  // TODO: After content type contract is updated to be able to store Metadata.
+  // Set _ELV_TENANT_ID on the ContentType to the ContentType creator's tenant id
+  // await this.CallContractMethodAndWait({
+  //   contractAddress,
+  //   methodName: "putMeta",
+  //   methodArgs: [
+  //     META_KEY_TENANT_ID,
+  //     tenantContractId
+  //   ]
+  // })
 
   /* Create object, upload bitcode and finalize */
   const rawCreateResponse = await this.HttpClient.Request({
@@ -244,7 +267,7 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
  * @param {Object=} metadata - Metadata of library object
  * @param {string=} kmsId - ID of the KMS to use for content in this library. If not specified,
  * the default KMS will be used.
- * @param {string=} tenantId - ID of the tenant to use for this library
+ * @param {string=} tenantId - ID of the tenant admins group to use for this library
  *
  * @returns {Promise<string>} - Library ID of created library
  */
@@ -257,6 +280,17 @@ exports.CreateContentLibrary = async function({
   kmsId,
   tenantId
 }) {
+
+  let tenantContractId = await this.userProfileClient.TenantContractId();
+  if (!tenantContractId) {
+    throw("User address is not associated with a tenant");
+  }
+  //Library can only be created by tenant admins or content admins
+  let accountAddr = this.CurrentAccountAddress();
+  if(!this.IsTenantAdmin({accountAddr, tenantContractId}) && !this.IsContentAdmin({accountAddr, tenantContractId})) {
+    throw Error("Invalid operation: Library can only be created by tenant admins or content admins");
+  }
+
   if(!kmsId) {
     kmsId = `ikms${this.utils.AddressToHash(await this.DefaultKMSAddress())}`;
   }
@@ -266,8 +300,7 @@ exports.CreateContentLibrary = async function({
 
   const { contractAddress } = await this.authClient.CreateContentLibrary({kmsId});
 
-
-  // Set tenant ID on the library if the user is associated with a tenant
+  // Set tenant admins ID on the library if the user is associated with a tenant admins' group
   if(!tenantId) {
     tenantId = await this.userProfileClient.TenantId();
   }
@@ -276,8 +309,7 @@ exports.CreateContentLibrary = async function({
     if(!this.utils.ValidHash(tenantId)) {
       throw Error(`Invalid tenant ID: ${tenantId}`);
     }
-
-    await this.CallContractMethod({
+    await this.CallContractMethodAndWait({
       contractAddress,
       methodName: "putMeta",
       methodArgs: [
@@ -286,6 +318,16 @@ exports.CreateContentLibrary = async function({
       ]
     });
   }
+
+  // Set _ELV_TENANT_ID on the library to the library creator's tenant id
+  await this.CallContractMethodAndWait({
+    contractAddress,
+    methodName: "putMeta",
+    methodArgs: [
+      META_KEY_TENANT_ID,
+      tenantContractId
+    ]
+  })
 
   metadata = {
     ...metadata,
@@ -350,6 +392,7 @@ exports.CreateContentLibrary = async function({
  */
 exports.SetContentLibraryImage = async function({libraryId, writeToken, image, imageName}) {
   ValidateLibrary(libraryId);
+  this.VerifyLibrary(libraryId);
 
   const objectId = libraryId.replace("ilib", "iq__");
 
@@ -424,6 +467,7 @@ exports.DeleteContentLibrary = async function({libraryId}) {
 
   // eslint-disable-next-line no-unreachable
   ValidateLibrary(libraryId);
+  this.VerifyLibrary(libraryId);
 
   let path = UrlJoin("qlibs", libraryId);
 
@@ -460,6 +504,9 @@ exports.DeleteContentLibrary = async function({libraryId}) {
  */
 exports.AddLibraryContentType = async function({libraryId, typeId, typeName, typeHash, customContractAddress}) {
   ValidateLibrary(libraryId);
+  this.VerifyLibrary(libraryId);
+  //TODO: After content type contract is updated to be able to store Metadata.
+  //this.VerifyContentType(typeId);
 
   this.Log(`Adding library content type to ${libraryId}: ${typeId || typeHash || typeName}`);
 
@@ -499,6 +546,7 @@ exports.AddLibraryContentType = async function({libraryId, typeId, typeName, typ
  */
 exports.RemoveLibraryContentType = async function({libraryId, typeId, typeName, typeHash}) {
   ValidateLibrary(libraryId);
+  this.VerifyLibrary(libraryId);
 
   this.Log(`Removing library content type from ${libraryId}: ${typeId || typeHash || typeName}`);
 
@@ -546,6 +594,7 @@ exports.RemoveLibraryContentType = async function({libraryId, typeId, typeName, 
  */
 exports.CreateContentObject = async function({libraryId, objectId, options={}}) {
   ValidateLibrary(libraryId);
+  this.VerifyLibrary(libraryId);
   if(objectId) { ValidateObject(objectId); }
 
   this.Log(`Creating content object: ${libraryId} ${objectId || ""}`);
@@ -751,6 +800,7 @@ exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, writ
  */
 exports.EditContentObject = async function({libraryId, objectId, options={}}) {
   ValidateParameters({libraryId, objectId});
+  this.VerifyLibrary(libraryId);
 
   this.Log(`Opening content draft: ${libraryId} ${objectId}`);
 
@@ -1530,3 +1580,112 @@ exports.SetAuthPolicy = async function({objectId, policyId}) {
     metadata: { "elv:delegation-id": policyId }
   });
 };
+
+/**
+ * Check if the account is a tenant admin of the tenant with tenantId
+ * @namedParams
+ * @param {string} accountAddr - The address of the account
+ * @param {string} tenantContractId - The ID of the tenant
+ */
+exports.IsTenantAdmin = async function({ accountAddr, tenantContractId }) {
+  const tenantAddr = this.utils.HashToAddress(tenantContractId);
+
+  let isAdmin = await this.CallContractMethod({
+    contractAddress: tenantAddr,
+    methodName: "isAdmin",
+    methodArgs: [accountAddr],
+    formatArguments: true,
+  });
+
+  if (isAdmin) {
+    return true;
+  }
+  return false;
+};
+
+/**
+ * Check if the account is a content admin of the tenant with tenantId
+ * @namedParams
+ * @param {string} accountAddr - The address of the account
+ * @param {string} tenantContractId - The ID of the tenant
+ */
+exports.IsContentAdmin = async function({ accountAddr, tenantContractId }) {
+  const tenantAddr = this.utils.HashToAddress(tenantContractId);
+
+  for (let i = 0; i < Number.MAX_SAFE_INTEGER; i++) {
+    let ordinal = BigNumber(i).toString(16);
+    try {
+      let ContentAdminAddr = await this.CallContractMethod({
+        contractAddress: tenantAddr,
+        abi: JSON.parse(abi),
+        methodName: "groupsMapping",
+        methodArgs: ["content_admin", ordinal], 
+        formatArguments: true,
+      });
+
+      if (this.utils.EqualAddress(ContentAdminAddr, accountAddr)) {
+        return true;
+      }
+    } catch (e) {
+      break;
+    }
+  }
+
+  return false;
+};
+
+exports.VerifyLibrary = async function(libraryId) {
+  if (await this.authClient.AccessType(libraryId.toString()) !== this.authClient.ACCESS_TYPES.LIBRARY) {
+    return;
+  }
+
+  let libraryAddress = this.utils.HashToAddress(libraryId).toLowerCase();
+  let tenantContractIdHex;
+  //Library must be linked to a tenant
+  try {
+    tenantContractIdHex = await this.CallContractMethod({
+      contractAddress: libraryAddress,
+      methodName: "getMeta",
+      methodArgs: [
+        META_KEY_TENANT_ID
+      ]
+    });
+  } catch (e) {
+    throw e;
+  }
+  if (tenantContractIdHex == "0x") {
+    throw Error(`The library with id: ${libraryId} doesn't have an _ELV_TENANT_ID tag`);
+  }
+
+  //Verify library is created by the tenant's tenant admin or content admin users
+  accountAddr = await this.CallContractMethod({
+    contractAddress: libraryAddress,
+    methodName: "creator",
+    methodArgs: []
+  });
+  let tenantContractId = Ethers.utils.toUtf8String(tenantContractIdHex);
+
+  if(!this.IsTenantAdmin({accountAddr, tenantContractId}) && !this.isContentAdmin({accountAddr, tenantContractId})) {
+    throw Error(`The creator of the library withid: ${libraryId} is not part of tenant ${tenantContractId} admins groups`);
+  }
+}
+
+exports.VerifyContentType = async function(typeId) {
+  let typeAddress = this.utils.HashToAddress(typeId).toLowerCase();
+  let tenantContractIdHex;
+  //Library must be linked to a tenant
+  try {
+    tenantContractIdHex = await this.CallContractMethod({
+      contractAddress: typeAddress,
+      methodName: "getMeta",
+      methodArgs: [
+        META_KEY_TENANT_ID
+      ]
+    });
+  } catch (e) {
+    throw e;
+  }
+  if (tenantContractIdHex == "0x") {
+    throw Error(`The content type with id: ${typeId} doesn't have an _ELV_TENANT_ID tag`);
+  }
+}
