@@ -872,6 +872,7 @@ class ElvClient {
     address,
     Sign,
     addEthereumPrefix=true,
+    context={}
   }={}) {
     address = address || this.CurrentAccountAddress();
 
@@ -882,6 +883,7 @@ class ElvClient {
       spc: await this.ContentSpaceId(),
       iat: Date.now(),
       exp: Date.now() + duration,
+      ctx: context
     };
 
     let message = `Eluvio Content Fabric Access Token 1.0\n${JSON.stringify(token)}`;
