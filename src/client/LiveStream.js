@@ -942,7 +942,7 @@ exports.StreamInitialize = async function({name, drm=false, format}) {
  */
 exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveStream, drm=false, format}) {
   let status = await this.StreamStatus({name});
-  if(status.state != "inactive" && status.state != "terminated") {
+  if(status.state != "inactive" && status.state != "stopped") {
     return {
       state: status.state,
       error: "stream still active - must terminate first"
