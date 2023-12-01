@@ -50,6 +50,9 @@ const CONTRACTS = {
     [ACCESS_TYPES.ACCESSIBLE]: require("./contracts/v3/Accessible"),
     [ACCESS_TYPES.EDITABLE]: require("./contracts/v3/Editable"),
     [ACCESS_TYPES.TENANT]: require("./contracts/v3/BaseTenantSpace")
+  },
+  v3b: {
+    [ACCESS_TYPES.GROUP]: require("./contracts/v3b/BaseAccessControlGroup")
   }
 };
 
@@ -757,8 +760,12 @@ class AuthorizationClient {
     if(!id) { id = Utils.AddressToObjectId(address); }
 
     const isV3 = await this.IsV3({id});
-    const version = isV3 ? "v3" : "v2";
+    const contractName = await this.client.ethClient.ContractName(Utils.HashToAddress(id), true);
     const accessType = await this.AccessType(id);
+
+    // Contract BsAccessCtrlGrp20210809150000PO has an outdated isAdmin method that checks a managersList array instead of managersMap
+    const v3Version = (contractName === "BsAccessCtrlGrp20210809150000PO" && accessType === this.ACCESS_TYPES.GROUP) ? "v3b" : "v3";
+    const version = isV3 ? v3Version : "v2";
 
     if(accessType === this.ACCESS_TYPES.OTHER) { return {}; }
 
