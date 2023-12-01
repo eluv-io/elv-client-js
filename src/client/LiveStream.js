@@ -827,7 +827,7 @@ exports.StreamStopSession = async function({name}) {
         });
       } catch(error) {
         // The /call/lro/stop API returns empty response
-        console.log("LRO Stop (failed): ", error);
+        // console.log("LRO Stop (failed): ", error);
       }
 
       // Wait until LRO is terminated
