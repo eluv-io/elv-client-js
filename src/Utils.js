@@ -769,7 +769,7 @@ const Utils = {
         "liveDurationInfinity": false,
         "maxBufferLength": 8,
         "backBufferLength": 4,
-        ...defaultSettings
+        "highBufferWatchdogPeriod": 1
       };
     } else if(["ll", "lowLatency", "ull", "ultraLowLatency"].includes(profile)) {
       return {
