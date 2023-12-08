@@ -547,13 +547,6 @@ exports.RemoveAccessGroupManager = async function({contractAddress, memberAddres
     methodName: "managersList"
   });
 
-  const response = await this.AccessGroupMembershipMethod({
-    contractAddress,
-    memberAddress,
-    methodName: "revokeManagerAccess",
-    eventName: "ManagerAccessRevoked"
-  });
-
   if(!hasMethod) {
     let managerList = await this.AccessGroupManagers({
       contractAddress
@@ -561,12 +554,19 @@ exports.RemoveAccessGroupManager = async function({contractAddress, memberAddres
 
     managerList = managerList.filter(element => element !== memberAddress);
 
-    return await this.ReplaceContractMetadata({
+    await this.ReplaceContractMetadata({
       contractAddress,
       metadataKey: "managers",
       metadata: managerList
     });
   }
+
+  const response = await this.AccessGroupMembershipMethod({
+    contractAddress,
+    memberAddress,
+    methodName: "revokeManagerAccess",
+    eventName: "ManagerAccessRevoked"
+  });
 
   return response;
 };
