@@ -1123,6 +1123,32 @@ exports.ListingAttributes = async function({marketplaceParams, displayName}={}) 
 /* PURCHASE / CLAIM */
 
 /**
+ * Claim the specified gift code
+ *
+ * Use the <a href="#.GiftClaimStatus">GiftClaimStatus</a> method to check minting status after claiming
+ *
+ * @methodGroup Purchase
+ * @namedParams
+ * @param {string} code - The OTP gift code to claim
+ *
+ * @returns {Promise<Object>} - Information about the claim, including the tenant associated with the item, the gift ID and the status op key
+ */
+exports.ClaimGift = async function({code}) {
+  return await Utils.ResponseToJson(
+    this.client.authClient.MakeAuthServiceRequest({
+      method: "POST",
+      path: UrlJoin("as", "wlt", "gifts", "claim"),
+      body: {
+        otp_code: code
+      },
+      headers: {
+        Authorization: `Bearer ${this.AuthToken()}`
+      }
+    })
+  );
+};
+
+/**
  * Claim the specified item from the specified marketplace
  *
  * Use the <a href="#.ClaimStatus">ClaimStatus</a> method to check minting status after claiming
