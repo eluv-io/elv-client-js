@@ -1320,6 +1320,58 @@ exports.ClaimStatus = async function({marketplaceParams, sku}) {
 };
 
 /**
+ * Return status of the specified gift claim
+ *
+ * @methodGroup Status
+ * @namedParams
+ * @param {Object} marketplaceParams - Parameters of the marketplace
+ * @param {string=} confirmationId - The confirmation ID of the gift purchase
+ * @param {string=} giftId - The ID of the claimed gift
+ *
+ * @returns {Promise<Object>} - The transfer status of the gift claim
+ */
+exports.GiftClaimStatus = async function({marketplaceParams, confirmationId, giftId}) {
+  try {
+    const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
+    const statuses = await this.MintingStatus({tenantId: marketplaceInfo.tenantId});
+
+    // Status is a list of transfer statuses, may be multiple if quantity > 1
+    const responses = statuses.filter(status => status.op === "nft-transfer" && ((confirmationId && status.confirmationId === confirmationId) || (giftId && status.giftId === giftId))) || { status: "none" };
+
+    if(responses.length === 0) {
+      return { status: "none" };
+    } else {
+      if(responses.find(response => response.status === "error")) {
+        return {
+          status: "error",
+          op: "nft-transfer",
+          transfer_statuses: responses
+        };
+      } else if(responses.find(response => response.status !== "complete")) {
+        return {
+          status: "pending",
+          op: "nft-transfer",
+          transfer_statuses: responses
+        };
+      } else {
+        return {
+          status: "complete",
+          op: "nft-transfer",
+          transfer_statuses: responses,
+          items: responses.map(response => ({
+            token_addr: response.address,
+            token_id_str: response.tokenId
+          }))
+        };
+      }
+    }
+  } catch(error) {
+    this.Log(error, true);
+    return { status: "unknown" };
+  }
+};
+
+/**
  * Return status of the specified pack opening
  *
  * @methodGroup Status
@@ -1385,7 +1437,7 @@ exports.RedeemableOfferStatus = async function({tenantId, marketplaceParams, con
       status.op === "nft-offer-redeem" &&
       Utils.EqualAddress(status.address, contractAddress) &&
       status.tokenId === (tokenId || "").toString() &&
-      status.extra && typeof status.extra[0] !== "undefined" && status.extra[0].toString() === (offerId || "").toString()
+      status.offerId === (offerId || "").toString()
     ) || { status: "none" };
   } catch(error) {
     this.Log(error, true);

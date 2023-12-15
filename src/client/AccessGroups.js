@@ -279,6 +279,7 @@ exports.CreateAccessGroup = async function({name, description, metadata={}, visi
 
     groupMetadata["tenantId"] = tenantId;
   } else {
+    // eslint-disable-next-line no-console
     console.warn("No tenant ID associated with current tenant.");
   }
 
