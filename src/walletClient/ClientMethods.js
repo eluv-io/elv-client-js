@@ -1385,7 +1385,7 @@ exports.RedeemableOfferStatus = async function({tenantId, marketplaceParams, con
       status.op === "nft-offer-redeem" &&
       Utils.EqualAddress(status.address, contractAddress) &&
       status.tokenId === (tokenId || "").toString() &&
-      status.extra && typeof status.extra[0] !== "undefined" && status.extra[0].toString() === (offerId || "").toString()
+      status.offerId === (offerId || "").toString()
     ) || { status: "none" };
   } catch(error) {
     this.Log(error, true);
