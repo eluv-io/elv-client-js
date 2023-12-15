@@ -1296,7 +1296,7 @@ class ElvWalletClient {
           let [op, address, id] = status.op.split(":");
           address = address.startsWith("0x") ? Utils.FormatAddress(address) : address;
 
-          let confirmationId, tokenId;
+          let confirmationId, tokenId, offerId, giftId;
           if(op === "nft-buy") {
             confirmationId = id;
           } else if(op === "nft-claim") {
@@ -1315,8 +1315,13 @@ class ElvWalletClient {
 
           if(op === "nft-transfer") {
             confirmationId = status.extra && status.extra.trans_id;
+            tokenId = (status.extra && status.extra.token_id_str) || tokenId;
+
+            if(status.extra && status.extra.gift_action === "nft-gift-claim") {
+              giftId = status.extra.gift_id;
+            }
           }
-          let offerId;
+
           if(op === "nft-offer-redeem") {
             offerId = status.op.split(":")[3];
           }
@@ -1331,6 +1336,7 @@ class ElvWalletClient {
             address: Utils.FormatAddress(address),
             tokenId,
             offerId,
+            giftId
           };
         })
         .sort((a, b) => a.ts < b.ts ? 1 : -1);
