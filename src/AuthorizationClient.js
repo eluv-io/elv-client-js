@@ -1015,7 +1015,6 @@ class AuthorizationClient {
 
   // MakeTenantAuthServiceRequest makes an auth service request with timestamp and signature
   // optional params kmsId, objectId, versionHash, bodyType
-  // default method is GET
   async MakeTenantAuthServiceRequest({ kmsId, objectId, versionHash, method="GET", path, queryParams={}, body={}, headers = {}, useFabricToken=false }) {
     if (!body) {
       body = {};
@@ -1051,6 +1050,40 @@ class AuthorizationClient {
       queryParams,
     });
     return res;
+  }
+
+  // MakeTenantPathAuthServiceRequest makes an auth service request with timestamp in params
+  async MakeTenantPathAuthServiceRequest({ path, method, queryParams={}, headers = {}}) {
+    let ts = Date.now();
+    let params = { ts, ...queryParams };
+    const paramString = new URLSearchParams(params).toString();
+
+    var newPath = path + "?" + paramString;
+
+    const { multiSig } = await this.TenantSign({
+      message: newPath,
+    });
+
+    if (this.debug) {
+      console.log(`Authorization: Bearer ${multiSig}`);
+    }
+
+    let res = {};
+
+    path = urljoin(this.asUrlPath, path);
+
+    res = await this.client.authClient.MakeAuthServiceRequest({
+      method,
+      path,
+      body,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...headers,
+      },
+      queryParams,
+    });
+    return res;
+
   }
 
   async TenantSign({ message }) {
