@@ -471,7 +471,7 @@ class ElvWalletClient {
     const expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
     const fabricToken = await this.client.CreateFabricToken({
       duration: tokenDuration * 60 * 60 * 1000,
-      context: email ? {usr: {email}} : {}
+      //context: email ? {usr: {email}} : {}
     });
     const address = this.client.utils.FormatAddress(this.client.CurrentAccountAddress());
 
