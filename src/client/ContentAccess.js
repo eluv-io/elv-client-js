@@ -6,7 +6,7 @@
 
 const UrlJoin = require("url-join");
 const objectPath = require("object-path");
-
+const UUID = require("uuid");
 const HttpClient = require("../HttpClient");
 
 const {
@@ -19,6 +19,7 @@ const {
 } = require("../Validation");
 
 const MergeWith = require("lodash/mergeWith");
+const {ElvClient} = require("../ElvClient");
 
 // Note: Keep these ordered by most-restrictive to least-restrictive
 exports.permissionLevels = {
@@ -3073,4 +3074,64 @@ exports.QParts = async function({libraryId, objectId, partHash, format="blob"}) 
       path: path
     })
   );
+};
+
+/**
+ * Audit the validity of the specified content object by verifying across several nodes
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Hash of the object version - If not specified, latest version will be used
+ *
+ * @throws If audit fails or if insufficient nodes respond after 3 attempts
+ * @returns {Promise<Object>} - Returns information about the successful audit, including the audit hash
+ */
+exports.AuditContentObject = async function({objectId, versionHash, attempt=1}) {
+  const libraryId = await this.ContentObjectLibraryId({objectId, versionHash});
+
+  ValidateParameters({libraryId, objectId, versionHash});
+
+  const salt = this.utils.B64(UUID.v4());
+  const samples = [Math.random(), Math.random(), Math.random()].join(",");
+
+  const { fabricURIs } = await this.Configuration({
+    configUrl: this.configUrl,
+    region: this.region,
+    clientIP: this.clientIP
+  });
+
+  const responses = (await Promise.allSettled(
+    fabricURIs.map(async fabricURI => {
+      const httpClient = new HttpClient({uris: [fabricURI]});
+
+      return await this.utils.ResponseToJson(
+        httpClient.Request({
+          headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
+          method: "GET",
+          path: UrlJoin("/qlibs", libraryId, "q", versionHash || objectId, "audit"),
+          queryParams: {
+            salt,
+            samples
+          }
+        })
+      );
+    })
+  ))
+    .filter(response => response.status === "fulfilled")
+    .map(response => response.value);
+
+  if(responses.length < 2) {
+    // If unable to get at least two different nodes to respond, wait a second and retry
+    if(attempt < 3) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return await this.AuditContentObject({objectId, versionHash, attempt: attempt + 1});
+    }
+
+    throw Error(`ElvClient: Insufficient responses for content audit for ${versionHash || objectId}`);
+  } else if(responses.find(({audit_hash}) => audit_hash !== responses[0].audit_hash)) {
+    throw Error(`ElvClient: Audit failed for ${versionHash || objectId}`);
+  }
+
+  return responses[0];
 };
