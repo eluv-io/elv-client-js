@@ -1069,12 +1069,11 @@ class AuthorizationClient {
     res = await this.client.authClient.MakeAuthServiceRequest({
       method,
       path,
-      body,
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${multiSig}`,
         ...headers,
       },
-      queryParams,
+      queryParams: { ts, ...queryParams },
     });
     return res;
 
