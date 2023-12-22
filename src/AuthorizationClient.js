@@ -1035,6 +1035,8 @@ class AuthorizationClient {
       token = multiSig;
     }
 
+    path = UrlJoin("as", path);
+    
     let res;
     res = await this.client.authClient.MakeAuthServiceRequest({
       method,
@@ -1064,6 +1066,8 @@ class AuthorizationClient {
     if (this.debug) {
       console.log(`Authorization: Bearer ${multiSig}`);
     }
+
+    path = UrlJoin("as", path);
 
     let res = {};
     res = await this.client.authClient.MakeAuthServiceRequest({
