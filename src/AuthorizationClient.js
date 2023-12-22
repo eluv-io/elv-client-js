@@ -1036,9 +1036,6 @@ class AuthorizationClient {
     }
 
     let res;
-
-    path = UrlJoin(this.asUrlPath, path);
-
     res = await this.client.authClient.MakeAuthServiceRequest({
       method,
       path,
@@ -1069,9 +1066,6 @@ class AuthorizationClient {
     }
 
     let res = {};
-
-    path = UrlJoin(this.asUrlPath, path);
-
     res = await this.client.authClient.MakeAuthServiceRequest({
       method,
       path,
