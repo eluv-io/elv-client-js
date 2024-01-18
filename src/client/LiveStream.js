@@ -6,16 +6,9 @@
 
 const {LiveConf} = require("./LiveConf");
 const path = require("path");
-
 const fs = require("fs");
-
 const HttpClient = require("../HttpClient");
-//
-// const {
-//   ValidateLibrary,
-//   ValidateVersion,
-//   ValidateParameters
-// } = require("../Validation");
+const Fraction = require("fraction.js");
 
 const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   const tok = await client.authClient.AuthorizationToken({libraryId, objectId,
@@ -25,18 +18,298 @@ const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   return tok;
 };
 
-function sleep(ms) {
+const Sleep = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
+};
+
+/**
+ * Set the offering for the live stream
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {Object} client - The client object
+ * @param {string} libraryId - ID of the library for the new live stream object
+ * @param {string} objectId - ID of the new live stream object
+ * @param {string=} typeAbrMaster - Content type hash
+ * @param {string=} typeLiveStream - Content type hash
+ * @param {string} streamUrl - Live source URL
+ * @param {object} abrProfile - ABR Profile for the offering
+ * @param {number} aBitRate - Audio bitrate
+ * @param {number} aChannels - Audio channels
+ * @param {number} aSampleRate - Audio sample rate
+ * @param {number} aStreamIndex - Audio stream index
+ * @param {string} aTimeBase - Audio time base as a fraction, e.g. "1/48000" (usually equal to 1/aSampleRate)
+ * @param {string} aChannelLayout - Channel layout, e.g. "stereo"
+ * @param {number} vBitRate - Video bitrate
+ * @param {number} vHeight - Video height
+ * @param {number} vStreamIndex - Video stream index
+ * @param {number} vWidth - Video width
+ * @param {string} vDisplayAspectRatio - Display aspect ratio as a fraction, e.g. "16/9"
+ * @param {string} vFrameRate - Frame rate as an integer, e.g. "30"
+ * @param {string} vTimeBase - Time base as a fraction, e.g. "1/30000"
+ *
+ * @return {Promise<string>} - Final hash of the live stream object
+ */
+const StreamGenerateOffering = async({
+  client,
+  libraryId,
+  objectId,
+  typeAbrMaster,
+  typeLiveStream,
+  streamUrl,
+  abrProfile,
+  aBitRate,
+  aChannels,
+  aSampleRate,
+  aStreamIndex,
+  aTimeBase,
+  aChannelLayout,
+  vBitRate,
+  vHeight,
+  vStreamIndex,
+  vWidth,
+  vDisplayAspectRatio,
+  vFrameRate,
+  vTimeBase
+}) => {
+  // compute duration_ts
+  const DUMMY_DURATION = 1001; // should result in integer duration_ts values for both audio and video
+  const aDurationTs = Fraction(aTimeBase).inverse().mul(DUMMY_DURATION).valueOf();
+  const vDurationTs = Fraction(vTimeBase).inverse().mul(DUMMY_DURATION).valueOf();
+
+  // construct /production_master/sources/STREAM_URL/streams
+
+  const sourceAudioStream = {
+    "bit_rate": aBitRate,
+    "channel_layout": aChannelLayout,
+    "channels": aChannels,
+    "codec_name": "aac",
+    "duration": DUMMY_DURATION,
+    "duration_ts": aDurationTs,
+    "frame_count": 0,
+    "language": "",
+    "max_bit_rate": aBitRate,
+    "sample_rate": aSampleRate,
+    "start_pts": 0,
+    "start_time": 0,
+    "time_base": aTimeBase,
+    "type": "StreamAudio"
+  };
+
+  const sourceVideoStream = {
+    "bit_rate": vBitRate,
+    "codec_name": "h264",
+    "display_aspect_ratio": vDisplayAspectRatio,
+    "duration": DUMMY_DURATION,
+    "duration_ts": vDurationTs,
+    "field_order": "progressive",
+    "frame_count": 0,
+    "frame_rate": vFrameRate,
+    "hdr": null,
+    "height": vHeight,
+    "language": "",
+    "max_bit_rate": vBitRate,
+    "sample_aspect_ratio": "1",
+    "start_pts": 0,
+    "start_time": 0,
+    "time_base": vTimeBase,
+    "type": "StreamVideo",
+    "width": vWidth
+  };
+
+  // placeholder stream to use if [aStreamIndex, vStreamIndex].sort() is not [0,1]
+  const DUMMY_STREAM = {
+    "bit_rate": 0,
+    "codec_name": "",
+    "duration": DUMMY_DURATION,
+    "duration_ts": 2500 * DUMMY_DURATION,
+    "frame_count": 1,
+    "language": "",
+    "max_bit_rate": 0,
+    "start_pts": 0,
+    "start_time": 0,
+    "time_base": "1/2500",
+    "type": "StreamData"
+  };
+
+  const sourceStreams = [];
+  const maxStreamIndex = Math.max(aStreamIndex, vStreamIndex);
+
+  for(let i = 0; i <= maxStreamIndex; i++) {
+    if (i === aStreamIndex) {
+      sourceStreams.push(sourceAudioStream);
+    } else if (i === vStreamIndex) {
+      sourceStreams.push(sourceVideoStream);
+    } else {
+      sourceStreams.push(DUMMY_STREAM);
+    }
+  }
+
+  // construct /production_master/sources
+  const sources = {
+    [streamUrl]: {
+      "container_format": {
+        "duration": DUMMY_DURATION,
+        "filename": streamUrl,
+        "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+        "start_time": 0
+      },
+      "streams": sourceStreams
+    }
+  };
+
+  // construct /production_master/variants
+  const variants = {
+    "default": {
+      "streams": {
+        "audio": {
+          "default_for_media_type": false,
+          "label": "",
+          "language": "",
+          "mapping_info": "",
+          "sources": [
+            {
+              "files_api_path": streamUrl,
+              "stream_index": aStreamIndex
+            }
+          ]
+        },
+        "video": {
+          "default_for_media_type": false,
+          "label": "",
+          "language": "",
+          "mapping_info": "",
+          "sources": [
+            {
+              "files_api_path": streamUrl,
+              "stream_index": vStreamIndex
+            }
+          ]
+        }
+      }
+    }
+  };
+
+  // construct /production_master
+  const production_master = {sources, variants};
+
+  // get existing metadata
+  console.log("Retrieving current metadata...");
+  let metadata = await client.ContentObjectMetadata({
+    libraryId,
+    objectId
+  });
+
+  // add /production_master to metadata
+  metadata.production_master = production_master;
+
+  // write back to object
+  console.log("Getting write token...");
+  let editResponse = await client.EditContentObject({
+    libraryId,
+    objectId,
+    options: {
+      type: typeAbrMaster
+    }
+  });
+  let writeToken = editResponse.write_token;
+  console.log(`New write token: ${writeToken}`);
+
+  console.log("Writing back metadata with /production_master added...");
+  await client.ReplaceMetadata({
+    libraryId,
+    metadata,
+    objectId,
+    writeToken
+  });
+
+  console.log("Finalizing...");
+  let finalizeResponse = await client.FinalizeContentObject({
+    libraryId,
+    objectId,
+    writeToken
+  });
+  let masterVersionHash = finalizeResponse.hash;
+  console.log(`Finalized, new version hash: ${masterVersionHash}`);
+
+  // Generate offering
+  const createResponse = await client.CreateABRMezzanine({
+    libraryId,
+    objectId,
+    masterVersionHash,
+    variant: "default",
+    offeringKey: "default",
+    abrProfile
+  });
+
+  if (createResponse.warnings.length > 0) {
+    console.log("WARNINGS:");
+    console.log(JSON.stringify(createResponse.warnings, null, 2));
+  }
+
+  if (createResponse.errors.length > 0) {
+    console.log("ERRORS:");
+    console.log(JSON.stringify(createResponse.errors, null, 2));
+  }
+
+  let versionHash = createResponse.hash;
+  console.log(`New version hash: ${versionHash}`);
+
+  // get new metadata
+  console.log("Retrieving revised metadata with offering...");
+  metadata = await client.ContentObjectMetadata({
+    libraryId,
+    versionHash
+  });
+
+  console.log("Moving /abr_mezzanine/offerings to /offerings and removing /abr_mezzanine...");
+  metadata.offerings = metadata.abr_mezzanine.offerings;
+  delete metadata.abr_mezzanine;
+
+  // add items to media_struct needed to use options.json handler
+  metadata.offerings.default.media_struct.duration_rat = `${DUMMY_DURATION}`;
+
+  // write back to object
+  console.log("Getting write token...");
+  editResponse = await client.EditContentObject({
+    libraryId,
+    objectId,
+    options: {
+      type: typeLiveStream
+    }
+  });
+  writeToken = editResponse.write_token;
+  console.log(`New write token: ${writeToken}`);
+
+  console.log("Writing back metadata with /offerings...");
+  await client.ReplaceMetadata({
+    libraryId,
+    metadata,
+    objectId,
+    writeToken
+  });
+
+  console.log("Finalizing...");
+  finalizeResponse = await client.FinalizeContentObject({
+    libraryId,
+    objectId,
+    writeToken
+  });
+
+  const finalHash = finalizeResponse.hash;
+  console.log(`Finalized, new version hash: ${finalHash}`);
+
+  return finalHash;
+};
 
 /**
  * Retrieve the status of the current live stream session
  *
  * @methodGroup Live Stream
  * @namedParams
- * @param {string} name -
- * @param {boolean} stopLro -
- * @param {boolean} showParams -
+ * @param {string} name - Object ID or name of the live stream object
+ * @param {boolean=} stopLro - If specified, will stop LRO
+ * @param {boolean=} showParams - If specified, will return recording_params with status
  * States:
  * unconfigured    - no live_recording_config
  * uninitialized   - no live_recording config generated
@@ -46,15 +319,13 @@ function sleep(ms) {
  * running         - stream is running and producing output
  * stalled         - LRO running but no source data (so not producing output)
  *
- * @return {Object} - The status response for the object, as well as logs, warnings and errors from the master initialization
+ * @return {Promise<Object>} - The status response for the object, as well as logs, warnings and errors from the master initialization
  */
 exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
   let conf = await this.LoadConf({name});
-
   let status = {name: name};
 
   try {
-
     let libraryId = await this.ContentObjectLibraryId({objectId: conf.objectId});
     status.library_id = libraryId;
     status.object_id = conf.objectId;
@@ -114,6 +385,8 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       ]
     });
 
+    status.edge_meta_size = JSON.stringify(edgeMeta).length;
+
     // If a stream has never been started return state 'inactive'
     if(edgeMeta.live_recording === undefined ||
       edgeMeta.live_recording.recordings === undefined ||
@@ -168,7 +441,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     }
 
     if(showParams) {
-      status.recording_paramse = edgeMeta.live_recording.recording_config.recording_params;
+      status.recording_params = edgeMeta.live_recording.recording_config.recording_params;
     }
 
     let state = "stopped";
@@ -207,10 +480,12 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
         await this.utils.ResponseToJson(
           await HttpClient.Fetch(lroStopUrl)
         );
+
         console.log("LRO Stop: ", lroStatus.body);
       } catch(error) {
         console.log("LRO Stop (failed): ", error.response.statusCode);
       }
+
       state = "stopped";
       status.state = state;
     }
@@ -290,36 +565,18 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
   return status;
 };
 
-// async StatusPrep({name}) {
-//
-//   let conf = await this.LoadConf({name});
-//
-//   try {
-//
-//     // Set static token - avoid individual auth for separate channels/streams
-//     let token = await MakeTxLessToken({client: this.client, libraryId: conf.libraryId});
-//     this.client.SetStaticToken({token});
-//
-//   } catch(error) {
-//     console.log("StatusPrep failed: ", error);
-//     return null;
-//   }
-//
-// }
-
 /**
  * Create a new edge write token
  *
  * @methodGroup Live Stream
  * @namedParams
- * @param {string} name -
- * @param {boolean} start -
+ * @param {string} name - Object ID or name of the live stream object
+ * @param {boolean=} start - If specified, will start the stream after creation
  *
- * @return {Object} - The status response for the object
+ * @return {Promise<Object>} - The status response for the object
  *
 */
-exports.StreamCreate = async function({name, start = false}) {
-
+exports.StreamCreate = async function({name, start=false}) {
   let status = await this.StreamStatus({name});
   if(status.state !== "inactive" && status.state !== "terminated" && status.state !== "stopped") {
     return {
@@ -392,6 +649,7 @@ exports.StreamCreate = async function({name, start = false}) {
     writeToken: writeToken,
     commitMessage: "Create stream edge write token " + edgeToken
   });
+
   const objectHash = response.hash;
   this.Log("Finalized object: ", objectHash);
 
@@ -417,20 +675,21 @@ exports.StreamCreate = async function({name, start = false}) {
  *
  * @methodGroup Live Stream
  * @namedParams
- * @param {string} name -
- * @param {string=} op - The operation to perform. Possible values:
+ * @param {string} name - Object ID or name of the live stream object
+ * @param {string} op - The operation to perform. Possible values:
  * 'start'
  * 'reset' - Stops current LRO recording and starts a new one.  Does
  * not create a new edge write token (just creates a new recording
  * period in the existing edge write token)
  * - 'stop'
  *
- * @return {Object} - The status response for the stream
+ * @return {Promise<Object>} - The status response for the stream
  *
 */
 exports.StreamStartOrStopOrReset = async function({name, op}) {
   try {
     console.log("Stream ", op, ": ", name);
+
     let status = await this.StreamStatus({name});
     if(status.state != "stopped") {
       if(op === "start") {
@@ -441,6 +700,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
 
     if(status.state == "running" || status.state == "starting" || status.state == "stalled") {
       console.log("STOPPING");
+
       try {
         await this.CallBitcodeMethod({
           libraryId: status.library_id,
@@ -458,13 +718,14 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
       let tries = 10;
       while(status.state != "stopped" && tries-- > 0) {
         console.log("Wait to terminate - ", status.state);
-        await sleep(1000);
+        await Sleep(1000);
         status = await this.StreamStatus({name});
       }
-      console.log("Status after terminate - ", status.state);
+
+      console.log("Status after stop - ", status.state);
 
       if(tries <= 0) {
-        console.log("Failed to terminate");
+        console.log("Failed to stop");
         return status;
       }
     }
@@ -495,7 +756,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
     let tries = 10;
     while(status.state != "starting" && tries-- > 0) {
       console.log("Wait to start - ", status.state);
-      await sleep(1000);
+      await Sleep(1000);
       status = await this.StreamStatus({name});
     }
 
@@ -507,416 +768,505 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
   }
 };
 
-/*
+/**
  * Stop the live stream session and close the edge write token.
  * Not implemented fully
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name - Object ID or name of the live stream object
+ *
+ * @return {Promise<Object>} - The finalize response for the stream object
  */
-// async StopSession({name}) {
-//
-//   try {
-//
-//     console.log("TERMINATE: ", name);
-//
-//     let conf = await this.LoadConf({name});
-//
-//     let objectId = conf.objectId;
-//     let libraryId = await this.client.ContentObjectLibraryId({objectId: objectId});
-//
-//     let mainMeta = await this.client.ContentObjectMetadata({
-//       libraryId: libraryId,
-//       objectId: objectId
-//     });
-//
-//     let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
-//     // Support both hostname and URL ingress_node_api
-//     if(!fabURI.startsWith("http")) {
-//       // Assume https
-//       fabURI = "https://" + fabURI;
-//     }
-//
-//     this.client.SetNodes({fabricURIs: [fabURI]});
-//
-//     let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
-//
-//     if(edgeWriteToken === undefined || edgeWriteToken === "") {
-//       return {
-//         state: "inactive",
-//         error: "no active streams - must create a stream first"
-//       };
-//     }
-//     let edgeMeta = await this.client.ContentObjectMetadata({
-//       libraryId: libraryId,
-//       objectId: objectId,
-//       writeToken: edgeWriteToken
-//     });
-//
-//     // Stop the LRO if running
-//     let status = await this.Status({name});
-//     if(status.state != "terminated") {
-//       console.log("STOPPING");
-//       try {
-//         await this.client.CallBitcodeMethod({
-//           libraryId: status.library_id,
-//           objectId: status.object_id,
-//           writeToken: status.edge_write_token,
-//           method: "/live/stop/" + status.tlro,
-//           constant: false
-//         });
-//       } catch(error) {
-//         // The /call/lro/stop API returns empty response
-//         // console.log("LRO Stop (failed): ", error);
-//       }
-//
-//       // Wait until LRO is terminated
-//       let tries = 10;
-//       while (status.state != "terminated" && tries-- > 0) {
-//         console.log("Wait to terminate - ", status.state);
-//         await sleep(1000);
-//         status = await this.Status({name});
-//       }
-//       console.log("Status after terminate - ", status.state);
-//
-//       if(tries <= 0) {
-//         console.log("Failed to terminate");
-//         return status;
-//       }
-//     }
-//
-//     // Set stop time
-//     edgeMeta.recording_stop_time = Math.floor(new Date().getTime() / 1000);
-//     console.log("recording_start_time: ", edgeMeta.recording_start_time);
-//     console.log("recording_stop_time:  ", edgeMeta.recording_stop_time);
-//
-//     edgeMeta.live_recording.status = {
-//       state: "terminated",
-//       recording_stop_time: edgeMeta.recording_stop_time
-//     };
-//
-//     edgeMeta.live_recording.fabric_config.edge_write_token = "";
-//
-//     await this.client.ReplaceMetadata({
-//       libraryId: libraryId,
-//       objectId: objectId,
-//       writeToken: edgeWriteToken,
-//       metadata: edgeMeta
-//     });
-//
-//     let fin = await this.client.FinalizeContentObject({
-//       libraryId,
-//       objectId,
-//       writeToken: edgeWriteToken,
-//       commitMessage: "Finalize live stream - stop time " + edgeMeta.recording_stop_time,
-//       publish: false // Don't publish this version because it is not currently useful
-//     });
-//
-//     return {
-//       fin,
-//       name: name,
-//       edge_write_token: edgeWriteToken,
-//       state: "terminated"
-//     };
-//
-//   } catch(error) {
-//     console.error(error);
-//   }
-// }
+exports.StreamStopSession = async function({name}) {
+  try {
+    console.log("TERMINATE: ", name);
 
-// async Initialize({name, drm=false, format}) {
-//
-//   const contentTypes = await this.client.ContentTypes();
-//
-//   let typeAbrMaster;
-//   let typeLiveStream;
-//   for (let i = 0; i < Object.keys(contentTypes).length; i ++) {
-//     const key = Object.keys(contentTypes)[i];
-//     if(contentTypes[key].name.includes("ABR Master") || contentTypes[key].name.includes("Title")) {
-//       typeAbrMaster = contentTypes[key].hash;
-//     }
-//     if(contentTypes[key].name.includes("Live Stream")) {
-//       typeLiveStream = contentTypes[key].hash;
-//     }
-//   }
-//
-//   if(typeAbrMaster === undefined || typeLiveStream === undefined) {
-//     console.log("ERROR - unable to find content types", "ABR Master", typeAbrMaster, "Live Stream", typeLiveStream);
-//     return {};
-//   }
-//   let res = await this.SetOfferingAndDRM({name, typeAbrMaster, typeLiveStream, drm, format});
-//   return res;
-// }
+    let conf = await this.LoadConf({name});
 
-// async SetOfferingAndDRM({name, typeAbrMaster, typeLiveStream, drm=false, format}) {
-//
-//   let status = await this.Status({name});
-//   if(status.state != "inactive" && status.state != "terminated") {
-//     return {
-//       state: status.state,
-//       error: "stream still active - must terminate first"
-//     };
-//   }
-//
-//   let objectId = status.object_id;
-//
-//   console.log("INIT: ", name, objectId);
-//
-//   const {GenerateOffering} = require("./LiveObjectSetupStepOne");
-//
-//   const aBitRate = 128000;
-//   const aChannels = 2;
-//   const aSampleRate = 48000;
-//   const aStreamIndex = 1;
-//   const aTimeBase = "1/48000";
-//   const aChannelLayout = "stereo";
-//
-//   const vBitRate = 14000000;
-//   const vHeight = 720;
-//   const vStreamIndex = 0;
-//   const vWidth = 1280;
-//   const vDisplayAspectRatio = "16/9";
-//   const vFrameRate = "30000/1001";
-//   const vTimeBase = "1/30000"; // "1/16000";
-//
-//   const abrProfile = require("./abr_profile_live_drm.json");
-//
-//   let playoutFormats = abrProfile.playout_formats;
-//   if(format) {
-//     drm = true; // Override DRM parameter
-//     playoutFormats = {};
-//     let formats = format.split(",");
-//     for (let i = 0; i < formats.length; i++) {
-//       if(formats[i] === "hls-clear") {
-//         abrProfile.drm_optional = true;
-//         playoutFormats["hls-clear"] = {
-//           "drm": null,
-//           "protocol": {
-//             "type": "ProtoHls"
-//           }
-//         };
-//         continue;
-//       }
-//       playoutFormats[formats[i]] = abrProfile.playout_formats[formats[i]];
-//     }
-//   } else if(!drm) {
-//     abrProfile.drm_optional = true;
-//     playoutFormats = {
-//       "hls-clear": {
-//         "drm": null,
-//         "protocol": {
-//           "type": "ProtoHls"
-//         }
-//       }
-//     };
-//   }
-//
-//   abrProfile.playout_formats = playoutFormats;
-//
-//   let libraryId = await this.client.ContentObjectLibraryId({objectId});
-//
-//   try {
-//
-//     let mainMeta = await this.client.ContentObjectMetadata({
-//       libraryId: libraryId,
-//       objectId: objectId
-//     });
-//
-//     let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
-//     // Support both hostname and URL ingress_node_api
-//     if(!fabURI.startsWith("http")) {
-//       // Assume https
-//       fabURI = "https://" + fabURI;
-//     }
-//
-//     this.client.SetNodes({fabricURIs: [fabURI]});
-//
-//     let streamUrl = mainMeta.live_recording.recording_config.recording_params.origin_url;
-//
-//     await GenerateOffering({
-//       client: this.client,
-//       libraryId,
-//       objectId,
-//       typeAbrMaster, typeLiveStream,
-//       streamUrl,
-//       abrProfile,
-//       aBitRate, aChannels, aSampleRate, aStreamIndex,
-//       aTimeBase,
-//       aChannelLayout,
-//       vBitRate, vHeight, vStreamIndex, vWidth,
-//       vDisplayAspectRatio, vFrameRate, vTimeBase
-//     });
-//
-//     console.log("GenerateOffering - DONE");
-//
-//     return {
-//       name,
-//       object_id: objectId,
-//       state: "initialized"
-//     };
-//   } catch(error) {
-//     console.error(error);
-//   }
-// }
+    let {objectId} = conf;
+    let libraryId = await this.ContentObjectLibraryId({objectId});
 
-// Add a content insertion entry
-// Parameters:
-// - insertionTime - seconds (float)
-// - sinceStart - true if time specified since stream start, false if since epoch
-// - duration - seconds (float, deafault 20.0)
-// - targetHash -  playable
-// - remove - flag to remove the insertion at that exact 'time' (instead of adding)
-// async Insertion({name, insertionTime, sinceStart, duration, targetHash, remove}) {
-//
-//   // Determine audio and video parameters of the insertion
-//   const insertionInfo = await this.getOfferingInfo({versionHash: targetHash});
-//   const audioAbrDuration = insertionInfo.audio.seg_duration_sec;
-//   const videoAbrDuration = insertionInfo.video.seg_duration_sec;
-//
-//   if(audioAbrDuration === 0 || videoAbrDuration === 0) {
-//     throw new Error("Bad segment duration hash:", targetHash);
-//   }
-//
-//   if(duration === undefined) {
-//     duration = insertionInfo.duration_sec;  // Use full duration of the insertion
-//   } else {
-//     if(duration > insertionInfo.duration_sec) {
-//       throw new Error("Bad duration - larger than insertion object duration", insertionInfo.duration_sec);
-//     }
-//   }
-//
-//   let conf = await this.LoadConf({name});
-//   let libraryId = await this.client.ContentObjectLibraryId({objectId: conf.objectId});
-//   let objectId = conf.objectId;
-//
-//   let mainMeta = await this.client.ContentObjectMetadata({
-//     libraryId: libraryId,
-//     objectId: conf.objectId
-//   });
-//
-//   let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
-//
-//   // Support both hostname and URL ingress_node_api
-//   if(!fabURI.startsWith("http")) {
-//     // Assume https
-//     fabURI = "https://" + fabURI;
-//   }
-//   this.client.SetNodes({fabricURIs: [fabURI]});
-//   let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
-//
-//   let edgeMeta = await this.client.ContentObjectMetadata({
-//     libraryId: libraryId,
-//     objectId: conf.objectId,
-//     writeToken: edgeWriteToken
-//   });
-//
-//   // Find stream start time (from the most recent recording section)
-//   let recordings = edgeMeta.live_recording.recordings;
-//   let sequence = 1;
-//   let streamStartTime = 0;
-//   if(recordings != undefined && recordings.recording_sequence != undefined) {
-//     // We have at least one recording - check if still active
-//     sequence = recordings.recording_sequence;
-//     let period = recordings.live_offering[sequence - 1];
-//
-//     if(period.end_time_epoch_sec > 0) {
-//       // The last period is closed - apply insertions to the next period
-//       sequence ++;
-//     } else {
-//       // The period is active
-//       streamStartTime = period.start_time_epoch_sec;
-//     }
-//   }
-//
-//   if(streamStartTime === 0) {
-//     // There is no active period - must use absolute time
-//     if(sinceStart === false) {
-//       throw new Error("Stream not running - must use 'time since start'");
-//     }
-//   }
-//
-//   // Find the current period playout configuration
-//   if(edgeMeta.live_recording.playout_config.interleaves === undefined) {
-//     edgeMeta.live_recording.playout_config.interleaves = {};
-//   }
-//   if(edgeMeta.live_recording.playout_config.interleaves[sequence] === undefined) {
-//     edgeMeta.live_recording.playout_config.interleaves[sequence] = [];
-//   }
-//
-//   let playoutConfig = edgeMeta.live_recording.playout_config;
-//   let insertions = playoutConfig.interleaves[sequence];
-//
-//   let res = {};
-//
-//   if(!sinceStart) {
-//     insertionTime = insertionTime - streamStartTime;
-//   }
-//
-//   // Assume insertions are sorted by insertion time
-//   let errs = [];
-//   let currentTime = -1;
-//   let insertionDone = false;
-//   let newInsertion = {
-//     insertion_time: insertionTime,
-//     duration: duration,
-//     audio_abr_duration: audioAbrDuration,
-//     video_abr_duration: videoAbrDuration,
-//     playout: "/qfab/" + targetHash + "/rep/playout"  // TO FIX - should be a link
-//   };
-//
-//   for (let i = 0; i < insertions.length; i ++) {
-//     if(insertions[i].insertion_time <= currentTime) {
-//       // Bad insertion - must be later than current time
-//       append(errs, "Bad insertion - time:", insertions[i].insertion_time);
-//     }
-//     if(remove) {
-//       if(insertions[i].insertion_time === insertionTime) {
-//         insertions.splice(i, 1);
-//         break;
-//       }
-//     } else {
-//       if(insertions[i].insertion_time > insertionTime) {
-//         if(i > 0) {
-//           insertions = [
-//             ...insertions.splice(0, i),
-//             newInsertion,
-//             ...insertions.splice(i)
-//           ];
-//         } else {
-//           insertions = [
-//             newInsertion,
-//             ...insertions.splice(i)
-//           ];
-//         }
-//         insertionDone = true;
-//         break;
-//       }
-//     }
-//   }
-//
-//   if(!remove && !insertionDone) {
-//     // Add to the end of the insertions list
-//     console.log("Add insertion at the end");
-//     insertions = [
-//       ...insertions,
-//       newInsertion
-//     ];
-//   }
-//
-//   playoutConfig.interleaves[sequence] = insertions;
-//
-//   // Store the new insertions in the write token
-//   await this.client.ReplaceMetadata({
-//     libraryId: libraryId,
-//     objectId: objectId,
-//     writeToken: edgeWriteToken,
-//     metadataSubtree: "/live_recording/playout_config",
-//     metadata: edgeMeta.live_recording.playout_config
-//   });
-//
-//   res.errors = errs;
-//   res.insertions = insertions;
-//   return res;
-// }
+    let mainMeta = await this.ContentObjectMetadata({
+      libraryId,
+      objectId
+    });
 
+    let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
+    // Support both hostname and URL ingress_node_api
+    if(!fabURI.startsWith("http")) {
+      // Assume https
+      fabURI = "https://" + fabURI;
+    }
 
+    this.SetNodes({fabricURIs: [fabURI]});
+
+    let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
+
+    if(edgeWriteToken === undefined || edgeWriteToken === "") {
+      return {
+        state: "inactive",
+        error: "no active streams - must create a stream first"
+      };
+    }
+    let edgeMeta = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      writeToken: edgeWriteToken
+    });
+
+    // Stop the LRO if running
+    let status = await this.StreamStatus({name});
+    if(status.state != "terminated") {
+      console.log("STOPPING");
+      try {
+        await this.CallBitcodeMethod({
+          libraryId: status.library_id,
+          objectId: status.object_id,
+          writeToken: status.edge_write_token,
+          method: "/live/stop/" + status.tlro,
+          constant: false
+        });
+      } catch(error) {
+        // The /call/lro/stop API returns empty response
+        // console.log("LRO Stop (failed): ", error);
+      }
+
+      // Wait until LRO is terminated
+      let tries = 10;
+      while (status.state != "stopped" && tries-- > 0) {
+        console.log("Wait to terminate - ", status.state);
+        await Sleep(1000);
+        status = await this.StreamStatus({name});
+      }
+      console.log("Status after stop - ", status.state);
+
+      if(tries <= 0) {
+        console.log("Failed to stop");
+        return status;
+      }
+    }
+
+    // Set stop time
+    edgeMeta.recording_stop_time = Math.floor(new Date().getTime() / 1000);
+    console.log("recording_start_time: ", edgeMeta.recording_start_time);
+    console.log("recording_stop_time:  ", edgeMeta.recording_stop_time);
+
+    edgeMeta.live_recording.status = {
+      state: "terminated",
+      recording_stop_time: edgeMeta.recording_stop_time
+    };
+
+    edgeMeta.live_recording.fabric_config.edge_write_token = "";
+
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: edgeWriteToken,
+      metadata: edgeMeta
+    });
+
+    let fin = await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: edgeWriteToken,
+      commitMessage: "Finalize live stream - stop time " + edgeMeta.recording_stop_time,
+      publish: false // Don't publish this version because it is not currently useful
+    });
+
+    return {
+      fin,
+      name,
+      edge_write_token: edgeWriteToken,
+      state: "terminated"
+    };
+
+  } catch(error) {
+    console.error(error);
+  }
+};
+
+/**
+ * Initialize the stream object
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name - Object ID or name of the live stream object
+ * @param {boolean=} drm - If specified, playout will be DRM protected
+ * @param {string=} format - Specify the list of playout formats and DRM to support,
+ comma-separated (hls-clear, hls-aes128, hls-sample-aes,
+ hls-fairplay)
+ *
+ * @return {Promise<Object>} - The name, object ID, and state of the stream
+ */
+exports.StreamInitialize = async function({name, drm=false, format}) {
+  const contentTypes = await this.ContentTypes();
+
+  let typeAbrMaster;
+  let typeLiveStream;
+
+  for(let i = 0; i < Object.keys(contentTypes).length; i++) {
+    const key = Object.keys(contentTypes)[i];
+
+    if(contentTypes[key].name.includes("ABR Master") || contentTypes[key].name.includes("Title")) {
+      typeAbrMaster = contentTypes[key].hash;
+    }
+
+    if(contentTypes[key].name.includes("Live Stream")) {
+      typeLiveStream = contentTypes[key].hash;
+    }
+  }
+
+  if(typeAbrMaster === undefined || typeLiveStream === undefined) {
+    console.log("ERROR - unable to find content types", "ABR Master", typeAbrMaster, "Live Stream", typeLiveStream);
+    return {};
+  }
+
+  const res = await this.StreamSetOfferingAndDRM({name, typeAbrMaster, typeLiveStream, drm, format});
+
+  return res;
+};
+
+/**
+ * Set the Live Stream offering
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name - Object ID or name of the live stream object
+ * @param {string=} typeAbrMaster - Content type hash
+ * @param {string=} typeLiveStream - Content type hash
+ * @param {boolean=} drm - If specified, DRM will be applied to the stream
+ * @param {string=} format - A list of playout formats and DRM to support, comma-separated
+ * (hls-clear, hls-aes128, hls-sample-aes, hls-fairplay). If specified,
+ * this will take precedence over the drm value
+ *
+ * @return {Promise<Object>} - The name, object ID, and state of the stream
+ */
+exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveStream, drm=false, format}) {
+  let status = await this.StreamStatus({name});
+  if(status.state != "inactive" && status.state != "stopped") {
+    return {
+      state: status.state,
+      error: "stream still active - must terminate first"
+    };
+  }
+
+  let objectId = status.object_id;
+
+  console.log("INIT: ", name, objectId);
+
+  const aBitRate = 128000;
+  const aChannels = 2;
+  const aSampleRate = 48000;
+  const aStreamIndex = 1;
+  const aTimeBase = "1/48000";
+  const aChannelLayout = "stereo";
+
+  const vBitRate = 14000000;
+  const vHeight = 720;
+  const vStreamIndex = 0;
+  const vWidth = 1280;
+  const vDisplayAspectRatio = "16/9";
+  const vFrameRate = "30000/1001";
+  const vTimeBase = "1/30000"; // "1/16000";
+
+  const abrProfile = require("../abr_profiles/abr_profile_live_drm.js");
+
+  let playoutFormats = abrProfile.playout_formats;
+  if(format) {
+    drm = true; // Override DRM parameter
+    playoutFormats = {};
+    let formats = format.split(",");
+    for(let i = 0; i < formats.length; i++) {
+      if(formats[i] === "hls-clear") {
+        abrProfile.drm_optional = true;
+        playoutFormats["hls-clear"] = {
+          "drm": null,
+          "protocol": {
+            "type": "ProtoHls"
+          }
+        };
+        continue;
+      }
+      playoutFormats[formats[i]] = abrProfile.playout_formats[formats[i]];
+    }
+  } else if(!drm) {
+    abrProfile.drm_optional = true;
+    playoutFormats = {
+      "hls-clear": {
+        "drm": null,
+        "protocol": {
+          "type": "ProtoHls"
+        }
+      }
+    };
+  }
+
+  abrProfile.playout_formats = playoutFormats;
+
+  let libraryId = await this.ContentObjectLibraryId({objectId});
+
+  try {
+    let mainMeta = await this.ContentObjectMetadata({
+      libraryId,
+      objectId
+    });
+
+    let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
+    // Support both hostname and URL ingress_node_api
+    if(!fabURI.startsWith("http")) {
+      // Assume https
+      fabURI = "https://" + fabURI;
+    }
+
+    this.SetNodes({fabricURIs: [fabURI]});
+
+    let streamUrl = mainMeta.live_recording.recording_config.recording_params.origin_url;
+
+    await StreamGenerateOffering({
+      client: this,
+      libraryId,
+      objectId,
+      typeAbrMaster,
+      typeLiveStream,
+      streamUrl,
+      abrProfile,
+      aBitRate,
+      aChannels,
+      aSampleRate,
+      aStreamIndex,
+      aTimeBase,
+      aChannelLayout,
+      vBitRate,
+      vHeight,
+      vStreamIndex,
+      vWidth,
+      vDisplayAspectRatio,
+      vFrameRate,
+      vTimeBase
+    });
+
+    console.log("Finished generating offering");
+
+    return {
+      name,
+      object_id: objectId,
+      state: "initialized"
+    };
+  } catch(error) {
+    console.error(error);
+  }
+};
+
+/**
+ * Add a content insertion entry
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name - Object ID or name of the live stream object
+ * @param {number} insertionTime - Time in seconds (float)
+ * @param {boolean=} sinceStart - If specified, time specified will be elapsed seconds
+ * since stream start, otherwise, time will be elapsed since epoch
+ * @param {number=} duration - Time in seconds (float). Default: 20.0
+ * @param {string} targetHash - The target content object hash (playable)
+ * @param {boolean=} remove - If specified, will remove the inseration at the exact 'time' (instead of adding)
+ *
+ * @return {Promise<Object>} - Insertions, as well as any errors from bad insertions
+ */
+exports.StreamInsertion = async function({name, insertionTime, sinceStart=false, duration, targetHash, remove=false}) {
+  // Determine audio and video parameters of the insertion
+
+  // Content Type check is currently disabled due to permissions
+  /*
+  let ct = await this.client.ContentObject({versionHash});
+  if(ct.type != undefined && ct.type != "") {
+    let typeMeta = await this.client.ContentObjectMetadata({
+      versionHash: ct.type
+    });
+    if(typeMeta.bitcode_flags != "abrmaster") {
+      throw new Error("Not a playable VoD object " + versionHash);
+    }
+  }
+  */
+  let offeringMeta = await this.ContentObjectMetadata({
+    versionHash: targetHash,
+    metadataSubtree: "/offerings/default"
+  });
+
+  var insertionInfo = {
+    duration_sec: 0 // Minimum of video and audio duration
+  };
+  ["video", "audio"].forEach(mt =>  {
+    const stream = offeringMeta.media_struct.streams[mt];
+    insertionInfo[mt] = {
+      seg_duration_sec: stream.optimum_seg_dur.float,
+      duration_sec: stream.duration.float,
+      frame_rate_rat: stream.rate,
+    };
+    if(insertionInfo.duration_sec === 0 || stream.duration.float < insertionInfo.duration_sec) {
+      insertionInfo.duration_sec = stream.duration.float;
+    }
+  });
+
+  const audioAbrDuration = insertionInfo.audio.seg_duration_sec;
+  const videoAbrDuration = insertionInfo.video.seg_duration_sec;
+
+  if(audioAbrDuration === 0 || videoAbrDuration === 0) {
+    throw new Error("Bad segment duration hash:", targetHash);
+  }
+
+  if(duration === undefined) {
+    duration = insertionInfo.duration_sec;  // Use full duration of the insertion
+  } else {
+    if(duration > insertionInfo.duration_sec) {
+      throw new Error("Bad duration - larger than insertion object duration", insertionInfo.duration_sec);
+    }
+  }
+
+  let conf = await this.LoadConf({name});
+  let libraryId = await this.ContentObjectLibraryId({objectId: conf.objectId});
+  let objectId = conf.objectId;
+
+  let mainMeta = await this.ContentObjectMetadata({
+    libraryId: libraryId,
+    objectId: conf.objectId
+  });
+
+  let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
+
+  // Support both hostname and URL ingress_node_api
+  if(!fabURI.startsWith("http")) {
+    // Assume https
+    fabURI = "https://" + fabURI;
+  }
+  this.SetNodes({fabricURIs: [fabURI]});
+  let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
+
+  let edgeMeta = await this.ContentObjectMetadata({
+    libraryId: libraryId,
+    objectId: conf.objectId,
+    writeToken: edgeWriteToken
+  });
+
+  // Find stream start time (from the most recent recording section)
+  let recordings = edgeMeta.live_recording.recordings;
+  let sequence = 1;
+  let streamStartTime = 0;
+  if(recordings != undefined && recordings.recording_sequence != undefined) {
+    // We have at least one recording - check if still active
+    sequence = recordings.recording_sequence;
+    let period = recordings.live_offering[sequence - 1];
+
+    if(period.end_time_epoch_sec > 0) {
+      // The last period is closed - apply insertions to the next period
+      sequence ++;
+    } else {
+      // The period is active
+      streamStartTime = period.start_time_epoch_sec;
+    }
+  }
+
+  if(streamStartTime === 0) {
+    // There is no active period - must use absolute time
+    if(sinceStart === false) {
+      throw new Error("Stream not running - must use 'time since start'");
+    }
+  }
+
+  // Find the current period playout configuration
+  if(edgeMeta.live_recording.playout_config.interleaves === undefined) {
+    edgeMeta.live_recording.playout_config.interleaves = {};
+  }
+  if(edgeMeta.live_recording.playout_config.interleaves[sequence] === undefined) {
+    edgeMeta.live_recording.playout_config.interleaves[sequence] = [];
+  }
+
+  let playoutConfig = edgeMeta.live_recording.playout_config;
+  let insertions = playoutConfig.interleaves[sequence];
+
+  let res = {};
+
+  if(!sinceStart) {
+    insertionTime = insertionTime - streamStartTime;
+  }
+
+  // Assume insertions are sorted by insertion time
+  let errs = [];
+  let currentTime = -1;
+  let insertionDone = false;
+  let newInsertion = {
+    insertion_time: insertionTime,
+    duration: duration,
+    audio_abr_duration: audioAbrDuration,
+    video_abr_duration: videoAbrDuration,
+    playout: "/qfab/" + targetHash + "/rep/playout"  // TO FIX - should be a link
+  };
+
+  for (let i = 0; i < insertions.length; i ++) {
+    if(insertions[i].insertion_time <= currentTime) {
+      // Bad insertion - must be later than current time
+      append(errs, "Bad insertion - time:", insertions[i].insertion_time);
+    }
+    if(remove) {
+      if(insertions[i].insertion_time === insertionTime) {
+        insertions.splice(i, 1);
+        break;
+      }
+    } else {
+      if(insertions[i].insertion_time > insertionTime) {
+        if(i > 0) {
+          insertions = [
+            ...insertions.splice(0, i),
+            newInsertion,
+            ...insertions.splice(i)
+          ];
+        } else {
+          insertions = [
+            newInsertion,
+            ...insertions.splice(i)
+          ];
+        }
+        insertionDone = true;
+        break;
+      }
+    }
+  }
+
+  if(!remove && !insertionDone) {
+    // Add to the end of the insertions list
+    console.log("Add insertion at the end");
+    insertions = [
+      ...insertions,
+      newInsertion
+    ];
+  }
+
+  playoutConfig.interleaves[sequence] = insertions;
+
+  // Store the new insertions in the write token
+  await this.ReplaceMetadata({
+    libraryId: libraryId,
+    objectId: objectId,
+    writeToken: edgeWriteToken,
+    metadataSubtree: "/live_recording/playout_config",
+    metadata: edgeMeta.live_recording.playout_config
+  });
+
+  res.errors = errs;
+  res.insertions = insertions;
+
+  return res;
+};
+
+/**
+ * Load cached stream configuration
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name - Object ID or name of the live stream object
+ *
+ * @return {Promise<Object>} - The configuration of the stream
+ */
 exports.LoadConf = async function({name}) {
   if(name.startsWith("iq__")) {
     return {
@@ -945,180 +1295,22 @@ exports.LoadConf = async function({name}) {
   return conf;
 };
 
-/*
- * Read a playable contnet object and get information about a particular offering
- */
-// async getOfferingInfo({versionHash, offering = "default"}) {
-//
-//   // Content Type check is currently disabled due to permissions
-//   /*
-//   let ct = await this.client.ContentObject({versionHash});
-//   if(ct.type != undefined && ct.type != "") {
-//     let typeMeta = await this.client.ContentObjectMetadata({
-//       versionHash: ct.type
-//     });
-//     if(typeMeta.bitcode_flags != "abrmaster") {
-//       throw new Error("Not a playable VoD object " + versionHash);
-//     }
-//   }
-//   */
-//   let offeringMeta = await this.client.ContentObjectMetadata({
-//     versionHash,
-//     metadataSubtree: "/offerings/" + offering
-//   });
-//
-//   var info = {
-//     duration_sec: 0 // Minimum of video and audio duration
-//   };
-//   ["video", "audio"].forEach(mt =>  {
-//     const stream = offeringMeta.media_struct.streams[mt];
-//     info[mt] = {
-//       seg_duration_sec: stream.optimum_seg_dur.float,
-//       duration_sec: stream.duration.float,
-//       frame_rate_rat: stream.rate,
-//     };
-//     if(info.duration_sec === 0 || stream.duration.float < info.duration_sec) {
-//       info.duration_sec = stream.duration.float;
-//     }
-//   });
-//   return info;
-// }
-
-
-// async StreamDownload({name, period}) {
-//
-//   let conf = await this.LoadConf({name});
-//
-//   let status = {name};
-//
-//   try {
-//
-//     let libraryId = await this.client.ContentObjectLibraryId({objectId: conf.objectId});
-//     status.library_id = libraryId;
-//     status.object_id = conf.objectId;
-//
-//     let mainMeta = await this.client.ContentObjectMetadata({
-//       libraryId: libraryId,
-//       objectId: conf.objectId
-//     });
-//
-//     let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
-//     if(fabURI === undefined) {
-//       console.log("bad fabric config - missing ingress node API");
-//     }
-//
-//     // Support both hostname and URL ingress_node_api
-//     if(!fabURI.startsWith("http")) {
-//       // Assume https
-//       fabURI = "https://" + fabURI;
-//     }
-//     this.client.SetNodes({fabricURIs: [fabURI]});
-//
-//     let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
-//     let edgeMeta = await this.client.ContentObjectMetadata({
-//       libraryId: libraryId,
-//       objectId: conf.objectId,
-//       writeToken: edgeWriteToken
-//     });
-//
-//     // If a stream has never been started return state 'inactive'
-//     if(edgeMeta.live_recording === undefined ||
-//       edgeMeta.live_recording.recordings === undefined ||
-//       edgeMeta.live_recording.recordings.recording_sequence === undefined) {
-//       status.state = "no recordings";
-//       return status;
-//     }
-//
-//     let recordings = edgeMeta.live_recording.recordings;
-//     status.recording_period_sequence = recordings.recording_sequence;
-//
-//     let sequence = recordings.recording_sequence;
-//     if(period === undefined || period < 0 || period > sequence - 1) {
-//       period = sequence - 1;
-//     }
-//
-//     console.log("Downloading stream", name, " period", period, " latest", sequence - 1);
-//
-//     let recording = recordings.live_offering[period];
-//     if(recording === undefined) {
-//       console.log("ERROR - recording period not found: ", period);
-//     }
-//
-//     let dpath = "DOWNLOAD/" + edgeWriteToken + "." + period;
-//     !fs.existsSync(dpath) && fs.mkdirSync(dpath, {recursive: true});
-//
-//     let mts = ["audio", "video"];
-//     for (let mi = 0; mi < mts.length; mi ++) {
-//       let mt = mts[mi];
-//       console.log("Downloading ", mt);
-//       let mtpath = dpath + "/" + mt;
-//       let partsfile = dpath + "/parts_" + mt + ".txt";
-//       !fs.existsSync(mtpath) && fs.mkdirSync(mtpath);
-//       var sources = recording.sources[mt];
-//       for (let i = 0; i < sources.length - 1; i++) {
-//         console.log(sources[i].hash);
-//         let partHash = sources[i].hash;
-//         let buf = await this.client.DownloadPart({
-//           libraryId,
-//           objectId: conf.objectId,
-//           partHash,
-//           format: "buffer",
-//           chunked: false,
-//           callback: ({bytesFinished, bytesTotal}) => {
-//             console.log("  progress: ", bytesFinished + "/" + bytesTotal);
-//           }
-//         });
-//
-//         let partfile = mtpath + "/" + partHash + ".mp4";
-//         fs.appendFile(partfile, buf, (err) => {
-//           if(err)
-//             console.log(err);
-//         });
-//         fs.appendFile(partsfile, "file '" + mt + "/" + partHash + ".mp4'\n", (err) => {
-//           if(err)
-//             console.log(err);
-//         });
-//       }
-//
-//       // Concatenate parts into one mp4
-//       let cmd = "ffmpeg -f concat -safe 0 -i " + partsfile + " -c copy " + dpath + "/" + mt + ".mp4";
-//       console.log("Running", cmd);
-//       execSync(cmd);
-//     }
-//
-//     // Create final mp4 file
-//     let f = dpath + "/download.mp4";
-//     let cmd = "ffmpeg -i " + dpath + "/video.mp4"  + "  -i " +  dpath + "/audio.mp4" + "  -map 0:v:0  -map 1:a:0  -c copy  -shortest " + f;
-//     console.log("Running", cmd);
-//     execSync(cmd);
-//
-//     status.file = f;
-//     status.state = "completed";
-//   } catch(e) {
-//     console.log("Download failed", e);
-//     throw e;
-//   }
-//
-//   return status;
-// }
-
 /**
  * Configure the stream
  *
  * @methodGroup Live Stream
  * @namedParams
- * @param {string} name -
- * @param {string=} op - The operation to perform. Possible values:
- * 'start'
- * 'reset' - Stops current LRO recording and starts a new one.  Does
- * not create a new edge write token (just creates a new recording
- * period in the existing edge write token)
- * - 'stop'
+ * @param {string} name - Object ID or name of the live stream object
+ * @param {Object=} customSettings - Additional options to customize configuration settings
+ * - audioBitrate
+ * - audioIndex
+ * - partTtl
+ * - channelLayout
  *
- * @return {Object} - The status response for the stream
+ * @return {Promise<Object>} - The status response for the stream
  *
  */
-exports.StreamConfig = async function({name, customSettings}) {
+exports.StreamConfig = async function({name, customSettings={}}) {
   let conf = await this.LoadConf({name});
   let status = {name};
 
@@ -1235,322 +1427,3 @@ exports.StreamConfig = async function({name, customSettings}) {
 
   return status;
 };
-
-// const ChannelStatus = async ({client, name}) => {
-//
-//   let status = {name: name};
-//
-//   const conf = channels[name];
-//   if(conf === null) {
-//     console.log("Bad name: ", name);
-//     return;
-//   }
-//
-//   try {
-//
-//     let meta = await client.ContentObjectMetadata({
-//       libraryId: conf.libraryId,
-//       objectId: conf.objectId
-//     });
-//
-//     status.channel_title = meta.public.asset_metadata.title;
-//     let source = meta.channel.offerings.default.items[0].source["/"];
-//     let hash = source.split("/")[2];
-//     status.stream_hash = hash;
-//     latestHash = await client.LatestVersionHash({
-//       versionHash: hash
-//     });
-//     status.stream_latest_hash = latestHash;
-//
-//     if(hash != latestHash) {
-//       status.warnings = ["Stream version is not the latest"];
-//     }
-//
-//     let channelFormatsUrl = await client.FabricUrl({
-//       libraryId: conf.libraryId,
-//       objectId: conf.objectId,
-//       rep: "channel/options.json"
-//     });
-//
-//     try {
-//       let offerings = await got(channelFormatsUrl);
-//       status.offerings = JSON.parse(offerings.body);
-//     } catch(error) {
-//       console.log(error);
-//       status.offerings_error = "Failed to retrieve channel offerings";
-//     }
-//
-//     status.playout = await ChannelPlayout({client, libraryId: conf.libraryId, objectId: conf.objectId});
-//
-//   } catch(error) {
-//     console.error(error);
-//   }
-//
-//   return status;
-// };
-
-/*
- * Performs client-side playout operations - open the channel, read offerings,
- * retrieve playlist and one video init segment.
- */
-// const ChannelPlayout = async({client, libraryId, objectId}) => {
-//
-//   let playout = {};
-//
-//   const offerings = await client.AvailableOfferings({
-//     libraryId,
-//     objectId,
-//     handler: "channel",
-//     linkPath: "/public/asset_metadata/offerings"
-//   });
-//
-//   // Choosing offering 'default'
-//   let offering = offerings.default;
-//
-//   const playoutOptions = await client.PlayoutOptions({
-//     libraryId,
-//     objectId,
-//     offeringURI: offering.uri
-//   });
-//
-//   // Retrieve master playlist
-//   let masterPlaylistUrl = playoutOptions["hls"]["playoutMethods"]["fairplay"]["playoutUrl"];
-//   playout.master_playlist_url = masterPlaylistUrl;
-//   try {
-//     //let masterPlaylist =  await got(masterPlaylistUrl);
-//     playout.master_playlist = "success";
-//   } catch(error) {
-//     playout.master_playlist = "fail";
-//   }
-//
-//   let url = new URL(masterPlaylistUrl);
-//   let p = url.pathname.split("/");
-//
-//   // Retrieve media playlist
-//   p[p.length - 1] = "video/720@14000000/live.m3u8";
-//   let pathMediaPlaylist = p.join("/");
-//   url.pathname = pathMediaPlaylist;
-//   let mediaPlaylistUrl = url.toString();
-//   playout.media_playlist_url = mediaPlaylistUrl;
-//   let mediaPlaylist;
-//   try {
-//     mediaPlaylist = await got(mediaPlaylistUrl);
-//     playout.media_playlist = "success";
-//   } catch(error) {
-//     playout.media_playlist = "fail";
-//   }
-//
-//   // Retrieve init segment
-//   var regex = new RegExp("^#EXT-X-MAP:URI=\"init.m4s.(.*)\"$", "m");
-//   var match = regex.exec(mediaPlaylist.body);
-//   let initQueryParams;
-//   if(match) {
-//     initQueryParams = match[1];
-//   }
-//
-//   p[p.length - 1] = "video/720@14000000/init.m4s";
-//   let pathInit = p.join("/");
-//   url.pathname = pathInit;
-//   url.search=initQueryParams;
-//   let initUrl = url.toString();
-//   playout.init_segment_url = initUrl;
-//   /*
-//   try {
-// 	let initSegment = await got(initUrl);
-// 	playout.init_segment = "success"
-//   } catch(error) {
-// 	playout.init_segment = "fail";
-//   }
-// */
-//   return playout;
-// };
-
-
-// const Summary = async ({client}) => {
-//
-//   let summary = {};
-//
-//   try {
-//     for (const [key] of Object.entries(streams)) {
-//       conf = streams[key];
-//       summary[key] = await Status({client, name: key, stopLro: false});
-//     }
-//
-//   } catch(error) {
-//     console.error(error);
-//   }
-//   return summary;
-// };
-
-// const ChannelSummary = async ({client}) => {
-//
-//   let summary = {};
-//
-//   try {
-//     for (const [key] of Object.entries(channels)) {
-//       conf = channels[key];
-//       summary[key] = await ChannelStatus({client, name: key});
-//     }
-//
-//   } catch(error) {
-//     console.error(error);
-//   }
-//   return summary;
-// };
-
-// const ConfigStreamRebroadcast = async () => {
-//
-//   const t = 1619850660;
-//
-//   try {
-//     let client;
-//     if(conf.clientConf.configUrl) {
-//       client = await ElvClient.FromConfigurationUrl({
-//         configUrl: conf.clientConf.configUrl
-//       });
-//     } else {
-//       client = new ElvClient(conf.clientConf);
-//     }
-//     const wallet = client.GenerateWallet();
-//     const signer = wallet.AddAccount({ privateKey: conf.signerPrivateKey });
-//     client.SetSigner({ signer });
-//     const fabURI = client.fabricURIs[0];
-//     console.log("Fabric URI: " + fabURI);
-//     const ethURI = client.ethereumURIs[0];
-//     console.log("Ethereum URI: " + ethURI);
-//
-//     client.ToggleLogging(false);
-//
-//     let mainMeta = await client.ContentObjectMetadata({
-//       libraryId: conf.libraryId,
-//       objectId: conf.objectId
-//     });
-//     console.log("Main meta:", mainMeta);
-//
-//     edgeWriteToken = mainMeta.edge_write_token;
-//     console.log("Edge: ", edgeWriteToken);
-//
-//     let edgeMeta = await client.ContentObjectMetadata({
-//       libraryId: conf.libraryId,
-//       objectId: conf.objectId,
-//       writeToken: edgeWriteToken
-//     });
-//     console.log("Edge meta:", edgeMeta);
-//
-//     //console.log("CONFIG: ", edgeMeta.live_recording_parameters.live_playout_config);
-//     console.log("recording_start_time: ", edgeMeta.recording_start_time);
-//     console.log("recording_stop_time:  ", edgeMeta.recording_stop_time);
-//
-//     // Set rebroadcast start
-//     edgeMeta.live_recording_parameters.live_playout_config.rebroadcast_start_time_sec_epoch = t;
-//
-//     if(PRINT_DEBUG) console.log("MergeMetadata", conf.libraryId, conf.objectId, writeToken);
-//     await client.MergeMetadata({
-//       libraryId: conf.libraryId,
-//       objectId: conf.objectId,
-//       writeToken: edgeWriteToken,
-//       metadata: {
-//         "live_recording_parameters": {
-//           "live_playout_config" : edgeMeta.live_recording_parameters.live_playout_config
-//         }
-//       }
-//     });
-//
-//   } catch(error) {
-//     console.error(error);
-//   }
-// };
-
-// async function EnsureAll() {
-//   client = await StatusPrep({name: null});
-//   let summary = await Summary({client});
-//
-//   var res = {
-//     running: 0,
-//     stalled: 0,
-//     terminated: 0
-//   };
-//
-//   try {
-//     for (const [key, value] of Object.entries(summary)) {
-//       if(value.state === "stalled") {
-//         console.log("Stream stalled: ", key, " - restarting");
-//         console.log("todo ...");
-//       }
-//       res[value.state] = res[value.state] + 1;
-//     }
-//   } catch(error) {
-//     console.error(error);
-//   }
-//
-//   return res;
-// }
-
-
-/*
- * Original Run() function - kept for reference
- */
-// async function Run() {
-//
-//   var client;
-//
-//   switch (command) {
-//
-//     case "start":
-//       StartStream({name});
-//       break;
-//
-//     case "status":
-//       client = await StatusPrep({name});
-//       let status = await Status({client, name, stopLro: false});
-//       console.log(JSON.stringify(status, null, 4));
-//       break;
-//
-//     case "stop":
-//       client = await UpdatePrep({name});
-//       Status({client, name, stopLro: true});
-//       break;
-//
-//     case "summary":
-//       client = await StatusPrep({name: null});
-//       let summary = await Summary({client});
-//       console.log(JSON.stringify(summary, null, 4));
-//       break;
-//
-//     case "init": // Set up DRM
-//       SetOfferingAndDRM();
-//       break;
-//
-//     case "reset": // Stop and start LRO recording (same edge write token)
-//       client = await StatusPrep({name});
-//       let reset = await Reset({client, name, stopLro: false});
-//       console.log(JSON.stringify(reset, null, 4));
-//       break;
-//
-//     case "channel":
-//       client = await StatusPrep({name});
-//       let channelStatus = await ChannelStatus({client, name});
-//       console.log(JSON.stringify(channelStatus, null, 4));
-//       break;
-//
-//     case "channel_summary":
-//       client = await StatusPrep({name});
-//       let channelSummary = await ChannelSummary({client, name});
-//       console.log(JSON.stringify(channelSummary, null, 4));
-//       break;
-//
-//     case "ensure_all": // Check all and restart stalled
-//       let ensureSummary = await EnsureAll();
-//       console.log(JSON.stringify(ensureSummary, null, 4));
-//       break;
-//
-//     case "future_use_config":
-//       ConfigStreamRebroadcast();
-//       break;
-//
-//     default:
-//       console.log("Bad command: ", command);
-//       break;
-//
-//   }
-// }
