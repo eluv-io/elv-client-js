@@ -275,7 +275,7 @@ class LiveConf {
         console.log("HLS detected. Not yet implemented");
         break;
       default:
-        console.log("Unsuppoted media", this.probeKind());
+        console.log("Unsupported media", this.probeKind());
         break;
     }
 
