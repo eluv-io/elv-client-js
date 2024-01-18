@@ -9,7 +9,6 @@ const path = require("path");
 const fs = require("fs");
 const HttpClient = require("../HttpClient");
 const Fraction = require("fraction.js");
-const {AbrProfiles} = require("../index");
 
 const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   const tok = await client.authClient.AuthorizationToken({libraryId, objectId,
@@ -971,7 +970,7 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
   const vFrameRate = "30000/1001";
   const vTimeBase = "1/30000"; // "1/16000";
 
-  const abrProfile = AbrProfiles.AbrProfileLiveDrm;
+  const abrProfile = this.AbrProfiles.AbrProfileLiveDrm;
 
   let playoutFormats = abrProfile.playout_formats;
   if(format) {
