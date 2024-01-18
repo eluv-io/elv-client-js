@@ -1,4 +1,4 @@
-{
+const AbrProfileLiveVod = {
   "drm_optional": true,
   "store_clear": true,
   "ladder_specs": {
@@ -1880,4 +1880,6 @@
       "target_dur": 2.000
     }
   }
-}
+};
+
+module.exports = AbrProfileLiveVod;

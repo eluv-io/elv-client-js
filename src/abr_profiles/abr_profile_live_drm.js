@@ -1,4 +1,4 @@
-{
+const AbrProfileLiveDrm = {
   "drm_optional": false,
   "store_clear": false,
   "ladder_specs": {
@@ -1902,4 +1902,6 @@
       "target_dur": 2
     }
   }
-}
+};
+
+module.exports = AbrProfileLiveDrm;
