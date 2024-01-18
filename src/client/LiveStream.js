@@ -970,7 +970,7 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
   const vFrameRate = "30000/1001";
   const vTimeBase = "1/30000"; // "1/16000";
 
-  const abrProfile = this.AbrProfiles.AbrProfileLiveDrm;
+  const abrProfile = require("../abr_profiles/abr_profile_live_drm.js");
 
   let playoutFormats = abrProfile.playout_formats;
   if(format) {
