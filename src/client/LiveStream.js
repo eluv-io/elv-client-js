@@ -385,6 +385,8 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       ]
     });
 
+    status.edge_meta_size = JSON.stringify(edgeMeta).length;
+
     // If a stream has never been started return state 'inactive'
     if(edgeMeta.live_recording === undefined ||
       edgeMeta.live_recording.recordings === undefined ||
@@ -720,10 +722,10 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
         status = await this.StreamStatus({name});
       }
 
-      console.log("Status after terminate - ", status.state);
+      console.log("Status after stop - ", status.state);
 
       if(tries <= 0) {
-        console.log("Failed to terminate");
+        console.log("Failed to stop");
         return status;
       }
     }
