@@ -265,9 +265,13 @@ class LiveConf {
     // Fill in specifics for protocol
     switch(this.probeKind()) {
       case "udp":
+        sourceTimescale = 90000;
+        conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
+        break;
       case "srt":
         sourceTimescale = 90000;
         conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
+        conf.live_recording.recording_config.recording_params.live_delay_nano = 4000000000;
         break;
       case "rtmp":
         sourceTimescale = 16000;
