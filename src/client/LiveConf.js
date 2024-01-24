@@ -220,6 +220,7 @@ class LiveConf {
     let videoStream = this.getStreamDataForCodecType("video");
     switch(this.probeKind()) {
       case "udp":
+      case "srt":
         sync_id = videoStream.stream_id;
         break;
       case "rtmp":
@@ -264,6 +265,7 @@ class LiveConf {
     // Fill in specifics for protocol
     switch(this.probeKind()) {
       case "udp":
+      case "srt":
         sourceTimescale = 90000;
         conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
         break;

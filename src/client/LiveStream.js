@@ -1325,9 +1325,10 @@ exports.StreamConfig = async function({name, customSettings={}}) {
 
   let userConfig = mainMeta.live_recording_config;
   status.user_config = userConfig;
+  console.log("userConfig", userConfig)
 
   // Get node URI from user config
-  const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").split(":")[0];
+  const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").replace("srt://", "").split(":")[0];
   const streamUrl = new URL(userConfig.url);
 
   console.log("Retrieving nodes...");
