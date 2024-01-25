@@ -239,10 +239,8 @@ class LiveConf {
     const videoStream = this.getStreamDataForCodecType("video");
     let sourceTimescale;
 
-    console.log("AUDIO", audioStream);
-    console.log("VIDEO", videoStream);
-
     // Fill in liveconf all formats have in common
+    conf.live_recording.probe_info = this.probeData;
     conf.live_recording.fabric_config.ingress_node_api = this.nodeUrl || null;
     conf.live_recording.fabric_config.ingress_node_id = this.nodeId || null;
     conf.live_recording.recording_config.recording_params.description;
