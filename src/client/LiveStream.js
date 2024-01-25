@@ -367,7 +367,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     status.url = mainMeta.live_recording.recording_config.recording_params.origin_url;
 
     let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
-    if(edgeWriteToken == undefined) {
+    if(!edgeWriteToken) {
       status.state = "inactive";
       return status;
     }
@@ -1427,4 +1427,106 @@ exports.StreamConfig = async function({name, customSettings={}}) {
   });
 
   return status;
+};
+
+/**
+ * Deactivate the stream
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name - Object ID or name of the live stream object
+ *
+ * @return {Promise<Object>} - The status response for the stream
+ */
+exports.StreamDeactivate = async function({name}) {
+  try {
+    let conf = await this.LoadConf({name});
+
+    let {objectId} = conf;
+    let libraryId = await this.ContentObjectLibraryId({objectId});
+
+    let mainMeta = await this.ContentObjectMetadata({
+      libraryId,
+      objectId
+    });
+    let status = await this.StreamStatus({name});
+
+    if(!mainMeta.live_recording) {
+      return {
+        state: status.state,
+        error: "Stream must be configured before deactivating"
+      }
+    }
+
+    // Return error if the LRO is running
+    if(status.state !== "stopped") {
+      return {
+        state: status.state,
+        error: "Stream must be stopped before deactivating"
+      }
+    }
+
+    let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
+    // Support both hostname and URL ingress_node_api
+    if(!fabURI.startsWith("http")) {
+      // Assume https
+      fabURI = "https://" + fabURI;
+    }
+
+    this.SetNodes({fabricURIs: [fabURI]});
+
+    let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
+
+    if(edgeWriteToken === undefined || edgeWriteToken === "") {
+      return {
+        state: "inactive",
+        error: "stream is already inactive"
+      };
+    }
+    let edgeMeta = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      writeToken: edgeWriteToken
+    });
+    console.log("BEG edgeMeta", edgeMeta)
+
+    // Set stop time
+    edgeMeta.recording_stop_time = Math.floor(new Date().getTime() / 1000);
+    console.log("recording_start_time: ", edgeMeta.recording_start_time);
+    console.log("recording_stop_time:  ", edgeMeta.recording_stop_time);
+    const newState = "inactive";
+
+    edgeMeta.live_recording.status = {
+      state: newState,
+      recording_stop_time: edgeMeta.recording_stop_time
+    };
+
+    edgeMeta.live_recording.fabric_config.edge_write_token = "";
+    console.log("edgeMeta", edgeMeta)
+    console.log("edgeWriteToken", edgeWriteToken)
+
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: edgeWriteToken,
+      metadata: edgeMeta
+    });
+
+    let fin = await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: edgeWriteToken,
+      commitMessage: "Deactivate stream"
+    });
+
+    return {
+      fin,
+      name,
+      edge_write_token: edgeWriteToken,
+      state: newState
+    };
+
+  } catch(error) {
+    console.error(error);
+  }
 };
