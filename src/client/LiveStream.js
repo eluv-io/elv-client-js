@@ -136,9 +136,9 @@ const StreamGenerateOffering = async({
   const maxStreamIndex = Math.max(aStreamIndex, vStreamIndex);
 
   for(let i = 0; i <= maxStreamIndex; i++) {
-    if (i === aStreamIndex) {
+    if(i === aStreamIndex) {
       sourceStreams.push(sourceAudioStream);
-    } else if (i === vStreamIndex) {
+    } else if(i === vStreamIndex) {
       sourceStreams.push(sourceVideoStream);
     } else {
       sourceStreams.push(DUMMY_STREAM);
@@ -242,12 +242,12 @@ const StreamGenerateOffering = async({
     abrProfile
   });
 
-  if (createResponse.warnings.length > 0) {
+  if(createResponse.warnings.length > 0) {
     console.log("WARNINGS:");
     console.log(JSON.stringify(createResponse.warnings, null, 2));
   }
 
-  if (createResponse.errors.length > 0) {
+  if(createResponse.errors.length > 0) {
     console.log("ERRORS:");
     console.log(JSON.stringify(createResponse.errors, null, 2));
   }
@@ -834,7 +834,7 @@ exports.StreamStopSession = async function({name}) {
 
       // Wait until LRO is terminated
       let tries = 10;
-      while (status.state != "stopped" && tries-- > 0) {
+      while(status.state != "stopped" && tries-- > 0) {
         console.log("Wait to terminate - ", status.state);
         await Sleep(1000);
         status = await this.StreamStatus({name});
@@ -1202,7 +1202,7 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
     playout: "/qfab/" + targetHash + "/rep/playout"  // TO FIX - should be a link
   };
 
-  for (let i = 0; i < insertions.length; i ++) {
+  for(let i = 0; i < insertions.length; i ++) {
     if(insertions[i].insertion_time <= currentTime) {
       // Bad insertion - must be later than current time
       append(errs, "Bad insertion - time:", insertions[i].insertion_time);

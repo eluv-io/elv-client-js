@@ -160,7 +160,31 @@ class LiveConf {
     }
   }
 
-  calcSegDuration({sourceTimescale}) {
+  /*
+   * Calculates mez segment durations based on input stream parameters
+  *
+  * Live input formats have fixed timebase:
+  * - MPEG-TS/SRT input stream timebase is 90000
+  * - RTMP input stream timebase is 1000 and gets translated to 16000 if not otherwise specified
+  *
+  * This causes frame duration irregularities for certain frame rates.
+  * For example RTMP 60fps has frames of durations 16 and 17.  MPEG-TS 59.94fps has frames of durations 1001 and 1002.
+  *
+  * Live mez segmentation requires that the segment be cut at the specific number of frames, and since some
+  * frames have shorter duration, the 'segment duration ts' needs to be specified as the lowest value.
+  * (for example for frames of durations 246 and 261, a 30 sec mez segment is 460800 - 15 = 460785)
+  *
+  * Also the timebase of the mez segment needs to be adjusted to a value that accommodates the frame rate
+  * using constant frame durations (so it can convert to VoD correctly).
+  * For example for MPEG-TS 59.94fps, the mez segment timebase needs to be 60000
+  * (and resulting frame duration is 1001) and for RTMP 60fps the timebase needs to be 15360 (resulting frame
+  * duration is 256).
+  *
+  * @sourceTimescale - adjusted source video stream timescale (eg. MPEGTS 90000, RTMP 16000 )
+  * @sampleRate - audio sample rate (commonly 48000 but can be different)
+  * @return - segment encoding parameters
+  */
+  calcSegDuration({sourceTimescale, sampleRate}) {
     let videoStream = this.getStreamDataForCodecType("video");
     let frameRate = videoStream.frame_rate;
 
@@ -179,7 +203,15 @@ class LiveConf {
         seg.duration = "30";
         break;
       case "30":
-        seg.video = 30 * sourceTimescale;
+        switch(sourceTimescale) {
+          case 16000: // RTMP
+            seg.video = 15360 * 30 - 15; // Frame durations are 507 and 522
+            seg.videoTimeBase = 15360;
+            break;
+          default:
+            seg.video = 30 * sourceTimescale;
+            break;
+        }
         seg.keyint = 60;
         seg.duration = "30";
         break;
@@ -199,12 +231,28 @@ class LiveConf {
         seg.duration = "30";
         break;
       case "60":
-        seg.video = 30 * sourceTimescale;
+        switch(sourceTimescale) {
+          case 16000: // RTMP
+            seg.video = 15360 * 30 - 15; // Frame durations are 246 and 261
+            seg.videoTimeBase = 15360;
+            break;
+          default:
+            seg.video = 30 * sourceTimescale;
+            break;
+        }
         seg.keyint = 120;
         seg.duration = "30";
         break;
       case "60000/1001":
-        seg.video = 30.03 * sourceTimescale;
+        switch(sourceTimescale) {
+          case 90000: // MPEGTS
+            seg.video = 30.03 * 60000;
+            seg.videoTimeBase = 60000;
+            break;
+          default:
+            seg.video = 30 * sourceTimescale;
+            break;
+        }
         seg.keyint = 120;
         seg.duration = "30.03";
         break;
@@ -286,6 +334,12 @@ class LiveConf {
     conf.live_recording.recording_config.recording_params.xc_params.audio_seg_duration_ts = segDurations.audio;
     conf.live_recording.recording_config.recording_params.xc_params.video_seg_duration_ts = segDurations.video;
     conf.live_recording.recording_config.recording_params.xc_params.force_keyint = segDurations.keyint;
+
+    // Optional output timebase override
+    if(segDurations.videoTimeBase) {
+      conf.live_recording.recording_config.recording_params.xc_params.video_time_base = segDurations.videoTimeBase;
+      conf.live_recording.recording_config.recording_params.source_timescale = segDurations.videoTimeBase;
+    }
 
     switch(videoStream.height) {
       case 2160:
