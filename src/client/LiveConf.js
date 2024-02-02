@@ -107,6 +107,7 @@ const LiveconfTemplate = {
           sync_audio_to_stream_id: -1,
           video_bitrate: null,
           video_seg_duration_ts: null,
+          video_time_base: null,
           xc_type: 3
         }
       }
@@ -160,8 +161,8 @@ class LiveConf {
     }
   }
 
-  /*
-   * Calculates mez segment durations based on input stream parameters
+ /*
+  * Calculates mez segment durations based on input stream parameters
   *
   * Live input formats have fixed timebase:
   * - MPEG-TS/SRT input stream timebase is 90000
@@ -184,31 +185,61 @@ class LiveConf {
   * @sampleRate - audio sample rate (commonly 48000 but can be different)
   * @return - segment encoding parameters
   */
-  calcSegDuration({sourceTimescale, sampleRate}) {
+  calcSegDuration({sourceTimescale, sampleRate, audioCodec}) {
     let videoStream = this.getStreamDataForCodecType("video");
     let frameRate = videoStream.frame_rate;
 
     let seg = {};
-    seg.audio = 29.76 * 48000;
+
+    if (audioCodec == "aac") {
+      seg.audio = 29.76 * sampleRate;
+    } else {
+      seg.audio = 29.76 * 48000; // Other codecs are resampled @48000
+    }
 
     switch(frameRate) {
       case "24":
-        seg.video = 30 * sourceTimescale;
+        switch(sourceTimescale) {
+          case 16000: // RTMP
+            seg.videoTimeBase = 12288;
+            seg.video = seg.videoTimeBase * 30 - 12; // Frame durations are 504 and 516
+            break;
+          case 90000: // MPEGTS
+            seg.videoTimeBase = 12288;
+            seg.video = seg.videoTimeBase * 30;
+            break;
+          default:
+            seg.video = 30 * sourceTimescale;
+            break;
+        }
         seg.keyint = 48;
         seg.duration = "30";
         break;
       case "25":
-        seg.video = 30 * sourceTimescale;
+        switch(sourceTimescale) {
+          case 16000: // RTMP
+          case 90000: // MPEGTS
+            seg.videoTimeBase = 12800;
+            seg.video = seg.videoTimeBase * 30; // Frame durations are 512
+            break;
+          default:
+            seg.video = 30 * sourceTimescale;
+            break;
+        }
         seg.keyint = 50;
         seg.duration = "30";
         break;
       case "30":
         switch(sourceTimescale) {
           case 16000: // RTMP
-            seg.video = 15360 * 30 - 15; // Frame durations are 507 and 522
             seg.videoTimeBase = 15360;
+            seg.video = seg.videoTimeBase * 30 - 15; // Frame durations are 507 and 522
             break;
-          default:
+          case 90000: // MPEGTS
+            seg.videoTimeBase = 15360;
+            seg.video = seg.videoTimeBase * 30;
+            break;
+        default:
             seg.video = 30 * sourceTimescale;
             break;
         }
@@ -216,25 +247,62 @@ class LiveConf {
         seg.duration = "30";
         break;
       case "30000/1001":
-        seg.video = 30.03 * sourceTimescale;
+        switch(sourceTimescale) {
+          case 16000: // RTMP
+            seg.videoTimeBase = 30000;
+            seg.video = seg.videoTimeBase * 30.03 - 30; // Frame durations are 990 and 1020
+            break;
+          case 90000: // MPEGTS
+            seg.videoTimeBase = 30000;
+            seg.video = seg.videoTimeBase * 30.03; // Frame durations are 1001
+            break;
+          default:
+            seg.video = 30.03 * sourceTimescale;
+            break;
+        }
         seg.keyint = 60;
         seg.duration = "30.03";
         break;
       case "48":
-        seg.video = 30 * sourceTimescale;
+        switch(sourceTimescale) {
+          case 16000: // RTMP
+            seg.videoTimeBase = 12228;
+            seg.video = seg.videoTimeBase * 30 - 12; // Frame durations are 246 and 258
+            break;
+          case 90000: // MPEGTS
+            seg.videoTimeBase = 12228;
+            seg.video = seg.videoTimeBase * 30;
+            break;
+          default:
+            seg.video = 30 * sourceTimescale;
+            break;
+        }
         seg.keyint = 96;
         seg.duration = "30";
         break;
       case "50":
-        seg.video = 30 * sourceTimescale;
+        switch(sourceTimescale) {
+          case 16000: // RTMP
+          case 90000: // MPEGTS
+            seg.videoTimeBase = 12800;
+            seg.video = seg.videoTimeBase * 30; // Frame durations are 256
+            break;
+          default:
+            seg.video = 30 * sourceTimescale;
+            break;
+        }
         seg.keyint = 100;
         seg.duration = "30";
         break;
       case "60":
         switch(sourceTimescale) {
           case 16000: // RTMP
-            seg.video = 15360 * 30 - 15; // Frame durations are 246 and 261
             seg.videoTimeBase = 15360;
+            seg.video = seg.videoTimeBase * 30 - 15; // Frame durations are 246 and 261
+            break;
+          case 90000: // MPEGTS
+            seg.videoTimeBase = 15360;
+            seg.video = seg.videoTimeBase * 30;
             break;
           default:
             seg.video = 30 * sourceTimescale;
@@ -245,12 +313,16 @@ class LiveConf {
         break;
       case "60000/1001":
         switch(sourceTimescale) {
-          case 90000: // MPEGTS
-            seg.video = 30.03 * 60000;
+          case 16000: // RTMP
             seg.videoTimeBase = 60000;
+            seg.video = seg.videoTimeBase * 30.03 - 30; // Frame durations are 960 and 1020
+            break;
+          case 90000: // MPEGTS
+            seg.videoTimeBase = 60000;
+            seg.video = seg.videoTimeBase * 30.03; // Frame durations are 1001
             break;
           default:
-            seg.video = 30 * sourceTimescale;
+            seg.video = 30.03 * sourceTimescale;
             break;
         }
         seg.keyint = 120;
@@ -272,7 +344,7 @@ class LiveConf {
         sync_id = videoStream.stream_id;
         break;
       case "rtmp":
-        sync_id = -1; // Pending fabric API: videoStream.stream_index
+        sync_id = videoStream.stream_index;
         break;
     }
     return sync_id;
@@ -283,7 +355,9 @@ class LiveConf {
     const conf = JSON.parse(JSON.stringify(LiveconfTemplate));
     const fileName = this.overwriteOriginUrl || this.probeData.format.filename;
     const audioStream = this.getStreamDataForCodecType("audio");
+
     const sampleRate = parseInt(audioStream.sample_rate);
+    const audioCodec = audioStream.codec_name;
     const videoStream = this.getStreamDataForCodecType("video");
     let sourceTimescale;
 
@@ -331,7 +405,7 @@ class LiveConf {
         break;
     }
 
-    const segDurations = this.calcSegDuration({sourceTimescale});
+    const segDurations = this.calcSegDuration({sourceTimescale, sampleRate, audioCodec});
 
     // Segment conditioning parameters
     conf.live_recording.recording_config.recording_params.xc_params.seg_duration = segDurations.duration;
