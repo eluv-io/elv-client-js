@@ -266,11 +266,11 @@ class LiveConf {
       case "48":
         switch(sourceTimescale) {
           case 16000: // RTMP
-            seg.videoTimeBase = 12228;
+            seg.videoTimeBase = 12288;
             seg.video = seg.videoTimeBase * 30 - 12; // Frame durations are 246 and 258
             break;
           case 90000: // MPEGTS
-            seg.videoTimeBase = 12228;
+            seg.videoTimeBase = 12288;
             seg.video = seg.videoTimeBase * 30;
             break;
           default:
