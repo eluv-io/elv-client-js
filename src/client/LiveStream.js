@@ -339,6 +339,8 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       ]
     });
 
+    status.reference_url = mainMeta.live_recording_config.reference_url;
+
     if(mainMeta.live_recording_config == undefined || mainMeta.live_recording_config.url == undefined) {
       status.state = "unconfigured";
       return status;
@@ -688,8 +690,6 @@ exports.StreamCreate = async function({name, start=false}) {
 */
 exports.StreamStartOrStopOrReset = async function({name, op}) {
   try {
-    console.log("Stream ", op, ": ", name);
-
     let status = await this.StreamStatus({name});
     if(status.state != "stopped") {
       if(op === "start") {
@@ -699,8 +699,6 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
     }
 
     if(status.state == "running" || status.state == "starting" || status.state == "stalled") {
-      console.log("STOPPING");
-
       try {
         await this.CallBitcodeMethod({
           libraryId: status.library_id,
@@ -1511,12 +1509,12 @@ exports.StreamDeactivate = async function({name}) {
     });
 
     return {
+      reference_url: status.reference_url,
       fin,
       name,
       edge_write_token: edgeWriteToken,
       state: newState
     };
-
   } catch(error) {
     console.error(error);
   }
