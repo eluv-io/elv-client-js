@@ -162,29 +162,29 @@ class LiveConf {
   }
 
   /*
-  * Calculates mez segment durations based on input stream parameters
-  *
-  * Live input formats have fixed timebase:
-  * - MPEG-TS/SRT input stream timebase is 90000
-  * - RTMP input stream timebase is 1000 and gets translated to 16000 if not otherwise specified
-  *
-  * This causes frame duration irregularities for certain frame rates.
-  * For example RTMP 60fps has frames of durations 16 and 17.  MPEG-TS 59.94fps has frames of durations 1001 and 1002.
-  *
-  * Live mez segmentation requires that the segment be cut at the specific number of frames, and since some
-  * frames have shorter duration, the 'segment duration ts' needs to be specified as the lowest value.
-  * (for example for frames of durations 246 and 261, a 30 sec mez segment is 460800 - 15 = 460785)
-  *
-  * Also the timebase of the mez segment needs to be adjusted to a value that accommodates the frame rate
-  * using constant frame durations (so it can convert to VoD correctly).
-  * For example for MPEG-TS 59.94fps, the mez segment timebase needs to be 60000
-  * (and resulting frame duration is 1001) and for RTMP 60fps the timebase needs to be 15360 (resulting frame
-  * duration is 256).
-  *
-  * @sourceTimescale - adjusted source video stream timescale (eg. MPEGTS 90000, RTMP 16000 )
-  * @sampleRate - audio sample rate (commonly 48000 but can be different)
-  * @return - segment encoding parameters
-  */
+   * Calculates mez segment durations based on input stream parameters
+   *
+   * Live input formats have fixed timebase:
+   * - MPEG-TS/SRT input stream timebase is 90000
+   * - RTMP input stream timebase is 1000 and gets translated to 16000 if not otherwise specified
+   *
+   * This causes frame duration irregularities for certain frame rates.
+   * For example RTMP 60fps has frames of durations 16 and 17.  MPEG-TS 59.94fps has frames of
+   * durations 1001 and 1002.
+   *
+   * Live mez segmentation requires that the segment be cut at the specific number of frames, and when
+   * the frame durations are irregular we adjust both the video timebase and the video frame duration
+   * to make the math possible.  This adjustment is also required for live-to-vod conversion.
+   *
+   * For example for MPEG-TS 59.94fps, the mez segment timebase needs to be 60000
+   * (and resulting frame duration is 1001) and for RTMP 60fps the timebase needs to be 15360 (resulting frame
+   * duration is 256).
+   *
+   * @sourceTimescale - adjusted source video stream timescale (eg. MPEGTS 90000, RTMP 16000 )
+   * @sampleRate - audio sample rate (commonly 48000 but can be different)
+   * @audioCodec - audio codec as a string (eg. "aac")
+   * @return - segment encoding parameters
+   */
   calcSegDuration({sourceTimescale, sampleRate, audioCodec}) {
     let seg = {};
 

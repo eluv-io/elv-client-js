@@ -1323,7 +1323,7 @@ exports.StreamConfig = async function({name, customSettings={}}) {
 
   let userConfig = mainMeta.live_recording_config;
   status.user_config = userConfig;
-  console.log("userConfig", userConfig)
+  console.log("userConfig", userConfig);
 
   // Get node URI from user config
   const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").replace("srt://", "").split(":")[0];
@@ -1444,7 +1444,7 @@ exports.StreamDeactivate = async function({name}) {
       return {
         state: status.state,
         error: "Stream must be configured before deactivating"
-      }
+      };
     }
 
     // Return error if the LRO is running
@@ -1452,7 +1452,7 @@ exports.StreamDeactivate = async function({name}) {
       return {
         state: status.state,
         error: "Stream must be stopped before deactivating"
-      }
+      };
     }
 
     let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
@@ -1477,12 +1477,9 @@ exports.StreamDeactivate = async function({name}) {
       objectId,
       writeToken: edgeWriteToken
     });
-    console.log("BEG edgeMeta", edgeMeta)
 
     // Set stop time
     edgeMeta.recording_stop_time = Math.floor(new Date().getTime() / 1000);
-    console.log("recording_start_time: ", edgeMeta.recording_start_time);
-    console.log("recording_stop_time:  ", edgeMeta.recording_stop_time);
     const newState = "inactive";
 
     edgeMeta.live_recording.status = {
@@ -1491,8 +1488,6 @@ exports.StreamDeactivate = async function({name}) {
     };
 
     edgeMeta.live_recording.fabric_config.edge_write_token = "";
-    console.log("edgeMeta", edgeMeta)
-    console.log("edgeWriteToken", edgeWriteToken)
 
     await this.ReplaceMetadata({
       libraryId,
