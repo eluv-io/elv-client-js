@@ -161,7 +161,7 @@ class LiveConf {
     }
   }
 
- /*
+  /*
   * Calculates mez segment durations based on input stream parameters
   *
   * Live input formats have fixed timebase:
@@ -186,150 +186,147 @@ class LiveConf {
   * @return - segment encoding parameters
   */
   calcSegDuration({sourceTimescale, sampleRate, audioCodec}) {
-    let videoStream = this.getStreamDataForCodecType("video");
-    let frameRate = videoStream.frame_rate;
-
     let seg = {};
 
-    if (audioCodec == "aac") {
+    switch(this.probeKind()) {
+      case "rtmp":
+        seg = this.calcSegDurationRtmp({sourceTimescale, sampleRate, audioCodec});
+        break;
+      case "udp":
+      case "srt":
+        seg = this.calcSegDurationMpegts({sourceTimescale, sampleRate, audioCodec});
+        break;
+      default:
+        throw "protocol not supported - " + this.probeKind();
+    }
+
+    if(audioCodec == "aac") {
       seg.audio = 29.76 * sampleRate;
     } else {
       seg.audio = 29.76 * 48000; // Other codecs are resampled @48000
     }
 
+    return seg;
+  }
+
+  calcSegDurationMpegts({sourceTimescale}) {
+    let videoStream = this.getStreamDataForCodecType("video");
+    let frameRate = videoStream.frame_rate;
+    let seg = {};
+
     switch(frameRate) {
       case "24":
-        switch(sourceTimescale) {
-          case 16000: // RTMP
-            seg.videoTimeBase = 12288;
-            seg.video = seg.videoTimeBase * 30 - 12; // Frame durations are 504 and 516
-            break;
-          case 90000: // MPEGTS
-            seg.videoTimeBase = 12288;
-            seg.video = seg.videoTimeBase * 30;
-            break;
-          default:
-            seg.video = 30 * sourceTimescale;
-            break;
-        }
+        seg.video = sourceTimescale * 30;
         seg.keyint = 48;
         seg.duration = "30";
         break;
       case "25":
-        switch(sourceTimescale) {
-          case 16000: // RTMP
-          case 90000: // MPEGTS
-            seg.videoTimeBase = 12800;
-            seg.video = seg.videoTimeBase * 30; // Frame durations are 512
-            break;
-          default:
-            seg.video = 30 * sourceTimescale;
-            break;
-        }
+        seg.video = sourceTimescale * 30;
         seg.keyint = 50;
         seg.duration = "30";
         break;
       case "30":
-        switch(sourceTimescale) {
-          case 16000: // RTMP
-            seg.videoTimeBase = 15360;
-            seg.video = seg.videoTimeBase * 30 - 15; // Frame durations are 507 and 522
-            break;
-          case 90000: // MPEGTS
-            seg.videoTimeBase = 15360;
-            seg.video = seg.videoTimeBase * 30;
-            break;
-        default:
-            seg.video = 30 * sourceTimescale;
-            break;
-        }
+        seg.video = sourceTimescale * 30;
         seg.keyint = 60;
         seg.duration = "30";
         break;
       case "30000/1001":
-        switch(sourceTimescale) {
-          case 16000: // RTMP
-            seg.videoTimeBase = 30000;
-            seg.video = seg.videoTimeBase * 30.03 - 30; // Frame durations are 990 and 1020
-            break;
-          case 90000: // MPEGTS
-            seg.videoTimeBase = 30000;
-            seg.video = seg.videoTimeBase * 30.03; // Frame durations are 1001
-            break;
-          default:
-            seg.video = 30.03 * sourceTimescale;
-            break;
-        }
+        seg.video = sourceTimescale * 30;
         seg.keyint = 60;
         seg.duration = "30.03";
         break;
       case "48":
-        switch(sourceTimescale) {
-          case 16000: // RTMP
-            seg.videoTimeBase = 12288;
-            seg.video = seg.videoTimeBase * 30 - 12; // Frame durations are 246 and 258
-            break;
-          case 90000: // MPEGTS
-            seg.videoTimeBase = 12288;
-            seg.video = seg.videoTimeBase * 30;
-            break;
-          default:
-            seg.video = 30 * sourceTimescale;
-            break;
-        }
+        seg.video = sourceTimescale * 30;
         seg.keyint = 96;
         seg.duration = "30";
         break;
       case "50":
-        switch(sourceTimescale) {
-          case 16000: // RTMP
-          case 90000: // MPEGTS
-            seg.videoTimeBase = 12800;
-            seg.video = seg.videoTimeBase * 30; // Frame durations are 256
-            break;
-          default:
-            seg.video = 30 * sourceTimescale;
-            break;
-        }
+        seg.video = sourceTimescale * 30;
         seg.keyint = 100;
         seg.duration = "30";
         break;
       case "60":
-        switch(sourceTimescale) {
-          case 16000: // RTMP
-            seg.videoTimeBase = 15360;
-            seg.video = seg.videoTimeBase * 30 - 15; // Frame durations are 246 and 261
-            break;
-          case 90000: // MPEGTS
-            seg.videoTimeBase = 15360;
-            seg.video = seg.videoTimeBase * 30;
-            break;
-          default:
-            seg.video = 30 * sourceTimescale;
-            break;
-        }
+        seg.video = sourceTimescale * 30;
         seg.keyint = 120;
         seg.duration = "30";
         break;
       case "60000/1001":
-        switch(sourceTimescale) {
-          case 16000: // RTMP
-            seg.videoTimeBase = 60000;
-            seg.video = seg.videoTimeBase * 30.03 - 30; // Frame durations are 960 and 1020
-            break;
-          case 90000: // MPEGTS
-            seg.videoTimeBase = 60000;
-            seg.video = seg.videoTimeBase * 30.03; // Frame durations are 1001
-            break;
-          default:
-            seg.video = 30.03 * sourceTimescale;
-            break;
-        }
+        seg.videoTimeBase = 60000;
+        seg.video = seg.videoTimeBase * 30.03;
         seg.keyint = 120;
         seg.duration = "30.03";
         break;
       default:
-        console.log("Unsupported frame rate", frameRate);
+        throw "unsupported frame rate for MPEGTS - " + frameRate;
+        break;
+    }
+    return seg;
+  }
+
+  calcSegDurationRtmp({sourceTimescale}) {
+    let videoStream = this.getStreamDataForCodecType("video");
+    let frameRate = videoStream.frame_rate;
+    let seg = {};
+
+    switch(frameRate) {
+      case "24":
+        seg.videoTimeBase = 12288;
+        seg.videoFrameDurationTs = 512;
+        seg.video = seg.videoTimeBase * 30;
+        seg.keyint = 48;
+        seg.duration = "30";
+        break;
+      case "25":
+        seg.videoTimeBase = 12800;
+        seg.videoFrameDurationTs = 512;
+        seg.video = seg.videoTimeBase * 30;
+        seg.keyint = 50;
+        seg.duration = "30";
+        break;
+      case "30":
+        seg.videoTimeBase = 15360;
+        seg.videoFrameDurationTs = 512;
+        seg.video = seg.videoTimeBase * 30;
+        seg.keyint = 60;
+        seg.duration = "30";
+        break;
+      case "30000/1001":
+        seg.videoTimeBase = 30000;
+        seg.videoFrameDurationTs = 1001;
+        seg.video = seg.videoTimeBase * 30.03;
+        seg.keyint = 60;
+        seg.duration = "30.03";
+        break;
+      case "48":
+        seg.videoTimeBase = 12288;
+        seg.videoFrameDurationTs = 256;
+        seg.video = seg.videoTimeBase * 30;
+        seg.keyint = 96;
+        seg.duration = "30";
+        break;
+      case "50":
+        seg.videoTimeBase = 12800;
+        seg.videoFrameDurationTs = 256;
+        seg.video = seg.videoTimeBase * 30;
+        seg.keyint = 100;
+        seg.duration = "30";
+        break;
+      case "60":
+        seg.videoTimeBase = 15360;
+        seg.videoFrameDurationTs = 256;
+        seg.video = seg.videoTimeBase * 30;
+        seg.keyint = 120;
+        seg.duration = "30";
+        break;
+      case "60000/1001":
+        seg.videoTimeBase = 60000;
+        seg.videoFrameDurationTs = 1001;
+        seg.video = seg.videoTimeBase * 30.03;
+        seg.keyint = 120;
+        seg.duration = "30.03";
+        break;
+      default:
+        throw "unsupported frame rate for RTMP - " + frameRate;
         break;
     }
     return seg;
@@ -413,10 +410,13 @@ class LiveConf {
     conf.live_recording.recording_config.recording_params.xc_params.video_seg_duration_ts = segDurations.video;
     conf.live_recording.recording_config.recording_params.xc_params.force_keyint = segDurations.keyint;
 
-    // Optional output timebase override
+    // Optional override output timebase and frame duration (ts)
     if(segDurations.videoTimeBase) {
       conf.live_recording.recording_config.recording_params.xc_params.video_time_base = segDurations.videoTimeBase;
       conf.live_recording.recording_config.recording_params.source_timescale = segDurations.videoTimeBase;
+    }
+    if(segDurations.videoFrameDurationTs) {
+      conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs;
     }
 
     switch(videoStream.height) {
