@@ -319,8 +319,10 @@ class LiveConf {
         seg.duration = "30";
         break;
       case "60000/1001":
-        seg.videoTimeBase = 60000;
-        seg.videoFrameDurationTs = 1001;
+        // PENDING : the correct setting would be 60000 but there seems to be a problem with it
+        // and 90000 produces correct segments
+        // seg.videoTimeBase = 60000;
+        // seg.videoFrameDurationTs = 1001;
         seg.video = seg.videoTimeBase * 30.03;
         seg.keyint = 120;
         seg.duration = "30.03";
