@@ -2176,6 +2176,11 @@ const EmbedMediaTypes = {
   - `showTitle` - Shows the video title, which is set from the title option (if set) or the metadata
   - `title` - Sets the page title
   - `viewRecordKey` - Contains record key
+  - `useTicketCodes` - Use tickets authorization
+  - `tenantId` - Tenant ID, required for tickets authorization
+  - `ntpId` - NTP ID, required for tickets authorization
+  - `ticketCode` - Ticket code, optional with tickets authorization
+  - `ticketSubject` - Ticket subject, optional with tickets authorization
  *
  * @returns {Promise<string>} - Will return an embed URL
  */
@@ -2278,6 +2283,22 @@ exports.EmbedUrl = async function({
         break;
       case "viewRecordKey":
         embedUrl.searchParams.set("vrk", options.viewRecordKey);
+        break;
+      case "useTicketCodes":
+        embedUrl.searchParams.set("ptk", "");
+        if (options.tenantId) {
+          embedUrl.searchParams.set("ten", options.tenantId);
+        }
+        if (options.ntpId) {
+          embedUrl.searchParams.set("ntp", options.ntpId);
+        }
+        if (options.ticketCode) {
+          embedUrl.searchParams.set("tk", Buffer.from(options.ticketCode).toString("base64"));
+
+        }
+        if (options.ticketSubject) {
+          embedUrl.searchParams.set("sbj", Buffer.from(options.ticketSubject).toString("base64"));
+        }
         break;
     }
   }
