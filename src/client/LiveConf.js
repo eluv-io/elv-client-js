@@ -107,6 +107,7 @@ const LiveconfTemplate = {
           sync_audio_to_stream_id: -1,
           video_bitrate: null,
           video_seg_duration_ts: null,
+          video_time_base: null,
           xc_type: 3
         }
       }
@@ -160,56 +161,156 @@ class LiveConf {
     }
   }
 
-  calcSegDuration({sourceTimescale}) {
+  /*
+   * Calculates mez segment durations based on input stream parameters
+   *
+   * Live input formats have fixed timebase:
+   * - MPEG-TS/SRT input stream timebase is 90000
+   * - RTMP input stream timebase is 1000 and gets translated to 16000 if not otherwise specified
+   *
+   * This causes frame duration irregularities for certain frame rates.
+   * For example RTMP 60fps has frames of durations 16 and 17.  MPEG-TS 59.94fps has frames of
+   * durations 1001 and 1002.
+   *
+   * Live mez segmentation requires that the segment be cut at the specific number of frames, and when
+   * the frame durations are irregular we adjust both the video timebase and the video frame duration
+   * to make the math possible.  This adjustment is also required for live-to-vod conversion.
+   *
+   * For example for MPEG-TS 59.94fps, the mez segment timebase needs to be 60000
+   * (and resulting frame duration is 1001) and for RTMP 60fps the timebase needs to be 15360 (resulting frame
+   * duration is 256).
+   *
+   * @sourceTimescale - adjusted source video stream timescale (eg. MPEGTS 90000, RTMP 16000 )
+   * @sampleRate - audio sample rate (commonly 48000 but can be different)
+   * @audioCodec - audio codec as a string (eg. "aac")
+   * @return - segment encoding parameters
+   */
+  calcSegDuration({sourceTimescale, sampleRate, audioCodec}) {
+    let seg = {};
+
+    switch(this.probeKind()) {
+      case "rtmp":
+        seg = this.calcSegDurationRtmp({sourceTimescale, sampleRate, audioCodec});
+        break;
+      case "udp":
+      case "srt":
+        seg = this.calcSegDurationMpegts({sourceTimescale, sampleRate, audioCodec});
+        break;
+      default:
+        throw "protocol not supported - " + this.probeKind();
+    }
+
+    if(audioCodec == "aac") {
+      seg.audio = 29.76 * sampleRate;
+    } else {
+      seg.audio = 29.76 * 48000; // Other codecs are resampled @48000
+    }
+
+    return seg;
+  }
+
+  calcSegDurationMpegts({sourceTimescale}) {
     let videoStream = this.getStreamDataForCodecType("video");
     let frameRate = videoStream.frame_rate;
-
     let seg = {};
-    seg.audio = 29.76 * 48000;
 
     switch(frameRate) {
       case "24":
-        seg.video = 30 * sourceTimescale;
+        seg.video = sourceTimescale * 30;
         seg.keyint = 48;
         seg.duration = "30";
         break;
       case "25":
-        seg.video = 30 * sourceTimescale;
+        seg.video = sourceTimescale * 30;
         seg.keyint = 50;
         seg.duration = "30";
         break;
       case "30":
-        seg.video = 30 * sourceTimescale;
+        seg.video = sourceTimescale * 30;
         seg.keyint = 60;
         seg.duration = "30";
         break;
       case "30000/1001":
-        seg.video = 30.03 * sourceTimescale;
+        seg.video = sourceTimescale * 30;
         seg.keyint = 60;
         seg.duration = "30.03";
         break;
       case "48":
-        seg.video = 30 * sourceTimescale;
+        seg.video = sourceTimescale * 30;
         seg.keyint = 96;
         seg.duration = "30";
         break;
       case "50":
-        seg.video = 30 * sourceTimescale;
+        seg.video = sourceTimescale * 30;
         seg.keyint = 100;
         seg.duration = "30";
         break;
       case "60":
-        seg.video = 30 * sourceTimescale;
+        seg.video = sourceTimescale * 30;
         seg.keyint = 120;
         seg.duration = "30";
         break;
       case "60000/1001":
-        seg.video = 30.03 * sourceTimescale;
+        seg.videoTimeBase = 60000;
+        seg.video = seg.videoTimeBase * 30.03;
         seg.keyint = 120;
         seg.duration = "30.03";
         break;
       default:
-        console.log("Unsupported frame rate", frameRate);
+        throw "unsupported frame rate for MPEGTS - " + frameRate;
+        break;
+    }
+    return seg;
+  }
+
+  calcSegDurationRtmp({sourceTimescale}) {
+    let videoStream = this.getStreamDataForCodecType("video");
+    let frameRate = videoStream.frame_rate;
+    let seg = {};
+
+    switch(frameRate) {
+      case "24":
+        seg.video = sourceTimescale * 30;
+        seg.keyint = 48;
+        seg.duration = "30";
+        break;
+      case "25":
+        seg.video = sourceTimescale * 30;
+        seg.keyint = 50;
+        seg.duration = "30";
+        break;
+      case "30":
+        seg.video = sourceTimescale * 30;
+        seg.keyint = 60;
+        seg.duration = "30";
+        break;
+      case "30000/1001":
+        seg.video = sourceTimescale * 30.03;
+        seg.keyint = 60;
+        seg.duration = "30.03";
+        break;
+      case "48":
+        seg.video = sourceTimescale * 30;
+        seg.keyint = 96;
+        seg.duration = "30";
+        break;
+      case "50":
+        seg.video = sourceTimescale * 30;
+        seg.keyint = 100;
+        seg.duration = "30";
+        break;
+      case "60":
+        seg.video = sourceTimescale * 30;
+        seg.keyint = 120;
+        seg.duration = "30";
+        break;
+      case "60000/1001":
+        seg.video = sourceTimescale * 30.03;
+        seg.keyint = 120;
+        seg.duration = "30.03";
+        break;
+      default:
+        throw "unsupported frame rate for RTMP - " + frameRate;
         break;
     }
     return seg;
@@ -220,10 +321,11 @@ class LiveConf {
     let videoStream = this.getStreamDataForCodecType("video");
     switch(this.probeKind()) {
       case "udp":
+      case "srt":
         sync_id = videoStream.stream_id;
         break;
       case "rtmp":
-        sync_id = -1; // Pending fabric API: videoStream.stream_index
+        sync_id = videoStream.stream_index;
         break;
     }
     return sync_id;
@@ -234,14 +336,14 @@ class LiveConf {
     const conf = JSON.parse(JSON.stringify(LiveconfTemplate));
     const fileName = this.overwriteOriginUrl || this.probeData.format.filename;
     const audioStream = this.getStreamDataForCodecType("audio");
+
     const sampleRate = parseInt(audioStream.sample_rate);
+    const audioCodec = audioStream.codec_name;
     const videoStream = this.getStreamDataForCodecType("video");
     let sourceTimescale;
 
-    console.log("AUDIO", audioStream);
-    console.log("VIDEO", videoStream);
-
     // Fill in liveconf all formats have in common
+    conf.live_recording.probe_info = this.probeData;
     conf.live_recording.fabric_config.ingress_node_api = this.nodeUrl || null;
     conf.live_recording.fabric_config.ingress_node_id = this.nodeId || null;
     conf.live_recording.recording_config.recording_params.description;
@@ -267,6 +369,11 @@ class LiveConf {
         sourceTimescale = 90000;
         conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
         break;
+      case "srt":
+        sourceTimescale = 90000;
+        conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
+        conf.live_recording.recording_config.recording_params.live_delay_nano = 4000000000;
+        break;
       case "rtmp":
         sourceTimescale = 16000;
         conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
@@ -279,13 +386,22 @@ class LiveConf {
         break;
     }
 
-    const segDurations = this.calcSegDuration({sourceTimescale});
+    const segDurations = this.calcSegDuration({sourceTimescale, sampleRate, audioCodec});
 
     // Segment conditioning parameters
     conf.live_recording.recording_config.recording_params.xc_params.seg_duration = segDurations.duration;
     conf.live_recording.recording_config.recording_params.xc_params.audio_seg_duration_ts = segDurations.audio;
     conf.live_recording.recording_config.recording_params.xc_params.video_seg_duration_ts = segDurations.video;
     conf.live_recording.recording_config.recording_params.xc_params.force_keyint = segDurations.keyint;
+
+    // Optional override output timebase and frame duration (ts)
+    if(segDurations.videoTimeBase) {
+      conf.live_recording.recording_config.recording_params.xc_params.video_time_base = segDurations.videoTimeBase;
+      conf.live_recording.recording_config.recording_params.source_timescale = segDurations.videoTimeBase;
+    }
+    if(segDurations.videoFrameDurationTs) {
+      conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs;
+    }
 
     switch(videoStream.height) {
       case 2160:

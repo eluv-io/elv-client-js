@@ -136,9 +136,9 @@ const StreamGenerateOffering = async({
   const maxStreamIndex = Math.max(aStreamIndex, vStreamIndex);
 
   for(let i = 0; i <= maxStreamIndex; i++) {
-    if (i === aStreamIndex) {
+    if(i === aStreamIndex) {
       sourceStreams.push(sourceAudioStream);
-    } else if (i === vStreamIndex) {
+    } else if(i === vStreamIndex) {
       sourceStreams.push(sourceVideoStream);
     } else {
       sourceStreams.push(DUMMY_STREAM);
@@ -242,12 +242,12 @@ const StreamGenerateOffering = async({
     abrProfile
   });
 
-  if (createResponse.warnings.length > 0) {
+  if(createResponse.warnings.length > 0) {
     console.log("WARNINGS:");
     console.log(JSON.stringify(createResponse.warnings, null, 2));
   }
 
-  if (createResponse.errors.length > 0) {
+  if(createResponse.errors.length > 0) {
     console.log("ERRORS:");
     console.log(JSON.stringify(createResponse.errors, null, 2));
   }
@@ -339,6 +339,8 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       ]
     });
 
+    status.reference_url = mainMeta.live_recording_config.reference_url;
+
     if(mainMeta.live_recording_config == undefined || mainMeta.live_recording_config.url == undefined) {
       status.state = "unconfigured";
       return status;
@@ -367,7 +369,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     status.url = mainMeta.live_recording.recording_config.recording_params.origin_url;
 
     let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
-    if(edgeWriteToken == undefined) {
+    if(!edgeWriteToken) {
       status.state = "inactive";
       return status;
     }
@@ -688,8 +690,6 @@ exports.StreamCreate = async function({name, start=false}) {
 */
 exports.StreamStartOrStopOrReset = async function({name, op}) {
   try {
-    console.log("Stream ", op, ": ", name);
-
     let status = await this.StreamStatus({name});
     if(status.state != "stopped") {
       if(op === "start") {
@@ -699,8 +699,6 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
     }
 
     if(status.state == "running" || status.state == "starting" || status.state == "stalled") {
-      console.log("STOPPING");
-
       try {
         await this.CallBitcodeMethod({
           libraryId: status.library_id,
@@ -834,7 +832,7 @@ exports.StreamStopSession = async function({name}) {
 
       // Wait until LRO is terminated
       let tries = 10;
-      while (status.state != "stopped" && tries-- > 0) {
+      while(status.state != "stopped" && tries-- > 0) {
         console.log("Wait to terminate - ", status.state);
         await Sleep(1000);
         status = await this.StreamStatus({name});
@@ -1202,7 +1200,7 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
     playout: "/qfab/" + targetHash + "/rep/playout"  // TO FIX - should be a link
   };
 
-  for (let i = 0; i < insertions.length; i ++) {
+  for(let i = 0; i < insertions.length; i ++) {
     if(insertions[i].insertion_time <= currentTime) {
       // Bad insertion - must be later than current time
       append(errs, "Bad insertion - time:", insertions[i].insertion_time);
@@ -1325,9 +1323,10 @@ exports.StreamConfig = async function({name, customSettings={}}) {
 
   let userConfig = mainMeta.live_recording_config;
   status.user_config = userConfig;
+  console.log("userConfig", userConfig);
 
   // Get node URI from user config
-  const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").split(":")[0];
+  const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").replace("srt://", "").split(":")[0];
   const streamUrl = new URL(userConfig.url);
 
   console.log("Retrieving nodes...");
@@ -1380,7 +1379,6 @@ exports.StreamConfig = async function({name, customSettings={}}) {
     }
   }
 
-  console.log("PROBE", probe);
   probe.format.filename = streamUrl.href;
 
   // Create live recording config
@@ -1410,14 +1408,6 @@ exports.StreamConfig = async function({name, customSettings={}}) {
     metadata: liveRecordingConfig.live_recording
   });
 
-  await this.ReplaceMetadata({
-    libraryId,
-    objectId: conf.objectId,
-    writeToken,
-    metadataSubtree: "probe",
-    metadata: probe
-  });
-
   status.fin = await this.FinalizeContentObject({
     libraryId,
     objectId: conf.objectId,
@@ -1426,4 +1416,101 @@ exports.StreamConfig = async function({name, customSettings={}}) {
   });
 
   return status;
+};
+
+/**
+ * Deactivate the stream
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name - Object ID or name of the live stream object
+ *
+ * @return {Promise<Object>} - The status response for the stream
+ */
+exports.StreamDeactivate = async function({name}) {
+  try {
+    let conf = await this.LoadConf({name});
+
+    let {objectId} = conf;
+    let libraryId = await this.ContentObjectLibraryId({objectId});
+
+    let mainMeta = await this.ContentObjectMetadata({
+      libraryId,
+      objectId
+    });
+    let status = await this.StreamStatus({name});
+
+    if(!mainMeta.live_recording) {
+      return {
+        state: status.state,
+        error: "Stream must be configured before deactivating"
+      };
+    }
+
+    // Return error if the LRO is running
+    if(status.state !== "stopped") {
+      return {
+        state: status.state,
+        error: "Stream must be stopped before deactivating"
+      };
+    }
+
+    let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
+    // Support both hostname and URL ingress_node_api
+    if(!fabURI.startsWith("http")) {
+      // Assume https
+      fabURI = "https://" + fabURI;
+    }
+
+    this.SetNodes({fabricURIs: [fabURI]});
+
+    let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
+
+    if(edgeWriteToken === undefined || edgeWriteToken === "") {
+      return {
+        state: "inactive",
+        error: "stream is already inactive"
+      };
+    }
+    let edgeMeta = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      writeToken: edgeWriteToken
+    });
+
+    // Set stop time
+    edgeMeta.recording_stop_time = Math.floor(new Date().getTime() / 1000);
+    const newState = "inactive";
+
+    edgeMeta.live_recording.status = {
+      state: newState,
+      recording_stop_time: edgeMeta.recording_stop_time
+    };
+
+    edgeMeta.live_recording.fabric_config.edge_write_token = "";
+
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: edgeWriteToken,
+      metadata: edgeMeta
+    });
+
+    let fin = await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: edgeWriteToken,
+      commitMessage: "Deactivate stream"
+    });
+
+    return {
+      reference_url: status.reference_url,
+      fin,
+      name,
+      edge_write_token: edgeWriteToken,
+      state: newState
+    };
+  } catch(error) {
+    console.error(error);
+  }
 };

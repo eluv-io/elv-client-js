@@ -476,6 +476,7 @@ class FrameClient {
       "StartABRMezzanineJobs",
       "StreamConfig",
       "StreamCreate",
+      "StreamDeactivate",
       "StreamInitialize",
       "StreamInsertion",
       "StreamStatus",
