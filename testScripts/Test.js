@@ -16,6 +16,13 @@ const Test = async () => {
     });
 
     client.SetSigner({signer});
+
+    const versionHash = "";
+
+    const url = await client.FabricUrl({
+      versionHash
+    });
+    console.log("url", url)
   } catch(error) {
     console.error(error);
     console.error(JSON.stringify(error, null, 2));
