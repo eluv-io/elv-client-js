@@ -22,7 +22,8 @@ const {
   ValidateVersion,
   ValidateWriteToken,
   ValidateParameters,
-  ValidatePresence, ValidateAddress,
+  ValidatePresence,
+  ValidateAddress,
 } = require("../Validation");
 
 exports.SetVisibility = async function({id, visibility}) {
@@ -264,7 +265,6 @@ exports.CreateContentLibrary = async function({
   imageName,
   metadata={},
   kmsId,
-  tenantId,
   tenantContractId
 }) {
   if(!kmsId) {

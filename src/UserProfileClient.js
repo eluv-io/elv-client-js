@@ -4,7 +4,7 @@ const { FrameClient } = require("./FrameClient");
 const {LogMessage} = require("./LogMessage");
 
 class UserProfileClient {
-  Log(message, error = false) {
+  Log(message, error=false) {
     LogMessage(this, message, error);
   }
 
@@ -37,19 +37,19 @@ class UserProfileClient {
    * Access the UserProfileClient from ElvClient or FrameClient via client.userProfileClient
    *
    * @example
-   let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
+ let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 
-   let wallet = client.GenerateWallet();
-   let signer = wallet.AddAccount({
+ let wallet = client.GenerateWallet();
+ let signer = wallet.AddAccount({
   accountName: "Alice",
   privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
 });
-   client.SetSigner({signer});
+ client.SetSigner({signer});
 
-   await client.userProfileClient.UserMetadata()
+ await client.userProfileClient.UserMetadata()
 
-   let frameClient = new FrameClient();
-   await client.userProfileClient.UserMetadata()
+ let frameClient = new FrameClient();
+ await client.userProfileClient.UserMetadata()
    *
    */
   constructor({client, debug}) {
@@ -199,7 +199,7 @@ class UserProfileClient {
    *
    * @return {Promise<{Object}>} - An object containing the libraryId and objectId for the wallet object.
    */
-  async UserWalletObjectInfo({address} = {}) {
+  async UserWalletObjectInfo({address}={}) {
 
     const walletAddress = address ?
       await this.UserWalletAddress({address}) :
@@ -223,9 +223,9 @@ class UserProfileClient {
    * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
    * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
-   Example:
+     Example:
 
-   {
+     {
           "resolved-link": {
             ".": {
               "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
@@ -244,13 +244,13 @@ class UserProfileClient {
    */
   async PublicUserMetadata({
     address,
-    metadataSubtree = "/",
-    queryParams = {},
-    select = [],
-    resolveLinks = false,
-    resolveIncludeSource = false,
-    resolveIgnoreErrors = false,
-    linkDepthLimit = 1
+    metadataSubtree="/",
+    queryParams={},
+    select=[],
+    resolveLinks=false,
+    resolveIncludeSource=false,
+    resolveIgnoreErrors=false,
+    linkDepthLimit=1
   }) {
     if(!address) {
       return;
@@ -264,7 +264,7 @@ class UserProfileClient {
 
     metadataSubtree = UrlJoin("public", metadataSubtree || "/");
 
-    const {libraryId, objectId} = await this.UserWalletObjectInfo({address});
+    const { libraryId, objectId } = await this.UserWalletObjectInfo({address});
 
     if(!objectId) {
       return;
@@ -298,9 +298,9 @@ class UserProfileClient {
    * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
    * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
-   Example:
+     Example:
 
-   {
+     {
           "resolved-link": {
             ".": {
               "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
@@ -318,17 +318,17 @@ class UserProfileClient {
    * @return {Promise<Object|string>} - The user's profile metadata - returns undefined if no metadata set or subtree doesn't exist
    */
   async UserMetadata({
-    metadataSubtree = "/",
-    queryParams = {},
-    select = [],
-    resolveLinks = false,
-    resolveIncludeSource = false,
-    resolveIgnoreErrors = false,
-    linkDepthLimit = 1
-  } = {}) {
+    metadataSubtree="/",
+    queryParams={},
+    select=[],
+    resolveLinks=false,
+    resolveIncludeSource=false,
+    resolveIgnoreErrors=false,
+    linkDepthLimit=1
+  }={}) {
     this.Log(`Accessing private user metadata at ${metadataSubtree}`);
 
-    const {libraryId, objectId} = await this.UserWalletObjectInfo();
+    const { libraryId, objectId } = await this.UserWalletObjectInfo();
 
     return await this.client.ContentObjectMetadata({
       libraryId,
@@ -350,10 +350,10 @@ class UserProfileClient {
    * @param {Object} metadata - New metadata
    * @param {string=} metadataSubtree - Subtree to merge into - modifies root metadata if not specified
    */
-  async MergeUserMetadata({metadataSubtree = "/", metadata = {}}) {
+  async MergeUserMetadata({metadataSubtree="/", metadata={}}) {
     this.Log(`Merging user metadata at ${metadataSubtree}`);
 
-    const {libraryId, objectId} = await this.UserWalletObjectInfo();
+    const { libraryId, objectId } = await this.UserWalletObjectInfo();
 
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
@@ -379,10 +379,10 @@ class UserProfileClient {
    * @param {Object} metadata - New metadata
    * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
    */
-  async ReplaceUserMetadata({metadataSubtree = "/", metadata = {}}) {
+  async ReplaceUserMetadata({metadataSubtree="/", metadata={}}) {
     this.Log(`Replacing user metadata at ${metadataSubtree}`);
 
-    const {libraryId, objectId} = await this.UserWalletObjectInfo();
+    const { libraryId, objectId } = await this.UserWalletObjectInfo();
 
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
@@ -407,10 +407,10 @@ class UserProfileClient {
    * @namedParams
    * @param {string=} metadataSubtree - Subtree to delete - deletes all metadata if not specified
    */
-  async DeleteUserMetadata({metadataSubtree = "/"}) {
+  async DeleteUserMetadata({metadataSubtree="/"}) {
     this.Log(`Deleting user metadata at ${metadataSubtree}`);
 
-    const {libraryId, objectId} = await this.UserWalletObjectInfo();
+    const { libraryId, objectId } = await this.UserWalletObjectInfo();
 
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
