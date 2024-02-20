@@ -510,16 +510,13 @@ class UserProfileClient {
    * @return {Promise<string>} - Tenant Contract ID
    */
   async TenantContractId() {
-
     if(!this.tenantContractId) {
-      const walletAddr = await this.WalletAddress();
-      const metadataFunc = this.UserMetadata;
+      const {libraryId, objectId} = await this.UserWalletObjectInfo();
       this.tenantContractId = await this.client.authClient.GetTenantContractId(
-        walletAddr,
-        metadataFunc
+        libraryId,
+        objectId
       );
     }
-
     return this.tenantContractId;
   }
 
