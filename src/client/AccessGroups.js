@@ -241,9 +241,7 @@ exports.CreateAccessGroup = async function({name, description, metadata={}, visi
   this.Log(`Creating access group: ${name || ""} ${description || ""}`);
   let { contractAddress } = await this.authClient.CreateAccessGroup();
   contractAddress = this.utils.FormatAddress(contractAddress);
-
   const objectId = this.utils.AddressToObjectId(contractAddress);
-  const tenantId = await this.userProfileClient.TenantId();
   const tenantContractId = await this.userProfileClient.TenantContractId();
 
   this.Log(`Access group: ${contractAddress} ${objectId}`);
@@ -262,27 +260,6 @@ exports.CreateAccessGroup = async function({name, description, metadata={}, visi
     description,
     ...metadata
   };
-
-  if(tenantId) {
-    let tenantAdminGroupAddress = this.utils.HashToAddress(tenantId);
-
-    await this.AddContentObjectGroupPermission({
-      objectId,
-      groupAddress: tenantAdminGroupAddress,
-      permission: "manage"
-    });
-
-    await this.ReplaceContractMetadata({
-      contractAddress,
-      metadataKey: "_tenantId",
-      metadata: tenantId
-    });
-
-    groupMetadata["tenantId"] = tenantId;
-  } else {
-    // eslint-disable-next-line no-console
-    console.warn("No tenant ID associated with current tenant.");
-  }
 
   await this.ReplaceMetadata({
     libraryId: this.contentSpaceLibraryId,
@@ -305,13 +282,23 @@ exports.CreateAccessGroup = async function({name, description, metadata={}, visi
   });
 
   if(tenantContractId){
-    await this.client.authClient.SetTenantContractId(
-      this.contentSpaceLibraryId,
-      objectId,
+    const tenantInfo = await this.SetGroupTenantContractId({
+      groupAddress: contractAddress,
       tenantContractId,
-      ""
-    );
-    this.Log(`tenant_contract_id set for ${objectId}`);
+    });
+
+    if(tenantInfo.tenantId) {
+      let tenantAdminGroupAddress = this.utils.HashToAddress(tenantInfo.tenantId);
+
+      await this.AddContentObjectGroupPermission({
+        objectId,
+        groupAddress: tenantAdminGroupAddress,
+        permission: "manage"
+      });
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn("No tenant ID associated with current tenant.");
+    }
   }
 
   return contractAddress;
@@ -959,11 +946,18 @@ exports.UnlinkAccessGroupFromOauth = async function({groupAddress}) {
   });
 };
 
+/**
+ * Set the tenant contract ID for the group address provided
+ *
+ * @param groupAddress
+ * @param tenantContractId
+ * @returns {Promise<void>}
+ */
 exports.SetGroupTenantContractId = async function({groupAddress, tenantContractId}){
   ValidateAddress(groupAddress);
   ValidateObject(tenantContractId);
 
-  await this.client.authClient.SetTenantContractId(
+  return await this.authClient.SetTenantContractId(
     this.contentSpaceLibraryId,
     this.utils.AddressToObjectId(groupAddress),
     tenantContractId,
@@ -971,11 +965,17 @@ exports.SetGroupTenantContractId = async function({groupAddress, tenantContractI
   );
 };
 
+/**
+ * Return the ID of the tenant this group belongs to, if set.
+ *
+ * @param groupAddress
+ * @returns {Promise<string|undefined>}
+ */
 exports.GetGroupTenantContractId = async function({groupAddress}){
   ValidateAddress(groupAddress);
 
-  return await this.client.authClient.GetTenantContractId(
-    this.contentSpaceLubraryId,
+  return await this.authClient.GetTenantContractId(
+    this.contentSpaceLibraryId,
     this.utils.AddressToObjectId(groupAddress),
   );
 };

@@ -532,12 +532,13 @@ class UserProfileClient {
   async SetTenantContractId({tenantContractId, address}) {
     const {libraryId, objectId} = await this.UserWalletObjectInfo();
 
-    this.tenantContractId = await this.client.authClient.SetTenantContractId(
+    const tenantInfo = await this.client.authClient.SetTenantContractId(
       libraryId,
       objectId,
       tenantContractId,
       address,
     );
+    this.tenantContractId = tenantInfo.tenantContractId;
   }
 
   /**

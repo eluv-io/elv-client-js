@@ -1159,15 +1159,23 @@ class AuthorizationClient {
     };
   }
 
+  /**
+   * GetTenantContractId returns the ID of the tenant contract for
+   * the objectId provided from contract metadata or from fabric metadata
+   *
+   * @param libraryId
+   * @param objectId
+   * @returns {Promise<string|undefined>}
+   */
   async GetTenantContractId(libraryId, objectId) {
-    const hasGetMetaMethod = await this.authclient.ContractHasMethod({
-      contractAddress: objectAddress,
+    const hasGetMetaMethod = await this.ContractHasMethod({
+      contractAddress: Utils.HashToAddress(objectId),
       methodName: "getMeta"
     });
 
     let tenantContractId;
     if(hasGetMetaMethod) {
-      tenantContractId = await this.CallContractMethod({
+      tenantContractId = await this.client.CallContractMethod({
         contractAddress: Utils.HashToAddress(objectId),
         methodName: "getMeta",
         methodArgs: [
@@ -1186,6 +1194,16 @@ class AuthorizationClient {
     });
   }
 
+  /**
+   * SetTenantContractId sets the ID of the tenant contract for the
+   * objectId provided in contract metadata or in fabric metadata
+   *
+   * @param libraryId
+   * @param objectId
+   * @param tenantContractId
+   * @param tenantAddress
+   * @returns {Promise<string>}
+   */
   async SetTenantContractId(libraryId, objectId, tenantContractId, tenantAddress) {
     if(tenantContractId && (!tenantContractId.startsWith("iten") || !Utils.ValidHash(tenantContractId))) {
       throw Error(`Invalid tenant ID: ${tenantContractId}`);
@@ -1206,7 +1224,15 @@ class AuthorizationClient {
       throw Error("Invalid tenant ID: " + tenantContractId);
     }
 
-    const hasPutMetaMethod = await this.client.authClient.ContractHasMethod({
+    // get tenant admin group
+    const tenantAdminGroupAddress = await this.client.CallContractMethod({
+      contractAddress: tenantAddress,
+      methodName: "groupsMapping",
+      methodArgs: ["tenant_admin", 0],
+      formatArguments: true,
+    });
+
+    const hasPutMetaMethod = await this.ContractHasMethod({
       contractAddress: Utils.HashToAddress(objectId),
       methodName: "putMeta"
     });
@@ -1221,13 +1247,6 @@ class AuthorizationClient {
         ]
       });
     } else {
-      const tenantAdminGroupAddress = await this.client.CallContractMethod({
-        contractAddress: tenantAddress,
-        methodName: "groupsMapping",
-        methodArgs: ["tenant_admin", 0],
-        formatArguments: true,
-      });
-
       await this.MergeObjectMetadata({
         libraryId,
         objectId,
@@ -1238,7 +1257,10 @@ class AuthorizationClient {
         commitMessage: "set tenant_contract_id"
       });
     }
-    return tenantContractId;
+    return {
+      tenantContractId: tenantContractId,
+      tenantId: !tenantAdminGroupAddress ? undefined : `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
+    };
   }
 
   async MergeObjectMetadata({libraryId, objectId, metadataSubtree = "/", metadata = {}, commitMessage}) {

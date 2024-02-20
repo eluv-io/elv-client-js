@@ -223,12 +223,10 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
 
   const tenantContractId = await this.userProfileClient.TenantContractId();
   if(tenantContractId){
-    await this.client.authClient.SetTenantContractId(
-      this.contentSpaceLibraryId,
-      objectId,
+    await this.SetContentTypeTenantContractId({
+      contentTypeAddress: contractAddress,
       tenantContractId,
-      ""
-    );
+    });
     this.Log(`tenant_contract_id set for ${objectId}`);
   }
 
@@ -278,31 +276,6 @@ exports.CreateContentLibrary = async function({
 
   const { contractAddress } = await this.authClient.CreateContentLibrary({kmsId});
 
-
-  // Set tenant ID on the library if the user is associated with a tenant
-  if(!tenantId) {
-    tenantId = await this.userProfileClient.TenantId();
-  }
-
-  if(!tenantContractId) {
-    tenantContractId = await this.userProfileclient.TenantContractId();
-  }
-
-  if(tenantId) {
-    if(!this.utils.ValidHash(tenantId)) {
-      throw Error(`Invalid tenant ID: ${tenantId}`);
-    }
-
-    await this.CallContractMethod({
-      contractAddress,
-      methodName: "putMeta",
-      methodArgs: [
-        "_tenantId",
-        tenantId
-      ]
-    });
-  }
-
   metadata = {
     ...metadata,
     name,
@@ -349,14 +322,14 @@ exports.CreateContentLibrary = async function({
     });
   }
 
+  // Set tenant contract ID on the library if the user is associated with a tenant
+  if(!tenantContractId) {
+    tenantContractId = await this.userProfileClient.TenantContractId();
+  }
+
   if(tenantContractId){
-    await this.client.authClient.SetTenantContractId(
-      libraryId,
-      objectId,
-      tenantContractId,
-      ""
-    );
-    this.Log(`tenant_contract_id set for ${libraryId}`);
+    await this.SetLibraryTenantContractId({libraryAddress:contractAddress, tenantContractId});
+    this.Log(`tenant_contract_id set for ${contractAddress}`);
   }
 
   this.Log(`Library ${libraryId} created`);
@@ -1557,11 +1530,18 @@ exports.SetAuthPolicy = async function({objectId, policyId}) {
   });
 };
 
+/**
+ * Set the tenant contract ID for the libraryAddress provided
+ *
+ * @param libraryAddress
+ * @param tenantContractId
+ * @returns {Promise<void>}
+ */
 exports.SetLibraryTenantContractId = async function({libraryAddress, tenantContractId}){
   ValidateAddress(libraryAddress);
   ValidateObject(tenantContractId);
 
-  await this.client.authClient.SetTenantContractId(
+  return await this.authClient.SetTenantContractId(
     this.utils.AddressToLibraryId(libraryAddress),
     this.utils.AddressToObjectId(libraryAddress),
     tenantContractId,
@@ -1569,20 +1549,34 @@ exports.SetLibraryTenantContractId = async function({libraryAddress, tenantContr
   );
 };
 
+/**
+ * Return the ID of the tenant this libraryAddress belongs to, if set.
+ *
+ * @param libraryAddress
+ * @returns {Promise<string|undefined>}
+ * @constructor
+ */
 exports.GetLibraryTenantContractId = async function({libraryAddress}){
   ValidateAddress(libraryAddress);
 
-  return await this.client.authClient.GetTenantContractId(
+  return await this.authClient.GetTenantContractId(
     this.utils.AddressToLibraryId(libraryAddress),
     this.utils.AddressToObjectId(libraryAddress),
   );
 };
 
+/**
+ * Set the tenant contract ID for the contentTypeAddress provided
+ *
+ * @param contentTypeAddress
+ * @param tenantContractId
+ * @returns {Promise<void>}
+ */
 exports.SetContentTypeTenantContractId = async function({contentTypeAddress, tenantContractId}){
   ValidateAddress(contentTypeAddress);
   ValidateObject(tenantContractId);
 
-  await this.client.authClient.SetTenantContractId(
+  return await this.authClient.SetTenantContractId(
     this.contentSpaceLibraryId,
     this.utils.AddressToObjectId(contentTypeAddress),
     tenantContractId,
@@ -1590,11 +1584,17 @@ exports.SetContentTypeTenantContractId = async function({contentTypeAddress, ten
   );
 };
 
-exports.GetGroupTenantContractId = async function({contentTypeAddress}){
+/**
+ * Return the ID of the tenant this contentTypeAddress belongs to, if set.
+ *
+ * @param contentTypeAddress
+ * @returns {Promise<string|undefined>}
+ */
+exports.GetContentTypeTenantContractId = async function({contentTypeAddress}){
   ValidateAddress(contentTypeAddress);
 
-  return await this.client.authClient.GetTenantContractId(
-    this.contentSpaceLubraryId,
+  return await this.authClient.GetTenantContractId(
+    this.contentSpaceLibraryId,
     this.utils.AddressToObjectId(contentTypeAddress),
   );
 };
