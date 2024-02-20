@@ -22,7 +22,7 @@ const {
   ValidateVersion,
   ValidateWriteToken,
   ValidateParameters,
-  ValidatePresence,
+  ValidatePresence, ValidateAddress,
 } = require("../Validation");
 
 exports.SetVisibility = async function({id, visibility}) {
@@ -221,6 +221,17 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
     commitMessage: "Create content type"
   });
 
+  const tenantContractId = await this.userProfileClient.TenantContractId();
+  if(tenantContractId){
+    await this.client.authClient.SetTenantContractId(
+      this.contentSpaceLibraryId,
+      objectId,
+      tenantContractId,
+      ""
+    );
+    this.Log(`tenant_contract_id set for ${objectId}`);
+  }
+
   return objectId;
 };
 
@@ -255,7 +266,8 @@ exports.CreateContentLibrary = async function({
   imageName,
   metadata={},
   kmsId,
-  tenantId
+  tenantId,
+  tenantContractId
 }) {
   if(!kmsId) {
     kmsId = `ikms${this.utils.AddressToHash(await this.DefaultKMSAddress())}`;
@@ -270,6 +282,10 @@ exports.CreateContentLibrary = async function({
   // Set tenant ID on the library if the user is associated with a tenant
   if(!tenantId) {
     tenantId = await this.userProfileClient.TenantId();
+  }
+
+  if(!tenantContractId) {
+    tenantContractId = await this.userProfileclient.TenantContractId();
   }
 
   if(tenantId) {
@@ -331,6 +347,16 @@ exports.CreateContentLibrary = async function({
       image,
       imageName
     });
+  }
+
+  if(tenantContractId){
+    await this.client.authClient.SetTenantContractId(
+      libraryId,
+      objectId,
+      tenantContractId,
+      ""
+    );
+    this.Log(`tenant_contract_id set for ${libraryId}`);
   }
 
   this.Log(`Library ${libraryId} created`);
@@ -1529,4 +1555,46 @@ exports.SetAuthPolicy = async function({objectId, policyId}) {
     metadataKey: "_AUTH_CONTEXT",
     metadata: { "elv:delegation-id": policyId }
   });
+};
+
+exports.SetLibraryTenantContractId = async function({libraryAddress, tenantContractId}){
+  ValidateAddress(libraryAddress);
+  ValidateObject(tenantContractId);
+
+  await this.client.authClient.SetTenantContractId(
+    this.utils.AddressToLibraryId(libraryAddress),
+    this.utils.AddressToObjectId(libraryAddress),
+    tenantContractId,
+    "",
+  );
+};
+
+exports.GetLibraryTenantContractId = async function({libraryAddress}){
+  ValidateAddress(libraryAddress);
+
+  return await this.client.authClient.GetTenantContractId(
+    this.utils.AddressToLibraryId(libraryAddress),
+    this.utils.AddressToObjectId(libraryAddress),
+  );
+};
+
+exports.SetContentTypeTenantContractId = async function({contentTypeAddress, tenantContractId}){
+  ValidateAddress(contentTypeAddress);
+  ValidateObject(tenantContractId);
+
+  await this.client.authClient.SetTenantContractId(
+    this.contentSpaceLibraryId,
+    this.utils.AddressToObjectId(contentTypeAddress),
+    tenantContractId,
+    "",
+  );
+};
+
+exports.GetGroupTenantContractId = async function({contentTypeAddress}){
+  ValidateAddress(contentTypeAddress);
+
+  return await this.client.authClient.GetTenantContractId(
+    this.contentSpaceLubraryId,
+    this.utils.AddressToObjectId(contentTypeAddress),
+  );
 };

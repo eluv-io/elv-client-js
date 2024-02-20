@@ -4,7 +4,7 @@ const { FrameClient } = require("./FrameClient");
 const {LogMessage} = require("./LogMessage");
 
 class UserProfileClient {
-  Log(message, error=false) {
+  Log(message, error = false) {
     LogMessage(this, message, error);
   }
 
@@ -37,19 +37,19 @@ class UserProfileClient {
    * Access the UserProfileClient from ElvClient or FrameClient via client.userProfileClient
    *
    * @example
-let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
+   let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 
-let wallet = client.GenerateWallet();
-let signer = wallet.AddAccount({
+   let wallet = client.GenerateWallet();
+   let signer = wallet.AddAccount({
   accountName: "Alice",
   privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
 });
-client.SetSigner({signer});
+   client.SetSigner({signer});
 
-await client.userProfileClient.UserMetadata()
+   await client.userProfileClient.UserMetadata()
 
-let frameClient = new FrameClient();
-await client.userProfileClient.UserMetadata()
+   let frameClient = new FrameClient();
+   await client.userProfileClient.UserMetadata()
    *
    */
   constructor({client, debug}) {
@@ -131,8 +131,10 @@ await client.userProfileClient.UserMetadata()
    *
    * @return {Promise<string>} - The contract address of the current user's wallet contract
    */
-  async WalletAddress(autoCreate=true) {
-    if(this.walletAddress || this.walletAddressRetrieved) { return this.walletAddress; }
+  async WalletAddress(autoCreate = true) {
+    if(this.walletAddress || this.walletAddressRetrieved) {
+      return this.walletAddress;
+    }
 
     if(!this.walletAddressPromise) {
       this.walletAddressPromise = this.client.CallContractMethod({
@@ -197,7 +199,7 @@ await client.userProfileClient.UserMetadata()
    *
    * @return {Promise<{Object}>} - An object containing the libraryId and objectId for the wallet object.
    */
-  async UserWalletObjectInfo({address}={}) {
+  async UserWalletObjectInfo({address} = {}) {
 
     const walletAddress = address ?
       await this.UserWalletAddress({address}) :
@@ -221,9 +223,9 @@ await client.userProfileClient.UserMetadata()
    * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
    * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
-       Example:
+   Example:
 
-       {
+   {
           "resolved-link": {
             ".": {
               "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
@@ -242,25 +244,31 @@ await client.userProfileClient.UserMetadata()
    */
   async PublicUserMetadata({
     address,
-    metadataSubtree="/",
-    queryParams={},
-    select=[],
-    resolveLinks=false,
-    resolveIncludeSource=false,
-    resolveIgnoreErrors=false,
-    linkDepthLimit=1
+    metadataSubtree = "/",
+    queryParams = {},
+    select = [],
+    resolveLinks = false,
+    resolveIncludeSource = false,
+    resolveIgnoreErrors = false,
+    linkDepthLimit = 1
   }) {
-    if(!address) { return; }
+    if(!address) {
+      return;
+    }
 
     const walletAddress = await this.UserWalletAddress({address});
 
-    if(!walletAddress) { return; }
+    if(!walletAddress) {
+      return;
+    }
 
     metadataSubtree = UrlJoin("public", metadataSubtree || "/");
 
-    const { libraryId, objectId } = await this.UserWalletObjectInfo({address});
+    const {libraryId, objectId} = await this.UserWalletObjectInfo({address});
 
-    if(!objectId) { return; }
+    if(!objectId) {
+      return;
+    }
 
     return await this.client.ContentObjectMetadata({
       libraryId,
@@ -290,9 +298,9 @@ await client.userProfileClient.UserMetadata()
    * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
    * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
-       Example:
+   Example:
 
-       {
+   {
           "resolved-link": {
             ".": {
               "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
@@ -310,17 +318,17 @@ await client.userProfileClient.UserMetadata()
    * @return {Promise<Object|string>} - The user's profile metadata - returns undefined if no metadata set or subtree doesn't exist
    */
   async UserMetadata({
-    metadataSubtree="/",
-    queryParams={},
-    select=[],
-    resolveLinks=false,
-    resolveIncludeSource=false,
-    resolveIgnoreErrors=false,
-    linkDepthLimit=1
-  }={}) {
+    metadataSubtree = "/",
+    queryParams = {},
+    select = [],
+    resolveLinks = false,
+    resolveIncludeSource = false,
+    resolveIgnoreErrors = false,
+    linkDepthLimit = 1
+  } = {}) {
     this.Log(`Accessing private user metadata at ${metadataSubtree}`);
 
-    const { libraryId, objectId } = await this.UserWalletObjectInfo();
+    const {libraryId, objectId} = await this.UserWalletObjectInfo();
 
     return await this.client.ContentObjectMetadata({
       libraryId,
@@ -342,15 +350,26 @@ await client.userProfileClient.UserMetadata()
    * @param {Object} metadata - New metadata
    * @param {string=} metadataSubtree - Subtree to merge into - modifies root metadata if not specified
    */
-  async MergeUserMetadata({metadataSubtree="/", metadata={}}) {
+  async MergeUserMetadata({metadataSubtree = "/", metadata = {}}) {
     this.Log(`Merging user metadata at ${metadataSubtree}`);
 
-    const { libraryId, objectId } = await this.UserWalletObjectInfo();
+    const {libraryId, objectId} = await this.UserWalletObjectInfo();
 
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
-    await this.client.MergeMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree, metadata});
-    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token, commitMessage: "Merge user metadata"});
+    await this.client.MergeMetadata({
+      libraryId,
+      objectId,
+      writeToken: editRequest.write_token,
+      metadataSubtree,
+      metadata
+    });
+    await this.client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: editRequest.write_token,
+      commitMessage: "Merge user metadata"
+    });
   }
 
   /**
@@ -360,15 +379,26 @@ await client.userProfileClient.UserMetadata()
    * @param {Object} metadata - New metadata
    * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
    */
-  async ReplaceUserMetadata({metadataSubtree="/", metadata={}}) {
+  async ReplaceUserMetadata({metadataSubtree = "/", metadata = {}}) {
     this.Log(`Replacing user metadata at ${metadataSubtree}`);
 
-    const { libraryId, objectId } = await this.UserWalletObjectInfo();
+    const {libraryId, objectId} = await this.UserWalletObjectInfo();
 
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
-    await this.client.ReplaceMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree, metadata});
-    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token, commitMessage: "Replace user metadata"});
+    await this.client.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: editRequest.write_token,
+      metadataSubtree,
+      metadata
+    });
+    await this.client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: editRequest.write_token,
+      commitMessage: "Replace user metadata"
+    });
   }
 
   /**
@@ -377,15 +407,20 @@ await client.userProfileClient.UserMetadata()
    * @namedParams
    * @param {string=} metadataSubtree - Subtree to delete - deletes all metadata if not specified
    */
-  async DeleteUserMetadata({metadataSubtree="/"}) {
+  async DeleteUserMetadata({metadataSubtree = "/"}) {
     this.Log(`Deleting user metadata at ${metadataSubtree}`);
 
-    const { libraryId, objectId } = await this.UserWalletObjectInfo();
+    const {libraryId, objectId} = await this.UserWalletObjectInfo();
 
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
     await this.client.DeleteMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree});
-    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token, commitMessage: "Delete user metadata"});
+    await this.client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: editRequest.write_token,
+      commitMessage: "Delete user metadata"
+    });
   }
 
   /**
@@ -475,8 +510,14 @@ await client.userProfileClient.UserMetadata()
    * @return {Promise<string>} - Tenant Contract ID
    */
   async TenantContractId() {
+
     if(!this.tenantContractId) {
-      this.tenantContractId = await this.UserMetadata({metadataSubtree: "tenantContractId"});
+      const walletAddr = await this.WalletAddress();
+      const metadataFunc = this.UserMetadata;
+      this.tenantContractId = await this.client.authClient.GetTenantContractId(
+        walletAddr,
+        metadataFunc
+      );
     }
 
     return this.tenantContractId;
@@ -489,44 +530,17 @@ await client.userProfileClient.UserMetadata()
    *
    * @namedParams
    * @param {string} tenantContractId - The tenant contract ID in hash format
-   * @param {string} address - The group address to use in the hash if id is not provided
+   * @param {string} address - The tenant address to use in the hash if id is not provided
    */
   async SetTenantContractId({tenantContractId, address}) {
-    if(tenantContractId && (!tenantContractId.startsWith("iten") || !Utils.ValidHash(tenantContractId))) {
-      throw Error(`Invalid tenant ID: ${tenantContractId}`);
-    }
+    const {libraryId, objectId} = await this.UserWalletObjectInfo();
 
-    if(address) {
-      if(!Utils.ValidAddress(address)) {
-        throw Error(`Invalid address: ${address}`);
-      }
-
-      tenantContractId = `iten${Utils.AddressToHash(address)}`;
-    }
-
-    try {
-      const version = await this.client.AccessType({id: tenantContractId});
-
-      if(version !== this.client.authClient.ACCESS_TYPES.TENANT) {
-        throw Error("Invalid tenant ID: " + tenantContractId);
-      }
-    } catch(error) {
-      throw Error("Invalid tenant ID: " + tenantContractId);
-    }
-
-    const tenantAdminGroupAddress = await this.client.CallContractMethod({
-      contractAddress: address || Utils.HashToAddress(tenantContractId),
-      methodName: "groupsMapping",
-      methodArgs : ["tenant_admin", 0],
-      formatArguments: true,
-    });
-
-    await this.MergeUserMetadata({
-      metadata: {
-        tenantContractId,
-        tenantId: !tenantAdminGroupAddress ? undefined : `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
-      }
-    });
+    this.tenantContractId = await this.client.authClient.SetTenantContractId(
+      libraryId,
+      objectId,
+      tenantContractId,
+      address,
+    );
   }
 
   /**

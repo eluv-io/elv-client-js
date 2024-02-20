@@ -244,6 +244,7 @@ exports.CreateAccessGroup = async function({name, description, metadata={}, visi
 
   const objectId = this.utils.AddressToObjectId(contractAddress);
   const tenantId = await this.userProfileClient.TenantId();
+  const tenantContractId = await this.userProfileClient.TenantContractId();
 
   this.Log(`Access group: ${contractAddress} ${objectId}`);
 
@@ -302,6 +303,16 @@ exports.CreateAccessGroup = async function({name, description, metadata={}, visi
     writeToken: editResponse.write_token,
     commitMessage: "Create access group"
   });
+
+  if(tenantContractId){
+    await this.client.authClient.SetTenantContractId(
+      this.contentSpaceLibraryId,
+      objectId,
+      tenantContractId,
+      ""
+    );
+    this.Log(`tenant_contract_id set for ${objectId}`);
+  }
 
   return contractAddress;
 };
@@ -946,4 +957,25 @@ exports.UnlinkAccessGroupFromOauth = async function({groupAddress}) {
     methodName: "setOAuthEnabled",
     methodArgs: [false]
   });
+};
+
+exports.SetGroupTenantContractId = async function({groupAddress, tenantContractId}){
+  ValidateAddress(groupAddress);
+  ValidateObject(tenantContractId);
+
+  await this.client.authClient.SetTenantContractId(
+    this.contentSpaceLibraryId,
+    this.utils.AddressToObjectId(groupAddress),
+    tenantContractId,
+    "",
+  );
+};
+
+exports.GetGroupTenantContractId = async function({groupAddress}){
+  ValidateAddress(groupAddress);
+
+  return await this.client.authClient.GetTenantContractId(
+    this.contentSpaceLubraryId,
+    this.utils.AddressToObjectId(groupAddress),
+  );
 };

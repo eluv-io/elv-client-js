@@ -1159,6 +1159,108 @@ class AuthorizationClient {
     };
   }
 
+  async GetTenantContractId(libraryId, objectId) {
+    const hasGetMetaMethod = await this.authclient.ContractHasMethod({
+      contractAddress: objectAddress,
+      methodName: "getMeta"
+    });
+
+    let tenantContractId;
+    if(hasGetMetaMethod) {
+      tenantContractId = await this.CallContractMethod({
+        contractAddress: Utils.HashToAddress(objectId),
+        methodName: "getMeta",
+        methodArgs: [
+          "_ELV_TENANT_ID"
+        ]
+      });
+      if(tenantContractId !== "") {
+        return Buffer.from(tenantContractId.replace("0x", ""), "hex").toString("utf8");
+      }
+    }
+
+    return await this.client.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: "tenantContractId",
+    });
+  }
+
+  async SetTenantContractId(libraryId, objectId, tenantContractId, tenantAddress) {
+    if(tenantContractId && (!tenantContractId.startsWith("iten") || !Utils.ValidHash(tenantContractId))) {
+      throw Error(`Invalid tenant ID: ${tenantContractId}`);
+    }
+
+    if(tenantAddress) {
+      if(!Utils.ValidAddress(tenantAddress)) {
+        throw Error(`Invalid address: ${tenantAddress}`);
+      }
+      tenantContractId = `iten${Utils.AddressToHash(tenantAddress)}`;
+    } else {
+      tenantAddress = Utils.HashToAddress(tenantContractId);
+    }
+
+    const version = await this.client.AccessType({id: tenantContractId});
+
+    if(version !== this.ACCESS_TYPES.TENANT) {
+      throw Error("Invalid tenant ID: " + tenantContractId);
+    }
+
+    const hasPutMetaMethod = await this.client.authClient.ContractHasMethod({
+      contractAddress: Utils.HashToAddress(objectId),
+      methodName: "putMeta"
+    });
+
+    if(hasPutMetaMethod) {
+      await this.client.CallContractMethodAndWait({
+        contractAddress: Utils.HashToAddress(objectId),
+        methodName: "putMeta",
+        methodArgs: [
+          "_ELV_TENANT_ID",
+          tenantContractId
+        ]
+      });
+    } else {
+      const tenantAdminGroupAddress = await this.client.CallContractMethod({
+        contractAddress: tenantAddress,
+        methodName: "groupsMapping",
+        methodArgs: ["tenant_admin", 0],
+        formatArguments: true,
+      });
+
+      await this.MergeObjectMetadata({
+        libraryId,
+        objectId,
+        metadata: {
+          tenantContractId,
+          tenantId: !tenantAdminGroupAddress ? undefined : `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
+        },
+        commitMessage: "set tenant_contract_id"
+      });
+    }
+    return tenantContractId;
+  }
+
+  async MergeObjectMetadata({libraryId, objectId, metadataSubtree = "/", metadata = {}, commitMessage}) {
+    this.Log(`Merging metadata at ${metadataSubtree}`);
+
+    const editRequest = await this.client.EditContentObject({libraryId, objectId});
+
+    await this.client.MergeMetadata({
+      libraryId,
+      objectId,
+      writeToken: editRequest.write_token,
+      metadataSubtree,
+      metadata
+    });
+    await this.client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: editRequest.write_token,
+      commitMessage: commitMessage
+    });
+  }
+
   // Clear cached access transaction IDs and state channel tokens
   ClearCache() {
     this.accessTransactions = {};
