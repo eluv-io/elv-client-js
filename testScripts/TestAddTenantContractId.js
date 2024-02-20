@@ -15,7 +15,7 @@ const argv = yargs
   )
   .argv;
 
-const AddTenantContractIdToUser = async ({configUrl, tenantContractId}) => {
+const TestAddTenantContractId = async ({configUrl, tenantContractId}) => {
   try {
     if(!process.env.PRIVATE_KEY) {
       console.log("ERROR: 'PRIVATE_KEY' environment variable must be set");
@@ -88,4 +88,4 @@ const AddTenantContractIdToUser = async ({configUrl, tenantContractId}) => {
   }
 };
 
-AddTenantContractIdToUser(argv);
+TestAddTenantContractId(argv);
