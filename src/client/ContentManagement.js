@@ -1544,8 +1544,7 @@ exports.SetLibraryTenantContractId = async function({libraryAddress, tenantContr
   return await this.authClient.SetTenantContractId(
     this.utils.AddressToLibraryId(libraryAddress),
     this.utils.AddressToObjectId(libraryAddress),
-    tenantContractId,
-    "",
+    tenantContractId
   );
 };
 
@@ -1579,8 +1578,7 @@ exports.SetContentTypeTenantContractId = async function({contentTypeAddress, ten
   return await this.authClient.SetTenantContractId(
     this.contentSpaceLibraryId,
     this.utils.AddressToObjectId(contentTypeAddress),
-    tenantContractId,
-    "",
+    tenantContractId
   );
 };
 

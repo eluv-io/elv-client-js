@@ -960,8 +960,7 @@ exports.SetGroupTenantContractId = async function({groupAddress, tenantContractI
   return await this.authClient.SetTenantContractId(
     this.contentSpaceLibraryId,
     this.utils.AddressToObjectId(groupAddress),
-    tenantContractId,
-    "",
+    tenantContractId
   );
 };
 

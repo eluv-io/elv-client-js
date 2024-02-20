@@ -30,7 +30,7 @@ const AddTenantContractIdToUser = async ({configUrl, tenantContractId}) => {
     client.SetSigner({signer});
 
     // set tenant contract ID for user
-    await client.userProfileClient.SetTenantContractId({tenantContractId: tenantContractId});
+    await client.userProfileClient.SetTenantContractId({tenantContractId});
     console.log(`tenant contract ${await client.userProfileClient.TenantContractId()} set for user ${client.signer.address}`);
 
     // tenant contract ID set during creation of library

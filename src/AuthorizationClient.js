@@ -1201,25 +1201,15 @@ class AuthorizationClient {
    * @param libraryId
    * @param objectId
    * @param tenantContractId
-   * @param tenantAddress
-   * @returns {Promise<string>}
+   * @returns {Promise<{tenantId: (undefined|string), tenantContractId: string}>}
    */
-  async SetTenantContractId(libraryId, objectId, tenantContractId, tenantAddress) {
+  async SetTenantContractId(libraryId, objectId, tenantContractId) {
     if(tenantContractId && (!tenantContractId.startsWith("iten") || !Utils.ValidHash(tenantContractId))) {
       throw Error(`Invalid tenant ID: ${tenantContractId}`);
     }
-
-    if(tenantAddress) {
-      if(!Utils.ValidAddress(tenantAddress)) {
-        throw Error(`Invalid address: ${tenantAddress}`);
-      }
-      tenantContractId = `iten${Utils.AddressToHash(tenantAddress)}`;
-    } else {
-      tenantAddress = Utils.HashToAddress(tenantContractId);
-    }
+    const tenantAddress = Utils.HashToAddress(tenantContractId);
 
     const version = await this.client.AccessType({id: tenantContractId});
-
     if(version !== this.ACCESS_TYPES.TENANT) {
       throw Error("Invalid tenant ID: " + tenantContractId);
     }
