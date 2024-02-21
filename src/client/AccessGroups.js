@@ -942,36 +942,3 @@ exports.UnlinkAccessGroupFromOauth = async function({groupAddress}) {
     methodArgs: [false]
   });
 };
-
-/**
- * Set the tenant contract ID for the group address provided
- *
- * @param groupAddress
- * @param tenantContractId
- * @returns {Promise<void>}
- */
-exports.SetGroupTenantContractId = async function({groupAddress, tenantContractId}){
-  ValidateAddress(groupAddress);
-  ValidateObject(tenantContractId);
-
-  return await this.authClient.SetTenantContractId(
-    this.contentSpaceLibraryId,
-    this.utils.AddressToObjectId(groupAddress),
-    tenantContractId
-  );
-};
-
-/**
- * Return the ID of the tenant this group belongs to, if set.
- *
- * @param groupAddress
- * @returns {Promise<string|undefined>}
- */
-exports.GetGroupTenantContractId = async function({groupAddress}){
-  ValidateAddress(groupAddress);
-
-  return await this.authClient.GetTenantContractId(
-    this.contentSpaceLibraryId,
-    this.utils.AddressToObjectId(groupAddress),
-  );
-};
