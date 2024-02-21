@@ -579,22 +579,22 @@ exports.SendFunds = async function({recipient, ether}) {
  * TenantContractId returns the ID of the tenant contract for
  * the objectId provided from contract metadata or from fabric metadata
  *
- * @param objectAddress
+ * @param contractAddress
  * @returns {Promise<string|undefined>}
  */
-exports.TenantContractId = async function(objectAddress) {
-  ValidateAddress(objectAddress);
+exports.TenantContractId = async function({contractAddress}) {
+  ValidateAddress(contractAddress);
 
-  const objectId = Utils.AddressToObjectId(objectAddress);
+  const objectId = Utils.AddressToObjectId(contractAddress);
 
   const hasGetMetaMethod = await this.authClient.ContractHasMethod({
-    contractAddress: objectAddress,
+    contractAddress: contractAddress,
     methodName: "getMeta"
   });
 
   if(hasGetMetaMethod) {
     const tenantContractId = await this.ContractMetadata({
-      contractAddress:objectAddress,
+      contractAddress:contractAddress,
       metadataKey:"_ELV_TENANT_ID"
     });
     if(tenantContractId !== "") {
@@ -602,9 +602,7 @@ exports.TenantContractId = async function(objectAddress) {
     }
   }
 
-  const libraryId = await this.ContentObjectLibraryId({
-    objectId: Utils.AddressToObjectId(objectAddress)
-  });
+  const libraryId = await this.ContentObjectLibraryId({ objectId });
 
   return await this.ContentObjectMetadata({
     libraryId,
@@ -622,11 +620,11 @@ exports.TenantContractId = async function(objectAddress) {
  * @param tenantContractId
  * @returns {Promise<{tenantId: (undefined|string), tenantContractId: string}>}
  */
-exports.SetTenantContractId = async function(objectAddress, tenantContractId) {
-  ValidateAddress(objectAddress);
+exports.SetTenantContractId = async function({contractAddress, tenantContractId}) {
+  ValidateAddress(contractAddress);
   ValidateObject(tenantContractId);
 
-  const objectId = Utils.AddressToObjectId(objectAddress);
+  const objectId = Utils.AddressToObjectId(contractAddress);
 
   if(tenantContractId && (!tenantContractId.startsWith("iten") || !Utils.ValidHash(tenantContractId))) {
     throw Error(`Invalid tenant ID: ${tenantContractId}`);
@@ -645,15 +643,6 @@ exports.SetTenantContractId = async function(objectAddress, tenantContractId) {
     methodArgs: ["tenant_admin", 0],
     formatArguments: true,
   });
-
-  const libraryId = await this.ContentObjectLibraryId({
-    objectId
-  });
-  const editRequest = await this.EditContentObject({libraryId, objectId});
-
-  const metadata = {
-    tenantId: !tenantAdminGroupAddress ? undefined : `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
-  };
 
   const hasPutMetaMethod = await this.authClient.ContractHasMethod({
     contractAddress: Utils.HashToAddress(objectId),
@@ -678,22 +667,26 @@ exports.SetTenantContractId = async function(objectAddress, tenantContractId) {
       console.warn("No tenant ID associated with current tenant.");
     }
   } else {
-    metadata["tenantContractId"] = tenantContractId;
+    const libraryId = await this.ContentObjectLibraryId({ objectId });
+    const editRequest = await this.EditContentObject({libraryId, objectId});
+
+    await this.MergeMetadata({
+      libraryId,
+      objectId,
+      writeToken: editRequest.write_token,
+      metadata:  {
+        tenantContractId,
+        tenantId: !tenantAdminGroupAddress ? undefined : `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
+      },
+    });
+
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: editRequest.write_token,
+      commitMessage: "set tenant_contract_id"
+    });
   }
-
-  await this.MergeMetadata({
-    libraryId,
-    objectId,
-    writeToken: editRequest.write_token,
-    metadata: metadata,
-  });
-
-  await this.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken: editRequest.write_token,
-    commitMessage: "set tenant_contract_id"
-  });
 
   return {
     tenantContractId: tenantContractId,

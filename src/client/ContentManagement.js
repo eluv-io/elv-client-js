@@ -223,7 +223,7 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
 
   const tenantContractId = await this.userProfileClient.TenantContractId();
   if(tenantContractId){
-    await this.SetTenantContractId(contractAddress, tenantContractId);
+    await this.SetTenantContractId({contractAddress, tenantContractId});
     this.Log(`tenant_contract_id set for ${objectId}`);
   }
 
@@ -324,7 +324,7 @@ exports.CreateContentLibrary = async function({
   }
 
   if(tenantContractId){
-    await this.SetTenantContractId(contractAddress, tenantContractId);
+    await this.SetTenantContractId({contractAddress, tenantContractId});
     this.Log(`tenant_contract_id set for ${contractAddress}`);
   }
 

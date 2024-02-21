@@ -476,11 +476,10 @@ await client.userProfileClient.UserMetadata()
    */
   async TenantContractId() {
     if(!this.tenantContractId) {
-      const {libraryId, objectId} = await this.UserWalletObjectInfo();
-      this.tenantContractId = await this.client.TenantContractId(
-        libraryId,
-        objectId
-      );
+      const {objectId} = await this.UserWalletObjectInfo();
+      this.tenantContractId = await this.client.TenantContractId({
+        contractAddress: this.client.utils.HashToAddress(objectId)
+      });
     }
     return this.tenantContractId;
   }
@@ -497,10 +496,10 @@ await client.userProfileClient.UserMetadata()
   async SetTenantContractId({tenantContractId}) {
     const {objectId} = await this.UserWalletObjectInfo();
 
-    const tenantInfo = await this.client.SetTenantContractId(
-      this.client.utils.HashToAddress(objectId),
-      tenantContractId
-    );
+    const tenantInfo = await this.client.SetTenantContractId({
+      contractAddress: this.client.utils.HashToAddress(objectId),
+      tenantContractId,
+    });
     this.tenantContractId = tenantInfo.tenantContractId;
   }
 
