@@ -1514,3 +1514,106 @@ exports.StreamDeactivate = async function({name}) {
     console.error(error);
   }
 };
+
+/**
+ * List the pre-allocated URLs for a site
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {}
+ *
+ * @return {Promise<Object>} - The list of stream URLs
+ */
+exports.StreamListUrls = async function({siteId}={}) {
+  try {
+    const STATUS_MAP = {
+      UNCONFIGURED: "unconfigured",
+      UNINITIALIZED: "uninitialized",
+      INACTIVE: "inactive",
+      STOPPED: "stopped",
+      STARTING: "starting",
+      RUNNING: "running",
+      STALLED: "stalled",
+    };
+
+    if(!siteId) {
+      const tenantContractId = await this.userProfileClient.TenantContractId();
+      siteId = await this.ContentObjectMetadata({
+        libraryId: tenantContractId.replace("iten", "ilib"),
+        objectId: tenantContractId.replace("iten", "iq__"),
+        metadataSubtree: "public/sites/live_streams",
+      });
+    }
+
+    const streamMetadata = await this.ContentObjectMetadata({
+      libraryId: await this.ContentObjectLibraryId({objectId: siteId}),
+      objectId: siteId,
+      metadataSubtree: "public/asset_metadata/live_streams",
+      resolveLinks: true,
+      resolveIgnoreErrors: true
+    });
+
+    const activeUrlMap = {};
+    await this.utils.LimitedMap(
+      10,
+      Object.keys(streamMetadata),
+      async slug => {
+        const stream = streamMetadata[slug];
+
+        const versionHash = (
+          stream?.sources?.default?.["."]?.container ||
+          ((stream["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1]
+        );
+
+        if(versionHash) {
+          const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+          const libraryId = await this.ContentObjectLibraryId({objectId});
+
+          const status = await this.StreamStatus({
+            name: objectId
+          });
+
+          const streamMeta = await this.ContentObjectMetadata({
+            objectId,
+            libraryId,
+            select: [
+              "live_recording_config/reference_url",
+              // live_recording_config/url is the old path
+              "live_recording_config/url"
+            ]
+          });
+
+          const url = streamMeta.live_recording_config.reference_url || streamMeta.live_recording_config.url;
+          const isActive = [STATUS_MAP.STARTING, STATUS_MAP.RUNNING, STATUS_MAP.STALLED, STATUS_MAP.STOPPED].includes(status.state);
+
+          if(url && isActive) {
+            activeUrlMap[url] = true;
+          }
+        }
+      }
+    );
+
+    const streamUrlStatus = {};
+
+    const streamUrls = await this.ContentObjectMetadata({
+      libraryId: await this.ContentObjectLibraryId({objectId: siteId}),
+      objectId: siteId,
+      metadataSubtree: "/live_stream_urls",
+      resolveLinks: true,
+      resolveIgnoreErrors: true
+    });
+
+    Object.keys(streamUrls).forEach(protocol => {
+      streamUrlStatus[protocol] = streamUrls[protocol].map(url => {
+        return {
+          url,
+          active: activeUrlMap[url] || false
+        };
+      })
+    });
+
+    return streamUrlStatus;
+  } catch(error) {
+    console.error(error);
+  }
+};

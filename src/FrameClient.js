@@ -479,6 +479,7 @@ class FrameClient {
       "StreamDeactivate",
       "StreamInitialize",
       "StreamInsertion",
+      "StreamListUrls",
       "StreamStatus",
       "StreamStartOrStopOrReset",
       "StreamStopSession",
