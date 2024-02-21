@@ -1520,7 +1520,7 @@ exports.StreamDeactivate = async function({name}) {
  *
  * @methodGroup Live Stream
  * @namedParams
- * @param {}
+ * @param {string=} - ID of the live stream site object
  *
  * @return {Promise<Object>} - The list of stream URLs
  */
