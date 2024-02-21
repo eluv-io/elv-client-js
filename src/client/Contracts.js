@@ -614,8 +614,9 @@ exports.TenantContractId = async function(objectAddress) {
 };
 
 /**
- * SetTenantContractId sets the ID of the tenant contract for the
- * objectAddress provided in contract metadata or in fabric metadata
+ * SetTenantContractId sets :
+ * ID of the tenant contract in contract or fabric metadata
+ * tenant_admin group in contract and fabric metadata
  *
  * @param objectAddress
  * @param tenantContractId
@@ -645,6 +646,15 @@ exports.SetTenantContractId = async function(objectAddress, tenantContractId) {
     formatArguments: true,
   });
 
+  const libraryId = await this.ContentObjectLibraryId({
+    objectId
+  });
+  const editRequest = await this.EditContentObject({libraryId, objectId});
+
+  const metadata = {
+    tenantId: !tenantAdminGroupAddress ? undefined : `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
+  };
+
   const hasPutMetaMethod = await this.authClient.ContractHasMethod({
     contractAddress: Utils.HashToAddress(objectId),
     methodName: "putMeta"
@@ -656,29 +666,35 @@ exports.SetTenantContractId = async function(objectAddress, tenantContractId) {
       metadataKey: "_ELV_TENANT_ID",
       metadata: tenantContractId
     });
+
+    if(tenantAdminGroupAddress){
+      await this.ReplaceContractMetadata({
+        contractAddress: Utils.HashToAddress(objectId),
+        metadataKey: "_tenantId",
+        metadata: `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
+      });
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn("No tenant ID associated with current tenant.");
+    }
   } else {
-    const libraryId = await this.ContentObjectLibraryId({
-      objectId
-    });
-
-    const editRequest = await this.EditContentObject({libraryId, objectId});
-
-    await this.MergeMetadata({
-      libraryId,
-      objectId,
-      writeToken: editRequest.write_token,
-      metadata: {
-        tenantContractId,
-        tenantId: !tenantAdminGroupAddress ? undefined : `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
-      }
-    });
-    await this.FinalizeContentObject({
-      libraryId,
-      objectId,
-      writeToken: editRequest.write_token,
-      commitMessage: "set tenant_contract_id"
-    });
+    metadata["tenantContractId"] = tenantContractId;
   }
+
+  await this.MergeMetadata({
+    libraryId,
+    objectId,
+    writeToken: editRequest.write_token,
+    metadata: metadata,
+  });
+
+  await this.FinalizeContentObject({
+    libraryId,
+    objectId,
+    writeToken: editRequest.write_token,
+    commitMessage: "set tenant_contract_id"
+  });
+
   return {
     tenantContractId: tenantContractId,
     tenantId: !tenantAdminGroupAddress ? undefined : `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
