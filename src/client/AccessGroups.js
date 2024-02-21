@@ -282,10 +282,7 @@ exports.CreateAccessGroup = async function({name, description, metadata={}, visi
   });
 
   if(tenantContractId){
-    const tenantInfo = await this.SetGroupTenantContractId({
-      groupAddress: contractAddress,
-      tenantContractId,
-    });
+    const tenantInfo = await this.SetTenantContractId(contractAddress, tenantContractId);
 
     if(tenantInfo.tenantId) {
       let tenantAdminGroupAddress = this.utils.HashToAddress(tenantInfo.tenantId);

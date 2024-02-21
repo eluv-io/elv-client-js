@@ -512,7 +512,7 @@ class UserProfileClient {
   async TenantContractId() {
     if(!this.tenantContractId) {
       const {libraryId, objectId} = await this.UserWalletObjectInfo();
-      this.tenantContractId = await this.client.authClient.GetTenantContractId(
+      this.tenantContractId = await this.client.TenantContractId(
         libraryId,
         objectId
       );
@@ -530,11 +530,10 @@ class UserProfileClient {
    * @param {string} address - The tenant address to use in the hash if id is not provided
    */
   async SetTenantContractId({tenantContractId}) {
-    const {libraryId, objectId} = await this.UserWalletObjectInfo();
+    const {objectId} = await this.UserWalletObjectInfo();
 
-    const tenantInfo = await this.client.authClient.SetTenantContractId(
-      libraryId,
-      objectId,
+    const tenantInfo = await this.client.SetTenantContractId(
+      this.client.utils.HashToAddress(objectId),
       tenantContractId
     );
     this.tenantContractId = tenantInfo.tenantContractId;

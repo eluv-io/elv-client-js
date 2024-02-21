@@ -38,7 +38,7 @@ const TestAddTenantContractId = async ({configUrl, tenantContractId}) => {
     libraryId = await client.CreateContentLibrary({name: "library_with_tenant_contract_id"});
     libraryAddress = client.utils.HashToAddress(libraryId);
     console.log(`library created: ${libraryId}`);
-    let actualTenantContractId = await client.GetLibraryTenantContractId({libraryAddress});
+    let actualTenantContractId = await client.TenantContractId(libraryAddress);
     if(tenantContractId !== actualTenantContractId){
       throw Error(`tenant mismatch, actual: ${actualTenantContractId}, expected: ${tenantContractId}`);
     }
@@ -60,22 +60,18 @@ const TestAddTenantContractId = async ({configUrl, tenantContractId}) => {
     });
     contentTypeAddress = client.utils.HashToAddress(contentTypeId);
     console.log(`content type - title created: ${contentTypeId}`);
-    actualTenantContractId = await client.GetContentTypeTenantContractId({
-      contentTypeAddress
-    });
+    actualTenantContractId = await client.TenantContractId(contentTypeAddress);
     if(tenantContractId !== actualTenantContractId){
       throw Error(`tenant mismatch, actual: ${actualTenantContractId}, expected: ${tenantContractId}`);
     }
     // console.log(await client.ContentObjectMetadata({
     //   libraryId: client.contentSpaceLibraryId,
-    //   objectId: client.utils.AddressToObjectId(libraryAddress)}));
+    //   objectId: client.utils.AddressToObjectId(contentTypeAddress)}));
 
     // tenant contract ID set during creation of access group
     const groupAddress = await client.CreateAccessGroup({name: "Test Group"});
     console.log(`group created: ${groupAddress}`);
-    actualTenantContractId = await client.GetGroupTenantContractId({
-      groupAddress
-    });
+    actualTenantContractId = await client.TenantContractId(groupAddress);
     if(tenantContractId !== actualTenantContractId){
       throw Error(`tenant mismatch, actual: ${actualTenantContractId}, expected: ${tenantContractId}`);
     }
