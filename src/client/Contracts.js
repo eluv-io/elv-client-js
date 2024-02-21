@@ -10,7 +10,8 @@ const Ethers = require("ethers");
 const {
   ValidateAddress,
   ValidateParameters,
-  ValidatePresence, ValidateObject
+  ValidatePresence,
+  ValidateObject
 } = require("../Validation");
 const Utils=require("../Utils");
 

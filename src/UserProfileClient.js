@@ -37,19 +37,19 @@ class UserProfileClient {
    * Access the UserProfileClient from ElvClient or FrameClient via client.userProfileClient
    *
    * @example
- let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
+let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 
- let wallet = client.GenerateWallet();
- let signer = wallet.AddAccount({
+let wallet = client.GenerateWallet();
+let signer = wallet.AddAccount({
   accountName: "Alice",
   privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
 });
- client.SetSigner({signer});
+client.SetSigner({signer});
 
- await client.userProfileClient.UserMetadata()
+await client.userProfileClient.UserMetadata()
 
- let frameClient = new FrameClient();
- await client.userProfileClient.UserMetadata()
+let frameClient = new FrameClient();
+await client.userProfileClient.UserMetadata()
    *
    */
   constructor({client, debug}) {
@@ -223,9 +223,9 @@ class UserProfileClient {
    * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
    * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
-     Example:
+       Example:
 
-     {
+       {
           "resolved-link": {
             ".": {
               "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
@@ -298,9 +298,9 @@ class UserProfileClient {
    * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
    * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
-     Example:
+       Example:
 
-     {
+       {
           "resolved-link": {
             ".": {
               "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
