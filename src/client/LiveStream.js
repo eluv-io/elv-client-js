@@ -1603,6 +1603,10 @@ exports.StreamListUrls = async function({siteId}={}) {
       resolveIgnoreErrors: true
     });
 
+    if(!streamUrls) {
+      throw Error("No pre-allocated URLs configured");
+    }
+
     Object.keys(streamUrls || {}).forEach(protocol => {
       streamUrlStatus[protocol] = streamUrls[protocol].map(url => {
         return {
