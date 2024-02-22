@@ -496,10 +496,7 @@ await client.userProfileClient.UserMetadata()
   async SetTenantContractId({tenantContractId}) {
     const {objectId} = await this.UserWalletObjectInfo();
 
-    const tenantInfo = await this.client.SetTenantContractId({
-      contractAddress: this.client.utils.HashToAddress(objectId),
-      tenantContractId,
-    });
+    const tenantInfo = await this.client.SetTenantContractId({ objectId,tenantContractId });
     this.tenantContractId = tenantInfo.tenantContractId;
   }
 

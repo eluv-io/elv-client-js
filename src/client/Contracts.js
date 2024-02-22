@@ -11,7 +11,7 @@ const {
   ValidateAddress,
   ValidateParameters,
   ValidatePresence,
-  ValidateObject
+  ValidateObject, ValidateVersion
 } = require("../Validation");
 const Utils=require("../Utils");
 
@@ -580,12 +580,25 @@ exports.SendFunds = async function({recipient, ether}) {
  * the objectId provided from contract metadata or from fabric metadata
  *
  * @param contractAddress
+ * @param objectId
+ * @param versionHash
  * @returns {Promise<string|undefined>}
  */
-exports.TenantContractId = async function({contractAddress}) {
-  ValidateAddress(contractAddress);
+exports.TenantContractId = async function({contractAddress, objectId, versionHash}) {
 
-  const objectId = Utils.AddressToObjectId(contractAddress);
+  if(contractAddress){
+    ValidateAddress(contractAddress);
+    objectId = Utils.AddressToObjectId(contractAddress);
+  } else if(versionHash){
+    ValidateVersion(versionHash);
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    contractAddress = Utils.HashToAddress(objectId);
+  } else if(objectId){
+    ValidateObject(objectId);
+    contractAddress=Utils.HashToAddress(objectId);
+  } else {
+    throw Error("contractAddress or objectId or versionHash not specified");
+  }
 
   const hasGetMetaMethod = await this.authClient.ContractHasMethod({
     contractAddress: contractAddress,
@@ -612,19 +625,31 @@ exports.TenantContractId = async function({contractAddress}) {
 };
 
 /**
- * SetTenantContractId sets :
- * ID of the tenant contract in contract or fabric metadata
- * tenant_admin group in contract and fabric metadata
+ * SetTenantContractId sets ID of the tenant contract and
+ * tenant_admin group in contract or fabric metadata
  *
- * @param objectAddress
+ * @param contractAddress
+ * @param objectId
+ * @param versionHash
  * @param tenantContractId
- * @returns {Promise<{tenantId: (undefined|string), tenantContractId: string}>}
+ * @returns {Promise<{tenantId: (undefined|string), tenantContractId}>}
  */
-exports.SetTenantContractId = async function({contractAddress, tenantContractId}) {
-  ValidateAddress(contractAddress);
-  ValidateObject(tenantContractId);
+exports.SetTenantContractId = async function({contractAddress, objectId, versionHash, tenantContractId}) {
 
-  const objectId = Utils.AddressToObjectId(contractAddress);
+  if(contractAddress){
+    ValidateAddress(contractAddress);
+    objectId = Utils.AddressToObjectId(contractAddress);
+  } else if(versionHash){
+    ValidateVersion(versionHash);
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    contractAddress = Utils.HashToAddress(objectId);
+  } else if(objectId){
+    ValidateObject(objectId);
+    contractAddress=Utils.HashToAddress(objectId);
+  } else {
+    throw Error("contractAddress or objectId or versionHash not specified");
+  }
+  ValidateObject(tenantContractId);
 
   if(tenantContractId && (!tenantContractId.startsWith("iten") || !Utils.ValidHash(tenantContractId))) {
     throw Error(`Invalid tenant ID: ${tenantContractId}`);
@@ -645,20 +670,20 @@ exports.SetTenantContractId = async function({contractAddress, tenantContractId}
   });
 
   const hasPutMetaMethod = await this.authClient.ContractHasMethod({
-    contractAddress: Utils.HashToAddress(objectId),
+    contractAddress: contractAddress,
     methodName: "putMeta"
   });
 
   if(hasPutMetaMethod) {
     await this.ReplaceContractMetadata({
-      contractAddress: Utils.HashToAddress(objectId),
+      contractAddress: contractAddress,
       metadataKey: "_ELV_TENANT_ID",
       metadata: tenantContractId
     });
 
     if(tenantAdminGroupAddress){
       await this.ReplaceContractMetadata({
-        contractAddress: Utils.HashToAddress(objectId),
+        contractAddress: contractAddress,
         metadataKey: "_tenantId",
         metadata: `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
       });

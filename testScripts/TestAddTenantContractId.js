@@ -32,7 +32,7 @@ const TestAddTenantContractId = async ({configUrl, tenantContractId}) => {
     // set tenant contract ID for user
     await client.userProfileClient.SetTenantContractId({tenantContractId});
     console.log(`tenant contract ${await client.userProfileClient.TenantContractId()} set for user ${client.signer.address}`);
-    console.log(await client.userProfileClient.UserMetadata());
+    // console.log(await client.userProfileClient.UserMetadata());
 
     // tenant contract ID set during creation of library
     libraryId = await client.CreateContentLibrary({name: "library_with_tenant_contract_id"});
@@ -42,7 +42,7 @@ const TestAddTenantContractId = async ({configUrl, tenantContractId}) => {
     if(tenantContractId !== actualTenantContractId){
       throw Error(`tenant mismatch, actual: ${actualTenantContractId}, expected: ${tenantContractId}`);
     }
-    console.log(await client.ContentObjectMetadata({libraryId, objectId: client.utils.AddressToObjectId(libraryAddress)}));
+    // console.log(await client.ContentObjectMetadata({libraryId, objectId: client.utils.AddressToObjectId(libraryAddress)}));
 
     // tenant contract ID set during creation of content type
     const typeMetadata = {
@@ -64,9 +64,9 @@ const TestAddTenantContractId = async ({configUrl, tenantContractId}) => {
     if(tenantContractId !== actualTenantContractId){
       throw Error(`tenant mismatch, actual: ${actualTenantContractId}, expected: ${tenantContractId}`);
     }
-    console.log(await client.ContentObjectMetadata({
-      libraryId: client.contentSpaceLibraryId,
-      objectId: client.utils.AddressToObjectId(contentTypeAddress)}));
+    // console.log(await client.ContentObjectMetadata({
+    //   libraryId: client.contentSpaceLibraryId,
+    //   objectId: client.utils.AddressToObjectId(contentTypeAddress)}));
 
     // tenant contract ID set during creation of access group
     const groupAddress = await client.CreateAccessGroup({name: "Test Group"});
@@ -75,9 +75,9 @@ const TestAddTenantContractId = async ({configUrl, tenantContractId}) => {
     if(tenantContractId !== actualTenantContractId){
       throw Error(`tenant mismatch, actual: ${actualTenantContractId}, expected: ${tenantContractId}`);
     }
-    console.log(await client.ContentObjectMetadata({
-      libraryId: client.contentSpaceLibraryId,
-      objectId: client.utils.AddressToObjectId(groupAddress)}));
+    // console.log(await client.ContentObjectMetadata({
+    //   libraryId: client.contentSpaceLibraryId,
+    //   objectId: client.utils.AddressToObjectId(groupAddress)}));
 
   } catch(e){
     console.error(e);
