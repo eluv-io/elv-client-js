@@ -1556,7 +1556,7 @@ exports.StreamListUrls = async function({siteId}={}) {
     const activeUrlMap = {};
     await this.utils.LimitedMap(
       10,
-      Object.keys(streamMetadata),
+      Object.keys(streamMetadata || {}),
       async slug => {
         const stream = streamMetadata[slug];
 
