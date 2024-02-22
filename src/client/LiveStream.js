@@ -797,16 +797,22 @@ exports.StreamStopSession = async function({name}) {
 
     this.SetNodes({fabricURIs: [fabURI]});
 
-    let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
+    const metaEdgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
 
-    if(edgeWriteToken === undefined || edgeWriteToken === "") {
+    if(metaEdgeWriteToken === undefined || metaEdgeWriteToken === "") {
       return {
         state: "inactive",
         error: "no active streams - must create a stream first"
       };
     }
 
-    let edgeMeta, status;
+    const editResponse = await this.EditContentObject({
+      libraryId: libraryId,
+      objectId: objectId
+    });
+    edgeWriteToken = editResponse.write_token;
+
+    let edgeMeta;
     try {
       edgeMeta = await this.ContentObjectMetadata({
         libraryId,
@@ -814,7 +820,7 @@ exports.StreamStopSession = async function({name}) {
         writeToken: edgeWriteToken
       });
 
-      status = await this.StreamStatus({name});
+      const status = await this.StreamStatus({name});
 
       if(status.state !== "stopped") {
         return {
@@ -823,24 +829,15 @@ exports.StreamStopSession = async function({name}) {
         }
       }
     } catch(error) {
-      console.warn(`Unable to retrieve metadata for edge write token ${edgeWriteToken}`);
+      this.Log(`Unable to retrieve metadata for edge write token ${edgeWriteToken}`);
+    }
 
-      // If token doesn't return metadata, generate new token
-      if(!edgeMeta) {
-        let response = await this.EditContentObject({
-          libraryId: libraryId,
-          objectId: objectId
-        });
-
-        this.Log(`Unable to retrieve metadata for token ${edgeWriteToken}. Generating new token ${response.write_token}`);
-
-        edgeWriteToken = response.write_token;
-        edgeMeta = await this.ContentObjectMetadata({
-          libraryId,
-          objectId,
-          writeToken: edgeWriteToken
-        });
-      }
+    if(!edgeMeta) {
+      edgeMeta = {
+        live_recording: {
+          fabric_config: {}
+        }
+      };
     }
 
     const newState = "inactive";
