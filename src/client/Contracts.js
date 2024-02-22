@@ -576,12 +576,14 @@ exports.SendFunds = async function({recipient, ether}) {
 };
 
 /**
- * TenantContractId returns the ID of the tenant contract for
- * the objectId provided from contract metadata or from fabric metadata
+ * Retrieve the ID of the tenant contract for the specified object
  *
- * @param contractAddress
- * @param objectId
- * @param versionHash
+ * @methodGroup Tenant
+ * @namedParams
+ * @param {string=} contractAddress - The address of the object
+ * @param {string=} objectId - The ID of the object
+ * @param {string=} versionHash - A version hash of the object
+ *
  * @returns {Promise<string|undefined>}
  */
 exports.TenantContractId = async function({contractAddress, objectId, versionHash}) {
@@ -625,13 +627,15 @@ exports.TenantContractId = async function({contractAddress, objectId, versionHas
 };
 
 /**
- * SetTenantContractId sets ID of the tenant contract and
- * tenant_admin group in contract or fabric metadata
+ * Set the tenant contract ID for the specified object
  *
- * @param contractAddress
- * @param objectId
- * @param versionHash
- * @param tenantContractId
+ * @methodGroup Tenant
+ * @namedParams
+ * @param {string=} contractAddress - The address of the object
+ * @param {string=} objectId - The ID of the object
+ * @param {string=} versionHash - A version hash of the object
+ * @param {string} tenantContractId - The tenant contract ID to set
+ *
  * @returns {Promise<{tenantId: (undefined|string), tenantContractId}>}
  */
 exports.SetTenantContractId = async function({contractAddress, objectId, versionHash, tenantContractId}) {
