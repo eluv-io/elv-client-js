@@ -1603,7 +1603,7 @@ exports.StreamListUrls = async function({siteId}={}) {
       resolveIgnoreErrors: true
     });
 
-    Object.keys(streamUrls).forEach(protocol => {
+    Object.keys(streamUrls || {}).forEach(protocol => {
       streamUrlStatus[protocol] = streamUrls[protocol].map(url => {
         return {
           url,
