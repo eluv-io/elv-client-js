@@ -221,6 +221,12 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
     commitMessage: "Create content type"
   });
 
+  const tenantContractId = await this.userProfileClient.TenantContractId();
+  if(tenantContractId){
+    await this.SetTenantContractId({contractAddress, tenantContractId});
+    this.Log(`tenant_contract_id set for ${objectId}`);
+  }
+
   return objectId;
 };
 
@@ -255,7 +261,7 @@ exports.CreateContentLibrary = async function({
   imageName,
   metadata={},
   kmsId,
-  tenantId
+  tenantContractId
 }) {
   if(!kmsId) {
     kmsId = `ikms${this.utils.AddressToHash(await this.DefaultKMSAddress())}`;
@@ -265,27 +271,6 @@ exports.CreateContentLibrary = async function({
   this.Log(`KMS ID: ${kmsId}`);
 
   const { contractAddress } = await this.authClient.CreateContentLibrary({kmsId});
-
-
-  // Set tenant ID on the library if the user is associated with a tenant
-  if(!tenantId) {
-    tenantId = await this.userProfileClient.TenantId();
-  }
-
-  if(tenantId) {
-    if(!this.utils.ValidHash(tenantId)) {
-      throw Error(`Invalid tenant ID: ${tenantId}`);
-    }
-
-    await this.CallContractMethod({
-      contractAddress,
-      methodName: "putMeta",
-      methodArgs: [
-        "_tenantId",
-        tenantId
-      ]
-    });
-  }
 
   metadata = {
     ...metadata,
@@ -331,6 +316,16 @@ exports.CreateContentLibrary = async function({
       image,
       imageName
     });
+  }
+
+  // Set tenant contract ID on the library if the user is associated with a tenant
+  if(!tenantContractId) {
+    tenantContractId = await this.userProfileClient.TenantContractId();
+  }
+
+  if(tenantContractId){
+    await this.SetTenantContractId({contractAddress, tenantContractId});
+    this.Log(`tenant_contract_id set for ${contractAddress}`);
   }
 
   this.Log(`Library ${libraryId} created`);

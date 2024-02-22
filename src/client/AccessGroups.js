@@ -241,9 +241,8 @@ exports.CreateAccessGroup = async function({name, description, metadata={}, visi
   this.Log(`Creating access group: ${name || ""} ${description || ""}`);
   let { contractAddress } = await this.authClient.CreateAccessGroup();
   contractAddress = this.utils.FormatAddress(contractAddress);
-
   const objectId = this.utils.AddressToObjectId(contractAddress);
-  const tenantId = await this.userProfileClient.TenantId();
+  const tenantContractId = await this.userProfileClient.TenantContractId();
 
   this.Log(`Access group: ${contractAddress} ${objectId}`);
 
@@ -261,27 +260,6 @@ exports.CreateAccessGroup = async function({name, description, metadata={}, visi
     description,
     ...metadata
   };
-
-  if(tenantId) {
-    let tenantAdminGroupAddress = this.utils.HashToAddress(tenantId);
-
-    await this.AddContentObjectGroupPermission({
-      objectId,
-      groupAddress: tenantAdminGroupAddress,
-      permission: "manage"
-    });
-
-    await this.ReplaceContractMetadata({
-      contractAddress,
-      metadataKey: "_tenantId",
-      metadata: tenantId
-    });
-
-    groupMetadata["tenantId"] = tenantId;
-  } else {
-    // eslint-disable-next-line no-console
-    console.warn("No tenant ID associated with current tenant.");
-  }
 
   await this.ReplaceMetadata({
     libraryId: this.contentSpaceLibraryId,
@@ -302,6 +280,23 @@ exports.CreateAccessGroup = async function({name, description, metadata={}, visi
     writeToken: editResponse.write_token,
     commitMessage: "Create access group"
   });
+
+  if(tenantContractId){
+    const tenantInfo = await this.SetTenantContractId({contractAddress, tenantContractId});
+
+    if(tenantInfo.tenantId) {
+      let tenantAdminGroupAddress = this.utils.HashToAddress(tenantInfo.tenantId);
+
+      await this.AddContentObjectGroupPermission({
+        objectId,
+        groupAddress: tenantAdminGroupAddress,
+        permission: "manage"
+      });
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn("No tenant ID associated with current tenant.");
+    }
+  }
 
   return contractAddress;
 };
