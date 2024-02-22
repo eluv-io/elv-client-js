@@ -767,8 +767,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
 };
 
 /**
- * Stop the live stream session and close the edge write token.
- * Not implemented fully
+ * close the edge write token for the live stream session.
  *
  * @methodGroup Live Stream
  * @namedParams
@@ -778,8 +777,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
  */
 exports.StreamStopSession = async function({name}) {
   try {
-    console.log("TERMINATE: ", name);
-
+    this.Log(`Terminating stream session for: ${name}`);
     let conf = await this.LoadConf({name});
 
     let {objectId} = conf;
@@ -807,51 +805,49 @@ exports.StreamStopSession = async function({name}) {
         error: "no active streams - must create a stream first"
       };
     }
-    let edgeMeta = await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      writeToken: edgeWriteToken
-    });
 
-    // Stop the LRO if running
-    let status = await this.StreamStatus({name});
-    if(status.state != "terminated") {
-      console.log("STOPPING");
-      try {
-        await this.CallBitcodeMethod({
-          libraryId: status.library_id,
-          objectId: status.object_id,
-          writeToken: status.edge_write_token,
-          method: "/live/stop/" + status.tlro,
-          constant: false
+    let edgeMeta, status;
+    try {
+      edgeMeta = await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        writeToken: edgeWriteToken
+      });
+
+      status = await this.StreamStatus({name});
+
+      if(status.state !== "stopped") {
+        return {
+          state: status.state,
+          error: "Stream must be stopped before terminating"
+        }
+      }
+    } catch(error) {
+      console.warn(`Unable to retrieve metadata for edge write token ${edgeWriteToken}`);
+
+      // If token doesn't return metadata, generate new token
+      if(!edgeMeta) {
+        let response = await this.EditContentObject({
+          libraryId: libraryId,
+          objectId: objectId
         });
-      } catch(error) {
-        // The /call/lro/stop API returns empty response
-        // console.log("LRO Stop (failed): ", error);
-      }
 
-      // Wait until LRO is terminated
-      let tries = 10;
-      while(status.state != "stopped" && tries-- > 0) {
-        console.log("Wait to terminate - ", status.state);
-        await Sleep(1000);
-        status = await this.StreamStatus({name});
-      }
-      console.log("Status after stop - ", status.state);
+        this.Log(`Unable to retrieve metadata for token ${edgeWriteToken}. Generating new token ${response.write_token}`);
 
-      if(tries <= 0) {
-        console.log("Failed to stop");
-        return status;
+        edgeWriteToken = response.write_token;
+        edgeMeta = await this.ContentObjectMetadata({
+          libraryId,
+          objectId,
+          writeToken: edgeWriteToken
+        });
       }
     }
 
-    // Set stop time
+    const newState = "inactive";
     edgeMeta.recording_stop_time = Math.floor(new Date().getTime() / 1000);
-    console.log("recording_start_time: ", edgeMeta.recording_start_time);
-    console.log("recording_stop_time:  ", edgeMeta.recording_stop_time);
-
+    // Set stop time and inactive state
     edgeMeta.live_recording.status = {
-      state: "terminated",
+      state: newState,
       recording_stop_time: edgeMeta.recording_stop_time
     };
 
@@ -868,17 +864,15 @@ exports.StreamStopSession = async function({name}) {
       libraryId,
       objectId,
       writeToken: edgeWriteToken,
-      commitMessage: "Finalize live stream - stop time " + edgeMeta.recording_stop_time,
-      publish: false // Don't publish this version because it is not currently useful
+      commitMessage: `Finalize live stream - stop time ${edgeMeta.recording_stop_time}`
     });
 
     return {
       fin,
       name,
       edge_write_token: edgeWriteToken,
-      state: "terminated"
+      state: newState
     };
-
   } catch(error) {
     console.error(error);
   }
@@ -1419,103 +1413,6 @@ exports.StreamConfig = async function({name, customSettings={}}) {
 };
 
 /**
- * Deactivate the stream
- *
- * @methodGroup Live Stream
- * @namedParams
- * @param {string} name - Object ID or name of the live stream object
- *
- * @return {Promise<Object>} - The status response for the stream
- */
-exports.StreamDeactivate = async function({name}) {
-  try {
-    let conf = await this.LoadConf({name});
-
-    let {objectId} = conf;
-    let libraryId = await this.ContentObjectLibraryId({objectId});
-
-    let mainMeta = await this.ContentObjectMetadata({
-      libraryId,
-      objectId
-    });
-    let status = await this.StreamStatus({name});
-
-    if(!mainMeta.live_recording) {
-      return {
-        state: status.state,
-        error: "Stream must be configured before deactivating"
-      };
-    }
-
-    // Return error if the LRO is running
-    if(status.state !== "stopped") {
-      return {
-        state: status.state,
-        error: "Stream must be stopped before deactivating"
-      };
-    }
-
-    let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
-    // Support both hostname and URL ingress_node_api
-    if(!fabURI.startsWith("http")) {
-      // Assume https
-      fabURI = "https://" + fabURI;
-    }
-
-    this.SetNodes({fabricURIs: [fabURI]});
-
-    let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
-
-    if(edgeWriteToken === undefined || edgeWriteToken === "") {
-      return {
-        state: "inactive",
-        error: "stream is already inactive"
-      };
-    }
-    let edgeMeta = await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      writeToken: edgeWriteToken
-    });
-
-    // Set stop time
-    edgeMeta.recording_stop_time = Math.floor(new Date().getTime() / 1000);
-    const newState = "inactive";
-
-    edgeMeta.live_recording.status = {
-      state: newState,
-      recording_stop_time: edgeMeta.recording_stop_time
-    };
-
-    edgeMeta.live_recording.fabric_config.edge_write_token = "";
-
-    await this.ReplaceMetadata({
-      libraryId,
-      objectId,
-      writeToken: edgeWriteToken,
-      metadata: edgeMeta
-    });
-
-    let fin = await this.FinalizeContentObject({
-      libraryId,
-      objectId,
-      writeToken: edgeWriteToken,
-      commitMessage: "Deactivate stream"
-    });
-
-    return {
-      reference_url: status.reference_url,
-      fin,
-      name,
-      edge_write_token: edgeWriteToken,
-      state: newState
-    };
-  } catch(error) {
-    console.error(error);
-  }
-};
-
-/**
  * List the pre-allocated URLs for a site
  *
  * @methodGroup Live Stream
@@ -1559,11 +1456,21 @@ exports.StreamListUrls = async function({siteId}={}) {
       Object.keys(streamMetadata || {}),
       async slug => {
         const stream = streamMetadata[slug];
+        let versionHash;
 
-        const versionHash = (
-          stream?.sources?.default?.["."]?.container ||
+        if(
+          stream &&
+          stream.sources &&
+          stream.sources.default &&
+          stream.sources.default["."] &&
+          stream.sources.default["."].container ||
           ((stream["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1]
-        );
+        ) {
+          versionHash = (
+            stream.sources.default["."].container ||
+            ((stream["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1]
+          );
+        }
 
         if(versionHash) {
           const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
