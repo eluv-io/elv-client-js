@@ -806,6 +806,11 @@ exports.StreamStopSession = async function({name}) {
       };
     }
 
+    await this.DeleteWriteToken({
+      libraryId,
+      writeToken: metaEdgeWriteToken
+    });
+
     const editResponse = await this.EditContentObject({
       libraryId: libraryId,
       objectId: objectId
