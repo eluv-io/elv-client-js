@@ -1549,4 +1549,6 @@ exports.DeleteWriteToken = async function({writeToken, libraryId}) {
     path: path,
     allowFailover: false
   });
+
+  await this.HttpClient.ClearWriteToken({writeToken});
 };
