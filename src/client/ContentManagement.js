@@ -1525,3 +1525,28 @@ exports.SetAuthPolicy = async function({objectId, policyId}) {
     metadata: { "elv:delegation-id": policyId }
   });
 };
+
+/**
+ * Delete the specified write token
+ *
+ * @methodGroup Content Objects
+ *
+ * @namedParams
+ * @param {string} writeToken - Write token to delete
+ * @param {string} libraryId - ID of the library
+ */
+exports.DeleteWriteToken = async function({writeToken, libraryId}) {
+  ValidateWriteToken(writeToken);
+  ValidateLibrary(libraryId);
+
+  let path = UrlJoin("qlibs", libraryId, "q", writeToken);
+
+  const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, update: true});
+
+  await this.HttpClient.Request({
+    headers: authorizationHeader,
+    method: "DELETE",
+    path: path,
+    allowFailover: false
+  });
+};

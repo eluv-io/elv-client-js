@@ -387,6 +387,7 @@ class FrameClient {
       "DeleteMetadata",
       "DeleteNTPInstance",
       "DeletePart",
+      "DeleteWriteToken",
       "DeployContract",
       "Download",
       "DownloadEncrypted",
