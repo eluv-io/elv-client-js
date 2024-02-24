@@ -767,7 +767,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
 };
 
 /**
- * close the edge write token for the live stream session.
+ * Close the edge write token and make the stream object inactive.
  *
  * @methodGroup Live Stream
  * @namedParams
@@ -802,27 +802,15 @@ exports.StreamStopSession = async function({name}) {
     if(metaEdgeWriteToken === undefined || metaEdgeWriteToken === "") {
       return {
         state: "inactive",
-        error: "no active streams - must create a stream first"
+        error: "The stream is not active"
       };
     }
 
-    await this.DeleteWriteToken({
-      libraryId,
-      writeToken: metaEdgeWriteToken
-    });
-
-    const editResponse = await this.EditContentObject({
-      libraryId: libraryId,
-      objectId: objectId
-    });
-    edgeWriteToken = editResponse.write_token;
-
-    let edgeMeta;
     try {
-      edgeMeta = await this.ContentObjectMetadata({
+      const streamMetadata = await this.ContentObjectMetadata({
         libraryId,
         objectId,
-        writeToken: edgeWriteToken
+        writeToken: metaEdgeWriteToken
       });
 
       const status = await this.StreamStatus({name});
@@ -830,49 +818,59 @@ exports.StreamStopSession = async function({name}) {
       if(status.state !== "stopped") {
         return {
           state: status.state,
-          error: "Stream must be stopped before terminating"
+          error: "The stream must be stopped before terminating"
         }
       }
+
+      await this.DeleteWriteToken({
+        libraryId,
+        writeToken: metaEdgeWriteToken
+      });
     } catch(error) {
       this.Log(`Unable to retrieve metadata for edge write token ${edgeWriteToken}`);
     }
 
-    if(!edgeMeta) {
-      edgeMeta = {
-        live_recording: {
-          fabric_config: {}
-        }
-      };
-    }
+    const {writeToken} = await this.EditContentObject({
+      libraryId: libraryId,
+      objectId: objectId
+    });
 
-    const newState = "inactive";
-    edgeMeta.recording_stop_time = Math.floor(new Date().getTime() / 1000);
     // Set stop time and inactive state
-    edgeMeta.live_recording.status = {
-      state: newState,
-      recording_stop_time: edgeMeta.recording_stop_time
+    const newState = "inactive";
+    const stopTime = Math.floor(new Date().getTime() / 1000);
+
+    const finalizeMetadata = {
+      live_recording: {
+        status: {
+          edge_write_token: "",
+          state: newState,
+          recording_stop_time: stopTime
+        },
+        fabric_config: {
+          edge_write_token: ""
+        }
+      },
+      recording_stop_time: stopTime
     };
 
-    edgeMeta.live_recording.fabric_config.edge_write_token = "";
-
-    await this.ReplaceMetadata({
+    await this.MergeMetadata({
       libraryId,
       objectId,
-      writeToken: edgeWriteToken,
-      metadata: edgeMeta
+      writeToken,
+      metadata: finalizeMetadata
     });
 
     let fin = await this.FinalizeContentObject({
       libraryId,
       objectId,
-      writeToken: edgeWriteToken,
-      commitMessage: `Finalize live stream - stop time ${edgeMeta.recording_stop_time}`
+      writeToken,
+      commitMessage: `Deactivate live stream - stop time ${stopTime}`
     });
 
     return {
       fin,
       name,
-      edge_write_token: edgeWriteToken,
+      edge_write_token: writeToken,
       state: newState
     };
   } catch(error) {
