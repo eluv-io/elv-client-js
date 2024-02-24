@@ -870,7 +870,6 @@ exports.StreamStopSession = async function({name}) {
     return {
       fin,
       name,
-      edge_write_token: writeToken,
       state: newState
     };
   } catch(error) {
