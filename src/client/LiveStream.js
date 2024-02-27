@@ -1434,6 +1434,11 @@ exports.StreamListUrls = async function({siteId}={}) {
 
     if(!siteId) {
       const tenantContractId = await this.userProfileClient.TenantContractId();
+
+      if(!tenantContractId) {
+        throw Error("No tenant contract ID configured");
+      }
+
       siteId = await this.ContentObjectMetadata({
         libraryId: tenantContractId.replace("iten", "ilib"),
         objectId: tenantContractId.replace("iten", "iq__"),
