@@ -679,17 +679,24 @@ exports.SetTenantContractId = async function({contractAddress, objectId, version
   });
 
   if(hasPutMetaMethod) {
-    await this.ReplaceContractMetadata({
-      contractAddress: contractAddress,
-      metadataKey: "_ELV_TENANT_ID",
-      metadata: tenantContractId
+
+    await this.CallContractMethodAndWait({
+      contractAddress,
+      methodName: "putMeta",
+      methodArgs: [
+        "_ELV_TENANT_ID",
+        tenantContractId
+      ]
     });
 
     if(tenantAdminGroupAddress){
-      await this.ReplaceContractMetadata({
-        contractAddress: contractAddress,
-        metadataKey: "_tenantId",
-        metadata: `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
+      await this.CallContractMethodAndWait({
+        contractAddress,
+        methodName: "putMeta",
+        methodArgs: [
+          "_tenantId",
+          `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
+        ]
       });
     } else {
       // eslint-disable-next-line no-console
