@@ -799,7 +799,7 @@ exports.StreamStopSession = async function({name}) {
 
     const metaEdgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
 
-    if(metaEdgeWriteToken === undefined || metaEdgeWriteToken === "") {
+    if(!metaEdgeWriteToken) {
       return {
         state: "inactive",
         error: "The stream is not active"
