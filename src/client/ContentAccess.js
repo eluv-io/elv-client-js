@@ -1275,7 +1275,7 @@ exports.PlayoutPathResolution = async function({
  * Retrieve available playout offerings for the specified content
  *
  * @methodGroup Media
- * @param {string=} objectId - Id of the content
+ * @param {string=} objectId - ID of the content
  * @param {string=} versionHash - Version hash of the content
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
