@@ -476,9 +476,11 @@ await client.userProfileClient.UserMetadata()
    */
   async TenantContractId() {
     if(!this.tenantContractId) {
-      this.tenantContractId = await this.UserMetadata({metadataSubtree: "tenantContractId"});
+      const {objectId} = await this.UserWalletObjectInfo();
+      this.tenantContractId = await this.client.TenantContractId({
+        contractAddress: this.client.utils.HashToAddress(objectId)
+      });
     }
-
     return this.tenantContractId;
   }
 
@@ -489,44 +491,13 @@ await client.userProfileClient.UserMetadata()
    *
    * @namedParams
    * @param {string} tenantContractId - The tenant contract ID in hash format
-   * @param {string} address - The group address to use in the hash if id is not provided
+   * @param {string} address - The tenant address to use in the hash if id is not provided
    */
-  async SetTenantContractId({tenantContractId, address}) {
-    if(tenantContractId && (!tenantContractId.startsWith("iten") || !Utils.ValidHash(tenantContractId))) {
-      throw Error(`Invalid tenant ID: ${tenantContractId}`);
-    }
+  async SetTenantContractId({tenantContractId}) {
+    const {objectId} = await this.UserWalletObjectInfo();
 
-    if(address) {
-      if(!Utils.ValidAddress(address)) {
-        throw Error(`Invalid address: ${address}`);
-      }
-
-      tenantContractId = `iten${Utils.AddressToHash(address)}`;
-    }
-
-    try {
-      const version = await this.client.AccessType({id: tenantContractId});
-
-      if(version !== this.client.authClient.ACCESS_TYPES.TENANT) {
-        throw Error("Invalid tenant ID: " + tenantContractId);
-      }
-    } catch(error) {
-      throw Error("Invalid tenant ID: " + tenantContractId);
-    }
-
-    const tenantAdminGroupAddress = await this.client.CallContractMethod({
-      contractAddress: address || Utils.HashToAddress(tenantContractId),
-      methodName: "groupsMapping",
-      methodArgs : ["tenant_admin", 0],
-      formatArguments: true,
-    });
-
-    await this.MergeUserMetadata({
-      metadata: {
-        tenantContractId,
-        tenantId: !tenantAdminGroupAddress ? undefined : `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
-      }
-    });
+    const tenantInfo = await this.client.SetTenantContractId({ objectId,tenantContractId });
+    this.tenantContractId = tenantInfo.tenantContractId;
   }
 
   /**

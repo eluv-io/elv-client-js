@@ -10,8 +10,10 @@ const Ethers = require("ethers");
 const {
   ValidateAddress,
   ValidateParameters,
-  ValidatePresence
+  ValidatePresence,
+  ValidateObject, ValidateVersion
 } = require("../Validation");
+const Utils=require("../Utils");
 
 /**
  * Return the name of the contract, as specified in the contracts "version" string
@@ -323,12 +325,16 @@ exports.ReplaceContractMetadata = async function({contractAddress, metadataKey, 
   ValidatePresence("contractAddress", contractAddress);
   ValidatePresence("metadataKey", metadataKey);
 
+  if(typeof metadata === "object") {
+    metadata = JSON.stringify(metadata);
+  }
+
   await this.CallContractMethodAndWait({
     contractAddress,
     methodName: "putMeta",
     methodArgs: [
       metadataKey,
-      JSON.stringify(metadata)
+      metadata
     ]
   });
 };
@@ -571,4 +577,153 @@ exports.SendFunds = async function({recipient, ether}) {
   });
 
   return await transaction.wait();
+};
+
+/**
+ * Retrieve the ID of the tenant contract for the specified object
+ *
+ * @methodGroup Tenant
+ * @namedParams
+ * @param {string=} contractAddress - The address of the object
+ * @param {string=} objectId - The ID of the object
+ * @param {string=} versionHash - A version hash of the object
+ *
+ * @returns {Promise<string|undefined>}
+ */
+exports.TenantContractId = async function({contractAddress, objectId, versionHash}) {
+
+  if(contractAddress){
+    ValidateAddress(contractAddress);
+    objectId = Utils.AddressToObjectId(contractAddress);
+  } else if(versionHash){
+    ValidateVersion(versionHash);
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    contractAddress = Utils.HashToAddress(objectId);
+  } else if(objectId){
+    ValidateObject(objectId);
+    contractAddress=Utils.HashToAddress(objectId);
+  } else {
+    throw Error("contractAddress or objectId or versionHash not specified");
+  }
+
+  const hasGetMetaMethod = await this.authClient.ContractHasMethod({
+    contractAddress: contractAddress,
+    methodName: "getMeta"
+  });
+
+  if(hasGetMetaMethod) {
+    const tenantContractId = await this.ContractMetadata({
+      contractAddress:contractAddress,
+      metadataKey:"_ELV_TENANT_ID"
+    });
+    if(tenantContractId !== "") {
+      return tenantContractId;
+    }
+  }
+
+  const libraryId = await this.ContentObjectLibraryId({ objectId });
+
+  return await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    metadataSubtree: "tenantContractId",
+  });
+};
+
+/**
+ * Set the tenant contract ID for the specified object
+ *
+ * @methodGroup Tenant
+ * @namedParams
+ * @param {string=} contractAddress - The address of the object
+ * @param {string=} objectId - The ID of the object
+ * @param {string=} versionHash - A version hash of the object
+ * @param {string} tenantContractId - The tenant contract ID to set
+ *
+ * @returns {Promise<{tenantId: (undefined|string), tenantContractId}>}
+ */
+exports.SetTenantContractId = async function({contractAddress, objectId, versionHash, tenantContractId}) {
+
+  if(contractAddress){
+    ValidateAddress(contractAddress);
+    objectId = Utils.AddressToObjectId(contractAddress);
+  } else if(versionHash){
+    ValidateVersion(versionHash);
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    contractAddress = Utils.HashToAddress(objectId);
+  } else if(objectId){
+    ValidateObject(objectId);
+    contractAddress=Utils.HashToAddress(objectId);
+  } else {
+    throw Error("contractAddress or objectId or versionHash not specified");
+  }
+  ValidateObject(tenantContractId);
+
+  if(tenantContractId && (!tenantContractId.startsWith("iten") || !Utils.ValidHash(tenantContractId))) {
+    throw Error(`Invalid tenant ID: ${tenantContractId}`);
+  }
+  const tenantAddress = Utils.HashToAddress(tenantContractId);
+
+  const version = await this.authClient.AccessType(tenantContractId);
+  if(version !== this.authClient.ACCESS_TYPES.TENANT) {
+    throw Error("Invalid tenant ID: " + tenantContractId);
+  }
+
+  // get tenant admin group
+  const tenantAdminGroupAddress = await this.CallContractMethod({
+    contractAddress: tenantAddress,
+    methodName: "groupsMapping",
+    methodArgs: ["tenant_admin", 0],
+    formatArguments: true,
+  });
+
+  const hasPutMetaMethod = await this.authClient.ContractHasMethod({
+    contractAddress: contractAddress,
+    methodName: "putMeta"
+  });
+
+  if(hasPutMetaMethod) {
+
+    await this.ReplaceContractMetadata({
+      contractAddress: contractAddress,
+      metadataKey: "_ELV_TENANT_ID",
+      metadata: tenantContractId
+    });
+
+    if(tenantAdminGroupAddress){
+      await this.ReplaceContractMetadata({
+        contractAddress: contractAddress,
+        metadataKey: "_tenantId",
+        metadata: `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
+      });
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn("No tenant ID associated with current tenant.");
+    }
+  } else {
+    const libraryId = await this.ContentObjectLibraryId({ objectId });
+    const editRequest = await this.EditContentObject({libraryId, objectId});
+
+    await this.MergeMetadata({
+      libraryId,
+      objectId,
+      writeToken: editRequest.write_token,
+      metadata:  {
+        tenantContractId,
+        tenantId: !tenantAdminGroupAddress ? undefined : `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
+      },
+    });
+
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: editRequest.write_token,
+      commitMessage: "set tenant_contract_id"
+    });
+  }
+
+  return {
+    tenantContractId: tenantContractId,
+    tenantId: !tenantAdminGroupAddress ? undefined : `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
+  };
 };
