@@ -325,12 +325,16 @@ exports.ReplaceContractMetadata = async function({contractAddress, metadataKey, 
   ValidatePresence("contractAddress", contractAddress);
   ValidatePresence("metadataKey", metadataKey);
 
+  if(typeof metadata === "object") {
+    metadata = JSON.stringify(metadata);
+  }
+
   await this.CallContractMethodAndWait({
     contractAddress,
     methodName: "putMeta",
     methodArgs: [
       metadataKey,
-      JSON.stringify(metadata)
+      metadata
     ]
   });
 };
@@ -679,6 +683,7 @@ exports.SetTenantContractId = async function({contractAddress, objectId, version
   });
 
   if(hasPutMetaMethod) {
+
     await this.ReplaceContractMetadata({
       contractAddress: contractAddress,
       metadataKey: "_ELV_TENANT_ID",
