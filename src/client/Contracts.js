@@ -733,12 +733,12 @@ exports.SetTenantId = async function({contractAddress, objectId, versionHash, te
 
   ValidateObject(tenantId);
 
-  if(!tenantId.startsWith("iten") || !Utils.ValidHash(id)) {
+  if(!tenantId.startsWith("iten") || !Utils.ValidHash(tenantId)) {
     throw Error(`Invalid tenant ID: ${tenantId}`);
   }
 
-  const version = await this.client.AccessType({id: tenantId});
-  if(version !== this.client.authClient.ACCESS_TYPES.GROUP) {
+  const version = await this.authClient.AccessType(tenantId);
+  if(version !== this.authClient.ACCESS_TYPES.GROUP) {
     throw Error("Invalid tenant ID: " + tenantId);
   }
 
