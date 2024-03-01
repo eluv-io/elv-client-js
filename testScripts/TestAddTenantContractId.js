@@ -7,15 +7,28 @@ const argv = yargs
     description: "Fabric configuration URL (e.g. https://main.net955210.contentfabric.io/config)"
   })
   .option("tenantContractId", {
-    description: "tenant Contract Id to set for the user"
+    description: "tenant Contract Id to set for the objects"
+  })
+  .option("tenantIdToBeReplaced", {
+    description: "tenant Id to be changed for the objects"
   })
   .demandOption(
-    ["configUrl", "tenantContractId"],
-    "\nUsage: PRIVATE_KEY=<private-key> node CreateUserWithTenantId --configUrl <config-url> --tenantContractId <tenant_id>\n"
+    ["configUrl", "tenantContractId", "tenantIdToBeReplaced" ],
+    "\nUsage: PRIVATE_KEY=<private-key> node TestAddTenantContractId --configUrl <config-url> --tenantContractId <tenant_contract_id> --tenantIdToBeReplaced <tenant_id>\n"
   )
   .argv;
 
-const TestAddTenantContractId = async ({configUrl, tenantContractId}) => {
+/**
+ * TestAddTenantContractId adds tenantContractId to wallet,library,group,content-type object
+ * and change tenantId to value provided.
+ *
+ * @param {string} configUrl - Config Url
+ * @param {string} tenantContractId - Id of tenantContract to be set
+ * @param {string} tenantIdToBeReplaced - Id of tenant admin group to be replaced
+ * @returns {Promise<void>}
+ * @constructor
+ */
+const TestAddTenantContractId = async ({configUrl, tenantContractId, tenantIdToBeReplaced}) => {
   try {
     if(!process.env.PRIVATE_KEY) {
       console.log("ERROR: 'PRIVATE_KEY' environment variable must be set");
@@ -78,6 +91,34 @@ const TestAddTenantContractId = async ({configUrl, tenantContractId}) => {
     // console.log(await client.ContentObjectMetadata({
     //   libraryId: client.contentSpaceLibraryId,
     //   objectId: client.utils.AddressToObjectId(groupAddress)}));
+
+
+    // Change tenantID (which in turn changes tenantContractId) to user, group, library and content-type
+    await client.userProfileClient.SetTenantId({id: tenantIdToBeReplaced});
+    const newTenantId = await client.userProfileClient.TenantId();
+    if(newTenantId !== tenantIdToBeReplaced) {
+      throw Error(`tenant mismatch, actual: ${tenantInfo.tenantId}, expected: ${tenantIdToBeReplaced}`);
+    }
+    console.log();
+    console.log(`tenantId for user changed to ${tenantIdToBeReplaced}`);
+
+    tenantInfo = await client.SetTenantId({objectId: libraryId, tenantId: tenantIdToBeReplaced});
+    if(tenantInfo.tenantId !== tenantIdToBeReplaced) {
+      throw Error(`tenant mismatch, actual: ${tenantInfo.tenantId}, expected: ${tenantIdToBeReplaced}`);
+    }
+    console.log(`tenantId for library changed to ${tenantIdToBeReplaced}`);
+
+    tenantInfo = await client.SetTenantId({contractAddress: contentTypeAddress, tenantId: tenantIdToBeReplaced});
+    if(tenantInfo.tenantId !== tenantIdToBeReplaced) {
+      throw Error(`tenant mismatch, actual: ${tenantInfo.tenantId}, expected: ${tenantIdToBeReplaced}`);
+    }
+    console.log(`tenantId for content-type object changed to ${tenantIdToBeReplaced}`)
+
+    tenantInfo = await client.SetTenantId({contractAddress: groupAddress, tenantId: tenantIdToBeReplaced});
+    if(tenantInfo.tenantId !== tenantIdToBeReplaced) {
+      throw Error(`tenant mismatch, actual: ${tenantInfo.tenantId}, expected: ${tenantIdToBeReplaced}`);
+    }
+    console.log(`tenantId for group-address changed to ${tenantIdToBeReplaced}`)
 
   } catch(e){
     console.error(e);

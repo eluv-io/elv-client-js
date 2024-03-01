@@ -580,7 +580,7 @@ exports.SendFunds = async function({recipient, ether}) {
   return await transaction.wait();
 };
 
-GetObjectIDAndContractAddress = async function({contractAddress, objectId, versionHash}){
+const GetObjectIDAndContractAddress = async function({contractAddress, objectId, versionHash}){
   if(contractAddress){
     ValidateAddress(contractAddress);
     objectId = Utils.AddressToObjectId(contractAddress);
@@ -613,19 +613,10 @@ GetObjectIDAndContractAddress = async function({contractAddress, objectId, versi
  * @returns {Promise<string|undefined>}
  */
 exports.TenantId = async function({contractAddress, objectId, versionHash}) {
-  if(contractAddress){
-    ValidateAddress(contractAddress);
-    objectId = Utils.AddressToObjectId(contractAddress);
-  } else if(versionHash){
-    ValidateVersion(versionHash);
-    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-    contractAddress = Utils.HashToAddress(objectId);
-  } else if(objectId){
-    ValidateObject(objectId);
-    contractAddress=Utils.HashToAddress(objectId);
-  } else {
-    throw Error("contractAddress or objectId or versionHash not specified");
-  }
+
+  objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
+  contractAddress = objectInfo.contractAddress;
+  objectId = objectInfo.objectId;
 
   const hasGetMetaMethod = await this.authClient.ContractHasMethod({
     contractAddress: contractAddress,
@@ -664,19 +655,9 @@ exports.TenantId = async function({contractAddress, objectId, versionHash}) {
  */
 exports.TenantContractId = async function({contractAddress, objectId, versionHash}) {
 
-  if(contractAddress){
-    ValidateAddress(contractAddress);
-    objectId = Utils.AddressToObjectId(contractAddress);
-  } else if(versionHash){
-    ValidateVersion(versionHash);
-    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-    contractAddress = Utils.HashToAddress(objectId);
-  } else if(objectId){
-    ValidateObject(objectId);
-    contractAddress=Utils.HashToAddress(objectId);
-  } else {
-    throw Error("contractAddress or objectId or versionHash not specified");
-  }
+  objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
+  contractAddress = objectInfo.contractAddress;
+  objectId = objectInfo.objectId;
 
   const hasGetMetaMethod = await this.authClient.ContractHasMethod({
     contractAddress: contractAddress,
@@ -717,18 +698,17 @@ exports.TenantContractId = async function({contractAddress, objectId, versionHas
  * @returns {Promise<{tenantId: (undefined|string), tenantContractId}>}
  */
 exports.SetTenantId = async function({contractAddress, objectId, versionHash, tenantId}) {
-  if(contractAddress){
-    ValidateAddress(contractAddress);
-    objectId = Utils.AddressToObjectId(contractAddress);
-  } else if(versionHash){
-    ValidateVersion(versionHash);
-    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-    contractAddress = Utils.HashToAddress(objectId);
-  } else if(objectId){
-    ValidateObject(objectId);
-    contractAddress=Utils.HashToAddress(objectId);
-  } else {
-    throw Error("contractAddress or objectId or versionHash not specified");
+  objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
+  contractAddress = objectInfo.contractAddress;
+  objectId = objectInfo.objectId;
+
+  const objectVersion = await this.authClient.AccessType(objectId);
+  if (objectVersion !== this.authClient.ACCESS_TYPES.GROUP &&
+    objectVersion !== this.authClient.ACCESS_TYPES.WALLET &&
+    objectVersion !== this.authClient.ACCESS_TYPES.LIBRARY &&
+    objectVersion !== this.authClient.ACCESS_TYPES.TYPE) {
+    throw Error(`Invalid object ID: ${objectId}, 
+    applicable only for wallet,group, library or content_type object.`);
   }
 
   ValidateObject(tenantId);
@@ -774,19 +754,19 @@ exports.SetTenantId = async function({contractAddress, objectId, versionHash, te
  */
 exports.SetTenantContractId = async function({contractAddress, objectId, versionHash, tenantContractId}) {
 
-  if(contractAddress){
-    ValidateAddress(contractAddress);
-    objectId = Utils.AddressToObjectId(contractAddress);
-  } else if(versionHash){
-    ValidateVersion(versionHash);
-    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-    contractAddress = Utils.HashToAddress(objectId);
-  } else if(objectId){
-    ValidateObject(objectId);
-    contractAddress=Utils.HashToAddress(objectId);
-  } else {
-    throw Error("contractAddress or objectId or versionHash not specified");
+  objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
+  contractAddress = objectInfo.contractAddress;
+  objectId = objectInfo.objectId;
+
+  const objectVersion = await this.authClient.AccessType(objectId);
+  if (objectVersion !== this.authClient.ACCESS_TYPES.GROUP &&
+    objectVersion !== this.authClient.ACCESS_TYPES.WALLET &&
+    objectVersion !== this.authClient.ACCESS_TYPES.LIBRARY &&
+    objectVersion !== this.authClient.ACCESS_TYPES.TYPE) {
+    throw Error(`Invalid object ID: ${objectId}, 
+    applicable only for wallet,group, library or content_type object.`);
   }
+
   ValidateObject(tenantContractId);
 
   if(tenantContractId && (!tenantContractId.startsWith("iten") || !Utils.ValidHash(tenantContractId))) {
