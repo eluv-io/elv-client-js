@@ -618,28 +618,31 @@ exports.TenantId = async function({contractAddress, objectId, versionHash}) {
   contractAddress = objectInfo.contractAddress;
   objectId = objectInfo.objectId;
 
-  const hasGetMetaMethod = await this.authClient.ContractHasMethod({
-    contractAddress: contractAddress,
-    methodName: "getMeta"
-  });
-
-  if(hasGetMetaMethod) {
-    const tenantId = await this.ContractMetadata({
-      contractAddress:contractAddress,
-      metadataKey:"_tenantId"
+  let tenantId;
+  try {
+    const hasGetMetaMethod = await this.authClient.ContractHasMethod({
+      contractAddress: contractAddress,
+      methodName: "getMeta"
     });
-    if(tenantId !== "") {
-      return tenantId;
+
+    if(hasGetMetaMethod) {
+      tenantId = await this.ContractMetadata({
+        contractAddress:contractAddress,
+        metadataKey:"_tenantId"
+      });
+    }else{
+      const libraryId = await this.ContentObjectLibraryId({ objectId });
+
+      tenantId = await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        metadataSubtree: "tenantId",
+      });
     }
+    return tenantId;
+  } catch(e) {
+    return "";
   }
-
-  const libraryId = await this.ContentObjectLibraryId({ objectId });
-
-  return await this.ContentObjectMetadata({
-    libraryId,
-    objectId,
-    metadataSubtree: "tenantId",
-  });
 };
 
 /**
@@ -659,28 +662,30 @@ exports.TenantContractId = async function({contractAddress, objectId, versionHas
   contractAddress = objectInfo.contractAddress;
   objectId = objectInfo.objectId;
 
-  const hasGetMetaMethod = await this.authClient.ContractHasMethod({
-    contractAddress: contractAddress,
-    methodName: "getMeta"
-  });
-
-  if(hasGetMetaMethod) {
-    const tenantContractId = await this.ContractMetadata({
-      contractAddress:contractAddress,
-      metadataKey:"_ELV_TENANT_ID"
+  try {
+    const hasGetMetaMethod = await this.authClient.ContractHasMethod({
+      contractAddress: contractAddress,
+      methodName: "getMeta"
     });
-    if(tenantContractId !== "") {
-      return tenantContractId;
+    let tenantContractId;
+    if(hasGetMetaMethod) {
+      tenantContractId = await this.ContractMetadata({
+        contractAddress:contractAddress,
+        metadataKey:"_ELV_TENANT_ID"
+      });
+    } else {
+      const libraryId = await this.ContentObjectLibraryId({ objectId });
+
+      tenantContractId = await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        metadataSubtree: "tenantContractId",
+      });
     }
+    return tenantContractId;
+  } catch(e) {
+    return "";
   }
-
-  const libraryId = await this.ContentObjectLibraryId({ objectId });
-
-  return await this.ContentObjectMetadata({
-    libraryId,
-    objectId,
-    metadataSubtree: "tenantContractId",
-  });
 };
 
 /**
@@ -837,3 +842,81 @@ exports.SetTenantContractId = async function({contractAddress, objectId, version
     tenantId: !tenantAdminGroupAddress ? undefined : `iten${Utils.AddressToHash(tenantAdminGroupAddress)}`
   };
 };
+
+/**
+ * Remove the tenant contract ID and tenant admin group ID for the specified object
+ *
+ * @methodGroup Tenant
+ * @namedParams
+ * @param {string=} contractAddress - The address of the object
+ * @param {string=} objectId - The ID of the object
+ * @param {string=} versionHash - A version hash of the object
+ *
+ * @returns {Promise<void>}
+ */
+exports.RemoveTenant = async function({contractAddress, objectId, versionHash}) {
+
+  objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
+  contractAddress = objectInfo.contractAddress;
+  objectId = objectInfo.objectId;
+
+  const objectVersion = await this.authClient.AccessType(objectId);
+  if(objectVersion !== this.authClient.ACCESS_TYPES.GROUP &&
+    objectVersion !== this.authClient.ACCESS_TYPES.WALLET &&
+    objectVersion !== this.authClient.ACCESS_TYPES.LIBRARY &&
+    objectVersion !== this.authClient.ACCESS_TYPES.TYPE) {
+    throw Error(`Invalid object ID: ${objectId}, 
+    applicable only for wallet,group, library or content_type object.`);
+  }
+
+  let tenantContractId = this.TenantContractId({objectId});
+  let tenantId = this.TenantId({objectId});
+
+  if(tenantContractId || tenantId){
+    const hasPutMetaMethod = await this.authClient.ContractHasMethod({
+      contractAddress: contractAddress,
+      methodName: "putMeta"
+    });
+
+    if(hasPutMetaMethod) {
+
+      await this.ReplaceContractMetadata({
+        contractAddress: contractAddress,
+        metadataKey: "_ELV_TENANT_ID",
+        metadata: ""
+      });
+
+      await this.ReplaceContractMetadata({
+        contractAddress: contractAddress,
+        metadataKey: "_tenantId",
+        metadata: ""
+      });
+
+    } else {
+      const libraryId = await this.ContentObjectLibraryId({ objectId });
+      const editRequest = await this.EditContentObject({libraryId, objectId});
+
+      await this.MergeMetadata({
+        libraryId,
+        objectId,
+        writeToken: editRequest.write_token,
+        metadata:  {
+          tenantContractId: undefined,
+          tenantId: undefined
+        },
+      });
+
+      await this.FinalizeContentObject({
+        libraryId,
+        objectId,
+        writeToken: editRequest.write_token,
+        commitMessage: "remove tenant_contract_id"
+      });
+    }
+  } else {
+    // eslint-disable-next-line no-console
+    console.warn("No tenant ID associated with current tenant.");
+  }
+};
+
+

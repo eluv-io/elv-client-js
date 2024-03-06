@@ -492,6 +492,13 @@ await client.userProfileClient.UserMetadata()
     this.tenantId = tenantInfo.tenantId;
   }
 
+  async RemoveTenant(){
+    const {objectId} = await this.UserWalletObjectInfo();
+    await this.client.RemoveTenant({objectId});
+    this.tenantId = this.client.TenantId({objectId});
+    this.tenantContractId = this.client.TenantContractId({objectId});
+  }
+
   /**
    * Get the URL of the current user's profile image
    *
