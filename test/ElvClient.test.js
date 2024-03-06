@@ -383,45 +383,34 @@ describe("Test ElvClient", () => {
     });
 
     test("Clear Tenancy", async () => {
-      // TODO: fix it
-      // Remove the tenant ID from the library
-      await client.CallContractMethodAndWait({
-        contractAddress: client.utils.HashToAddress(libraryId),
-        methodName: "putMeta",
-        methodArgs: [
-          "_tenantId",
-          ""
-        ]
+
+      await client.RemoveTenant({
+        objectId: libraryId
       });
 
-      const libraryTenant = await client.CallContractMethod({
-        contractAddress: client.utils.HashToAddress(libraryId),
-        methodName: "getMeta",
-        methodArgs: [
-          "_tenantId"
-        ]
+      let tenantId = await client.TenantId({
+        objectId:libraryId
       });
-
-      expect(libraryTenant).toEqual("0x");
+      let tenantContractId = await client.TenantContractId({
+        objectId:libraryId
+      });
+      expect(tenantId).toEqual("");
+      expect(tenantContractId).toEqual("");
 
       // Remove tenantId from user metadata
-      await client.userProfileClient.DeleteUserMetadata({metadataSubtree: "tenantId"});
-      client.userProfileClient.tenantId = undefined;
+      await client.userProfileClient.RemoveTenant();
 
-      const userMetadata = client.userProfileClient.UserMetadata();
-      expect(userMetadata.tenantId).not.toBeDefined();
+      tenantId = await client.userProfileClient.TenantId();
+      tenantContractId = await client.userProfileClient.TenantContractId();
+      expect(tenantId).toEqual("");
+      expect(tenantContractId).toEqual("");
 
       // Create a new library and ensure tenant ID is not set
       const newLibraryId = await client.CreateContentLibrary({name: "No Tenant ID"});
-      const newLibraryTenant = await client.CallContractMethod({
-        contractAddress: client.utils.HashToAddress(newLibraryId),
-        methodName: "getMeta",
-        methodArgs: [
-          "_tenantId"
-        ]
-      });
-
-      expect(newLibraryTenant).toEqual("0x");
+      tenantId = await client.TenantId({objectId:newLibraryId});
+      tenantContractId = await client.TenantContractId({objectId:newLibraryId});
+      expect(tenantId).toEqual("");
+      expect(tenantContractId).toEqual("");
     });
 
     test("List Content Libraries", async () => {
