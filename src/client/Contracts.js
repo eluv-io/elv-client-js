@@ -630,7 +630,7 @@ exports.TenantId = async function({contractAddress, objectId, versionHash}) {
         contractAddress:contractAddress,
         metadataKey:"_tenantId"
       });
-    }else{
+    } else {
       const libraryId = await this.ContentObjectLibraryId({ objectId });
 
       tenantId = await this.ContentObjectMetadata({
@@ -708,7 +708,7 @@ exports.SetTenantId = async function({contractAddress, objectId, versionHash, te
   objectId = objectInfo.objectId;
 
   const objectVersion = await this.authClient.AccessType(objectId);
-  if (objectVersion !== this.authClient.ACCESS_TYPES.GROUP &&
+  if(objectVersion !== this.authClient.ACCESS_TYPES.GROUP &&
     objectVersion !== this.authClient.ACCESS_TYPES.WALLET &&
     objectVersion !== this.authClient.ACCESS_TYPES.LIBRARY &&
     objectVersion !== this.authClient.ACCESS_TYPES.TYPE) {
@@ -764,7 +764,7 @@ exports.SetTenantContractId = async function({contractAddress, objectId, version
   objectId = objectInfo.objectId;
 
   const objectVersion = await this.authClient.AccessType(objectId);
-  if (objectVersion !== this.authClient.ACCESS_TYPES.GROUP &&
+  if(objectVersion !== this.authClient.ACCESS_TYPES.GROUP &&
     objectVersion !== this.authClient.ACCESS_TYPES.WALLET &&
     objectVersion !== this.authClient.ACCESS_TYPES.LIBRARY &&
     objectVersion !== this.authClient.ACCESS_TYPES.TYPE) {
