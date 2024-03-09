@@ -2,6 +2,7 @@ const Utils = require("../Utils");
 const UrlJoin = require("url-join");
 const {FormatNFTDetails, FormatNFTMetadata, FormatNFT} = require("./Utils");
 const MergeWith = require("lodash/mergeWith");
+const {rootStore} = require("../../../../../src/stores");
 
 /**
  * Methods
@@ -1341,9 +1342,9 @@ exports.GiftClaimStatus = async function({marketplaceParams, confirmationId, gif
     if(responses.length === 0) {
       return { status: "none" };
     } else {
-      if(responses.find(response => response.status === "failed")) {
+      if(responses.find(response => response.status === "error")) {
         return {
-          status: "failed",
+          status: "error",
           op: "nft-transfer",
           transfer_statuses: responses
         };
@@ -1357,6 +1358,59 @@ exports.GiftClaimStatus = async function({marketplaceParams, confirmationId, gif
         return {
           status: "complete",
           op: "nft-transfer",
+          transfer_statuses: responses,
+          items: responses.map(response => ({
+            token_addr: response.address,
+            token_id_str: response.tokenId
+          }))
+        };
+      }
+    }
+  } catch(error) {
+    this.Log(error, true);
+    return { status: "unknown" };
+  }
+};
+
+/**
+ * Return status of the specified entitlement claim
+ *
+ * @methodGroup Status
+ * @namedParams
+ * @param {Object} marketplaceParams - Parameters of the marketplace
+ * @param {string=} confirmationId - The confirmation ID of the entitlement
+ *
+ * @returns {Promise<Object>} - The mint status of the gift claim
+ */
+exports.EntitlementClaimStatus = async function({marketplaceParams, purchaseId}) {
+  try {
+    const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
+    const statuses = await this.MintingStatus({tenantId: marketplaceInfo.tenantId});
+
+    // TODO: fix this format, and then match new format
+    const responses = statuses.filter(status => status.op === "nft-claim-entitlement"
+      && (purchaseId && JSON.stringify(status.extra)?.includes(":" + purchaseId))) || { status: "none" };
+    this.Log("responses " + JSON.stringify(responses));
+
+    if(responses.length === 0) {
+      return { status: "none" };
+    } else {
+      if(responses.find(response => response.status === "error")) {
+        return {
+          status: "error",
+          op: "nft-claim-entitlement",
+          transfer_statuses: responses
+        };
+      } else if(responses.find(response => response.status !== "complete")) {
+        return {
+          status: "pending",
+          op: "nft-claim-entitlement",
+          transfer_statuses: responses
+        };
+      } else {
+        return {
+          status: "complete",
+          op: "nft-claim-entitlement",
           transfer_statuses: responses,
           items: responses.map(response => ({
             token_addr: response.address,
