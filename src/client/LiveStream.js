@@ -136,9 +136,9 @@ const StreamGenerateOffering = async({
   const maxStreamIndex = Math.max(aStreamIndex, vStreamIndex);
 
   for(let i = 0; i <= maxStreamIndex; i++) {
-    if (i === aStreamIndex) {
+    if(i === aStreamIndex) {
       sourceStreams.push(sourceAudioStream);
-    } else if (i === vStreamIndex) {
+    } else if(i === vStreamIndex) {
       sourceStreams.push(sourceVideoStream);
     } else {
       sourceStreams.push(DUMMY_STREAM);
@@ -242,12 +242,12 @@ const StreamGenerateOffering = async({
     abrProfile
   });
 
-  if (createResponse.warnings.length > 0) {
+  if(createResponse.warnings.length > 0) {
     console.log("WARNINGS:");
     console.log(JSON.stringify(createResponse.warnings, null, 2));
   }
 
-  if (createResponse.errors.length > 0) {
+  if(createResponse.errors.length > 0) {
     console.log("ERRORS:");
     console.log(JSON.stringify(createResponse.errors, null, 2));
   }
@@ -339,6 +339,8 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       ]
     });
 
+    status.reference_url = mainMeta.live_recording_config.reference_url;
+
     if(mainMeta.live_recording_config == undefined || mainMeta.live_recording_config.url == undefined) {
       status.state = "unconfigured";
       return status;
@@ -367,7 +369,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     status.url = mainMeta.live_recording.recording_config.recording_params.origin_url;
 
     let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
-    if(edgeWriteToken == undefined) {
+    if(!edgeWriteToken) {
       status.state = "inactive";
       return status;
     }
@@ -688,8 +690,6 @@ exports.StreamCreate = async function({name, start=false}) {
 */
 exports.StreamStartOrStopOrReset = async function({name, op}) {
   try {
-    console.log("Stream ", op, ": ", name);
-
     let status = await this.StreamStatus({name});
     if(status.state != "stopped") {
       if(op === "start") {
@@ -699,8 +699,6 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
     }
 
     if(status.state == "running" || status.state == "starting" || status.state == "stalled") {
-      console.log("STOPPING");
-
       try {
         await this.CallBitcodeMethod({
           libraryId: status.library_id,
@@ -769,8 +767,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
 };
 
 /**
- * Stop the live stream session and close the edge write token.
- * Not implemented fully
+ * Close the edge write token and make the stream object inactive.
  *
  * @methodGroup Live Stream
  * @namedParams
@@ -780,8 +777,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
  */
 exports.StreamStopSession = async function({name}) {
   try {
-    console.log("TERMINATE: ", name);
-
+    this.Log(`Terminating stream session for: ${name}`);
     let conf = await this.LoadConf({name});
 
     let {objectId} = conf;
@@ -801,86 +797,81 @@ exports.StreamStopSession = async function({name}) {
 
     this.SetNodes({fabricURIs: [fabURI]});
 
-    let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
+    const metaEdgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
 
-    if(edgeWriteToken === undefined || edgeWriteToken === "") {
+    if(!metaEdgeWriteToken) {
       return {
         state: "inactive",
-        error: "no active streams - must create a stream first"
+        error: "The stream is not active"
       };
     }
-    let edgeMeta = await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      writeToken: edgeWriteToken
-    });
 
-    // Stop the LRO if running
-    let status = await this.StreamStatus({name});
-    if(status.state != "terminated") {
-      console.log("STOPPING");
-      try {
-        await this.CallBitcodeMethod({
-          libraryId: status.library_id,
-          objectId: status.object_id,
-          writeToken: status.edge_write_token,
-          method: "/live/stop/" + status.tlro,
-          constant: false
-        });
-      } catch(error) {
-        // The /call/lro/stop API returns empty response
-        // console.log("LRO Stop (failed): ", error);
+    try {
+      const streamMetadata = await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        writeToken: metaEdgeWriteToken
+      });
+
+      const status = await this.StreamStatus({name});
+
+      if(status.state !== "stopped") {
+        return {
+          state: status.state,
+          error: "The stream must be stopped before terminating"
+        }
       }
 
-      // Wait until LRO is terminated
-      let tries = 10;
-      while (status.state != "stopped" && tries-- > 0) {
-        console.log("Wait to terminate - ", status.state);
-        await Sleep(1000);
-        status = await this.StreamStatus({name});
-      }
-      console.log("Status after stop - ", status.state);
-
-      if(tries <= 0) {
-        console.log("Failed to stop");
-        return status;
-      }
+      await this.DeleteWriteToken({
+        libraryId,
+        writeToken: metaEdgeWriteToken
+      });
+    } catch(error) {
+      this.Log(`Unable to retrieve metadata for edge write token ${edgeWriteToken}`);
     }
 
-    // Set stop time
-    edgeMeta.recording_stop_time = Math.floor(new Date().getTime() / 1000);
-    console.log("recording_start_time: ", edgeMeta.recording_start_time);
-    console.log("recording_stop_time:  ", edgeMeta.recording_stop_time);
+    const {writeToken} = await this.EditContentObject({
+      libraryId: libraryId,
+      objectId: objectId
+    });
 
-    edgeMeta.live_recording.status = {
-      state: "terminated",
-      recording_stop_time: edgeMeta.recording_stop_time
+    // Set stop time and inactive state
+    const newState = "inactive";
+    const stopTime = Math.floor(new Date().getTime() / 1000);
+
+    const finalizeMetadata = {
+      live_recording: {
+        status: {
+          edge_write_token: "",
+          state: newState,
+          recording_stop_time: stopTime
+        },
+        fabric_config: {
+          edge_write_token: ""
+        }
+      },
+      recording_stop_time: stopTime
     };
 
-    edgeMeta.live_recording.fabric_config.edge_write_token = "";
-
-    await this.ReplaceMetadata({
+    await this.MergeMetadata({
       libraryId,
       objectId,
-      writeToken: edgeWriteToken,
-      metadata: edgeMeta
+      writeToken,
+      metadata: finalizeMetadata
     });
 
     let fin = await this.FinalizeContentObject({
       libraryId,
       objectId,
-      writeToken: edgeWriteToken,
-      commitMessage: "Finalize live stream - stop time " + edgeMeta.recording_stop_time,
-      publish: false // Don't publish this version because it is not currently useful
+      writeToken,
+      commitMessage: `Deactivate live stream - stop time ${stopTime}`
     });
 
     return {
       fin,
       name,
-      edge_write_token: edgeWriteToken,
-      state: "terminated"
+      state: newState
     };
-
   } catch(error) {
     console.error(error);
   }
@@ -1202,7 +1193,7 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
     playout: "/qfab/" + targetHash + "/rep/playout"  // TO FIX - should be a link
   };
 
-  for (let i = 0; i < insertions.length; i ++) {
+  for(let i = 0; i < insertions.length; i ++) {
     if(insertions[i].insertion_time <= currentTime) {
       // Bad insertion - must be later than current time
       append(errs, "Bad insertion - time:", insertions[i].insertion_time);
@@ -1325,9 +1316,10 @@ exports.StreamConfig = async function({name, customSettings={}}) {
 
   let userConfig = mainMeta.live_recording_config;
   status.user_config = userConfig;
+  console.log("userConfig", userConfig);
 
   // Get node URI from user config
-  const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").split(":")[0];
+  const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").replace("srt://", "").split(":")[0];
   const streamUrl = new URL(userConfig.url);
 
   console.log("Retrieving nodes...");
@@ -1380,7 +1372,6 @@ exports.StreamConfig = async function({name, customSettings={}}) {
     }
   }
 
-  console.log("PROBE", probe);
   probe.format.filename = streamUrl.href;
 
   // Create live recording config
@@ -1410,14 +1401,6 @@ exports.StreamConfig = async function({name, customSettings={}}) {
     metadata: liveRecordingConfig.live_recording
   });
 
-  await this.ReplaceMetadata({
-    libraryId,
-    objectId: conf.objectId,
-    writeToken,
-    metadataSubtree: "probe",
-    metadata: probe
-  });
-
   status.fin = await this.FinalizeContentObject({
     libraryId,
     objectId: conf.objectId,
@@ -1426,4 +1409,126 @@ exports.StreamConfig = async function({name, customSettings={}}) {
   });
 
   return status;
+};
+
+/**
+ * List the pre-allocated URLs for a site
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} - ID of the live stream site object
+ *
+ * @return {Promise<Object>} - The list of stream URLs
+ */
+exports.StreamListUrls = async function({siteId}={}) {
+  try {
+    const STATUS_MAP = {
+      UNCONFIGURED: "unconfigured",
+      UNINITIALIZED: "uninitialized",
+      INACTIVE: "inactive",
+      STOPPED: "stopped",
+      STARTING: "starting",
+      RUNNING: "running",
+      STALLED: "stalled",
+    };
+
+    if(!siteId) {
+      const tenantContractId = await this.userProfileClient.TenantContractId();
+
+      if(!tenantContractId) {
+        throw Error("No tenant contract ID configured");
+      }
+
+      siteId = await this.ContentObjectMetadata({
+        libraryId: tenantContractId.replace("iten", "ilib"),
+        objectId: tenantContractId.replace("iten", "iq__"),
+        metadataSubtree: "public/sites/live_streams",
+      });
+    }
+
+    const streamMetadata = await this.ContentObjectMetadata({
+      libraryId: await this.ContentObjectLibraryId({objectId: siteId}),
+      objectId: siteId,
+      metadataSubtree: "public/asset_metadata/live_streams",
+      resolveLinks: true,
+      resolveIgnoreErrors: true
+    });
+
+    const activeUrlMap = {};
+    await this.utils.LimitedMap(
+      10,
+      Object.keys(streamMetadata || {}),
+      async slug => {
+        const stream = streamMetadata[slug];
+        let versionHash;
+
+        if(
+          stream &&
+          stream.sources &&
+          stream.sources.default &&
+          stream.sources.default["."] &&
+          stream.sources.default["."].container ||
+          ((stream["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1]
+        ) {
+          versionHash = (
+            stream.sources.default["."].container ||
+            ((stream["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1]
+          );
+        }
+
+        if(versionHash) {
+          const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+          const libraryId = await this.ContentObjectLibraryId({objectId});
+
+          const status = await this.StreamStatus({
+            name: objectId
+          });
+
+          const streamMeta = await this.ContentObjectMetadata({
+            objectId,
+            libraryId,
+            select: [
+              "live_recording_config/reference_url",
+              // live_recording_config/url is the old path
+              "live_recording_config/url"
+            ]
+          });
+
+          const url = streamMeta.live_recording_config.reference_url || streamMeta.live_recording_config.url;
+          const isActive = [STATUS_MAP.STARTING, STATUS_MAP.RUNNING, STATUS_MAP.STALLED, STATUS_MAP.STOPPED].includes(status.state);
+
+          if(url && isActive) {
+            activeUrlMap[url] = true;
+          }
+        }
+      }
+    );
+
+    const streamUrlStatus = {};
+
+    const streamUrls = await this.ContentObjectMetadata({
+      libraryId: await this.ContentObjectLibraryId({objectId: siteId}),
+      objectId: siteId,
+      metadataSubtree: "/live_stream_urls",
+      resolveLinks: true,
+      resolveIgnoreErrors: true
+    });
+
+    if(!streamUrls) {
+      throw Error("No pre-allocated URLs configured");
+    }
+
+    Object.keys(streamUrls || {}).forEach(protocol => {
+      streamUrlStatus[protocol] = streamUrls[protocol].map(url => {
+        return {
+          url,
+          active: activeUrlMap[url] || false
+        };
+      })
+    });
+
+    return streamUrlStatus;
+  } catch(error) {
+    console.error(error);
+  }
 };

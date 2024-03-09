@@ -29,6 +29,12 @@ class HttpClient {
     this.draftURIs[writeToken] = new URI(nodeUrlStr);
   }
 
+  ClearWriteToken({writeToken}) {
+    if(Object.hasOwn(this.draftURIs, writeToken)) {
+      delete this.draftURIs[writeToken];
+    }
+  }
+
   RequestHeaders(bodyType, headers={}) {
     if(!headers.Accept) {
       headers["Accept"] = "application/json";
