@@ -482,6 +482,7 @@ class FrameClient {
       "StreamListUrls",
       "StreamStatus",
       "StreamStartOrStopOrReset",
+      "StreamStopSession",
       "SuspendNTPInstance",
       "UnlinkAccessGroupFromOauth",
       "UpdateContentObjectGraph",

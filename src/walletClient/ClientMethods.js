@@ -2,7 +2,6 @@ const Utils = require("../Utils");
 const UrlJoin = require("url-join");
 const {FormatNFTDetails, FormatNFTMetadata, FormatNFT} = require("./Utils");
 const MergeWith = require("lodash/mergeWith");
-const {rootStore} = require("../../../../../src/stores");
 
 /**
  * Methods
@@ -1342,9 +1341,9 @@ exports.GiftClaimStatus = async function({marketplaceParams, confirmationId, gif
     if(responses.length === 0) {
       return { status: "none" };
     } else {
-      if(responses.find(response => response.status === "error")) {
+      if(responses.find(response => response.status === "failed")) {
         return {
-          status: "error",
+          status: "failed",
           op: "nft-transfer",
           transfer_statuses: responses
         };
