@@ -1384,37 +1384,37 @@ exports.GiftClaimStatus = async function({marketplaceParams, confirmationId, gif
 exports.EntitlementClaimStatus = async function({marketplaceParams, purchaseId}) {
   try {
     const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
-    const statuses = await this.MintingStatus({tenantId: marketplaceInfo.tenantId});
+    const statuses = await this.EntitlementMintingStatus({tenantId: marketplaceInfo.tenantId});
 
     // TODO: fix this format, and then match new format
     const responses = statuses.filter(status => status.op === "nft-claim-entitlement"
-      && (purchaseId && JSON.stringify(status.extra)?.includes(":" + purchaseId))) || { status: "none" };
-    this.Log("responses " + JSON.stringify(responses));
+      && (purchaseId && purchaseId == status.confirmationId && !JSON.stringify(status.state)?.includes("duplicate"))) || { status: "none" };
+    console.log("responses", responses);
 
     if(responses.length === 0) {
       return { status: "none" };
     } else {
-      if(responses.find(response => response.status === "error")) {
-        return {
-          status: "error",
-          op: "nft-claim-entitlement",
-          transfer_statuses: responses
-        };
-      } else if(responses.find(response => response.status !== "complete")) {
-        return {
-          status: "pending",
-          op: "nft-claim-entitlement",
-          transfer_statuses: responses
-        };
-      } else {
+      if(responses.find(response => response.status === "complete")) {
         return {
           status: "complete",
           op: "nft-claim-entitlement",
           transfer_statuses: responses,
           items: responses.map(response => ({
-            token_addr: response.address,
-            token_id_str: response.tokenId
+            token_addr: response.tokenAddress,
+            token_id: response.tokenId
           }))
+        };
+      } else if(responses.find(response => response.status == "error")) {
+        return {
+          status: "error",
+          op: "nft-claim-entitlement",
+          transfer_statuses: responses
+        };
+      } else {
+        return {
+          status: "pending",
+          op: "nft-claim-entitlement",
+          transfer_statuses: responses
         };
       }
     }

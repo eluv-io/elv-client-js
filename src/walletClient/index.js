@@ -1347,6 +1347,53 @@ class ElvWalletClient {
     }
   }
 
+  async EntitlementMintingStatus({marketplaceParams, tenantId}) {
+    if(!tenantId) {
+      const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams: marketplaceParams || this.selectedMarketplaceInfo});
+      tenantId = marketplaceInfo.tenantId;
+    }
+
+    try {
+      const response = await Utils.ResponseToJson(
+        this.client.authClient.MakeAuthServiceRequest({
+          path: UrlJoin("as", "wlt", "status", "act", tenantId),
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${this.AuthToken()}`
+          }
+        })
+      );
+
+      return response
+        .map(status => {
+          let [op, marketplace, sku, purchaseId ] = status.op.split(":");
+
+          let confirmationId, tokenAddress, tokenId;
+          confirmationId = purchaseId
+          if(status.extra && status.extra["0"]) {
+            tokenAddress = status.extra["0"].token_addr;
+            tokenId = status.extra["0"].token_id;
+          }
+
+          return {
+            ...status,
+            timestamp: new Date(status.ts),
+            extra: status.extra,
+            purchaseId,
+            confirmationId,
+            op,
+            tokenAddress: Utils.FormatAddress(tokenAddress),
+            tokenId,
+          };
+        })
+        .sort((a, b) => a.ts < b.ts ? 1 : -1);
+    } catch(error) {
+      this.Log("Failed to retrieve entitlement status", true, error);
+
+      return [];
+    }
+  }
+
   async DeployTenant({tenantId, tenantSlug="", tenantHash}) {
     if(!tenantHash) {
       const tenantLink = await this.client.ContentObjectMetadata({
