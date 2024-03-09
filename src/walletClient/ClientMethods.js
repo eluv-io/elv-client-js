@@ -1404,17 +1404,15 @@ exports.EntitlementClaimStatus = async function({marketplaceParams, purchaseId})
             token_id: response.tokenId
           }))
         };
-      } else if(responses.find(response => response.status == "error")) {
+      } else if(responses.find(response => response.status === "error")) {
         return {
           status: "error",
           op: "nft-claim-entitlement",
-          transfer_statuses: responses
         };
       } else {
         return {
           status: "pending",
           op: "nft-claim-entitlement",
-          transfer_statuses: responses
         };
       }
     }
