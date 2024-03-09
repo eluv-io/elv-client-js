@@ -1398,7 +1398,6 @@ exports.EntitlementClaimStatus = async function({marketplaceParams, purchaseId})
         return {
           status: "complete",
           op: "nft-claim-entitlement",
-          transfer_statuses: responses,
           items: responses.map(response => ({
             token_addr: response.tokenAddress,
             token_id: response.tokenId
