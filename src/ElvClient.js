@@ -1032,7 +1032,7 @@ class ElvClient {
             return {
                 type: type,
                 message: obj,
-                address: signerAddr,
+                signerAddress: signerAddr,
                 signature: "0x" + signature.toString("hex")
             };
         default:
