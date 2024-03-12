@@ -998,7 +998,7 @@ class ElvClient {
     const type = "mje_" // JSON message, EIP192 signature
 
     const msg = JSON.stringify(message);
-    const signature = await client.PersonalSign({message: msg, addEthereumPrefix: true});
+    const signature = await this.PersonalSign({message: msg, addEthereumPrefix: true});
     return `${type}${Utils.B58(
       Buffer.concat([
         Buffer.from(signature.replace(/^0x/, ""), "hex"),
@@ -1013,6 +1013,7 @@ class ElvClient {
    * @methodGroup Authorization
    * @namedParams
    * @param {string} signedMessage - a signed message as created by CreateSignedMessageJSON
+   * @returns {Promise<Object>} - The decoded message, signer address, signature and signature type
    */
   async DecodeSignedMessageJSON({
     signedMessage
@@ -1026,9 +1027,8 @@ class ElvClient {
             const msg = msgBytes.slice(65);
             const obj = JSON.parse(msg);
 
-            // TODO - Verify signature and extract signer
-            //
-            signerAddr = null;
+            const prefixedMsgHash = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${msg.length}${msg}`, "utf-8"));
+            const signerAddr = Ethers.utils.recoverAddress(prefixedMsgHash, signature);
 
             res = {
                 type: type,
