@@ -1357,6 +1357,9 @@ class ElvWalletClient {
       const response = await Utils.ResponseToJson(
         this.client.authClient.MakeAuthServiceRequest({
           path: UrlJoin("as", "wlt", "status", "act", tenantId),
+          queryParams: {
+            ts_from: 0
+          },
           method: "GET",
           headers: {
             Authorization: `Bearer ${this.AuthToken()}`
