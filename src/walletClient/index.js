@@ -1357,9 +1357,6 @@ class ElvWalletClient {
       const response = await Utils.ResponseToJson(
         this.client.authClient.MakeAuthServiceRequest({
           path: UrlJoin("as", "wlt", "status", "act", tenantId),
-          queryParams: {
-            ts_from: 0
-          },
           method: "GET",
           headers: {
             Authorization: `Bearer ${this.AuthToken()}`
@@ -1392,7 +1389,6 @@ class ElvWalletClient {
         .sort((a, b) => a.ts < b.ts ? 1 : -1);
     } catch(error) {
       this.Log("Failed to retrieve entitlement status", true, error);
-
       return [];
     }
   }

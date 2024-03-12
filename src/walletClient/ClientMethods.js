@@ -1388,7 +1388,6 @@ exports.EntitlementClaimStatus = async function({marketplaceParams, purchaseId})
 
     const responses = statuses.filter(status => status.op === "nft-claim-entitlement"
       && (purchaseId && purchaseId == status.confirmationId)) || { status: "none" };
-    console.log("responses", responses);
 
     if(responses.length === 0) {
       return { status: "none" };
