@@ -975,6 +975,71 @@ class ElvClient {
     ]))}`;
   }
 
+
+  /**
+   * Build a signed message (JSON) using the current signer.
+   * Signed messages have a similar format to signed access tokens and they include the message itself
+   * such that they can be both verified and decoded by the receiving entity.
+   *
+   * Messages can be encoded and signed using different methods, and the encoding and signature types
+   * are described in the header of the resulting signed message blob.
+   *
+   * Note this type of message can not be verified and decoded on chain.
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {string} messasge - A JSON object representing the message to sign
+   */
+  async CreateSignedMessageJSON({
+      message
+  }) {
+
+    // Only one kind of signature supported currently
+    const type = "mje_" // JSON message, EIP192 signature
+
+    const msg = JSON.stringify(message);
+    const signature = await this.PersonalSign({message: msg, addEthereumPrefix: true});
+    return `${type}${Utils.B58(
+      Buffer.concat([
+        Buffer.from(signature.replace(/^0x/, ""), "hex"),
+        Buffer.from(msg)
+      ])
+    )}`;
+  }
+
+  /**
+   * Verify and decode a signed message (JSON).
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {string} signedMessage - a signed message as created by CreateSignedMessageJSON
+   * @returns {Promise<Object>} - The decoded message, signer address, signature and signature type
+   */
+  async DecodeSignedMessageJSON({
+    signedMessage
+  })  {
+    const type = signedMessage.slice(0,4);
+    switch(type) {
+        case "mje_":
+            const msgBytes = Utils.FromB58(signedMessage.slice(4));
+            const signature = msgBytes.slice(0, 65);
+            const msg = msgBytes.slice(65);
+            const obj = JSON.parse(msg);
+
+            const prefixedMsgHash = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${msg.length}${msg}`, "utf-8"));
+            const signerAddr = Ethers.utils.recoverAddress(prefixedMsgHash, signature);
+
+            return {
+                type: type,
+                message: obj,
+                signerAddress: signerAddr,
+                signature: "0x" + signature.toString("hex")
+            };
+        default:
+            throw new Error(`Bad message type: ${type}`);
+    }
+  }
+
   /**
    * Get the account address of the current signer
    *
