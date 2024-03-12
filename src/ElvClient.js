@@ -1030,13 +1030,12 @@ class ElvClient {
             const prefixedMsgHash = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${msg.length}${msg}`, "utf-8"));
             const signerAddr = Ethers.utils.recoverAddress(prefixedMsgHash, signature);
 
-            res = {
+            return {
                 type: type,
                 obj: obj,
                 addr: signerAddr,
                 signature: "0x" + signature.toString("hex")
-            }
-            break;
+            };
         default:
             throw new Error(`Bad message type: ${type}`);
     }
