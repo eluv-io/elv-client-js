@@ -1386,7 +1386,6 @@ exports.EntitlementClaimStatus = async function({marketplaceParams, purchaseId})
     const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
     const statuses = await this.EntitlementMintingStatus({tenantId: marketplaceInfo.tenantId});
 
-    // TODO: fix this format, and then match new format
     const responses = statuses.filter(status => status.op === "nft-claim-entitlement"
       && (purchaseId && purchaseId == status.confirmationId && !JSON.stringify(status.state)?.includes("duplicate"))) || { status: "none" };
     console.log("responses", responses);
