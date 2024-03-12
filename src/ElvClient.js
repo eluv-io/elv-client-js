@@ -1031,8 +1031,8 @@ class ElvClient {
 
             return {
                 type: type,
-                obj: obj,
-                addr: signerAddr,
+                message: obj,
+                address: signerAddr,
                 signature: "0x" + signature.toString("hex")
             };
         default:
