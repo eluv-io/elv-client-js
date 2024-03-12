@@ -1387,7 +1387,7 @@ exports.EntitlementClaimStatus = async function({marketplaceParams, purchaseId})
     const statuses = await this.EntitlementMintingStatus({tenantId: marketplaceInfo.tenantId});
 
     const responses = statuses.filter(status => status.op === "nft-claim-entitlement"
-      && (purchaseId && purchaseId == status.confirmationId && !JSON.stringify(status.state)?.includes("duplicate"))) || { status: "none" };
+      && (purchaseId && purchaseId == status.confirmationId)) || { status: "none" };
     console.log("responses", responses);
 
     if(responses.length === 0) {
@@ -1397,10 +1397,10 @@ exports.EntitlementClaimStatus = async function({marketplaceParams, purchaseId})
         return {
           status: "complete",
           op: "nft-claim-entitlement",
-          items: responses.map(response => ({
-            token_addr: response.tokenAddress,
-            token_id: response.tokenId
-          }))
+          items: [{
+            token_addr: responses[0].tokenAddress,
+            token_id: responses[0].tokenId
+          }]
         };
       } else if(responses.find(response => response.status === "error")) {
         return {
