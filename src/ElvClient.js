@@ -1019,7 +1019,6 @@ class ElvClient {
     signedMessage
   })  {
     const type = signedMessage.slice(0,4);
-    let res = {};
     switch(type) {
         case "mje_":
             const msgBytes = Utils.FromB58(signedMessage.slice(4));
@@ -1039,8 +1038,6 @@ class ElvClient {
         default:
             throw new Error(`Bad message type: ${type}`);
     }
-
-    return res;
   }
 
   /**
