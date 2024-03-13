@@ -1384,7 +1384,7 @@ exports.GiftClaimStatus = async function({marketplaceParams, confirmationId, gif
 exports.EntitlementClaimStatus = async function({marketplaceParams, purchaseId}) {
   try {
     const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
-    const statuses = await this.EntitlementMintingStatus({tenantId: marketplaceInfo.tenantId});
+    const statuses = await this.MintingStatus({tenantId: marketplaceInfo.tenantId});
 
     const responses = statuses.filter(status => status.op === "nft-claim-entitlement"
       && (purchaseId && purchaseId == status.confirmationId)) || { status: "none" };
