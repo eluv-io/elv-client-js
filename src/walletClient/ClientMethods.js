@@ -1372,6 +1372,54 @@ exports.GiftClaimStatus = async function({marketplaceParams, confirmationId, gif
 };
 
 /**
+ * Return status of the specified entitlement claim
+ *
+ * @methodGroup Status
+ * @namedParams
+ * @param {Object} marketplaceParams - Parameters of the marketplace
+ * @param {string} purchaseId - The purchase ID of the entitlement, for confirmation of status
+ *
+ * @returns {Promise<Object>} - The mint status of the entitlement claim
+ */
+exports.EntitlementClaimStatus = async function({marketplaceParams, purchaseId}) {
+  try {
+    const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
+    const statuses = await this.MintingStatus({tenantId: marketplaceInfo.tenantId});
+
+    const responses = statuses.filter(status => status.op === "nft-claim-entitlement"
+      && (purchaseId && purchaseId == status.confirmationId)) || { status: "none" };
+
+    if(responses.length === 0) {
+      return { status: "none" };
+    } else {
+      if(responses.find(response => response.status === "complete")) {
+        return {
+          status: "complete",
+          op: "nft-claim-entitlement",
+          items: [{
+            token_addr: responses[0].address,
+            token_id: responses[0].tokenId
+          }]
+        };
+      } else if(responses.find(response => response.status === "error")) {
+        return {
+          status: "error",
+          op: "nft-claim-entitlement",
+        };
+      } else {
+        return {
+          status: "pending",
+          op: "nft-claim-entitlement",
+        };
+      }
+    }
+  } catch(error) {
+    this.Log(error, true);
+    return { status: "unknown" };
+  }
+};
+
+/**
  * Return status of the specified pack opening
  *
  * @methodGroup Status

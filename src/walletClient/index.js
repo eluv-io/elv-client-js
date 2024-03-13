@@ -1326,6 +1326,18 @@ class ElvWalletClient {
             offerId = status.op.split(":")[3];
           }
 
+          if(op === "nft-claim-entitlement") {
+            let [op, marketplace, sku, purchaseId ] = status.op.split(":");
+            confirmationId = purchaseId
+            if(status.extra && status.extra["0"]) {
+              address = status.extra["0"].token_addr;
+              tokenId = status.extra["0"].token_id;
+
+              address = address.startsWith("0x") ? Utils.FormatAddress(address) : address;
+              status.marketplaceId = marketplace;
+            }
+          }
+
           return {
             ...status,
             timestamp: new Date(status.ts),
