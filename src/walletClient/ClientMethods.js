@@ -1377,7 +1377,7 @@ exports.GiftClaimStatus = async function({marketplaceParams, confirmationId, gif
  * @methodGroup Status
  * @namedParams
  * @param {Object} marketplaceParams - Parameters of the marketplace
- * @param {string=} confirmationId - The confirmation ID of the entitlement
+ * @param {string} purchaseId - The purchase ID of the entitlement, for confirmation of status
  *
  * @returns {Promise<Object>} - The mint status of the gift claim
  */
