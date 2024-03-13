@@ -1397,7 +1397,7 @@ exports.EntitlementClaimStatus = async function({marketplaceParams, purchaseId})
           status: "complete",
           op: "nft-claim-entitlement",
           items: [{
-            token_addr: responses[0].tokenAddress,
+            token_addr: responses[0].address,
             token_id: responses[0].tokenId
           }]
         };

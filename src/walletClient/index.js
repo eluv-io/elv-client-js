@@ -1346,7 +1346,6 @@ class ElvWalletClient {
             confirmationId,
             op,
             address: Utils.FormatAddress(address),
-            tokenAddress: Utils.FormatAddress(address),
             tokenId,
             offerId,
             giftId
