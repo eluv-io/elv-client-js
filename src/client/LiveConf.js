@@ -270,7 +270,9 @@ class LiveConf {
 
     switch(frameRate) {
       case "24":
-        seg.video = sourceTimescale * 30;
+        seg.videoTimeBase = 1536; // Output timebase: 12288
+        seg.videoFrameDurationTs = 512;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 48;
         seg.duration = "30";
         break;
@@ -280,7 +282,9 @@ class LiveConf {
         seg.duration = "30";
         break;
       case "30":
-        seg.video = sourceTimescale * 30;
+        seg.videoTimeBase = 960; // Output timebase: 15360
+        seg.videoFrameDurationTs = 512;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 60;
         seg.duration = "30";
         break;
@@ -290,7 +294,9 @@ class LiveConf {
         seg.duration = "30.03";
         break;
       case "48":
-        seg.video = sourceTimescale * 30;
+        seg.videoTimeBase = 1536; // Output timebase: 12288
+        seg.videoFrameDurationTs = 512;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 96;
         seg.duration = "30";
         break;
@@ -300,7 +306,9 @@ class LiveConf {
         seg.duration = "30";
         break;
       case "60":
-        seg.video = sourceTimescale * 30;
+        seg.videoTimeBase = 960; // Output timebase: 15360
+        seg.videoFrameDurationTs = 512;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 120;
         seg.duration = "30";
         break;
