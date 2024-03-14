@@ -28,6 +28,10 @@ const URI = require("urijs");
 //const CustomContract = require("../src/contracts/SampleContentLicensing");
 
 const {ElvClient} = require("../src/ElvClient");
+const BaseTenantSpaceContract = require("../src/contracts/v3/BaseTenantSpace");
+
+const tenantBytecode = fs.readFileSync("./testScripts/contracts/bytecode/BaseTenantSpace.bin");
+const tenantAbi = fs.readFileSync("./testScripts/contracts/abi/BaseTenantSpace.abi");
 
 const OutputLogger = require("./utils/OutputLogger");
 const {
@@ -43,6 +47,7 @@ let client, accessClient;
 let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
 let mediaLibraryId, masterId, masterHash, mezzanineId, linkLibraryId, linkObjectId;
 let s3Access;
+let tenantContractId, tenantId, tenantAdminAddress, contentAdminAddress;
 
 let playoutResult;
 
@@ -284,19 +289,73 @@ describe("Test ElvClient", () => {
   });
 
   describe("Content Libraries", () => {
-    test("Set Tenant ID For User", async () => {
-      const tenantId = `iten${client.utils.AddressToHash(accessGroupAddress)}`;
+    beforeAll(async ()=> {
+      let wallet = client.GenerateWallet();
+      let signer = wallet.AddAccount({
+        privateKey: process.env.PRIVATE_KEY
+      });
+      client.SetSigner({signer});
 
-      await client.userProfileClient.SetTenantId({id: tenantId});
-      const tenantById = await client.userProfileClient.TenantId();
-      expect(tenantById).toEqual(tenantId);
+      const spaceOwner = await client.authClient.Owner({address: client.contentSpaceAddress});
+      if(client.signer.address.toString().toLowerCase() !== spaceOwner.toString().toLowerCase()){
+        console.log("require space owner to run this test");
+        return;
+      }
 
-      await client.userProfileClient.SetTenantId({address: accessGroupAddress});
-      const tenantByAddress = await client.userProfileClient.TenantId();
-      expect(tenantByAddress).toEqual(tenantId);
+      // create groups
+      tenantAdminAddress = await client.CreateAccessGroup({name: "tenant_admin group"});
+      expect(tenantAdminAddress).toBeDefined();
+      contentAdminAddress = await client.CreateAccessGroup({name: "content_admin group"});
+      expect(contentAdminAddress).toBeDefined();
+
+      // deploy tenant contract
+      const tenantContractInfo = await client.DeployContract({
+        abi: JSON.parse(tenantAbi),
+        bytecode: tenantBytecode.toString("utf8").replace("\n", ""),
+        constructorArgs: [client.contentSpaceAddress,"TestTenant", client.utils.nullAddress]
+      });
+
+      expect(tenantContractInfo.contractAddress).toBeDefined();
+      const tenantAddress=tenantContractInfo.contractAddress;
+      tenantContractId = `iten${client.utils.AddressToHash(tenantAddress)}`;
+
+      await client.CallContractMethodAndWait({
+        contractAddress: tenantAddress,
+        abi: JSON.parse(tenantAbi),
+        methodName: "addGroup",
+        methodArgs: ["tenant_admin", tenantAdminAddress],
+        formatArguments: true,
+      });
+
+
+      await client.CallContractMethodAndWait({
+        contractAddress: tenantAddress,
+        abi: JSON.parse(tenantAbi),
+        methodName: "addGroup",
+        methodArgs: ["content_admin", contentAdminAddress],
+        formatArguments: true,
+      });
+
+      // set tenant contract in tenant and content admins
+      await client.SetTenantContractId({
+        contractAddress: tenantAdminAddress,
+        tenantContractId
+      });
+      await client.SetTenantContractId({
+        contractAddress: contentAdminAddress,
+        tenantContractId
+      });
+
+      tenantId = `iten${client.utils.AddressToHash(tenantAdminAddress)}`;
+      console.log(`\n\nTenant contract deployed:\nTenantContractId:${tenantContractId}\nTenantId:${tenantId}\n\n`);
     });
 
-    test("Create Content Library", async () => {
+    test("Set Tenant ID For User",async () => {
+      await client.userProfileClient.SetTenantId({address: tenantAdminAddress});
+      expect(client.userProfileClient.tenantId).toEqual(tenantId);
+    });
+
+    test("Create Content Library",async () => {
       libraryId = await client.CreateContentLibrary({
         name: "Test Library " + testHash,
         description: "Test Library Description",
@@ -317,61 +376,41 @@ describe("Test ElvClient", () => {
 
       expect(privateMetadata).toEqual({meta: "data"});
 
-      const libraryTenant = await client.CallContractMethod({
-        contractAddress: client.utils.HashToAddress(libraryId),
-        methodName: "getMeta",
-        methodArgs: [
-          "_tenantId"
-        ]
-      });
-
-      const tenantId = `iten${client.utils.AddressToHash(accessGroupAddress)}`;
-      const libraryTenantId = Buffer.from(libraryTenant.replace("0x", ""), "hex").toString("utf8");
-
-      expect(libraryTenantId).toEqual(tenantId);
+      const tid = await client.TenantId({objectId: libraryObjectId});
+      expect(tid).toEqual(tenantId);
 
       console.log(`\n\nLibraryId: ${libraryId}\nTenant ID: ${tenantId}\n`);
     });
 
     test("Clear Tenancy", async () => {
-      // Remove the tenant ID from the library
-      await client.CallContractMethodAndWait({
-        contractAddress: client.utils.HashToAddress(libraryId),
-        methodName: "putMeta",
-        methodArgs: [
-          "_tenantId",
-          ""
-        ]
+
+      await client.RemoveTenant({
+        objectId: libraryId
       });
 
-      const libraryTenant = await client.CallContractMethod({
-        contractAddress: client.utils.HashToAddress(libraryId),
-        methodName: "getMeta",
-        methodArgs: [
-          "_tenantId"
-        ]
+      let tenantId = await client.TenantId({
+        objectId:libraryId
       });
-
-      expect(libraryTenant).toEqual("0x");
+      let tenantContractId = await client.TenantContractId({
+        objectId:libraryId
+      });
+      expect(tenantId).toEqual("");
+      expect(tenantContractId).toEqual("");
 
       // Remove tenantId from user metadata
-      await client.userProfileClient.DeleteUserMetadata({metadataSubtree: "tenantId"});
-      client.userProfileClient.tenantId = undefined;
+      await client.userProfileClient.RemoveTenant();
 
-      const userMetadata = client.userProfileClient.UserMetadata();
-      expect(userMetadata.tenantId).not.toBeDefined();
+      tenantId = await client.userProfileClient.TenantId();
+      tenantContractId = await client.userProfileClient.TenantContractId();
+      expect(tenantId).toEqual("");
+      expect(tenantContractId).toEqual("");
 
       // Create a new library and ensure tenant ID is not set
       const newLibraryId = await client.CreateContentLibrary({name: "No Tenant ID"});
-      const newLibraryTenant = await client.CallContractMethod({
-        contractAddress: client.utils.HashToAddress(newLibraryId),
-        methodName: "getMeta",
-        methodArgs: [
-          "_tenantId"
-        ]
-      });
-
-      expect(newLibraryTenant).toEqual("0x");
+      tenantId = await client.TenantId({objectId:newLibraryId});
+      tenantContractId = await client.TenantContractId({objectId:newLibraryId});
+      expect(tenantId).toEqual("");
+      expect(tenantContractId).toEqual("");
     });
 
     test("List Content Libraries", async () => {
