@@ -1075,7 +1075,7 @@ exports.ContentObjectVersions = async function({libraryId, objectId}) {
 };
 
 /**
- * Retrieve the version hash of the latest version of the specified object
+ * Retrieve the version hash of the latest version of the specified object from chain
  *
  * @methodGroup Content Objects
  * @namedParams
@@ -1119,6 +1119,43 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
     });
   }
 
+  return latestHash;
+};
+
+/**
+ * Retrieve the version hash of the latest version of the specified object
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object
+ *
+ * @returns {Promise<string>} - The latest version hash of the object
+ */
+exports.LatestVersionHashV2 = async function({objectId, versionHash}) {
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+  const libraryId = await this.ContentObjectLibraryId({objectId});
+
+  ValidateObject(objectId);
+
+  let latestHash;
+  console.log("LatestVersionHashV2");
+  try {
+    let path = UrlJoin("q", objectId);
+
+    let q = await this.utils.ResponseToJson(
+      this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+        method: "GET",
+        path: path
+      })
+    );
+    latestHash = q.hash;
+
+  } catch(error) {
+    console.log("ERROR", error);
+    throw Error(`Unable to determine latest version hash for ${versionHash || objectId}`);
+  }
   return latestHash;
 };
 
