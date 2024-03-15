@@ -209,6 +209,17 @@ class LiveConf {
     return seg;
   }
 
+ /*
+  * Calculate output timebase from the encoder (codec) timebase. The videoTimeBase parameter
+  * represents the encoder timebase. The format muxer will change it so it is greater than 10000.
+  */
+  calcOutputTimebase(codecTimebase) {
+    let outputTimebase = codecTimebase;
+    while (outputTimebase < 10000)
+      outputTimebase = outputTimebase * 2;
+    return outputTimebase;
+  }
+
   calcSegDurationMpegts({sourceTimescale}) {
     let videoStream = this.getStreamDataForCodecType("video");
     let frameRate = videoStream.frame_rate;
@@ -272,7 +283,7 @@ class LiveConf {
       case "24":
         seg.videoTimeBase = 1536; // Output timebase: 12288
         seg.videoFrameDurationTs = 512;
-        seg.video = seg.videoTimeBase * 30;
+        seg.video = calcOutputTimebase(seg.videoTimeBase) * 30;
         seg.keyint = 48;
         seg.duration = "30";
         break;
@@ -284,7 +295,7 @@ class LiveConf {
       case "30":
         seg.videoTimeBase = 960; // Output timebase: 15360
         seg.videoFrameDurationTs = 512;
-        seg.video = seg.videoTimeBase * 30;
+        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
         seg.keyint = 60;
         seg.duration = "30";
         break;
@@ -296,7 +307,7 @@ class LiveConf {
       case "48":
         seg.videoTimeBase = 1536; // Output timebase: 12288
         seg.videoFrameDurationTs = 512;
-        seg.video = seg.videoTimeBase * 30;
+        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
         seg.keyint = 96;
         seg.duration = "30";
         break;
@@ -308,7 +319,7 @@ class LiveConf {
       case "60":
         seg.videoTimeBase = 960; // Output timebase: 15360
         seg.videoFrameDurationTs = 512;
-        seg.video = seg.videoTimeBase * 30;
+        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
         seg.keyint = 120;
         seg.duration = "30";
         break;
