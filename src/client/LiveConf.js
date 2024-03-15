@@ -416,7 +416,9 @@ class LiveConf {
     // Optional override output timebase and frame duration (ts)
     if(segDurations.videoTimeBase) {
       conf.live_recording.recording_config.recording_params.xc_params.video_time_base = segDurations.videoTimeBase;
-      conf.live_recording.recording_config.recording_params.source_timescale = segDurations.videoTimeBase;
+
+      // Note 'source_timescale' needs to be set to the output timebase and is used by playout
+      conf.live_recording.recording_config.recording_params.source_timescale = calcOutputTimebase(segDurations.videoTimeBase);
     }
     if(segDurations.videoFrameDurationTs) {
       conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs;
