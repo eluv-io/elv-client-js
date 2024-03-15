@@ -283,7 +283,7 @@ class LiveConf {
       case "24":
         seg.videoTimeBase = 1536; // Output timebase: 12288
         seg.videoFrameDurationTs = 512;
-        seg.video = calcOutputTimebase(seg.videoTimeBase) * 30;
+        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
         seg.keyint = 48;
         seg.duration = "30";
         break;
@@ -418,7 +418,7 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.xc_params.video_time_base = segDurations.videoTimeBase;
 
       // Note 'source_timescale' needs to be set to the output timebase and is used by playout
-      conf.live_recording.recording_config.recording_params.source_timescale = calcOutputTimebase(segDurations.videoTimeBase);
+      conf.live_recording.recording_config.recording_params.source_timescale = this.calcOutputTimebase(segDurations.videoTimeBase);
     }
     if(segDurations.videoFrameDurationTs) {
       conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs;
