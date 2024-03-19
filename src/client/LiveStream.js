@@ -1322,7 +1322,7 @@ exports.StreamConfig = async function({name, customSettings={}}) {
   const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").replace("srt://", "").split(":")[0];
   const streamUrl = new URL(userConfig.url);
 
-  console.log("Retrieving nodes...");
+  console.log("Retrieving nodes - matching", hostName);
   let nodes = await this.SpaceNodes({matchEndpoint: hostName});
   if(nodes.length < 1) {
     status.error = "No node matching stream URL " + streamUrl.href;
