@@ -1570,19 +1570,59 @@ exports.StreamListUrls = async function({siteId}={}) {
 };
 
 /**
- * Make a VOD copy of a live stream
+ * Copy a portion of a live stream recording into a standard VoD object using the zero-copy content fabric API
+ *
+ * Limitations:
+ * - currently requires the target object to be pre-created and have content encryption keys (CAPS)
+ * - for audio and video to be sync'd, the live stream needs to have the beginning of the desired recording period
+ * - for an event stream, make sure the TTL is long enough to allow running the live-to-vod command before the beginning of the recording expires
+ * - for 24/7 streams, make sure to reset the stream before the desired recording (as to create a new recording period) and have the TTL long enough
+ *  to allow running the live-to-vod command before the beginning of the recording expires.
+ * - startTime and endTime are not currently implemented by this method
+ *
  *
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} name - Object ID or name of the live stream
  * @param {string} targetObjectId - Object ID of the target VOD object
  * @param {string=} eventId -
- * @param {boolean=} finalize - If enabled, target object will be finalized after
- * copy to vod operations
+ * @param {boolean=} finalize - If enabled, target object will be finalized after copy to vod operations
  *
  * @return {Promise<Object>} - The status response for the stream
  */
-exports.StreamCopyToVod = async function({name, targetObjectId, eventId, finalize=true}) {
+
+/*
+   Example fabric API flow:
+
+     https://host-76-74-34-194.contentfabric.io/qlibs/ilib24CtWSJeVt9DiAzym8jB6THE9e7H/q/$QWT/call/media/live_to_vod/init -d @r1 -H "Authorization: Bearer $TOK"
+
+     {
+       "live_qhash": "hq__5Zk1jSN8vNLUAXjQwMJV8F8J8ESXNvmVKkhaXySmGc1BXnJPG2FvvaXee4CXqvFHuGuU3fqLJc",
+       "start_time": "",
+       "end_time": "",
+       "recording_period": -1,
+       "streams": ["video", "audio"],
+       "variant_key": "default"
+     }
+
+     https://host-76-74-34-194.contentfabric.io/qlibs/ilib24CtWSJeVt9DiAzym8jB6THE9e7H/q/$QWT/call/media/abr_mezzanine/init  -H "Authorization: Bearer $TOK" -d @r2
+
+     {
+
+       "abr_profile": { ...  },
+       "offering_key": "default",
+       "prod_master_hash": "tqw__HSQHBt7vYxWfCMPH5yXwKTfhdPcQ4Lcs9WUMUbTtnMbTZPTLo4BfJWPMGpoy1Dpv1wWQVtUtAtAr429TnVs",
+       "variant_key": "default",
+       "keep_other_streams": false
+     }
+
+     https://host-76-74-34-194.contentfabric.io/qlibs/ilib24CtWSJeVt9DiAzym8jB6THE9e7H/q/$QWT/call/media/live_to_vod/copy -d '{"variant_key":"","offering_key":""}' -H "Authorization: Bearer $TOK"
+
+
+     https://host-76-74-34-194.contentfabric.io/qlibs/ilib24CtWSJeVt9DiAzym8jB6THE9e7H/q/$QWT/call/media/abr_mezzanine/offerings/default/finalize -d '{}' -H "Authorization: Bearer $TOK"
+
+ */
+exports.StreamCopyToVod = async function({name, targetObjectId, eventId, streams=null, finalize=true}) {
   const conf = await this.LoadConf({name});
   const abrProfile = require("../abr_profiles/abr_profile_live_to_vod.js");
 
@@ -1603,21 +1643,19 @@ exports.StreamCopyToVod = async function({name, targetObjectId, eventId, finaliz
     objectId: targetObjectId,
     metadataSubtree: kmsCapId
   });
-  console.log("kmsCap", kmsCap)
 
   if(!kmsCap) {
     throw Error(`No content encryption key set for object ${targetObjectId}`);
   }
 
-  let startTime = "", endTime = "";
+  let startTime = "";
+  let endTime = "";
 
   try {
     status.live_object_id = conf.objectId;
 
-    console.log("conf", conf)
     const liveHash = await this.LatestVersionHash({objectId: conf.objectId, libraryId});
     status.live_hash = liveHash;
-    console.log("liveHash", liveHash)
 
     if(eventId) {
       // Retrieve start and end times for the event
@@ -1636,7 +1674,8 @@ exports.StreamCopyToVod = async function({name, targetObjectId, eventId, finaliz
     status.target_object_id = targetObjectId;
     status.target_library_id = targetLibraryId;
     status.target_write_token = writeToken;
-    console.log("Getting live_to_vod init")
+
+    this.Log("Process live source (takes around 20 sec per hour of content)");
 
     await this.CallBitcodeMethod({
       libraryId: targetLibraryId,
@@ -1647,14 +1686,13 @@ exports.StreamCopyToVod = async function({name, targetObjectId, eventId, finaliz
         "live_qhash": liveHash,
         "start_time": startTime, // eg. "2023-10-03T02:09:02.00Z",
         "end_time": endTime, // eg. "2023-10-03T02:15:00.00Z",
-        "streams": ["video", "audio"],
+        "streams": streams,
         "recording_period": -1,
         "variant_key": "default"
       },
       constant: false,
       format: "text"
     });
-    console.log("called live_to_vod init**")
 
     const abrMezInitBody = {
       abr_profile: abrProfile,
@@ -1664,7 +1702,6 @@ exports.StreamCopyToVod = async function({name, targetObjectId, eventId, finaliz
       "keep_other_streams": false
     };
 
-    console.log("Calling /media/abr_mezzanine/init")
     await this.CallBitcodeMethod({
       libraryId: targetLibraryId,
       objectId: targetObjectId,
@@ -1674,7 +1711,6 @@ exports.StreamCopyToVod = async function({name, targetObjectId, eventId, finaliz
       constant: false,
       format: "text"
     });
-    console.log('called abr_mezz init')
 
     await this.CallBitcodeMethod({
       libraryId: targetLibraryId,
@@ -1695,7 +1731,6 @@ exports.StreamCopyToVod = async function({name, targetObjectId, eventId, finaliz
       constant: false,
       format: "text"
     });
-    console.log('called abr_mezzanine finalize')
 
     if(finalize) {
       const finalizeResponse = await this.FinalizeContentObject({
@@ -1736,7 +1771,7 @@ exports.StreamCopyToVod = async function({name, targetObjectId, eventId, finaliz
  *
  * @return {Promise<Object>} - The finalize response
  */
-exports.StreamWatermark = async function({op, objectId, fileName, finalize=true}) {
+exports.StreamWatermark = async function({op, objectId, fileName, fileInfo, simpleWatermark, finalize=true}) {
   ValidateObject(objectId);
   ValidatePresence("op", op);
 
@@ -1767,9 +1802,13 @@ exports.StreamWatermark = async function({op, objectId, fileName, finalize=true}
   }
 
   if(op === "set") {
-    const wmBuf = fs.readFileSync(fileName);
-    const wm = JSON.parse(wmBuf);
-    m.simple_watermark = wm;
+    if(simpleWatermark) {
+      m.simple_watermark = simpleWatermark;
+    } else {
+      const wmBuf = fs.readFileSync(fileName);
+      const wm = JSON.parse(wmBuf);
+      m.simple_watermark = wm;
+    }
   } else if(op === "remove") {
     delete m.simple_watermark;
   }
