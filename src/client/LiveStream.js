@@ -1783,7 +1783,7 @@ exports.StreamRemoveWatermark = async function({
     libraryId
   });
 
-  this.Log(`Removing watermark type: ${type} ${libraryId} ${objectId}`);
+  this.Log(`Removing watermark types: ${types.join(", ")} ${libraryId} ${objectId}`);
 
   const recordingParamsPath = "live_recording/recording_config/recording_params";
 
