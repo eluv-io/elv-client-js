@@ -1772,7 +1772,7 @@ exports.StreamCopyToVod = async function({name, targetObjectId, eventId, streams
  */
 exports.StreamRemoveWatermark = async function({
   objectId,
-  type,
+  types,
   finalize=true
 }) {
   ValidateObject(objectId);
