@@ -1763,7 +1763,7 @@ exports.StreamCopyToVod = async function({name, targetObjectId, eventId, streams
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} objectId - Object ID of the live stream
- * @param {string} type - Specify which type of watermark to remove. Possible values:
+ * @param {Array<string>} types - Specify which type of watermark to remove. Possible values:
  * - "image"
  * - "text"
  * @param {boolean=} finalize - If enabled, target object will be finalized after removing watermark
@@ -1799,11 +1799,13 @@ exports.StreamRemoveWatermark = async function({
     throw Error("Stream object must be configured");
   }
 
-  if(type === "text") {
-    delete recordingMetadata.simple_watermark;
-  } else if(type === "image") {
-    delete recordingMetadata.image_watermark;
-  }
+  types.forEach(type => {
+    if(type === "text") {
+      delete recordingMetadata.simple_watermark;
+    } else if(type === "image") {
+      delete recordingMetadata.image_watermark;
+    }
+  });
 
   await this.ReplaceMetadata({
     libraryId,
