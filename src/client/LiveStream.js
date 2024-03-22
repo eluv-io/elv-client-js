@@ -1758,26 +1758,24 @@ exports.StreamCopyToVod = async function({name, targetObjectId, eventId, streams
 };
 
 /**
- * Create a watermark for a live stream
+ * Remove a watermark for a live stream
  *
  * @methodGroup Live Stream
  * @namedParams
- * @param {string} op - The operation to perform. Possible values:
- * 'set'
- * 'remove'
  * @param {string} objectId - Object ID of the live stream
- * @param {string} fileName -
+ * @param {string} type - Specify which type of watermark to remove. Possible values:
+ * - "image"
+ * - "text"
  * @param {boolean=} finalize - If enabled, target object will be finalized after watermarking operation
  *
  * @return {Promise<Object>} - The finalize response
  */
-exports.StreamWatermark = async function({op, objectId, fileName, fileInfo, simpleWatermark, finalize=true}) {
+exports.StreamRemoveWatermark = async function({
+  objectId,
+  type,
+  finalize=true
+}) {
   ValidateObject(objectId);
-  ValidatePresence("op", op);
-
-  if(!["set", "remove"].includes(op)) {
-    throw Error(`Invalid watermark operation ${op}`);
-  }
 
   const libraryId = await this.ContentObjectLibraryId({objectId});
   const {writeToken} = await this.EditContentObject({
@@ -1785,7 +1783,7 @@ exports.StreamWatermark = async function({op, objectId, fileName, fileInfo, simp
     libraryId
   });
 
-  this.Log(`Watermarking op: ${op} ${libraryId} ${objectId}`);
+  this.Log(`Removing watermark type: ${type} ${libraryId} ${objectId}`);
 
   const recordingParamsPath = "live_recording/recording_config/recording_params";
 
@@ -1801,16 +1799,80 @@ exports.StreamWatermark = async function({op, objectId, fileName, fileInfo, simp
     throw Error("Stream object must be configured");
   }
 
-  if(op === "set") {
-    if(simpleWatermark) {
-      m.simple_watermark = simpleWatermark;
-    } else {
-      const wmBuf = fs.readFileSync(fileName);
-      const wm = JSON.parse(wmBuf);
-      m.simple_watermark = wm;
-    }
-  } else if(op === "remove") {
-    delete m.simple_watermark;
+  if(type === "text") {
+    delete recordingMetadata.simple_watermark;
+  } else if(type === "image") {
+    delete recordingMetadata.image_watermark;
+  }
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: recordingParamsPath,
+    metadata: recordingMetadata
+  });
+
+  if(finalize) {
+    const finalizeResponse = await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Watermark removed"
+    });
+
+    return finalizeResponse;
+  }
+};
+
+/**
+ * Create a watermark for a live stream
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} op - The operation to perform. Possible values:
+ * 'set'
+ * 'remove'
+ * @param {string} objectId - Object ID of the live stream
+ * @param {string} fileName -
+ * @param {boolean=} finalize - If enabled, target object will be finalized after watermarking operation
+ *
+ * @return {Promise<Object>} - The finalize response
+ */
+exports.StreamAddWatermark = async function({
+  objectId,
+  simpleWatermark,
+  imageWatermark,
+  finalize=true
+}) {
+  ValidateObject(objectId);
+
+  const libraryId = await this.ContentObjectLibraryId({objectId});
+  const {writeToken} = await this.EditContentObject({
+    objectId,
+    libraryId
+  });
+
+  this.Log(`Adding watermarking type: ${type} ${libraryId} ${objectId}`);
+
+  const recordingParamsPath = "live_recording/recording_config/recording_params";
+
+  const recordingMetadata = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: recordingParamsPath,
+    resolveLinks: false
+  });
+
+  if(!recordingMetadata) {
+    throw Error("Stream object must be configured");
+  }
+
+  if(simpleWatermark) {
+    recordingMetadata.simple_watermark = simpleWatermark;
+  } else if(imageWatermark) {
+    recordingMetadata.image_watermark = imageWatermark;
   }
 
   await this.ReplaceMetadata({
@@ -1822,7 +1884,7 @@ exports.StreamWatermark = async function({op, objectId, fileName, fileInfo, simp
   });
 
   const response = {
-    "watermark": recordingMetadata.simple_watermark
+    "watermark": recordingMetadata.simple_watermark || recordingMetadata.image_watermark
   };
 
   if(finalize) {
@@ -1830,7 +1892,7 @@ exports.StreamWatermark = async function({op, objectId, fileName, fileInfo, simp
       libraryId,
       objectId,
       writeToken,
-      commitMessage: `Watermark ${op}`
+      commitMessage: "Watermark set"
     });
 
     response.hash = finalizeResponse.hash;
