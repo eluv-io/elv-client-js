@@ -1044,11 +1044,26 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
 
       if(confirmEvent) {
         // Found confirmation
-        this.Log(`Commit confirmed: ${objectHash}`);
+        this.Log(`Commit confirmed on chain: ${objectHash}`);
         break;
       }
     }
   }
+
+  // APIv2 ensure the fabric API returns the correct hash
+  if(awaitCommitConfirmation) {
+    const pollingInterval = 500; // ms
+    let tries = 20;
+    while (tries > 0) {
+      const h = await this.LatestVersionHashV2({objectId});
+      if (h == versionHash) {
+        this.Log(`Commit confirmed on fabric node: ${versionHash}`);
+        break;
+      }
+      await new Promise(resolve => setTimeout(resolve, pollingInterval));
+    }
+  }
+
 };
 
 /**
