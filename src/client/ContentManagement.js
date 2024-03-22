@@ -8,6 +8,7 @@ const UrlJoin = require("url-join");
 const Ethers = require("ethers");
 const Pako = require("pako");
 
+
 /*
 const LibraryContract = require("../contracts/BaseLibrary");
 const ContentContract = require("../contracts/BaseContent");
@@ -1050,16 +1051,12 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
   }
 
   // APIv2 ensure the fabric API returns the correct hash
-  let tries = 20;
-  const pollingInterval = 500; // ms
   if(awaitCommitConfirmation) {
-    let confirmed = false;
+    const pollingInterval = 500; // ms
     let tries = 20;
-    while (!confirmed && tries > 0) {
+    while (tries > 0) {
       const h = await this.LatestVersionHashV2({objectId});
-      console.log("Await confirmation on fabric node:", h);
       if (h == versionHash) {
-        confirmed = true;
         this.Log(`Commit confirmed on fabric node: ${versionHash}`);
         break;
       }

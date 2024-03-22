@@ -1123,7 +1123,8 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
 };
 
 /**
- * Retrieve the version hash of the latest version of the specified object
+ * Retrieve the version hash of the latest version of the specified object via fabric API.
+ * Requires authorization.
  *
  * @methodGroup Content Objects
  * @namedParams
@@ -1134,18 +1135,16 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
  */
 exports.LatestVersionHashV2 = async function({objectId, versionHash}) {
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
-  const libraryId = await this.ContentObjectLibraryId({objectId});
 
   ValidateObject(objectId);
 
   let latestHash;
-  console.log("LatestVersionHashV2");
   try {
     let path = UrlJoin("q", objectId);
 
     let q = await this.utils.ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({objectId}),
         method: "GET",
         path: path
       })
