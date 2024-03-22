@@ -1766,7 +1766,7 @@ exports.StreamCopyToVod = async function({name, targetObjectId, eventId, streams
  * @param {string} type - Specify which type of watermark to remove. Possible values:
  * - "image"
  * - "text"
- * @param {boolean=} finalize - If enabled, target object will be finalized after watermarking operation
+ * @param {boolean=} finalize - If enabled, target object will be finalized after removing watermark
  *
  * @return {Promise<Object>} - The finalize response
  */
@@ -1830,12 +1830,10 @@ exports.StreamRemoveWatermark = async function({
  *
  * @methodGroup Live Stream
  * @namedParams
- * @param {string} op - The operation to perform. Possible values:
- * 'set'
- * 'remove'
  * @param {string} objectId - Object ID of the live stream
- * @param {string} fileName -
- * @param {boolean=} finalize - If enabled, target object will be finalized after watermarking operation
+ * @param {Object} simpleWatermark - Text watermark
+ * @param {Object} imageWatermark - Image watermark
+ * @param {boolean=} finalize - If enabled, target object will be finalized after adding watermark
  *
  * @return {Promise<Object>} - The finalize response
  */
