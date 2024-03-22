@@ -1853,7 +1853,7 @@ exports.StreamAddWatermark = async function({
     libraryId
   });
 
-  this.Log(`Adding watermarking type: ${type} ${libraryId} ${objectId}`);
+  this.Log(`Adding watermarking type: ${imageWatermark ? "image" : "text"} ${libraryId} ${objectId}`);
 
   const recordingParamsPath = "live_recording/recording_config/recording_params";
 
@@ -1884,7 +1884,8 @@ exports.StreamAddWatermark = async function({
   });
 
   const response = {
-    "watermark": recordingMetadata.simple_watermark || recordingMetadata.image_watermark
+    "imageWatermark": recordingMetadata.image_watermark,
+    "textWatermark": recordingMetadata.simple_watermark
   };
 
   if(finalize) {
