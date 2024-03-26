@@ -997,9 +997,10 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
   const vFrameRate = "30000/1001";
   const vTimeBase = "1/30000"; // "1/16000";
 
-  const abrProfile = require("../abr_profiles/abr_profile_live_drm.js");
+  const abrProfileDefault = require("../abr_profiles/abr_profile_live_drm.js");
 
-  let playoutFormats = abrProfile.playout_formats;
+  let playoutFormats;
+  let abrProfile = JSON.parse(JSON.stringify(abrProfileDefault));
   if(format) {
     drm = true; // Override DRM parameter
     playoutFormats = {};
@@ -1027,6 +1028,8 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
         }
       }
     };
+  } else {
+    playoutFormats = Object.assign({}, abrProfile.playout_formats);
   }
 
   abrProfile.playout_formats = playoutFormats;
