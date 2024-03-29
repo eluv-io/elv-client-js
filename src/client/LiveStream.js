@@ -1688,26 +1688,22 @@ exports.StreamCopyToVod = async function({
 
     this.Log("Process live source (takes around 20 sec per hour of content)");
 
-    try {
-      await this.CallBitcodeMethod({
-        libraryId: targetLibraryId,
-        objectId: targetObjectId,
-        writeToken,
-        method: "/media/live_to_vod/init",
-        body: {
-          "live_qhash": liveHash,
-          "start_time": startTime, // eg. "2023-10-03T02:09:02.00Z",
-          "end_time": endTime, // eg. "2023-10-03T02:15:00.00Z",
-          "streams": streams,
-          "recording_period": recordingPeriod,
-          "variant_key": "default"
-        },
-        constant: false,
-        format: "text"
-      });
-    } catch(error) {
-      console.log("****", error)
-    }
+    await this.CallBitcodeMethod({
+      libraryId: targetLibraryId,
+      objectId: targetObjectId,
+      writeToken,
+      method: "/media/live_to_vod/init",
+      body: {
+        "live_qhash": liveHash,
+        "start_time": startTime, // eg. "2023-10-03T02:09:02.00Z",
+        "end_time": endTime, // eg. "2023-10-03T02:15:00.00Z",
+        "streams": streams,
+        "recording_period": recordingPeriod,
+        "variant_key": "default"
+      },
+      constant: false,
+      format: "text"
+    });
 
     const abrMezInitBody = {
       abr_profile: abrProfile,
