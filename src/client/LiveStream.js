@@ -489,6 +489,8 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
         await HttpClient.Fetch(status.lro_status_url)
       );
       state = lroStatus.state;
+      status.warnings = lroStatus.custom && lroStatus.custom.warnings;
+      status.quality = lroStatus.custom && lroStatus.custom.quality;
     } catch(error) {
       console.log("LRO Status (failed): ", error.response.statusCode);
       status.state = "stopped";
@@ -927,21 +929,28 @@ exports.StreamStopSession = async function({name}) {
  * @return {Promise<Object>} - The name, object ID, and state of the stream
  */
 exports.StreamInitialize = async function({name, drm=false, format}) {
-  const contentTypes = await this.ContentTypes();
-
   let typeAbrMaster;
   let typeLiveStream;
 
-  for(let i = 0; i < Object.keys(contentTypes).length; i++) {
-    const key = Object.keys(contentTypes)[i];
+  // Fetch Title and Live Stream content types from tenant meta
+  const tenantContractId = await client.userProfileClient.TenantContractId();
+  let liveStreamContentType, titleContentType;
+  const {live_stream, title} = await client.ContentObjectMetadata({
+    libraryId: tenantContractId.replace("iten", "ilib"),
+    objectId: tenantContractId.replace("iten", "iq__"),
+    metadataSubtree: "public/content_types",
+    select: [
+      "live_stream",
+      "title"
+    ]
+  });
 
-    if(contentTypes[key].name.includes("ABR Master") || contentTypes[key].name.includes("Title")) {
-      typeAbrMaster = contentTypes[key].hash;
-    }
+  if(live_stream) {
+    typeLiveStream = live_stream;
+  }
 
-    if(contentTypes[key].name.includes("Live Stream")) {
-      typeLiveStream = contentTypes[key].hash;
-    }
+  if(title) {
+    typeAbrMaster = title;
   }
 
   if(typeAbrMaster === undefined || typeLiveStream === undefined) {
