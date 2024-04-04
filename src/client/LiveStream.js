@@ -865,7 +865,7 @@ exports.StreamStopSession = async function({name}) {
         writeToken: metaEdgeWriteToken
       });
     } catch(error) {
-      this.Log(`Unable to retrieve metadata for edge write token ${edgeWriteToken}`);
+      this.Log("Unable to retrieve metadata for edge write token");
     }
 
     const {writeToken} = await this.EditContentObject({
