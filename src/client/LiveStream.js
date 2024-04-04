@@ -1805,6 +1805,12 @@ exports.StreamRemoveWatermark = async function({
 
   this.Log(`Removing watermark types: ${types.join(", ")} ${libraryId} ${objectId}`);
 
+  const edgeWriteToken = await this.ContentObjectMetadata({
+    objectId,
+    libraryId,
+    metadataSubtree: "/live_recording/fabric_config/edge_write_token"
+  });
+
   const recordingParamsPath = "live_recording/recording_config/recording_params";
 
   const recordingMetadata = await this.ContentObjectMetadata({
@@ -1834,6 +1840,16 @@ exports.StreamRemoveWatermark = async function({
     metadataSubtree: recordingParamsPath,
     metadata: recordingMetadata
   });
+
+  if(edgeWriteToken) {
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: edgeWriteToken,
+      metadataSubtree: recordingParamsPath,
+      metadata: recordingMetadata
+    });
+  }
 
   if(finalize) {
     const finalizeResponse = await this.FinalizeContentObject({
@@ -1873,6 +1889,12 @@ exports.StreamAddWatermark = async function({
     libraryId
   });
 
+  const edgeWriteToken = await this.ContentObjectMetadata({
+    objectId,
+    libraryId,
+    metadataSubtree: "/live_recording/fabric_config/edge_write_token"
+  });
+
   this.Log(`Adding watermarking type: ${imageWatermark ? "image" : "text"} ${libraryId} ${objectId}`);
 
   const recordingParamsPath = "live_recording/recording_config/recording_params";
@@ -1902,6 +1924,16 @@ exports.StreamAddWatermark = async function({
     metadataSubtree: recordingParamsPath,
     metadata: recordingMetadata
   });
+
+  if(edgeWriteToken) {
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: edgeWriteToken,
+      metadataSubtree: recordingParamsPath,
+      metadata: recordingMetadata
+    });
+  }
 
   const response = {
     "imageWatermark": recordingMetadata.image_watermark,
