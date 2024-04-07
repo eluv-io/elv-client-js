@@ -1732,15 +1732,20 @@ exports.StreamCopyToVod = async function({
       format: "text"
     });
 
-    await this.CallBitcodeMethod({
-      libraryId: targetLibraryId,
-      objectId: targetObjectId,
-      writeToken,
-      method: "/media/live_to_vod/copy",
-      body: {},
-      constant: false,
-      format: "text"
-    });
+    try {
+      await this.CallBitcodeMethod({
+        libraryId: targetLibraryId,
+        objectId: targetObjectId,
+        writeToken,
+        method: "/media/live_to_vod/copy",
+        body: {},
+        constant: false,
+        format: "text"
+      });
+    } catch(error) {
+      console.error("Unable to call /media/live_to_vod/copy", error);
+      throw error;
+    }
 
     await this.CallBitcodeMethod({
       libraryId: targetLibraryId,
@@ -1774,6 +1779,7 @@ exports.StreamCopyToVod = async function({
     return status;
   } catch(error) {
     this.Log(error, true);
+    throw error;
   }
 };
 
