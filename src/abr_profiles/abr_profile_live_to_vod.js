@@ -20,6 +20,15 @@ const AbrProfileLiveVod = {
         }
       ]
     },
+    "{\"media_type\":\"audio\",\"channels\":6}": {
+      "rung_specs": [
+        {
+          "bit_rate": 384000,
+          "media_type": "audio",
+          "pregenerate": true
+        }
+      ]
+    },
     "{\"media_type\":\"video\",\"aspect_ratio_height\":273,\"aspect_ratio_width\":640}": {
       "rung_specs": [
         {
