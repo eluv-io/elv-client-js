@@ -442,8 +442,14 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     let tlro = period.live_recording_handle;
     status.tlro = tlro;
 
-    let sinceLastFinalize = Math.floor(new Date().getTime() / 1000) -
-      period.video_finalized_parts_info.last_finalization_time /1000000;
+    let videoLastFinalizationTimeEpochSec = -1;
+    let videoFinalizedParts = 0;
+    let sinceLastFinalize = -1;
+    if (period.finalized_parts_info.video && period.finalized_parts_info.video.last_finalization_time) {
+      videoLastFinalizationTimeEpochSec = period.finalized_parts_info.video.last_finalization_time / 1000000;
+      videoFinalizedParts = period.finalized_parts_info.video.n_parts;
+      sinceLastFinalize = Math.floor(new Date().getTime() / 1000) - videoLastFinalizationTimeEpochSec;
+    }
 
     let recording_period = {
       activation_time_epoch_sec: period.recording_start_time_epoch_sec,
@@ -451,8 +457,8 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       start_time_text: new Date(period.start_time_epoch_sec * 1000).toLocaleString(),
       end_time_epoch_sec: period.end_time_epoch_sec,
       end_time_text:  period.end_time_epoch_sec === 0 ? null : new Date(period.end_time_epoch_sec * 1000).toLocaleString(),
-      video_parts: period.video_finalized_parts_info.n_parts,
-      video_last_part_finalized_epoch_sec: period.video_finalized_parts_info.last_finalization_time / 1000000,
+      video_parts: videoFinalizedParts,
+      video_last_part_finalized_epoch_sec: videoLastFinalizationTimeEpochSec,
       video_since_last_finalize_sec : sinceLastFinalize
     };
     status.recording_period = recording_period;
@@ -499,7 +505,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     }
 
     // Convert LRO 'state' to desired 'state'
-    if(state === "running" && period.video_finalized_parts_info.last_finalization_time === 0) {
+    if(state === "running" && videoLastFinalizationTimeEpochSec <= 0) {
       state = "starting";
     } else if(state === "running" && sinceLastFinalize > 32.9) {
       state = "stalled";
