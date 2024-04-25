@@ -358,17 +358,17 @@ const StreamGenerateOffering = async({
  * @return {Promise<Object>} - The status response for the object, as well as logs, warnings and errors from the master initialization
  */
 exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
-  let conf = await this.LoadConf({name});
+  let objectId = name;
   let status = {name: name};
 
   try {
-    let libraryId = await this.ContentObjectLibraryId({objectId: conf.objectId});
+    let libraryId = await this.ContentObjectLibraryId({objectId});
     status.library_id = libraryId;
-    status.object_id = conf.objectId;
+    status.object_id = objectId;
 
     let mainMeta = await this.ContentObjectMetadata({
-      libraryId: libraryId,
-      objectId: conf.objectId,
+      libraryId,
+      objectId,
       select: [
         "live_recording_config",
         "live_recording"
@@ -416,7 +416,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     status.stream_id = edgeWriteToken; // By convention the stream ID is its write token
     let edgeMeta = await this.ContentObjectMetadata({
       libraryId: libraryId,
-      objectId: conf.objectId,
+      objectId: objectId,
       writeToken: edgeWriteToken,
       select: [
         "live_recording"
@@ -465,7 +465,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
 
     status.lro_status_url = await this.FabricUrl({
       libraryId: libraryId,
-      objectId: conf.objectId,
+      objectId: objectId,
       writeToken: edgeWriteToken,
       call: "live/status/" + tlro
     });
@@ -516,8 +516,8 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
 
     if((state === "running" || state === "stalled" || state === "starting") && stopLro) {
       lroStopUrl = await this.FabricUrl({
-        libraryId: libraryId,
-        objectId: conf.objectId,
+        libraryId,
+        objectId,
         writeToken: edgeWriteToken,
         call: "live/stop/" + tlro
       });
@@ -538,7 +538,6 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
 
     if(state === "running") {
       let playout_urls = {};
-      let objectId = conf.objectId;
       let playout_options = await this.PlayoutOptions({
         objectId,
         linkPath: "public/asset_metadata/sources/default"
@@ -599,7 +598,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       if(networkInfo.name.includes("demo")) {
         embed_net = "demo";
       }
-      let embed_url = `https://embed.v3.contentfabric.io/?net=${embed_net}&p&ct=h&oid=${conf.objectId}&mt=lv&ath=${token}`;
+      let embed_url = `https://embed.v3.contentfabric.io/?net=${embed_net}&p&ct=h&oid=${objectId}&mt=lv&ath=${token}`;
       playout_urls.embed_url = embed_url;
 
       status.playout_urls = playout_urls;
@@ -734,7 +733,7 @@ exports.StreamCreate = async function({name, start=false}) {
 */
 exports.StreamStartOrStopOrReset = async function({name, op}) {
   try {
-    let status = await this.StreamStatus({name});
+    let status = await this.StreamStatus({name})
     if(status.state != "stopped") {
       if(op === "start") {
         status.error = "Unable to start stream - state: " + status.state;
@@ -939,9 +938,8 @@ exports.StreamInitialize = async function({name, drm=false, format}) {
   let typeLiveStream;
 
   // Fetch Title and Live Stream content types from tenant meta
-  const tenantContractId = await client.userProfileClient.TenantContractId();
-  let liveStreamContentType, titleContentType;
-  const {live_stream, title} = await client.ContentObjectMetadata({
+  const tenantContractId = await this.userProfileClient.TenantContractId();
+  const {live_stream, title} = await this.ContentObjectMetadata({
     libraryId: tenantContractId.replace("iten", "ilib"),
     objectId: tenantContractId.replace("iten", "iq__"),
     metadataSubtree: "public/content_types",
@@ -970,7 +968,7 @@ exports.StreamInitialize = async function({name, drm=false, format}) {
 };
 
 /**
- * Set the Live Stream offering
+ * Create a dummy VoD offering and initialize DRM keys.
  *
  * @methodGroup Live Stream
  * @namedParams
@@ -1168,13 +1166,12 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
     }
   }
 
-  let conf = await this.LoadConf({name});
-  let libraryId = await this.ContentObjectLibraryId({objectId: conf.objectId});
-  let objectId = conf.objectId;
+  let objectId = name;
+  let libraryId = await this.ContentObjectLibraryId({objectId});
 
   let mainMeta = await this.ContentObjectMetadata({
-    libraryId: libraryId,
-    objectId: conf.objectId
+    libraryId,
+    objectId
   });
 
   let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
@@ -1188,8 +1185,8 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
   let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
 
   let edgeMeta = await this.ContentObjectMetadata({
-    libraryId: libraryId,
-    objectId: conf.objectId,
+    libraryId,
+    objectId,
     writeToken: edgeWriteToken
   });
 
@@ -1304,43 +1301,6 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
 };
 
 /**
- * Load cached stream configuration
- *
- * @methodGroup Live Stream
- * @namedParams
- * @param {string} name - Object ID or name of the live stream object
- *
- * @return {Promise<Object>} - The configuration of the stream
- */
-exports.LoadConf = async function({name}) {
-  if(name.startsWith("iq__")) {
-    return {
-      name: name,
-      objectId: name
-    };
-  }
-
-  // If name is not a QID, load liveconf.json
-  let streamsBuf;
-  try {
-    streamsBuf = fs.readFileSync(
-      path.resolve(__dirname, "../liveconf.json")
-    );
-  } catch(error) {
-    console.log("Stream name must be a QID or a label in liveconf.json");
-    return {};
-  }
-  const streams = JSON.parse(streamsBuf);
-  const conf = streams[name];
-  if(conf === null) {
-    console.log("Bad name: ", name);
-    return {};
-  }
-
-  return conf;
-};
-
-/**
  * Configure the stream
  *
  * @methodGroup Live Stream
@@ -1356,16 +1316,16 @@ exports.LoadConf = async function({name}) {
  *
  */
 exports.StreamConfig = async function({name, customSettings={}}) {
-  let conf = await this.LoadConf({name});
+  let objectId = name;
   let status = {name};
 
-  let libraryId = await this.ContentObjectLibraryId({objectId: conf.objectId});
+  let libraryId = await this.ContentObjectLibraryId({objectId});
   status.library_id = libraryId;
-  status.object_id = conf.objectId;
+  status.object_id = objectId;
 
   let mainMeta = await this.ContentObjectMetadata({
     libraryId: libraryId,
-    objectId: conf.objectId
+    objectId: objectId
   });
 
   let userConfig = mainMeta.live_recording_config;
@@ -1398,7 +1358,7 @@ exports.StreamConfig = async function({name, customSettings={}}) {
 
     let probeUrl = await this.Rep({
       libraryId,
-      objectId: conf.objectId,
+      objectId,
       rep: "probe"
     });
 
@@ -1438,18 +1398,17 @@ exports.StreamConfig = async function({name, customSettings={}}) {
     channelLayout: customSettings.channelLayout
   });
   let liveRecordingConfig = JSON.parse(liveRecordingConfigStr);
-  console.log("CONFIG", JSON.stringify(liveRecordingConfig.live_recording));
 
   // Store live recording config into the stream object
   let e = await this.EditContentObject({
     libraryId,
-    objectId: conf.objectId
+    objectId: objectId
   });
   let writeToken = e.write_token;
 
   await this.ReplaceMetadata({
     libraryId,
-    objectId: conf.objectId,
+    objectId,
     writeToken,
     metadataSubtree: "live_recording",
     metadata: liveRecordingConfig.live_recording
@@ -1457,7 +1416,7 @@ exports.StreamConfig = async function({name, customSettings={}}) {
 
   status.fin = await this.FinalizeContentObject({
     libraryId,
-    objectId: conf.objectId,
+    objectId,
     writeToken,
     commitMessage: "Apply live stream configuration"
   });
@@ -1652,7 +1611,7 @@ exports.StreamCopyToVod = async function({
   startTime="",
   endTime=""
 }) {
-  const conf = await this.LoadConf({name});
+  const objectId = name;
   const abrProfile = require("../abr_profiles/abr_profile_live_to_vod.js");
 
   const status = await this.StreamStatus({name});
@@ -1678,9 +1637,9 @@ exports.StreamCopyToVod = async function({
   }
 
   try {
-    status.live_object_id = conf.objectId;
+    status.live_object_id = objectId;
 
-    const liveHash = await this.LatestVersionHash({objectId: conf.objectId, libraryId});
+    const liveHash = await this.LatestVersionHash({objectId, libraryId});
     status.live_hash = liveHash;
 
     if(eventId) {
