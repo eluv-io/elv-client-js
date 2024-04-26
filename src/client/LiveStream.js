@@ -821,9 +821,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
 exports.StreamStopSession = async function({name}) {
   try {
     this.Log(`Terminating stream session for: ${name}`);
-    let conf = await this.LoadConf({name});
-
-    let {objectId} = conf;
+    let objectId = name;
     let libraryId = await this.ContentObjectLibraryId({objectId});
 
     let mainMeta = await this.ContentObjectMetadata({
@@ -1301,17 +1299,31 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
 };
 
 /**
- * Configure the stream
+ * Configure the stream based on built-in logic and optional custom settings.
+ *
+ * Custom settings format:
+ *    {
+ *      "audio" {
+ *        "1" : {  // This is the stream index
+ *          "tags" : "language: english",
+ *          "codec" : "aac",
+ *          "bitrate": 204000,
+ *          "record":  true,
+ *          "recording_bitrate" : 192000,
+ *          "recording_channels" : 2,
+ *          "playout": bool
+ *          "playout_label": "English (Stereo)"
+ *        },
+ *        "3": {
+ *          ...
+ *        }
+ *      }
+ *    }
  *
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} name - Object ID or name of the live stream object
  * @param {Object=} customSettings - Additional options to customize configuration settings
- * - audioBitrate
- * - audioIndex
- * - partTtl
- * - channelLayout
- *
  * @return {Promise<Object>} - The status response for the stream
  *
  */
@@ -1330,7 +1342,6 @@ exports.StreamConfig = async function({name, customSettings={}}) {
 
   let userConfig = mainMeta.live_recording_config;
   status.user_config = userConfig;
-  console.log("userConfig", userConfig);
 
   // Get node URI from user config
   const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").replace("srt://", "").split(":")[0];
@@ -1391,13 +1402,9 @@ exports.StreamConfig = async function({name, customSettings={}}) {
   // Create live recording config
   let lc = new LiveConf(probe, node.id, endpoint, false, false, true);
 
-  const liveRecordingConfigStr = lc.generateLiveConf({
-    audioBitrate: customSettings.audioBitrate,
-    audioIndex: customSettings.audioIndex,
-    partTtl: customSettings.partTtl,
-    channelLayout: customSettings.channelLayout
+  const liveRecordingConfig = lc.generateLiveConf({
+    customSettings
   });
-  let liveRecordingConfig = JSON.parse(liveRecordingConfigStr);
 
   // Store live recording config into the stream object
   let e = await this.EditContentObject({
