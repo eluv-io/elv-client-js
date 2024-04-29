@@ -445,7 +445,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     let videoLastFinalizationTimeEpochSec = -1;
     let videoFinalizedParts = 0;
     let sinceLastFinalize = -1;
-    if (period.finalized_parts_info.video && period.finalized_parts_info.video.last_finalization_time) {
+    if (period.finalized_parts_info && period.finalized_parts_info.video && period.finalized_parts_info.video.last_finalization_time) {
       videoLastFinalizationTimeEpochSec = period.finalized_parts_info.video.last_finalization_time / 1000000;
       videoFinalizedParts = period.finalized_parts_info.video.n_parts;
       sinceLastFinalize = Math.floor(new Date().getTime() / 1000) - videoLastFinalizationTimeEpochSec;
