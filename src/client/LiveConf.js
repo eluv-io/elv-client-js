@@ -410,10 +410,13 @@ class LiveConf {
     // gather required data
     const conf = JSON.parse(JSON.stringify(LiveconfTemplate));
     const fileName = this.overwriteOriginUrl || this.probeData.format.filename;
-    const audioStreams = this.generateAudioStreamsConfig({customSettings})
+    const audioStreams = this.generateAudioStreamsConfig({customSettings});
 
+    // Retrieve one audio stream from the probe to read the sample rate and codec name
+    const audioStream = this.getStreamDataForCodecType("audio");
     const sampleRate = parseInt(audioStream.sample_rate);
     const audioCodec = audioStream.codec_name;
+
     const videoStream = this.getStreamDataForCodecType("video");
     let sourceTimescale;
 
