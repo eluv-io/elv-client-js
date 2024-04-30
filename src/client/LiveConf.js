@@ -153,7 +153,7 @@ class LiveConf {
     for(let index = 0; index < this.probeData.streams.length; index++) {
       if(this.probeData.streams[index].codec_type == "audio") {
         audioStreams[index] = {
-          recordingBitrate: Math.min(this.probeData.streams[index].bit_rate, 128000),
+          recordingBitrate: Math.max(this.probeData.streams[index].bit_rate, 128000),
           recordingChannels: this.probeData.streams[index].channels,
           playoutLabel: `Audio ${index}`
         }
@@ -447,8 +447,8 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.xc_params.sync_audio_to_stream_id = this.syncAudioToStreamIdValue();
     }
 
-    if(customSettings.partTtl) {
-      conf.live_recording.recording_config.recording_params.part_ttl = customSettings.partTtl;
+    if(customSettings.part_ttl) {
+      conf.live_recording.recording_config.recording_params.part_ttl = customSettings.part_ttl;
     }
 
     // Fill in specifics for protocol
