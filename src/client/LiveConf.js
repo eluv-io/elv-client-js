@@ -374,13 +374,14 @@ class LiveConf {
     let audioStreams = {};
     if (customSettings && customSettings.audio) {
       for (let i = 0; i < Object.keys(customSettings.audio).length; i ++) {
-        let audio = customSettings.audio[i];
-        audioStreams[i] = {
+        let audioIdx = Object.keys(customSettings.audio)[i];
+        let audio = customSettings.audio[audioIdx];
+        audioStreams[audioIdx] = {
           recordingBitrate: audio.recording_bitrate || 192000,
           recordingChannels: audio.recording_channels || 2,
         };
         if (audio.playout) {
-          audioStreams[i].playoutLabel = audio.playout_label || `Audio ${i}`
+          audioStreams[audioIdx].playoutLabel = audio.playout_label || `Audio ${audioIdx}`
         }
       }
     }
