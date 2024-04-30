@@ -623,7 +623,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
 */
 exports.StreamCreate = async function({name, start=false}) {
   let status = await this.StreamStatus({name});
-  if(status.state !== "inactive" && status.state !== "terminated" && status.state !== "stopped") {
+  if(status.state != "uninitialized" && status.state !== "inactive" && status.state !== "terminated" && status.state !== "stopped") {
     return {
       state: status.state,
       error: "stream still active - must terminate first"
@@ -981,7 +981,7 @@ exports.StreamInitialize = async function({name, drm=false, format}) {
  */
 exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveStream, drm=false, format}) {
   let status = await this.StreamStatus({name});
-  if(status.state != "inactive" && status.state != "stopped") {
+  if(status.state != "uninitialized" && status.state != "inactive" && status.state != "stopped") {
     return {
       state: status.state,
       error: "stream still active - must terminate first"
