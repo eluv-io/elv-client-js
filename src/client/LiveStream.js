@@ -890,8 +890,7 @@ exports.StreamStopSession = async function({name}) {
         fabric_config: {
           edge_write_token: ""
         }
-      },
-      recording_stop_time: stopTime
+      }
     };
 
     await this.MergeMetadata({
