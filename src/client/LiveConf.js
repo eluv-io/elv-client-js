@@ -146,6 +146,22 @@ class LiveConf {
     return stream;
   }
 
+  // Return all audio streams found in the probe
+  // Used by generateAudioStreamsConfig()
+  getAudioStreamsFromProbe() {
+    let audioStreams = {};
+    for(let index = 0; index < this.probeData.streams.length; index++) {
+      if(this.probeData.streams[index].codec_type == "audio") {
+        audioStreams[index] = {
+          recordingBitrate: Math.min(this.probeData.streams[index].bit_rate, 128000),
+          recordingChannels: this.probeData.streams[index].channels,
+          playoutLabel: `Audio ${index}`
+        }
+      }
+    }
+    return audioStreams;
+  }
+
   getFrameRate() {
     let videoStream = this.getStreamDataForCodecType("video");
     let frameRate = videoStream.r_frame_rate || videoStream.frame_rate;
@@ -388,17 +404,7 @@ class LiveConf {
 
     // If no audio streams specified in custom config, set up all the suitable audio streams in the probe
     if (Object.keys(audioStreams).length == 0) {
-      // TODO! For now mock stream "1"
-      audioStreams[1] = {
-        recordingBitrate: 192000,
-        recordingChannels: 2,
-        playoutLabel: `Audio 1`
-      }
-      audioStreams[2] = {
-        recordingBitrate: 192200,
-        recordingChannels: 2,
-        playoutLabel: `Audio 2`
-      }
+      audioStreams = this.getAudioStreamsFromProbe();
     }
 
     return audioStreams;
