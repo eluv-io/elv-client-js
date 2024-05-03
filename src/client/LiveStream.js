@@ -1323,16 +1323,19 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @namedParams
  * @param {string} name - Object ID or name of the live stream object
  * @param {Object=} customSettings - Additional options to customize configuration settings
+ * @param {Object=} probeMetadata - Metadata for the probe. If not specified, a new probe will be configured
  * @return {Promise<Object>} - The status response for the stream
  *
  */
-exports.StreamConfig = async function({name, customSettings={}}) {
+exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) {
   let objectId = name;
   let status = {name};
 
   let libraryId = await this.ContentObjectLibraryId({objectId});
   status.library_id = libraryId;
   status.object_id = objectId;
+
+  let probe = probeMetadata;
 
   let mainMeta = await this.ContentObjectMetadata({
     libraryId: libraryId,
@@ -1354,49 +1357,51 @@ exports.StreamConfig = async function({name, customSettings={}}) {
   }
   const node = nodes[0];
   status.node = node;
-
   let endpoint = node.endpoints[0];
-  this.SetNodes({fabricURIs: [endpoint]});
 
-  // Probe the stream
-  let probe = {};
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => {
-    controller.abort();
-  }, 60 * 1000); // milliseconds
-  try {
+  if(!probe) {
+    this.SetNodes({fabricURIs: [endpoint]});
 
-    let probeUrl = await this.Rep({
-      libraryId,
-      objectId,
-      rep: "probe"
-    });
+    // Probe the stream
+    probe = {};
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 60 * 1000); // milliseconds
+    try {
 
-    probe = await this.utils.ResponseToJson(
-      await HttpClient.Fetch(probeUrl, {
-        body: JSON.stringify({
-          "filename": streamUrl.href,
-          "listen": true
-        }),
-        method: "POST",
-        signal: controller.signal
-      })
-    );
+      let probeUrl = await this.Rep({
+        libraryId,
+        objectId,
+        rep: "probe"
+      });
 
-    if(probe) { clearTimeout(timeoutId); }
+      probe = await this.utils.ResponseToJson(
+        await HttpClient.Fetch(probeUrl, {
+          body: JSON.stringify({
+            "filename": streamUrl.href,
+            "listen": true
+          }),
+          method: "POST",
+          signal: controller.signal
+        })
+      );
 
-    if(probe.errors) {
-      throw probe.errors[0];
+      if(probe) { clearTimeout(timeoutId); }
+
+      if(probe.errors) {
+        throw probe.errors[0];
+      }
+    } catch(error) {
+      if(error.code === "ETIMEDOUT") {
+        throw "Stream probe time out - make sure the stream source is available";
+      } else {
+        throw error;
+      }
     }
-  } catch(error) {
-    if(error.code === "ETIMEDOUT") {
-      throw "Stream probe time out - make sure the stream source is available";
-    } else {
-      throw error;
-    }
+
+    probe.format.filename = streamUrl.href;
   }
-
-  probe.format.filename = streamUrl.href;
 
   // Create live recording config
   let lc = new LiveConf(probe, node.id, endpoint, false, false, true);
