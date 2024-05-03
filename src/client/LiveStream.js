@@ -1417,7 +1417,7 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
   });
   let writeToken = e.write_token;
 
-  await this.ReplaceMetadata({
+  await this.MergeMetadata({
     libraryId,
     objectId,
     writeToken,
