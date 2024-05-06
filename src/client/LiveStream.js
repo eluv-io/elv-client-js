@@ -1429,6 +1429,14 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
     libraryId,
     objectId,
     writeToken,
+    metadataSubtree: "live_recording/playout_config",
+    metadata: liveRecordingConfig.live_recording.playout_config
+  });
+
+  await this.MergeMetadata({
+    libraryId,
+    objectId,
+    writeToken,
     metadataSubtree: "live_recording/probe_info",
     metadata: liveRecordingConfig.live_recording.probe_info
   });
