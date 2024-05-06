@@ -1421,8 +1421,24 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
     libraryId,
     objectId,
     writeToken,
-    metadataSubtree: "live_recording",
-    metadata: liveRecordingConfig.live_recording
+    metadataSubtree: "live_recording/fabric_config",
+    metadata: liveRecordingConfig.live_recording.fabric_config
+  });
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "live_recording/probe_info",
+    metadata: liveRecordingConfig.live_recording.probe_info
+  });
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "live_recording/recording_config",
+    metadata: liveRecordingConfig.live_recording.recording_config
   });
 
   status.fin = await this.FinalizeContentObject({
