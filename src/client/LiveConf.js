@@ -428,7 +428,6 @@ class LiveConf {
     let sourceTimescale;
 
     // Fill in liveconf all formats have in common
-    conf.live_recording.probe_info = this.probeData;
     conf.live_recording.fabric_config.ingress_node_api = this.nodeUrl || null;
     conf.live_recording.fabric_config.ingress_node_id = this.nodeId || null;
     conf.live_recording.recording_config.recording_params.description;
@@ -445,6 +444,10 @@ class LiveConf {
 
     if(this.syncAudioToVideo) {
       conf.live_recording.recording_config.recording_params.xc_params.sync_audio_to_stream_id = this.syncAudioToStreamIdValue();
+    }
+
+    if(customSettings.edge_write_token) {
+      conf.live_recording.fabric_config.edge_write_token = customSettings.edge_write_token;
     }
 
     if(customSettings.part_ttl) {

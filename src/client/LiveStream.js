@@ -1417,36 +1417,20 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
   });
   let writeToken = e.write_token;
 
-  await this.MergeMetadata({
+  await this.ReplaceMetadata({
     libraryId,
     objectId,
     writeToken,
-    metadataSubtree: "live_recording/fabric_config",
-    metadata: liveRecordingConfig.live_recording.fabric_config
+    metadataSubtree: "live_recording",
+    metadata: liveRecordingConfig.live_recording
   });
 
   await this.ReplaceMetadata({
     libraryId,
     objectId,
     writeToken,
-    metadataSubtree: "live_recording/playout_config",
-    metadata: liveRecordingConfig.live_recording.playout_config
-  });
-
-  await this.MergeMetadata({
-    libraryId,
-    objectId,
-    writeToken,
-    metadataSubtree: "live_recording/probe_info",
-    metadata: liveRecordingConfig.live_recording.probe_info
-  });
-
-  await this.ReplaceMetadata({
-    libraryId,
-    objectId,
-    writeToken,
-    metadataSubtree: "live_recording/recording_config",
-    metadata: liveRecordingConfig.live_recording.recording_config
+    metadataSubtree: "live_recording_config/probe_info",
+    metadata: probe
   });
 
   status.fin = await this.FinalizeContentObject({
@@ -1499,7 +1483,8 @@ exports.StreamListUrls = async function({siteId}={}) {
       objectId: siteId,
       metadataSubtree: "public/asset_metadata/live_streams",
       resolveLinks: true,
-      resolveIgnoreErrors: true
+      resolveIgnoreErrors: true,
+      resolveIncludeSource: true
     });
 
     const activeUrlMap = {};
@@ -1510,18 +1495,8 @@ exports.StreamListUrls = async function({siteId}={}) {
         const stream = streamMetadata[slug];
         let versionHash;
 
-        if(
-          stream &&
-          stream.sources &&
-          stream.sources.default &&
-          stream.sources.default["."] &&
-          stream.sources.default["."].container ||
-          ((stream["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1]
-        ) {
-          versionHash = (
-            stream.sources.default["."].container ||
-            ((stream["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1]
-          );
+        if(stream && stream["."] && stream["."].source) {
+          versionHash = stream["."].source;
         }
 
         if(versionHash) {
