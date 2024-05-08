@@ -437,6 +437,7 @@ class LiveConf {
     conf.live_recording.recording_config.recording_params.xc_params.sample_rate = sampleRate;
     conf.live_recording.recording_config.recording_params.xc_params.enc_height = videoStream.height;
     conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;
+    conf.live_recording.recording_config.recording_params.xc_params.connection_timeout = 60;
 
     for (let i =0; i < Object.keys(audioStreams).length; i ++) {
       conf.live_recording.recording_config.recording_params.xc_params.audio_index[i] = parseInt(Object.keys(audioStreams)[i]);
