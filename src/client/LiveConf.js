@@ -15,6 +15,7 @@ const LadderTemplate = {
     media_type: 1,
     representation: "videovideo_1920x1080_h264@9500000",
     stream_name: "video",
+    stream_index: 0,
     width: 1920
   },
   "720": {
@@ -24,6 +25,7 @@ const LadderTemplate = {
     media_type: 1,
     representation: "videovideo_1280x720_h264@4500000",
     stream_name: "video",
+    stream_index: 0,
     width: 1280
   },
   "540": {
@@ -33,6 +35,7 @@ const LadderTemplate = {
     media_type: 1,
     representation: "videovideo_960x540_h264@2000000",
     stream_name: "video",
+    stream_index: 0,
     width: 960
   },
   "540_low": {
@@ -42,6 +45,7 @@ const LadderTemplate = {
     media_type: 1,
     representation: "videovideo_960x540_h264@900000",
     stream_name: "video",
+    stream_index: 0,
     width: 960
   }
 };
@@ -59,16 +63,7 @@ const LiveconfTemplate = {
     recording_config: {
       recording_params: {
         description: "",
-        ladder_specs: [
-          {
-            bit_rate: 384000,
-            channels: 2,
-            codecs: "mp4a.40.2",
-            media_type: 2,
-            representation: "audioaudio_aac@384000",
-            stream_name: "audio"
-          }
-        ],
+        ladder_specs: [],
         listen: true,
         live_delay_nano: 2000000000,
         max_duration_sec: -1,
@@ -90,6 +85,7 @@ const LiveconfTemplate = {
             0
           ],
           audio_seg_duration_ts: null,
+          connection_timeout: 60,
           ecodec2: "aac",
           enc_height: null,
           enc_width: null,
@@ -108,11 +104,22 @@ const LiveconfTemplate = {
           video_bitrate: null,
           video_seg_duration_ts: null,
           video_time_base: null,
+          video_frame_duration_ts: null,
           xc_type: 3
         }
       }
     }
   }
+};
+
+const LadderSpecAudio = {
+  bit_rate: 384000,
+  channels: 2,
+  codecs: "mp4a.40.2",
+  media_type: 2,
+  representation: "audioaudio_aac@384000",
+  stream_name: "audio",
+  stream_index: 0
 };
 
 class LiveConf {
@@ -138,6 +145,22 @@ class LiveConf {
       }
     }
     return stream;
+  }
+
+  // Return all audio streams found in the probe
+  // Used by generateAudioStreamsConfig()
+  getAudioStreamsFromProbe() {
+    let audioStreams = {};
+    for(let index = 0; index < this.probeData.streams.length; index++) {
+      if(this.probeData.streams[index].codec_type == "audio") {
+        audioStreams[index] = {
+          recordingBitrate: Math.max(this.probeData.streams[index].bit_rate, 128000),
+          recordingChannels: this.probeData.streams[index].channels,
+          playoutLabel: `Audio ${index}`
+        }
+      }
+    }
+    return audioStreams;
   }
 
   getFrameRate() {
@@ -223,7 +246,12 @@ class LiveConf {
   calcSegDurationMpegts({sourceTimescale}) {
     let videoStream = this.getStreamDataForCodecType("video");
     let frameRate = videoStream.frame_rate;
-    let seg = {};
+
+    // PENDING(SS) - calculate frame duration here
+    // let frameRateNum = 0;
+    let seg = {
+      //  videoFrameDurationTs: sourceTimescale / frameRateNum
+    };
 
     switch(frameRate) {
       case "24":
@@ -242,21 +270,25 @@ class LiveConf {
         seg.duration = "30";
         break;
       case "30000/1001":
+        //seg.videoFrameDurationTs = 3003;
         seg.video = sourceTimescale * 30;
         seg.keyint = 60;
         seg.duration = "30.03";
         break;
       case "48":
+        //seg.videoFrameDurationTs = 1875;
         seg.video = sourceTimescale * 30;
         seg.keyint = 96;
         seg.duration = "30";
         break;
       case "50":
+        //seg.videoFrameDurationTs = 1800;
         seg.video = sourceTimescale * 30;
         seg.keyint = 100;
         seg.duration = "30";
         break;
       case "60":
+        //seg.videoFrameDurationTs = 1500;
         seg.video = sourceTimescale * 30;
         seg.keyint = 120;
         seg.duration = "30";
@@ -281,7 +313,7 @@ class LiveConf {
 
     switch(frameRate) {
       case "24":
-        seg.videoTimeBase = 1536; // Output timebase: 12288
+        seg.videoTimeBase = 768; // Note 1536 produces low output bitrate
         seg.videoFrameDurationTs = 512;
         seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
         seg.keyint = 48;
@@ -350,36 +382,77 @@ class LiveConf {
     return sync_id;
   }
 
-  generateLiveConf({audioBitrate, audioIndex, partTtl, channelLayout}) {
+ /*
+  * Generate audio streams recording configuration based on the optional custom settings.
+  * If no custom "audio" section is present, record all the acceptable audio streams found in the probe
+  */
+  generateAudioStreamsConfig({customSettings}) {
+
+    let audioStreams = {};
+    if (customSettings && customSettings.audio) {
+      for (let i = 0; i < Object.keys(customSettings.audio).length; i ++) {
+        let audioIdx = Object.keys(customSettings.audio)[i];
+        let audio = customSettings.audio[audioIdx];
+        audioStreams[audioIdx] = {
+          recordingBitrate: audio.recording_bitrate || 192000,
+          recordingChannels: audio.recording_channels || 2,
+        };
+        if (audio.playout) {
+          audioStreams[audioIdx].playoutLabel = audio.playout_label || `Audio ${audioIdx}`
+        }
+      }
+    }
+
+    // If no audio streams specified in custom config, set up all the suitable audio streams in the probe
+    if (Object.keys(audioStreams).length == 0) {
+      audioStreams = this.getAudioStreamsFromProbe();
+    }
+
+    return audioStreams;
+  }
+
+ /*
+  * Generate the live recording config as required by QFAB, based on defaults and optional custom settings.
+  */
+  generateLiveConf({customSettings}) {
     // gather required data
     const conf = JSON.parse(JSON.stringify(LiveconfTemplate));
     const fileName = this.overwriteOriginUrl || this.probeData.format.filename;
-    const audioStream = this.getStreamDataForCodecType("audio");
+    const audioStreams = this.generateAudioStreamsConfig({customSettings});
 
+    // Retrieve one audio stream from the probe to read the sample rate and codec name
+    const audioStream = this.getStreamDataForCodecType("audio");
     const sampleRate = parseInt(audioStream.sample_rate);
     const audioCodec = audioStream.codec_name;
+
     const videoStream = this.getStreamDataForCodecType("video");
     let sourceTimescale;
 
     // Fill in liveconf all formats have in common
-    conf.live_recording.probe_info = this.probeData;
     conf.live_recording.fabric_config.ingress_node_api = this.nodeUrl || null;
     conf.live_recording.fabric_config.ingress_node_id = this.nodeId || null;
     conf.live_recording.recording_config.recording_params.description;
     conf.live_recording.recording_config.recording_params.origin_url = fileName;
     conf.live_recording.recording_config.recording_params.description = `Ingest stream ${fileName}`;
     conf.live_recording.recording_config.recording_params.name = `Ingest stream ${fileName}`;
-    conf.live_recording.recording_config.recording_params.xc_params.audio_index[0] = audioIndex === undefined ? audioStream.stream_index : audioIndex;
     conf.live_recording.recording_config.recording_params.xc_params.sample_rate = sampleRate;
     conf.live_recording.recording_config.recording_params.xc_params.enc_height = videoStream.height;
     conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;
+
+    for (let i =0; i < Object.keys(audioStreams).length; i ++) {
+      conf.live_recording.recording_config.recording_params.xc_params.audio_index[i] = parseInt(Object.keys(audioStreams)[i]);
+    }
 
     if(this.syncAudioToVideo) {
       conf.live_recording.recording_config.recording_params.xc_params.sync_audio_to_stream_id = this.syncAudioToStreamIdValue();
     }
 
-    if(partTtl) {
-      conf.live_recording.recording_config.recording_params.part_ttl = partTtl;
+    if(customSettings.edge_write_token) {
+      conf.live_recording.fabric_config.edge_write_token = customSettings.edge_write_token;
+    }
+
+    if(customSettings.part_ttl) {
+      conf.live_recording.recording_config.recording_params.part_ttl = customSettings.part_ttl;
     }
 
     // Fill in specifics for protocol
@@ -472,21 +545,33 @@ class LiveConf {
         throw new Error("ERROR: Probed stream does not conform to one of the following built in resolution ladders [4096, 2160], [1920, 1080] [1280, 720], [960, 540]");
     }
 
-    if(audioBitrate || channelLayout) {
-      const audioLadderSpec = conf.live_recording.recording_config.recording_params.ladder_specs.find(spec => spec.stream_name === "audio");
 
-      if(audioBitrate) {
-        conf.live_recording.recording_config.recording_params.xc_params.audio_bitrate = audioBitrate;
-        audioLadderSpec.bit_rate = audioBitrate;
-        audioLadderSpec.representation = `audioaudio_aac@${audioBitrate}`;
-      }
+    let globalAudioBitrate = 0;
+    let nAudio = 0;
 
-      if(channelLayout) {
-        audioLadderSpec.channels = channelLayout;
+    for (let i = 0; i < Object.keys(audioStreams).length; i ++ ) {
+      let audioLadderSpec = {...LadderSpecAudio};
+      const audioIndex = Object.keys(audioStreams)[i];
+      const audio = audioStreams[audioIndex];
+      audioLadderSpec.bit_rate = audio.recordingBitrate;
+      audioLadderSpec.representation = `audioaudio_aac@${audio.recordingBitrate}`;
+      audioLadderSpec.channels = audio.recordingChannels;
+      audioLadderSpec.stream_index = parseInt(audioIndex);
+      audioLadderSpec.stream_name = `audio_${audioIndex}`;
+      audioLadderSpec.stream_label = audio.playoutLabel ? audio.playoutLabel : null;
+
+      conf.live_recording.recording_config.recording_params.ladder_specs.push(audioLadderSpec);
+      if (audio.recordingBitrate > globalAudioBitrate) {
+        globalAudioBitrate = audio.recordingBitrate;
       }
+      nAudio ++;
     }
 
-    return JSON.stringify(conf, null, 2);
+    // Global recording bitrate for all audio streams
+    conf.live_recording.recording_config.recording_params.xc_params.audio_bitrate = globalAudioBitrate;
+    conf.live_recording.recording_config.recording_params.xc_params.n_audio = nAudio;
+
+    return conf;
   }
 }
 exports.LiveConf = LiveConf;
