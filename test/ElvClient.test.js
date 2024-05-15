@@ -304,7 +304,7 @@ describe("Test ElvClient", () => {
           private: {
             meta: "data"
           }
-        }
+        },
       });
 
       const libraryObjectId = client.utils.AddressToObjectId(client.utils.HashToAddress(libraryId));
@@ -815,7 +815,7 @@ describe("Test ElvClient", () => {
       });
 
       expect(automaticCommit).toBeDefined();
-      expect(client.utils.EqualAddress(client.CurrentAccountAddress(), automaticCommit.author)).toBeTruthy();
+      expect(automaticCommit.author).toEqual("Test User");
       expect(client.utils.EqualAddress(client.CurrentAccountAddress(), automaticCommit.author_address)).toBeTruthy();
       expect(automaticCommit.message).toBeDefined();
       expect(automaticCommit.timestamp).toBeDefined();
