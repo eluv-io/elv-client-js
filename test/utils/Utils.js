@@ -32,14 +32,14 @@ const RandomString = (size) => {
   return crypto.randomBytes(size).toString("hex");
 };
 
-const CreateClient = async (name, bux="2") => {
+const CreateClient = async (name, bux="2", useExistingSigner=false) => {
   try {
     // Un-initialize global.window so that elv-crypto knows it's running in node
     const w = globalThis.window;
     globalThis.window = undefined;
 
     const fundedClient = await ElvClient.FromConfigurationUrl({configUrl});
-    const client = await ElvClient.FromConfigurationUrl({configUrl});
+    let client = await ElvClient.FromConfigurationUrl({configUrl});
 
     const wallet = client.GenerateWallet();
     const fundedSigner = wallet.AddAccount({privateKey});
@@ -51,28 +51,33 @@ const CreateClient = async (name, bux="2") => {
 
     await fundedClient.SetSigner({signer: fundedSigner});
 
-    const mnemonic = wallet.GenerateMnemonic();
-    // Create a new account and send some ether
-    const signer = wallet.AddAccountFromMnemonic({mnemonic});
+    if(!useExistingSigner) {
+      const mnemonic=wallet.GenerateMnemonic();
+      // Create a new account and send some ether
+      const signer=wallet.AddAccountFromMnemonic({mnemonic});
 
-    // Each test file is run in parallel, so there may be collisions when initializing - retry until success
-    for(let i = 0; i < 5; i++) {
-      try {
-        let receipt = await fundedSigner.sendTransaction({
-          to: signer.address,
-          value: Ethers.utils.parseEther(bux)
-        });
-        await receipt.wait();
-        break;
-      } catch(e) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      // Each test file is run in parallel, so there may be collisions when initializing - retry until success
+      for(let i = 0; i < 5; i++) {
+        try {
+          let receipt=await fundedSigner.sendTransaction({
+            to: signer.address,
+            value: Ethers.utils.parseEther(bux)
+          });
+          await receipt.wait();
+          break;
+        } catch(e) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
       }
+      // Ensure transaction has time to resolve fully before continuing
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      await client.SetSigner({signer});
+      // Create user wallet
+      await client.userProfileClient.CreateWallet();
+    } else {
+      client = fundedClient;
     }
-
-    // Ensure transaction has time to resolve fully before continuing
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    await client.SetSigner({signer});
 
     client.clientName = name;
     client.initialBalance = parseFloat(bux);
@@ -90,9 +95,6 @@ const CreateClient = async (name, bux="2") => {
     if(process.env["DEBUG"]) {
       client.ToggleLogging(true);
     }
-
-    // Create user wallet
-    await client.userProfileClient.CreateWallet();
 
     return client;
   } catch(error) {
