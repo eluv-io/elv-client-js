@@ -58,11 +58,11 @@ const CreateClient = async (name, bux="2") => {
     // Each test file is run in parallel, so there may be collisions when initializing - retry until success
     for(let i = 0; i < 5; i++) {
       try {
-        await fundedSigner.sendTransaction({
+        let receipt = await fundedSigner.sendTransaction({
           to: signer.address,
           value: Ethers.utils.parseEther(bux)
         });
-
+        await receipt.wait();
         break;
       } catch(e) {
         await new Promise(resolve => setTimeout(resolve, 1000));
