@@ -9,6 +9,7 @@ const path = require("path");
 const fs = require("fs");
 const HttpClient = require("../HttpClient");
 const Fraction = require("fraction.js");
+const {ValidateObject, ValidatePresence} = require("../Validation");
 
 const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   const tok = await client.authClient.AuthorizationToken({libraryId, objectId,
@@ -21,6 +22,41 @@ const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
 const Sleep = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
+
+const CueInfo = async ({eventId, status}) => {
+  let cues;
+  try {
+    const lroStatusResponse = await this.utils.ResponseToJson(
+      await HttpClient.Fetch(status.lro_status_url)
+    );
+    console.log("lroStatusResponse", lroStatusResponse)
+    cues = lroStatusResponse.custom.cues;
+  } catch (error) {
+    console.log("LRO status failed", error);
+    return {error: "failed to retrieve status", eventId};
+  }
+
+  let eventStart, eventEnd;
+  for (const value of Object.values(cues)) {
+    for (const event of Object.values(value.descriptors)) {
+      if (event.id == eventId) {
+        switch (event.type_id) {
+          case 32:
+          case 16:
+            eventStart = value.insertion_time;
+            break;
+          case 33:
+          case 17:
+            eventEnd = value.insertion_time;
+            break;
+
+        }
+      }
+    }
+  }
+
+  return {eventStart, eventEnd, eventId};
+}
 
 /**
  * Set the offering for the live stream
@@ -322,17 +358,17 @@ const StreamGenerateOffering = async({
  * @return {Promise<Object>} - The status response for the object, as well as logs, warnings and errors from the master initialization
  */
 exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
-  let conf = await this.LoadConf({name});
+  let objectId = name;
   let status = {name: name};
 
   try {
-    let libraryId = await this.ContentObjectLibraryId({objectId: conf.objectId});
+    let libraryId = await this.ContentObjectLibraryId({objectId});
     status.library_id = libraryId;
-    status.object_id = conf.objectId;
+    status.object_id = objectId;
 
     let mainMeta = await this.ContentObjectMetadata({
-      libraryId: libraryId,
-      objectId: conf.objectId,
+      libraryId,
+      objectId,
       select: [
         "live_recording_config",
         "live_recording"
@@ -380,7 +416,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     status.stream_id = edgeWriteToken; // By convention the stream ID is its write token
     let edgeMeta = await this.ContentObjectMetadata({
       libraryId: libraryId,
-      objectId: conf.objectId,
+      objectId: objectId,
       writeToken: edgeWriteToken,
       select: [
         "live_recording"
@@ -406,8 +442,14 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     let tlro = period.live_recording_handle;
     status.tlro = tlro;
 
-    let sinceLastFinalize = Math.floor(new Date().getTime() / 1000) -
-      period.video_finalized_parts_info.last_finalization_time /1000000;
+    let videoLastFinalizationTimeEpochSec = -1;
+    let videoFinalizedParts = 0;
+    let sinceLastFinalize = -1;
+    if (period.finalized_parts_info && period.finalized_parts_info.video && period.finalized_parts_info.video.last_finalization_time) {
+      videoLastFinalizationTimeEpochSec = period.finalized_parts_info.video.last_finalization_time / 1000000;
+      videoFinalizedParts = period.finalized_parts_info.video.n_parts;
+      sinceLastFinalize = Math.floor(new Date().getTime() / 1000) - videoLastFinalizationTimeEpochSec;
+    }
 
     let recording_period = {
       activation_time_epoch_sec: period.recording_start_time_epoch_sec,
@@ -415,15 +457,15 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       start_time_text: new Date(period.start_time_epoch_sec * 1000).toLocaleString(),
       end_time_epoch_sec: period.end_time_epoch_sec,
       end_time_text:  period.end_time_epoch_sec === 0 ? null : new Date(period.end_time_epoch_sec * 1000).toLocaleString(),
-      video_parts: period.video_finalized_parts_info.n_parts,
-      video_last_part_finalized_epoch_sec: period.video_finalized_parts_info.last_finalization_time / 1000000,
+      video_parts: videoFinalizedParts,
+      video_last_part_finalized_epoch_sec: videoLastFinalizationTimeEpochSec,
       video_since_last_finalize_sec : sinceLastFinalize
     };
     status.recording_period = recording_period;
 
     status.lro_status_url = await this.FabricUrl({
       libraryId: libraryId,
-      objectId: conf.objectId,
+      objectId: objectId,
       writeToken: edgeWriteToken,
       call: "live/status/" + tlro
     });
@@ -453,6 +495,8 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
         await HttpClient.Fetch(status.lro_status_url)
       );
       state = lroStatus.state;
+      status.warnings = lroStatus.custom && lroStatus.custom.warnings;
+      status.quality = lroStatus.custom && lroStatus.custom.quality;
     } catch(error) {
       console.log("LRO Status (failed): ", error.response.statusCode);
       status.state = "stopped";
@@ -461,7 +505,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     }
 
     // Convert LRO 'state' to desired 'state'
-    if(state === "running" && period.video_finalized_parts_info.last_finalization_time === 0) {
+    if(state === "running" && videoLastFinalizationTimeEpochSec <= 0) {
       state = "starting";
     } else if(state === "running" && sinceLastFinalize > 32.9) {
       state = "stalled";
@@ -472,8 +516,8 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
 
     if((state === "running" || state === "stalled" || state === "starting") && stopLro) {
       lroStopUrl = await this.FabricUrl({
-        libraryId: libraryId,
-        objectId: conf.objectId,
+        libraryId,
+        objectId,
         writeToken: edgeWriteToken,
         call: "live/stop/" + tlro
       });
@@ -494,7 +538,6 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
 
     if(state === "running") {
       let playout_urls = {};
-      let objectId = conf.objectId;
       let playout_options = await this.PlayoutOptions({
         objectId,
         linkPath: "public/asset_metadata/sources/default"
@@ -555,7 +598,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       if(networkInfo.name.includes("demo")) {
         embed_net = "demo";
       }
-      let embed_url = `https://embed.v3.contentfabric.io/?net=${embed_net}&p&ct=h&oid=${conf.objectId}&mt=lv&ath=${token}`;
+      let embed_url = `https://embed.v3.contentfabric.io/?net=${embed_net}&p&ct=h&oid=${objectId}&mt=lv&ath=${token}`;
       playout_urls.embed_url = embed_url;
 
       status.playout_urls = playout_urls;
@@ -580,7 +623,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
 */
 exports.StreamCreate = async function({name, start=false}) {
   let status = await this.StreamStatus({name});
-  if(status.state !== "inactive" && status.state !== "terminated" && status.state !== "stopped") {
+  if(status.state != "uninitialized" && status.state !== "inactive" && status.state !== "terminated" && status.state !== "stopped") {
     return {
       state: status.state,
       error: "stream still active - must terminate first"
@@ -690,7 +733,7 @@ exports.StreamCreate = async function({name, start=false}) {
 */
 exports.StreamStartOrStopOrReset = async function({name, op}) {
   try {
-    let status = await this.StreamStatus({name});
+    let status = await this.StreamStatus({name})
     if(status.state != "stopped") {
       if(op === "start") {
         status.error = "Unable to start stream - state: " + status.state;
@@ -778,9 +821,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
 exports.StreamStopSession = async function({name}) {
   try {
     this.Log(`Terminating stream session for: ${name}`);
-    let conf = await this.LoadConf({name});
-
-    let {objectId} = conf;
+    let objectId = name;
     let libraryId = await this.ContentObjectLibraryId({objectId});
 
     let mainMeta = await this.ContentObjectMetadata({
@@ -827,7 +868,7 @@ exports.StreamStopSession = async function({name}) {
         writeToken: metaEdgeWriteToken
       });
     } catch(error) {
-      this.Log(`Unable to retrieve metadata for edge write token ${edgeWriteToken}`);
+      this.Log("Unable to retrieve metadata for edge write token");
     }
 
     const {writeToken} = await this.EditContentObject({
@@ -849,8 +890,7 @@ exports.StreamStopSession = async function({name}) {
         fabric_config: {
           edge_write_token: ""
         }
-      },
-      recording_stop_time: stopTime
+      }
     };
 
     await this.MergeMetadata({
@@ -891,21 +931,27 @@ exports.StreamStopSession = async function({name}) {
  * @return {Promise<Object>} - The name, object ID, and state of the stream
  */
 exports.StreamInitialize = async function({name, drm=false, format}) {
-  const contentTypes = await this.ContentTypes();
-
   let typeAbrMaster;
   let typeLiveStream;
 
-  for(let i = 0; i < Object.keys(contentTypes).length; i++) {
-    const key = Object.keys(contentTypes)[i];
+  // Fetch Title and Live Stream content types from tenant meta
+  const tenantContractId = await this.userProfileClient.TenantContractId();
+  const {live_stream, title} = await this.ContentObjectMetadata({
+    libraryId: tenantContractId.replace("iten", "ilib"),
+    objectId: tenantContractId.replace("iten", "iq__"),
+    metadataSubtree: "public/content_types",
+    select: [
+      "live_stream",
+      "title"
+    ]
+  });
 
-    if(contentTypes[key].name.includes("ABR Master") || contentTypes[key].name.includes("Title")) {
-      typeAbrMaster = contentTypes[key].hash;
-    }
+  if(live_stream) {
+    typeLiveStream = live_stream;
+  }
 
-    if(contentTypes[key].name.includes("Live Stream")) {
-      typeLiveStream = contentTypes[key].hash;
-    }
+  if(title) {
+    typeAbrMaster = title;
   }
 
   if(typeAbrMaster === undefined || typeLiveStream === undefined) {
@@ -919,7 +965,7 @@ exports.StreamInitialize = async function({name, drm=false, format}) {
 };
 
 /**
- * Set the Live Stream offering
+ * Create a dummy VoD offering and initialize DRM keys.
  *
  * @methodGroup Live Stream
  * @namedParams
@@ -935,7 +981,7 @@ exports.StreamInitialize = async function({name, drm=false, format}) {
  */
 exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveStream, drm=false, format}) {
   let status = await this.StreamStatus({name});
-  if(status.state != "inactive" && status.state != "stopped") {
+  if(status.state != "uninitialized" && status.state != "inactive" && status.state != "stopped") {
     return {
       state: status.state,
       error: "stream still active - must terminate first"
@@ -961,9 +1007,10 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
   const vFrameRate = "30000/1001";
   const vTimeBase = "1/30000"; // "1/16000";
 
-  const abrProfile = require("../abr_profiles/abr_profile_live_drm.js");
+  const abrProfileDefault = require("../abr_profiles/abr_profile_live_drm.js");
 
-  let playoutFormats = abrProfile.playout_formats;
+  let playoutFormats;
+  let abrProfile = JSON.parse(JSON.stringify(abrProfileDefault));
   if(format) {
     drm = true; // Override DRM parameter
     playoutFormats = {};
@@ -991,6 +1038,8 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
         }
       }
     };
+  } else {
+    playoutFormats = Object.assign({}, abrProfile.playout_formats);
   }
 
   abrProfile.playout_formats = playoutFormats;
@@ -1114,13 +1163,12 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
     }
   }
 
-  let conf = await this.LoadConf({name});
-  let libraryId = await this.ContentObjectLibraryId({objectId: conf.objectId});
-  let objectId = conf.objectId;
+  let objectId = name;
+  let libraryId = await this.ContentObjectLibraryId({objectId});
 
   let mainMeta = await this.ContentObjectMetadata({
-    libraryId: libraryId,
-    objectId: conf.objectId
+    libraryId,
+    objectId
   });
 
   let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
@@ -1134,8 +1182,8 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
   let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
 
   let edgeMeta = await this.ContentObjectMetadata({
-    libraryId: libraryId,
-    objectId: conf.objectId,
+    libraryId,
+    objectId,
     writeToken: edgeWriteToken
   });
 
@@ -1250,79 +1298,58 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
 };
 
 /**
- * Load cached stream configuration
+ * Configure the stream based on built-in logic and optional custom settings.
  *
- * @methodGroup Live Stream
- * @namedParams
- * @param {string} name - Object ID or name of the live stream object
- *
- * @return {Promise<Object>} - The configuration of the stream
- */
-exports.LoadConf = async function({name}) {
-  if(name.startsWith("iq__")) {
-    return {
-      name: name,
-      objectId: name
-    };
-  }
-
-  // If name is not a QID, load liveconf.json
-  let streamsBuf;
-  try {
-    streamsBuf = fs.readFileSync(
-      path.resolve(__dirname, "../liveconf.json")
-    );
-  } catch(error) {
-    console.log("Stream name must be a QID or a label in liveconf.json");
-    return {};
-  }
-  const streams = JSON.parse(streamsBuf);
-  const conf = streams[name];
-  if(conf === null) {
-    console.log("Bad name: ", name);
-    return {};
-  }
-
-  return conf;
-};
-
-/**
- * Configure the stream
+ * Custom settings format:
+ *    {
+ *      "audio" {
+ *        "1" : {  // This is the stream index
+ *          "tags" : "language: english",
+ *          "codec" : "aac",
+ *          "bitrate": 204000,
+ *          "record":  true,
+ *          "recording_bitrate" : 192000,
+ *          "recording_channels" : 2,
+ *          "playout": bool
+ *          "playout_label": "English (Stereo)"
+ *        },
+ *        "3": {
+ *          ...
+ *        }
+ *      }
+ *    }
  *
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} name - Object ID or name of the live stream object
  * @param {Object=} customSettings - Additional options to customize configuration settings
- * - audioBitrate
- * - audioIndex
- * - partTtl
- * - channelLayout
- *
+ * @param {Object=} probeMetadata - Metadata for the probe. If not specified, a new probe will be configured
  * @return {Promise<Object>} - The status response for the stream
  *
  */
-exports.StreamConfig = async function({name, customSettings={}}) {
-  let conf = await this.LoadConf({name});
+exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) {
+  let objectId = name;
   let status = {name};
 
-  let libraryId = await this.ContentObjectLibraryId({objectId: conf.objectId});
+  let libraryId = await this.ContentObjectLibraryId({objectId});
   status.library_id = libraryId;
-  status.object_id = conf.objectId;
+  status.object_id = objectId;
+
+  let probe = probeMetadata;
 
   let mainMeta = await this.ContentObjectMetadata({
     libraryId: libraryId,
-    objectId: conf.objectId
+    objectId: objectId
   });
 
   let userConfig = mainMeta.live_recording_config;
   status.user_config = userConfig;
-  console.log("userConfig", userConfig);
 
   // Get node URI from user config
   const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").replace("srt://", "").split(":")[0];
   const streamUrl = new URL(userConfig.url);
 
-  console.log("Retrieving nodes...");
+  console.log("Retrieving nodes - matching", hostName);
   let nodes = await this.SpaceNodes({matchEndpoint: hostName});
   if(nodes.length < 1) {
     status.error = "No node matching stream URL " + streamUrl.href;
@@ -1330,80 +1357,85 @@ exports.StreamConfig = async function({name, customSettings={}}) {
   }
   const node = nodes[0];
   status.node = node;
-
   let endpoint = node.endpoints[0];
-  this.SetNodes({fabricURIs: [endpoint]});
 
-  // Probe the stream
-  let probe = {};
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => {
-    controller.abort();
-  }, 60 * 1000); // milliseconds
-  try {
+  if(!probe) {
+    this.SetNodes({fabricURIs: [endpoint]});
 
-    let probeUrl = await this.Rep({
-      libraryId,
-      objectId: conf.objectId,
-      rep: "probe"
-    });
+    // Probe the stream
+    probe = {};
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 60 * 1000); // milliseconds
+    try {
 
-    probe = await this.utils.ResponseToJson(
-      await HttpClient.Fetch(probeUrl, {
-        body: JSON.stringify({
-          "filename": streamUrl.href,
-          "listen": true
-        }),
-        method: "POST",
-        signal: controller.signal
-      })
-    );
+      let probeUrl = await this.Rep({
+        libraryId,
+        objectId,
+        rep: "probe"
+      });
 
-    if(probe) { clearTimeout(timeoutId); }
+      probe = await this.utils.ResponseToJson(
+        await HttpClient.Fetch(probeUrl, {
+          body: JSON.stringify({
+            "filename": streamUrl.href,
+            "listen": true
+          }),
+          method: "POST",
+          signal: controller.signal
+        })
+      );
 
-    if(probe.errors) {
-      throw probe.errors[0];
+      if(probe) { clearTimeout(timeoutId); }
+
+      if(probe.errors) {
+        throw probe.errors[0];
+      }
+    } catch(error) {
+      if(error.code === "ETIMEDOUT") {
+        throw "Stream probe time out - make sure the stream source is available";
+      } else {
+        throw error;
+      }
     }
-  } catch(error) {
-    if(error.code === "ETIMEDOUT") {
-      throw "Stream probe time out - make sure the stream source is available";
-    } else {
-      throw error;
-    }
+
+    probe.format.filename = streamUrl.href;
   }
-
-  probe.format.filename = streamUrl.href;
 
   // Create live recording config
   let lc = new LiveConf(probe, node.id, endpoint, false, false, true);
 
-  const liveRecordingConfigStr = lc.generateLiveConf({
-    audioBitrate: customSettings.audioBitrate,
-    audioIndex: customSettings.audioIndex,
-    partTtl: customSettings.partTtl,
-    channelLayout: customSettings.channelLayout
+  const liveRecordingConfig = lc.generateLiveConf({
+    customSettings
   });
-  let liveRecordingConfig = JSON.parse(liveRecordingConfigStr);
-  console.log("CONFIG", JSON.stringify(liveRecordingConfig.live_recording));
 
   // Store live recording config into the stream object
   let e = await this.EditContentObject({
     libraryId,
-    objectId: conf.objectId
+    objectId: objectId
   });
   let writeToken = e.write_token;
 
   await this.ReplaceMetadata({
     libraryId,
-    objectId: conf.objectId,
+    objectId,
     writeToken,
     metadataSubtree: "live_recording",
     metadata: liveRecordingConfig.live_recording
   });
 
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "live_recording_config/probe_info",
+    metadata: probe
+  });
+
   status.fin = await this.FinalizeContentObject({
     libraryId,
-    objectId: conf.objectId,
+    objectId,
     writeToken,
     commitMessage: "Apply live stream configuration"
   });
@@ -1416,7 +1448,7 @@ exports.StreamConfig = async function({name, customSettings={}}) {
  *
  * @methodGroup Live Stream
  * @namedParams
- * @param {string=} - ID of the live stream site object
+ * @param {string=} siteId - ID of the live stream site object
  *
  * @return {Promise<Object>} - The list of stream URLs
  */
@@ -1451,7 +1483,8 @@ exports.StreamListUrls = async function({siteId}={}) {
       objectId: siteId,
       metadataSubtree: "public/asset_metadata/live_streams",
       resolveLinks: true,
-      resolveIgnoreErrors: true
+      resolveIgnoreErrors: true,
+      resolveIncludeSource: true
     });
 
     const activeUrlMap = {};
@@ -1462,18 +1495,8 @@ exports.StreamListUrls = async function({siteId}={}) {
         const stream = streamMetadata[slug];
         let versionHash;
 
-        if(
-          stream &&
-          stream.sources &&
-          stream.sources.default &&
-          stream.sources.default["."] &&
-          stream.sources.default["."].container ||
-          ((stream["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1]
-        ) {
-          versionHash = (
-            stream.sources.default["."].container ||
-            ((stream["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1]
-          );
+        if(stream && stream["."] && stream["."].source) {
+          versionHash = stream["."].source;
         }
 
         if(versionHash) {
@@ -1531,4 +1554,383 @@ exports.StreamListUrls = async function({siteId}={}) {
   } catch(error) {
     console.error(error);
   }
+};
+
+/**
+ * Copy a portion of a live stream recording into a standard VoD object using the zero-copy content fabric API
+ *
+ * Limitations:
+ * - currently requires the target object to be pre-created and have content encryption keys (CAPS)
+ * - for audio and video to be sync'd, the live stream needs to have the beginning of the desired recording period
+ * - for an event stream, make sure the TTL is long enough to allow running the live-to-vod command before the beginning of the recording expires
+ * - for 24/7 streams, make sure to reset the stream before the desired recording (as to create a new recording period) and have the TTL long enough
+ *  to allow running the live-to-vod command before the beginning of the recording expires.
+ * - startTime and endTime are not currently implemented by this method
+ *
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name - Object ID or name of the live stream
+ * @param {string} targetObjectId - Object ID of the target VOD object
+ * @param {string=} eventId -
+ * @param {boolean=} finalize - If enabled, target object will be finalized after copy to vod operations
+ * @param {number=} recordingPeriod - Determines which recording period to copy, which are 0-based. -1 copies the current (or last) period
+ *
+ * @return {Promise<Object>} - The status response for the stream
+ */
+
+/*
+   Example fabric API flow:
+
+     https://host-76-74-34-194.contentfabric.io/qlibs/ilib24CtWSJeVt9DiAzym8jB6THE9e7H/q/$QWT/call/media/live_to_vod/init -d @r1 -H "Authorization: Bearer $TOK"
+
+     {
+       "live_qhash": "hq__5Zk1jSN8vNLUAXjQwMJV8F8J8ESXNvmVKkhaXySmGc1BXnJPG2FvvaXee4CXqvFHuGuU3fqLJc",
+       "start_time": "",
+       "end_time": "",
+       "recording_period": -1,
+       "streams": ["video", "audio"],
+       "variant_key": "default"
+     }
+
+     https://host-76-74-34-194.contentfabric.io/qlibs/ilib24CtWSJeVt9DiAzym8jB6THE9e7H/q/$QWT/call/media/abr_mezzanine/init  -H "Authorization: Bearer $TOK" -d @r2
+
+     {
+
+       "abr_profile": { ...  },
+       "offering_key": "default",
+       "prod_master_hash": "tqw__HSQHBt7vYxWfCMPH5yXwKTfhdPcQ4Lcs9WUMUbTtnMbTZPTLo4BfJWPMGpoy1Dpv1wWQVtUtAtAr429TnVs",
+       "variant_key": "default",
+       "keep_other_streams": false
+     }
+
+     https://host-76-74-34-194.contentfabric.io/qlibs/ilib24CtWSJeVt9DiAzym8jB6THE9e7H/q/$QWT/call/media/live_to_vod/copy -d '{"variant_key":"","offering_key":""}' -H "Authorization: Bearer $TOK"
+
+
+     https://host-76-74-34-194.contentfabric.io/qlibs/ilib24CtWSJeVt9DiAzym8jB6THE9e7H/q/$QWT/call/media/abr_mezzanine/offerings/default/finalize -d '{}' -H "Authorization: Bearer $TOK"
+
+ */
+
+exports.StreamCopyToVod = async function({
+  name,
+  targetObjectId,
+  eventId,
+  streams=null,
+  finalize=true,
+  recordingPeriod=-1,
+  startTime="",
+  endTime=""
+}) {
+  const objectId = name;
+  const abrProfile = require("../abr_profiles/abr_profile_live_to_vod.js");
+
+  const status = await this.StreamStatus({name});
+  const libraryId = status.library_id;
+
+  this.Log(`Copying stream ${name} to target ${targetObjectId}`);
+
+  ValidateObject(targetObjectId);
+
+  const targetLibraryId = await this.ContentObjectLibraryId({objectId: targetObjectId});
+
+  // Validation - ensure target object has content encryption keys
+  const kmsAddress = await this.authClient.KMSAddress({objectId: targetObjectId});
+  const kmsCapId = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
+  const kmsCap = await this.ContentObjectMetadata({
+    libraryId: targetLibraryId,
+    objectId: targetObjectId,
+    metadataSubtree: kmsCapId
+  });
+
+  if(!kmsCap) {
+    throw Error(`No content encryption key set for object ${targetObjectId}`);
+  }
+
+  try {
+    status.live_object_id = objectId;
+
+    const liveHash = await this.LatestVersionHash({objectId, libraryId});
+    status.live_hash = liveHash;
+
+    if(eventId) {
+      // Retrieve start and end times for the event
+      let event = await this.CueInfo({eventId, status});
+      if(event.eventStart && event.eventEnd) {
+        startTime = event.eventStart;
+        endTime = event.eventEnd;
+      }
+    }
+
+    const {writeToken} = await this.EditContentObject({
+      objectId: targetObjectId,
+      libraryId: targetLibraryId
+    });
+
+    status.target_object_id = targetObjectId;
+    status.target_library_id = targetLibraryId;
+    status.target_write_token = writeToken;
+
+    this.Log("Process live source (takes around 20 sec per hour of content)");
+
+    await this.CallBitcodeMethod({
+      libraryId: targetLibraryId,
+      objectId: targetObjectId,
+      writeToken,
+      method: "/media/live_to_vod/init",
+      body: {
+        "live_qhash": liveHash,
+        "start_time": startTime, // eg. "2023-10-03T02:09:02.00Z",
+        "end_time": endTime, // eg. "2023-10-03T02:15:00.00Z",
+        "streams": streams,
+        "recording_period": recordingPeriod,
+        "variant_key": "default"
+      },
+      constant: false,
+      format: "text"
+    });
+
+    const abrMezInitBody = {
+      abr_profile: abrProfile,
+      "offering_key": "default",
+      "prod_master_hash": writeToken,
+      "variant_key": "default",
+      "keep_other_streams": false
+    };
+
+    await this.CallBitcodeMethod({
+      libraryId: targetLibraryId,
+      objectId: targetObjectId,
+      writeToken,
+      method: "/media/abr_mezzanine/init",
+      body: abrMezInitBody,
+      constant: false,
+      format: "text"
+    });
+
+    try {
+      await this.CallBitcodeMethod({
+        libraryId: targetLibraryId,
+        objectId: targetObjectId,
+        writeToken,
+        method: "/media/live_to_vod/copy",
+        body: {},
+        constant: false,
+        format: "text"
+      });
+    } catch(error) {
+      console.error("Unable to call /media/live_to_vod/copy", error);
+      throw error;
+    }
+
+    await this.CallBitcodeMethod({
+      libraryId: targetLibraryId,
+      objectId: targetObjectId,
+      writeToken,
+      method: "/media/abr_mezzanine/offerings/default/finalize",
+      body: abrMezInitBody,
+      constant: false,
+      format: "text"
+    });
+
+    if(finalize) {
+      const finalizeResponse = await this.FinalizeContentObject({
+        libraryId: targetLibraryId,
+        objectId: targetObjectId,
+        writeToken,
+        commitMessage: "Live Stream to VoD"
+      });
+
+      status.target_hash = finalizeResponse.hash;
+    }
+
+    // Clean up unnecessary status items
+    delete status.playout_urls;
+    delete status.lro_status_url;
+    delete status.recording_period;
+    delete status.recording_period_sequence;
+    delete status.edge_meta_size;
+    delete status.insertions;
+
+    return status;
+  } catch(error) {
+    this.Log(error, true);
+    throw error;
+  }
+};
+
+/**
+ * Remove a watermark for a live stream
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} objectId - Object ID of the live stream
+ * @param {Array<string>} types - Specify which type of watermark to remove. Possible values:
+ * - "image"
+ * - "text"
+ * @param {boolean=} finalize - If enabled, target object will be finalized after removing watermark
+ *
+ * @return {Promise<Object>} - The finalize response
+ */
+exports.StreamRemoveWatermark = async function({
+  objectId,
+  types,
+  finalize=true
+}) {
+  ValidateObject(objectId);
+
+  const libraryId = await this.ContentObjectLibraryId({objectId});
+  const {writeToken} = await this.EditContentObject({
+    objectId,
+    libraryId
+  });
+
+  this.Log(`Removing watermark types: ${types.join(", ")} ${libraryId} ${objectId}`);
+
+  const edgeWriteToken = await this.ContentObjectMetadata({
+    objectId,
+    libraryId,
+    metadataSubtree: "/live_recording/fabric_config/edge_write_token"
+  });
+
+  const recordingParamsPath = "live_recording/recording_config/recording_params";
+
+  const recordingMetadata = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: recordingParamsPath,
+    resolveLinks: false
+  });
+
+  if(!recordingMetadata) {
+    throw Error("Stream object must be configured");
+  }
+
+  types.forEach(type => {
+    if(type === "text") {
+      delete recordingMetadata.simple_watermark;
+    } else if(type === "image") {
+      delete recordingMetadata.image_watermark;
+    }
+  });
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: recordingParamsPath,
+    metadata: recordingMetadata
+  });
+
+  if(edgeWriteToken) {
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: edgeWriteToken,
+      metadataSubtree: recordingParamsPath,
+      metadata: recordingMetadata
+    });
+  }
+
+  if(finalize) {
+    const finalizeResponse = await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Watermark removed"
+    });
+
+    return finalizeResponse;
+  }
+};
+
+/**
+ * Create a watermark for a live stream
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} objectId - Object ID of the live stream
+ * @param {Object} simpleWatermark - Text watermark
+ * @param {Object} imageWatermark - Image watermark
+ * @param {boolean=} finalize - If enabled, target object will be finalized after adding watermark
+ *
+ * @return {Promise<Object>} - The finalize response
+ */
+exports.StreamAddWatermark = async function({
+  objectId,
+  simpleWatermark,
+  imageWatermark,
+  finalize=true
+}) {
+  ValidateObject(objectId);
+
+  const libraryId = await this.ContentObjectLibraryId({objectId});
+  const {writeToken} = await this.EditContentObject({
+    objectId,
+    libraryId
+  });
+
+  const edgeWriteToken = await this.ContentObjectMetadata({
+    objectId,
+    libraryId,
+    metadataSubtree: "/live_recording/fabric_config/edge_write_token"
+  });
+
+  this.Log(`Adding watermarking type: ${imageWatermark ? "image" : "text"} ${libraryId} ${objectId}`);
+
+  const recordingParamsPath = "live_recording/recording_config/recording_params";
+
+  const recordingMetadata = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: recordingParamsPath,
+    resolveLinks: false
+  });
+
+  if(!recordingMetadata) {
+    throw Error("Stream object must be configured");
+  }
+
+  if(simpleWatermark) {
+    recordingMetadata.simple_watermark = simpleWatermark;
+  } else if(imageWatermark) {
+    recordingMetadata.image_watermark = imageWatermark;
+  }
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: recordingParamsPath,
+    metadata: recordingMetadata
+  });
+
+  if(edgeWriteToken) {
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: edgeWriteToken,
+      metadataSubtree: recordingParamsPath,
+      metadata: recordingMetadata
+    });
+  }
+
+  const response = {
+    "imageWatermark": recordingMetadata.image_watermark,
+    "textWatermark": recordingMetadata.simple_watermark
+  };
+
+  if(finalize) {
+    const finalizeResponse = await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Watermark set"
+    });
+
+    response.hash = finalizeResponse.hash;
+  }
+
+  return response;
 };

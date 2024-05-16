@@ -11,7 +11,10 @@ const GenerateFabricToken = async () => {
 
     client.SetSigner({signer});
 
-    console.log(await client.CreateFabricToken({duration: process.env.DURATION}));
+    console.log(await client.CreateFabricToken({
+      duration: parseInt(process.env.DURATION),
+      //context: {email:"xyz@eluv.io"}
+    }));
   } catch(error) {
     console.error(error);
     console.error(JSON.stringify(error, null, 2));
