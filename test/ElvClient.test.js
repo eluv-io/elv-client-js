@@ -384,72 +384,6 @@ describe("Test ElvClient", () => {
       console.log(`\n\nLibraryId: ${libraryId}\nTenant Contract ID: ${tcId}\n`);
     });
 
-    test("Clear Tenancy", async () => {
-      // Remove the tenant contract ID from the library
-      await client.CallContractMethodAndWait({
-        contractAddress: client.utils.HashToAddress(libraryId),
-        methodName: "putMeta",
-        methodArgs: [
-          "_tenantId",
-          ""
-        ]
-      });
-      await client.CallContractMethodAndWait({
-        contractAddress: client.utils.HashToAddress(libraryId),
-        methodName: "putMeta",
-        methodArgs: [
-          "_ELV_TENANT_ID",
-          ""
-        ]
-      });
-
-      // if tenant contract id not found in contract or fabric metadata returns error
-      try {
-        const tid = await client.TenantContractId({objectId: libraryId});
-        expect(tid).not.toBeDefined();
-      } catch(e) {
-        expect(e).toBeDefined();
-      }
-
-      const libraryTenantContract = await client.CallContractMethod({
-        contractAddress: client.utils.HashToAddress(libraryId),
-        methodName: "getMeta",
-        methodArgs: [
-          "_tenantId"
-        ]
-      });
-      expect(libraryTenantContract).toEqual("0x");
-
-      // Remove tenant details from user
-      await client.CallContractMethodAndWait({
-        contractAddress: client.userProfileClient.walletAddress,
-        methodName: "putMeta",
-        methodArgs: [
-          "_tenantId",
-          ""
-        ]
-      });
-      await client.CallContractMethodAndWait({
-        contractAddress: client.userProfileClient.walletAddress,
-        methodName: "putMeta",
-        methodArgs: [
-          "_ELV_TENANT_ID",
-          ""
-        ]
-      });
-      client.userProfileClient.tenantContractId = undefined;
-      client.userProfileClient.tenantId = undefined;
-
-      // Create a new library and ensure tenant ID is not set
-      try {
-        const lid = await client.CreateContentLibrary({name: "No Tenant ID"});
-        console.log("lid", lid);
-        expect(lid).not.toBeDefined();
-      } catch(e) {
-        expect(e).toBeDefined();
-      }
-    });
-
     test("List Content Libraries", async () => {
       const libraries = await client.ContentLibraries();
 
@@ -2640,6 +2574,71 @@ describe("Test ElvClient", () => {
         expect(undefined).toBeDefined();
         // eslint-disable-next-line no-empty
       } catch(error) {}
+    });
+
+    test("Clear Tenancy", async () => {
+      // Remove the tenant contract ID from the library
+      await client.CallContractMethodAndWait({
+        contractAddress: client.utils.HashToAddress(libraryId),
+        methodName: "putMeta",
+        methodArgs: [
+          "_tenantId",
+          ""
+        ]
+      });
+      await client.CallContractMethodAndWait({
+        contractAddress: client.utils.HashToAddress(libraryId),
+        methodName: "putMeta",
+        methodArgs: [
+          "_ELV_TENANT_ID",
+          ""
+        ]
+      });
+
+      // if tenant contract id not found in contract or fabric metadata returns error
+      try {
+        const tid = await client.TenantContractId({objectId: libraryId});
+        expect(tid).not.toBeDefined();
+      } catch(e) {
+        expect(e).toBeDefined();
+      }
+
+      const libraryTenantContract = await client.CallContractMethod({
+        contractAddress: client.utils.HashToAddress(libraryId),
+        methodName: "getMeta",
+        methodArgs: [
+          "_tenantId"
+        ]
+      });
+      expect(libraryTenantContract).toEqual("0x");
+
+      // Remove tenant details from user
+      await client.CallContractMethodAndWait({
+        contractAddress: client.userProfileClient.walletAddress,
+        methodName: "putMeta",
+        methodArgs: [
+          "_tenantId",
+          ""
+        ]
+      });
+      await client.CallContractMethodAndWait({
+        contractAddress: client.userProfileClient.walletAddress,
+        methodName: "putMeta",
+        methodArgs: [
+          "_ELV_TENANT_ID",
+          ""
+        ]
+      });
+      client.userProfileClient.tenantContractId = undefined;
+      client.userProfileClient.tenantId = undefined;
+
+      // Create a new library and ensure tenant ID is not set
+      try {
+        const lid = await client.CreateContentLibrary({name: "No Tenant ID"});
+        expect(lid).not.toBeDefined();
+      } catch(e) {
+        expect(e).toBeDefined();
+      }
     });
 
     /*
