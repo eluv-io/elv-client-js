@@ -1120,13 +1120,28 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
   if(awaitCommitConfirmation) {
     const pollingInterval = 500; // ms
     let tries = 20;
-    while (tries > 0) {
-      const h = await this.LatestVersionHashV2({objectId});
-      if (h == versionHash) {
-        this.Log(`Commit confirmed on fabric node: ${versionHash}`);
-        break;
+    while(tries > 0) {
+      let h;
+
+      try {
+        h = await this.LatestVersionHashV2({objectId});
+
+        if(h === versionHash) {
+          this.Log(`Commit confirmed on fabric node: ${versionHash}`);
+          break;
+        } else {
+          tries--;
+          await new Promise(resolve => setTimeout(resolve, pollingInterval));
+        }
+      } catch(error) {
+        console.error(error);
+        if(error.status !== 404) {
+          throw error;
+        }
+
+        tries--;
+        await new Promise(resolve => setTimeout(resolve, pollingInterval));
       }
-      await new Promise(resolve => setTimeout(resolve, pollingInterval));
     }
   }
 
