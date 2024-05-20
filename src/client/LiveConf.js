@@ -404,7 +404,7 @@ class LiveConf {
     }
 
     // If no audio streams specified in custom config, set up all the suitable audio streams in the probe
-    if (Object.keys(audioStreams).length == 0) {
+    if (!customSettings.audio) {
       audioStreams = this.getAudioStreamsFromProbe();
     }
 

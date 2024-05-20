@@ -1152,8 +1152,8 @@ exports.LatestVersionHashV2 = async function({objectId, versionHash}) {
     latestHash = q.hash;
 
   } catch(error) {
-    console.log("ERROR", error);
-    throw Error(`Unable to determine latest version hash for ${versionHash || objectId}`);
+    error.message = `Unable to determine latest version hash for ${versionHash || objectId}`;
+    throw error;
   }
   return latestHash;
 };
