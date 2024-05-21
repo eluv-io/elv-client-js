@@ -2,6 +2,7 @@ const Ethers = require("ethers");
 const Utils = require("./Utils");
 const HttpClient = require("./HttpClient");
 const UrlJoin = require("url-join");
+const UUID = require("uuid");
 
 class RemoteSigner extends Ethers.Signer {
   constructor({
@@ -70,6 +71,31 @@ class RemoteSigner extends Ethers.Signer {
 
     this.id = this.address ? `ikms${Utils.AddressToHash(this.address)}` : undefined;
     this.signer = this.provider.getSigner(this.address);
+  }
+
+  async RetrieveFabricToken({email, nonce}) {
+    nonce = nonce || Utils.B58(UUID.parse(UUID.v4()));
+
+    // TODO: Remove
+    this.HttpClient = new HttpClient({uris: ["https://wlt.stg.svc.eluv.io"]});
+
+    let response = await Utils.ResponseToJson(
+      this.HttpClient.Request({
+        method: "POST",
+        body: {
+          email,
+          nonce
+        },
+        path: UrlJoin("as", "wlt", "sign", "csat"),
+        headers: {
+          Authorization: `Bearer ${this.authToken}`
+        },
+      })
+    );
+
+    response.nonce = nonce;
+
+    return response;
   }
 
   // Overrides
