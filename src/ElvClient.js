@@ -991,11 +991,11 @@ class ElvClient {
    * @param {string} messasge - A JSON object representing the message to sign
    */
   async CreateSignedMessageJSON({
-      message
+    message
   }) {
 
     // Only one kind of signature supported currently
-    const type = "mje_" // JSON message, EIP192 signature
+    const type = "mje_"; // JSON message, EIP192 signature
 
     const msg = JSON.stringify(message);
     const signature = await this.PersonalSign({message: msg, addEthereumPrefix: true});
@@ -1020,23 +1020,23 @@ class ElvClient {
   })  {
     const type = signedMessage.slice(0,4);
     switch(type) {
-        case "mje_":
-            const msgBytes = Utils.FromB58(signedMessage.slice(4));
-            const signature = msgBytes.slice(0, 65);
-            const msg = msgBytes.slice(65);
-            const obj = JSON.parse(msg);
+      case "mje_":
+        const msgBytes = Utils.FromB58(signedMessage.slice(4));
+        const signature = msgBytes.slice(0, 65);
+        const msg = msgBytes.slice(65);
+        const obj = JSON.parse(msg);
 
-            const prefixedMsgHash = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${msg.length}${msg}`, "utf-8"));
-            const signerAddr = Ethers.utils.recoverAddress(prefixedMsgHash, signature);
+        const prefixedMsgHash = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${msg.length}${msg}`, "utf-8"));
+        const signerAddr = Ethers.utils.recoverAddress(prefixedMsgHash, signature);
 
-            return {
-                type: type,
-                message: obj,
-                signerAddress: signerAddr,
-                signature: "0x" + signature.toString("hex")
-            };
-        default:
-            throw new Error(`Bad message type: ${type}`);
+        return {
+          type: type,
+          message: obj,
+          signerAddress: signerAddr,
+          signature: "0x" + signature.toString("hex")
+        };
+      default:
+        throw new Error(`Bad message type: ${type}`);
     }
   }
 
