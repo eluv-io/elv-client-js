@@ -1055,7 +1055,6 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
     const pollingInterval = 500; // ms
     let tries = 20;
     while(tries > 0) {
-<<<<<<< Updated upstream
       let h;
 
       try {
@@ -1076,12 +1075,6 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
 
         tries--;
         await new Promise(resolve => setTimeout(resolve, pollingInterval));
-=======
-      const h = await this.LatestVersionHashV2({objectId});
-      if(h == versionHash) {
-        this.Log(`Commit confirmed on fabric node: ${versionHash}`);
-        break;
->>>>>>> Stashed changes
       }
     }
   }

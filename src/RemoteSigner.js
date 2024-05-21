@@ -76,9 +76,6 @@ class RemoteSigner extends Ethers.Signer {
   async RetrieveFabricToken({email, nonce}) {
     nonce = nonce || Utils.B58(UUID.parse(UUID.v4()));
 
-    // TODO: Remove
-    this.HttpClient = new HttpClient({uris: ["https://wlt.stg.svc.eluv.io"]});
-
     let response = await Utils.ResponseToJson(
       this.HttpClient.Request({
         method: "POST",
