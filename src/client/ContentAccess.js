@@ -1152,12 +1152,8 @@ exports.LatestVersionHashV2 = async function({objectId, versionHash}) {
     latestHash = q.hash;
 
   } catch(error) {
-<<<<<<< Updated upstream
     error.message = `Unable to determine latest version hash for ${versionHash || objectId}`;
     throw error;
-=======
-    throw Error(`Unable to determine latest version hash for ${versionHash || objectId}`);
->>>>>>> Stashed changes
   }
   return latestHash;
 };
