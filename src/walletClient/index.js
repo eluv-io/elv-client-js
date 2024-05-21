@@ -1339,7 +1339,7 @@ class ElvWalletClient {
 
           if(op === "nft-claim-entitlement") {
             let [op, marketplace, sku, purchaseId ] = status.op.split(":");
-            confirmationId = purchaseId
+            confirmationId = purchaseId;
             if(status.extra && status.extra["0"]) {
               address = status.extra["0"].token_addr;
               tokenId = status.extra["0"].token_id;
