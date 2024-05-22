@@ -1,4 +1,4 @@
-const {Initialize} = require("./utils/Utils");
+const {Initialize, SetNodes} = require("./utils/Utils");
 const fs = require("fs");
 const Path = require("path");
 const {
@@ -170,6 +170,7 @@ describe("Test ElvClient", () => {
   describe("Initialize From Configuration Url", () => {
     test("Initialization", async () => {
       const bootstrapClient = await ElvClient.FromConfigurationUrl({configUrl});
+      SetNodes(bootstrapClient);
 
       expect(bootstrapClient).toBeDefined();
       expect(bootstrapClient.fabricURIs).toBeDefined();
@@ -181,6 +182,7 @@ describe("Test ElvClient", () => {
 
     test("Initialization With Region", async () => {
       const bootstrapClient = await ElvClient.FromConfigurationUrl({configUrl, region: "eu-west"});
+      SetNodes(bootstrapClient);
 
       expect(bootstrapClient).toBeDefined();
       expect(bootstrapClient.fabricURIs).toBeDefined();
