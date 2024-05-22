@@ -9,6 +9,9 @@ if(process.env["CONFIG_URL"]) {
   ClientConfiguration["config-url"] = process.env["CONFIG_URL"];
 }
 
+const fabricUrl = process.env["FABRIC_URL"] || ClientConfiguration["fabric-url"] || "";
+const ethUrl = process.env["ETH_URL"] || ClientConfiguration["eth-url"] || "";
+
 // Uses source by default. If USE_BUILD is specified, uses the minified node version
 const ElvClient = process.env["USE_BUILD"] ? Min.ElvClient : Source.ElvClient;
 
@@ -32,6 +35,32 @@ const RandomString = (size) => {
   return crypto.randomBytes(size).toString("hex");
 };
 
+const SetNodes = (client) => {
+  if(fabricUrl !== "") {
+    client.SetNodes({
+      fabricURIs: [fabricUrl],
+    });
+
+    const nodes = client.Nodes();
+    if(nodes.fabricURIs[0] !== fabricUrl) {
+      throw Error("fabric_url is not being set to the provided values");
+    }
+  }
+
+  if(ethUrl !== "") {
+    client.SetNodes({
+      ethereumURIs: [ethUrl],
+    });
+
+    const nodes = client.Nodes();
+    if(nodes.ethereumURIs[0] !== ethUrl) {
+      throw Error("eth_url is not being set to the provided values");
+    }
+  }
+
+  console.log("client nodes:", client.Nodes());
+};
+
 const CreateClient = async (name, bux="2", useExistingSigner=false) => {
   try {
     // Un-initialize global.window so that elv-crypto knows it's running in node
@@ -39,8 +68,9 @@ const CreateClient = async (name, bux="2", useExistingSigner=false) => {
     global.window = undefined;
 
     const fundedClient = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
+    SetNodes(fundedClient);
     let client = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
-
+    SetNodes(client);
     const wallet = client.GenerateWallet();
     const fundedSigner = wallet.AddAccount({privateKey});
 
@@ -158,5 +188,6 @@ module.exports = {
   RandomBytes,
   RandomString,
   CreateClient,
-  ReturnBalance
+  ReturnBalance,
+  SetNodes
 };

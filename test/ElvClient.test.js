@@ -1,4 +1,4 @@
-const {Initialize} = require("./utils/Utils");
+const {Initialize, SetNodes} = require("./utils/Utils");
 const {
   afterAll,
   beforeAll,
@@ -105,6 +105,7 @@ describe("Test ElvClient", () => {
       const bootstrapClient = await ElvClient.FromConfigurationUrl({
         configUrl: ClientConfiguration["config-url"]
       });
+      SetNodes(bootstrapClient);
 
       expect(bootstrapClient).toBeDefined();
       expect(bootstrapClient.fabricURIs).toBeDefined();
@@ -119,6 +120,7 @@ describe("Test ElvClient", () => {
         configUrl: ClientConfiguration["config-url"],
         region: "eu-west"
       });
+      SetNodes(bootstrapClient);
 
       expect(bootstrapClient).toBeDefined();
       expect(bootstrapClient.fabricURIs).toBeDefined();

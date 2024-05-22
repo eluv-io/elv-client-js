@@ -1,3 +1,5 @@
 {
-  "config-url": "https://demov3.net955210.contentfabric.io/config"
+  "config-url": "https://demov3.net955210.contentfabric.io/config",
+  "eth-url": "https://host-76-74-28-234.contentfabric.io/eth/",
+  "fabric-url": "http://192.168.96.104:8008/config?self&qspace=demov3"
 }

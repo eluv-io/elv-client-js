@@ -1,4 +1,4 @@
-const {Initialize} = require("./utils/Utils");
+const {Initialize,SetNodes} = require("./utils/Utils");
 const OutputLogger = require("./utils/OutputLogger");
 const {
   describe,
@@ -25,7 +25,7 @@ describe("Test Utils", () => {
       fabricURIs: ["http://localhost:8008"],
       ethereumURIs: ["http://localhost:8545"]
     });
-
+    SetNodes(client);
     expect(client.utils).toBeDefined();
 
     global.window = w;
