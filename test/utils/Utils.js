@@ -6,8 +6,8 @@ const ClientConfiguration = require("../../TestConfiguration");
 const ElvCrypto = require("../../src/Crypto");
 
 const configUrl = process.env["CONFIG_URL"] || ClientConfiguration["config-url"];
-const fabricUrl = process.env["FABRIC_URL"] || ClientConfiguration["fabric_url"] || "";
-const ethUrl = process.env["ETH_URL"] || ClientConfiguration["eth_url"] || "";
+const fabricUrl = process.env["FABRIC_URL"] || ClientConfiguration["fabric-url"] || "";
+const ethUrl = process.env["ETH_URL"] || ClientConfiguration["eth-url"] || "";
 
 // Uses source by default. If USE_BUILD is specified, uses the minified node version
 //const ElvClient = process.env["USE_BUILD"] ? Min.ElvClient : Source.ElvClient;
