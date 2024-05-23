@@ -73,7 +73,7 @@ class RemoteSigner extends Ethers.Signer {
     this.signer = this.provider.getSigner(this.address);
   }
 
-  async RetrieveFabricToken({email, nonce}) {
+  async RetrieveCSAT({email, nonce, force=false}) {
     nonce = nonce || Utils.B58(UUID.parse(UUID.v4()));
 
     let response = await Utils.ResponseToJson(
@@ -81,7 +81,8 @@ class RemoteSigner extends Ethers.Signer {
         method: "POST",
         body: {
           email,
-          nonce
+          nonce,
+          force
         },
         path: UrlJoin("as", "wlt", "sign", "csat"),
         headers: {
@@ -93,6 +94,36 @@ class RemoteSigner extends Ethers.Signer {
     response.nonce = nonce;
 
     return response;
+  }
+
+  async CSATStatus({accessToken}) {
+    try {
+      const response = await Utils.ResponseToJson(
+        this.HttpClient.Request({
+          method: "POST",
+          path: UrlJoin("as", "wlt", "login", "status"),
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          },
+        })
+      );
+
+      return response && response.is_active;
+    } catch(error) {
+      return false;
+    }
+  }
+
+  async ReleaseCSAT({accessToken}) {
+    return await Utils.ResponseToJson(
+      this.HttpClient.Request({
+        method: "POST",
+        path: UrlJoin("as", "wlt", "login", "release"),
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        },
+      })
+    );
   }
 
   // Overrides
