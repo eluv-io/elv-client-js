@@ -395,7 +395,15 @@ class ElvWalletClient {
    *
    * @methodGroup Login
    */
-  LogOut() {
+  async LogOut() {
+    if(this.__authorization.nonce) {
+      try {
+        await this.client.signer.ReleaseCSAT({accessToken: this.AuthToken()});
+      } catch(error) {
+        this.Log("Failed to release token", true, error);
+      }
+    }
+
     this.__authorization = {};
     this.loggedIn = false;
 
@@ -408,6 +416,14 @@ class ElvWalletClient {
       // eslint-disable-next-line no-empty
       } catch(error) {}
     }
+  }
+
+  async TokenStatus() {
+    if(!this.__authorization || !this.__authorization.nonce) {
+      return true;
+    }
+
+    return await this.client.signer.CSATStatus({accessToken: this.AuthToken()});
   }
 
   /**
@@ -457,7 +473,7 @@ class ElvWalletClient {
    * - signingToken - Identical to `authToken`, but also includes the ability to perform arbitrary signatures with the custodial wallet. This token should be protected and should not be
    * shared with third parties.
    */
-  async AuthenticateOAuth({idToken, tenantId, email, signerURIs, shareEmail=false, nonce, createRemoteToken=true}) {
+  async AuthenticateOAuth({idToken, tenantId, email, signerURIs, shareEmail=false, nonce, createRemoteToken=true, force=false}) {
     let tokenDuration = 24;
 
     if(!tenantId && this.selectedMarketplaceInfo) {
@@ -471,7 +487,7 @@ class ElvWalletClient {
     let fabricToken, expiresAt;
     if(createRemoteToken && this.client.signer.remoteSigner) {
       expiresAt = Date.now() + 24 * 60 * 60 * 1000;
-      const tokenResponse = await this.client.signer.RetrieveFabricToken({email, nonce});
+      const tokenResponse = await this.client.signer.RetrieveCSAT({email, nonce, force});
       fabricToken = tokenResponse.token;
       nonce = tokenResponse.nonce;
     } else {
