@@ -56,8 +56,6 @@ const SetNodes = (client) => {
       throw Error("eth_url is not being set to the provided values");
     }
   }
-
-  console.log("client nodes:", client.Nodes());
 };
 
 const CreateClient = async (name, bux="2") => {
