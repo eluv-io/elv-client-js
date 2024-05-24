@@ -574,7 +574,7 @@ class ElvClient {
    * @param {string=} matchEndpoint - Return node(s) matching the specified endpoint
    * @param {string=} matchNodeId - Return node(s) matching the specified node ID
    *
-   * @return {Array<Object>} - A list of nodes in the space matching the parameters
+   * @return {Promise<Array<Object>>} - A list of nodes in the space matching the parameters
    */
   async SpaceNodes({matchEndpoint, matchNodeId}={}) {
     let nodes;

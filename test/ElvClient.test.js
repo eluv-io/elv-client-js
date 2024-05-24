@@ -2672,6 +2672,29 @@ describe("Test ElvClient", () => {
       await client.DeleteAccessGroup({contractAddress: accessGroupAddress});
     });
   });
+
+  describe("Nodes", () => {
+    let matchEndpoint = process.env.NODE_ENDPOINT;
+    let matchNodeId = process.env.NODE_ID;
+
+    test("List Nodes By Endpoint", async () => {
+      const nodes = await client.SpaceNodes({
+        matchEndpoint
+      });
+
+      expect(nodes).toBeDefined();
+      expect(nodes[0]).toBeDefined();
+    });
+
+    test("List Nodes By ID", async () => {
+      const nodes = await client.SpaceNodes({
+        matchNodeId
+      });
+
+      expect(nodes).toBeDefined();
+      expect(nodes[0]).toBeDefined();
+    });
+  });
 });
 
 if(!module.parent) { runTests(); }
