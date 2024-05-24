@@ -110,7 +110,7 @@ class RemoteSigner extends Ethers.Signer {
 
       return response && response.is_active;
     } catch(error) {
-      return false;
+      return !error || error.status !== 403;
     }
   }
 
