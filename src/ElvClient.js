@@ -601,15 +601,20 @@ class ElvClient {
         if(
           node.services &&
           node.services.fabric_api &&
-          node.services.fabric_api.urls &&
-          (node.services.fabric_api.urls || []).includes(matchEndpoint)
+          node.services.fabric_api.urls
         ) {
-          match = true;
+          const results = (node.services.fabric_api.urls || []).find(url => url.includes(matchEndpoint));
+
+          if(results) {
+            match = true;
+          }
         }
 
         if(matchNodeId && node.id === matchNodeId) {
           match = true;
         }
+
+        this.ClearStaticToken();
 
         return match;
       });
@@ -625,6 +630,7 @@ class ElvClient {
         })
       );
 
+      this.ClearStaticToken();
       return [node];
     }
   }
