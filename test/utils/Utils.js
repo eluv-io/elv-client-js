@@ -58,7 +58,7 @@ const SetNodes = (client) => {
   }
 };
 
-const CreateClient = async (name, bux="2") => {
+const CreateClient = async (name, bux="0.2") => {
   try {
     // Un-initialize global.window so that elv-crypto knows it's running in node
     const w = globalThis.window;

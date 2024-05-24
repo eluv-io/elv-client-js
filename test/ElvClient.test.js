@@ -48,6 +48,7 @@ let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAdd
 let mediaLibraryId, masterId, masterHash, mezzanineId, linkLibraryId, linkObjectId;
 let s3Access;
 let tenantId, tenantAdminAddress, contentAdminAddress;
+let isUsingExternalTenantContractId;
 
 let playoutResult;
 
@@ -58,7 +59,7 @@ let partInfo = {};
 // Describe blocks and  tests within them are run in order
 describe("Test ElvClient", () => {
   beforeAll(async () => {
-    client = OutputLogger(ElvClient, await CreateClient("ElvClient", "2"));
+    client = OutputLogger(ElvClient, await CreateClient("ElvClient","0.3"));
     accessClient = OutputLogger(ElvClient, await CreateClient("ElvClient Access"));
 
     testFile1 = RandomBytes(testFileSize);
@@ -102,9 +103,20 @@ describe("Test ElvClient", () => {
     });
     client.SetSigner({signer});
 
+    const userAddr = client.CurrentAccountAddress();
     if(tenantContractId !== ""){
-      console.log("RMMM", tenantContractId);
       let tenantContractAddress = client.utils.HashToAddress(tenantContractId);
+      isUsingExternalTenantContractId = true;
+
+      const owner = await client.CallContractMethod({
+        contractAddress: tenantContractAddress,
+        methodName: "owner",
+        formatArguments: true,
+      });
+
+      if(!client.utils.EqualAddress(userAddr, owner)){
+        throw new Error(`Error: require private_key to be tenant_root_key, expected(tenant_owner)=${owner}, actual=${userAddr}`);
+      }
 
       tenantAdminAddress = await client.CallContractMethod({
         contractAddress: tenantContractAddress,
@@ -112,14 +124,16 @@ describe("Test ElvClient", () => {
         methodArgs: ["tenant_admin", 0],
         formatArguments: true,
       });
-      console.log("RMMM", tenantAdminAddress);
       expect(tenantAdminAddress).toBeDefined();
+      if(tenantAdminAddress === ""){
+        throw new Error("Error: tenant_admin_address not found for tenant_contract_id provided");
+      }
       tenantId = `iten${client.utils.AddressToHash(tenantAdminAddress)}`;
+
     } else {
       const spaceOwner = await client.authClient.Owner({address: client.contentSpaceAddress});
-      if(client.signer.address.toString().toLowerCase() !== spaceOwner.toString().toLowerCase()){
-        console.log("require space owner to run this test");
-        return;
+      if(!client.utils.EqualAddress(userAddr, spaceOwner)){
+        throw new Error("Error: require space owner or trusted address to create new tenant");
       }
 
       // create groups
@@ -147,7 +161,6 @@ describe("Test ElvClient", () => {
         formatArguments: true,
       });
 
-
       await client.CallContractMethodAndWait({
         contractAddress: tenantAddress,
         abi: JSON.parse(tenantAbi),
@@ -167,11 +180,12 @@ describe("Test ElvClient", () => {
       });
     }
 
-
     tenantId = `iten${client.utils.AddressToHash(tenantAdminAddress)}`;
     console.log(`\n\nTenant contract deployed:\nTenantContractId:${tenantContractId}\nTenantId:${tenantId}\n\n`);
 
-    await client.userProfileClient.SetTenantContractId({tenantContractId});
+    await client.userProfileClient.SetTenantContractId({
+      tenantContractId
+    });
     expect(client.userProfileClient.tenantContractId).toEqual(tenantContractId);
   });
 
@@ -829,7 +843,12 @@ describe("Test ElvClient", () => {
       });
 
       expect(automaticCommit).toBeDefined();
-      expect(automaticCommit.author).toEqual("Test User");
+      if(isUsingExternalTenantContractId){
+        expect(automaticCommit.author).toContain("tenant-elv-admin");
+      }else{
+        expect(client.utils.EqualAddress(automaticCommit.author, automaticCommit.author_address)).toBeTruthy();
+      }
+
       expect(client.utils.EqualAddress(client.CurrentAccountAddress(), automaticCommit.author_address)).toBeTruthy();
       expect(automaticCommit.message).toBeDefined();
       expect(automaticCommit.timestamp).toBeDefined();
@@ -838,7 +857,7 @@ describe("Test ElvClient", () => {
       // Create new commit with message and user name
       await client.userProfileClient.ReplaceUserMetadata({
         metadataSubtree: "public/name",
-        metadata: "Test User"
+        metadata: automaticCommit.author
       });
 
       await client.EditAndFinalizeContentObject({
@@ -855,7 +874,11 @@ describe("Test ElvClient", () => {
       });
 
       expect(customCommit).toBeDefined();
-      expect(customCommit.author).toEqual("Test User");
+      if(isUsingExternalTenantContractId){
+        expect(customCommit.author).toContain("tenant-elv-admin");
+      } else {
+        expect(client.utils.EqualAddress(customCommit.author, customCommit.author_address)).toBeTruthy();
+      }
       expect(client.utils.EqualAddress(client.CurrentAccountAddress(), customCommit.author_address)).toBeTruthy();
       expect(customCommit.timestamp).toBeDefined();
       expect(isNaN((new Date(customCommit.timestamp)).getTime())).toBeFalsy();
