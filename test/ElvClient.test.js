@@ -59,7 +59,7 @@ let partInfo = {};
 // Describe blocks and  tests within them are run in order
 describe("Test ElvClient", () => {
   beforeAll(async () => {
-    client = OutputLogger(ElvClient, await CreateClient("ElvClient","0.3"));
+    client = OutputLogger(ElvClient, await CreateClient("ElvClient"));
     accessClient = OutputLogger(ElvClient, await CreateClient("ElvClient Access"));
 
     testFile1 = RandomBytes(testFileSize);
