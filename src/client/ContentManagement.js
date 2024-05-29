@@ -1068,7 +1068,6 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
           await new Promise(resolve => setTimeout(resolve, pollingInterval));
         }
       } catch(error) {
-        console.error(error);
         if(error.status !== 404) {
           throw error;
         }
