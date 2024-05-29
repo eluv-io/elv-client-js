@@ -56,11 +56,9 @@ const SetNodes = (client) => {
       throw Error("eth_url is not being set to the provided values");
     }
   }
-
-  console.log("client nodes:", client.Nodes());
 };
 
-const CreateClient = async (name, bux="2") => {
+const CreateClient = async (name, bux="0.2") => {
   try {
     // Un-initialize global.window so that elv-crypto knows it's running in node
     const w = globalThis.window;
