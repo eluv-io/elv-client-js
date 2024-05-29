@@ -1355,7 +1355,10 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
     status.error = "No node matching stream URL " + streamUrl.href;
     return status;
   }
-  const node = nodes[0];
+  const node = {
+    endpoints: nodes[0].services.fabric_api.urls,
+    id: nodes[0].id
+  };
   status.node = node;
   let endpoint = node.endpoints[0];
 
