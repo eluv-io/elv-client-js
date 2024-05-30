@@ -473,7 +473,7 @@ class ElvWalletClient {
    * - signingToken - Identical to `authToken`, but also includes the ability to perform arbitrary signatures with the custodial wallet. This token should be protected and should not be
    * shared with third parties.
    */
-  async AuthenticateOAuth({idToken, tenantId, email, signerURIs, shareEmail=false, nonce, createRemoteToken=true, force=false}) {
+  async AuthenticateOAuth({idToken, tenantId, email, signerURIs, shareEmail=false, extraData={}, nonce, createRemoteToken=true, force=false}) {
     let tokenDuration = 24;
 
     if(!tenantId && this.selectedMarketplaceInfo) {
@@ -482,7 +482,7 @@ class ElvWalletClient {
       tenantId = this.selectedMarketplaceInfo.tenantId;
     }
 
-    await this.client.SetRemoteSigner({idToken, tenantId, signerURIs, extraData: { share_email: shareEmail }, unsignedPublicAuth: true});
+    await this.client.SetRemoteSigner({idToken, tenantId, signerURIs, extraData: { ...extraData, share_email: shareEmail }, unsignedPublicAuth: true});
 
     let fabricToken, expiresAt;
     if(createRemoteToken && this.client.signer.remoteSigner) {
