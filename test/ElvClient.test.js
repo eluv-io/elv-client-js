@@ -1,4 +1,4 @@
-const {Initialize} = require("./utils/Utils");
+const {Initialize, SetNodes} = require("./utils/Utils");
 const fs = require("fs");
 const Path = require("path");
 const {
@@ -13,6 +13,7 @@ const {
 
 const ClientConfiguration = require("../TestConfiguration");
 const configUrl = process.env["CONFIG_URL"] || ClientConfiguration["config-url"];
+let tenantContractId = process.env["TENANT_CONTRACT_ID"] || ClientConfiguration["tenant-contract-id"] || "";
 
 const Fetch = (input, init={}) => {
   if(typeof fetch === "undefined") {
@@ -46,7 +47,8 @@ let client, accessClient;
 let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
 let mediaLibraryId, masterId, masterHash, mezzanineId, linkLibraryId, linkObjectId;
 let s3Access;
-let tenantContractId, tenantId, tenantAdminAddress, contentAdminAddress;
+let tenantId, tenantAdminAddress, contentAdminAddress;
+let isUsingExternalTenantContractId;
 
 let playoutResult;
 
@@ -57,7 +59,7 @@ let partInfo = {};
 // Describe blocks and  tests within them are run in order
 describe("Test ElvClient", () => {
   beforeAll(async () => {
-    client = OutputLogger(ElvClient, await CreateClient("ElvClient", "2"));
+    client = OutputLogger(ElvClient, await CreateClient("ElvClient"));
     accessClient = OutputLogger(ElvClient, await CreateClient("ElvClient Access"));
 
     testFile1 = RandomBytes(testFileSize);
@@ -101,62 +103,90 @@ describe("Test ElvClient", () => {
     });
     client.SetSigner({signer});
 
-    const spaceOwner = await client.authClient.Owner({address: client.contentSpaceAddress});
-    if(client.signer.address.toString().toLowerCase() !== spaceOwner.toString().toLowerCase()){
-      console.log("require space owner to run this test");
-      return;
+    const userAddr = client.CurrentAccountAddress();
+    if(tenantContractId !== ""){
+      let tenantContractAddress = client.utils.HashToAddress(tenantContractId);
+      isUsingExternalTenantContractId = true;
+
+      const owner = await client.CallContractMethod({
+        contractAddress: tenantContractAddress,
+        methodName: "owner",
+        formatArguments: true,
+      });
+
+      if(!client.utils.EqualAddress(userAddr, owner)){
+        throw new Error(`Error: require private_key to be tenant_root_key, expected(tenant_owner)=${owner}, actual=${userAddr}`);
+      }
+
+      tenantAdminAddress = await client.CallContractMethod({
+        contractAddress: tenantContractAddress,
+        methodName: "groupsMapping",
+        methodArgs: ["tenant_admin", 0],
+        formatArguments: true,
+      });
+      expect(tenantAdminAddress).toBeDefined();
+      if(tenantAdminAddress === ""){
+        throw new Error("Error: tenant_admin_address not found for tenant_contract_id provided");
+      }
+      tenantId = `iten${client.utils.AddressToHash(tenantAdminAddress)}`;
+
+    } else {
+      const spaceOwner = await client.authClient.Owner({address: client.contentSpaceAddress});
+      if(!client.utils.EqualAddress(userAddr, spaceOwner)){
+        throw new Error("Error: require space owner or trusted address to create new tenant");
+      }
+
+      // create groups
+      tenantAdminAddress = await client.CreateAccessGroup({name: "tenant_admin group"});
+      expect(tenantAdminAddress).toBeDefined();
+      contentAdminAddress = await client.CreateAccessGroup({name: "content_admin group"});
+      expect(contentAdminAddress).toBeDefined();
+
+      // deploy tenant contract
+      const tenantContractInfo = await client.DeployContract({
+        abi: JSON.parse(tenantAbi),
+        bytecode: tenantBytecode.toString("utf8").replace("\n", ""),
+        constructorArgs: [client.contentSpaceAddress,"TestTenant", client.utils.nullAddress]
+      });
+
+      expect(tenantContractInfo.contractAddress).toBeDefined();
+      const tenantAddress=tenantContractInfo.contractAddress;
+      tenantContractId = `iten${client.utils.AddressToHash(tenantAddress)}`;
+
+      await client.CallContractMethodAndWait({
+        contractAddress: tenantAddress,
+        abi: JSON.parse(tenantAbi),
+        methodName: "addGroup",
+        methodArgs: ["tenant_admin", tenantAdminAddress],
+        formatArguments: true,
+      });
+
+      await client.CallContractMethodAndWait({
+        contractAddress: tenantAddress,
+        abi: JSON.parse(tenantAbi),
+        methodName: "addGroup",
+        methodArgs: ["content_admin", contentAdminAddress],
+        formatArguments: true,
+      });
+
+      // set tenant contract in tenant and content admins
+      await client.SetTenantContractId({
+        contractAddress: tenantAdminAddress,
+        tenantContractId
+      });
+      await client.SetTenantContractId({
+        contractAddress: contentAdminAddress,
+        tenantContractId
+      });
     }
-
-    // create groups
-    tenantAdminAddress = await client.CreateAccessGroup({name: "tenant_admin group"});
-    expect(tenantAdminAddress).toBeDefined();
-    contentAdminAddress = await client.CreateAccessGroup({name: "content_admin group"});
-    expect(contentAdminAddress).toBeDefined();
-
-    // deploy tenant contract
-    const tenantContractInfo = await client.DeployContract({
-      abi: JSON.parse(tenantAbi),
-      bytecode: tenantBytecode.toString("utf8").replace("\n", ""),
-      constructorArgs: [client.contentSpaceAddress,"TestTenant", client.utils.nullAddress]
-    });
-
-    expect(tenantContractInfo.contractAddress).toBeDefined();
-    const tenantAddress=tenantContractInfo.contractAddress;
-    tenantContractId = `iten${client.utils.AddressToHash(tenantAddress)}`;
-
-    await client.CallContractMethodAndWait({
-      contractAddress: tenantAddress,
-      abi: JSON.parse(tenantAbi),
-      methodName: "addGroup",
-      methodArgs: ["tenant_admin", tenantAdminAddress],
-      formatArguments: true,
-    });
-
-
-    await client.CallContractMethodAndWait({
-      contractAddress: tenantAddress,
-      abi: JSON.parse(tenantAbi),
-      methodName: "addGroup",
-      methodArgs: ["content_admin", contentAdminAddress],
-      formatArguments: true,
-    });
-
-    // set tenant contract in tenant and content admins
-    await client.SetTenantContractId({
-      contractAddress: tenantAdminAddress,
-      tenantContractId
-    });
-    await client.SetTenantContractId({
-      contractAddress: contentAdminAddress,
-      tenantContractId
-    });
 
     tenantId = `iten${client.utils.AddressToHash(tenantAdminAddress)}`;
     console.log(`\n\nTenant contract deployed:\nTenantContractId:${tenantContractId}\nTenantId:${tenantId}\n\n`);
 
-    await client.userProfileClient.SetTenantContractId({tenantContractId});
+    await client.userProfileClient.SetTenantContractId({
+      tenantContractId
+    });
     expect(client.userProfileClient.tenantContractId).toEqual(tenantContractId);
-
   });
 
   afterAll(async () => {
@@ -170,6 +200,7 @@ describe("Test ElvClient", () => {
   describe("Initialize From Configuration Url", () => {
     test("Initialization", async () => {
       const bootstrapClient = await ElvClient.FromConfigurationUrl({configUrl});
+      SetNodes(bootstrapClient);
 
       expect(bootstrapClient).toBeDefined();
       expect(bootstrapClient.fabricURIs).toBeDefined();
@@ -181,6 +212,7 @@ describe("Test ElvClient", () => {
 
     test("Initialization With Region", async () => {
       const bootstrapClient = await ElvClient.FromConfigurationUrl({configUrl, region: "eu-west"});
+      SetNodes(bootstrapClient);
 
       expect(bootstrapClient).toBeDefined();
       expect(bootstrapClient.fabricURIs).toBeDefined();
@@ -811,7 +843,12 @@ describe("Test ElvClient", () => {
       });
 
       expect(automaticCommit).toBeDefined();
-      expect(automaticCommit.author).toEqual("Test User");
+      if(isUsingExternalTenantContractId){
+        expect(automaticCommit.author).toContain("tenant-elv-admin");
+      }else{
+        expect(client.utils.EqualAddress(automaticCommit.author, automaticCommit.author_address)).toBeTruthy();
+      }
+
       expect(client.utils.EqualAddress(client.CurrentAccountAddress(), automaticCommit.author_address)).toBeTruthy();
       expect(automaticCommit.message).toBeDefined();
       expect(automaticCommit.timestamp).toBeDefined();
@@ -820,7 +857,7 @@ describe("Test ElvClient", () => {
       // Create new commit with message and user name
       await client.userProfileClient.ReplaceUserMetadata({
         metadataSubtree: "public/name",
-        metadata: "Test User"
+        metadata: automaticCommit.author
       });
 
       await client.EditAndFinalizeContentObject({
@@ -837,7 +874,11 @@ describe("Test ElvClient", () => {
       });
 
       expect(customCommit).toBeDefined();
-      expect(customCommit.author).toEqual("Test User");
+      if(isUsingExternalTenantContractId){
+        expect(customCommit.author).toContain("tenant-elv-admin");
+      } else {
+        expect(client.utils.EqualAddress(customCommit.author, customCommit.author_address)).toBeTruthy();
+      }
       expect(client.utils.EqualAddress(client.CurrentAccountAddress(), customCommit.author_address)).toBeTruthy();
       expect(customCommit.timestamp).toBeDefined();
       expect(isNaN((new Date(customCommit.timestamp)).getTime())).toBeFalsy();
@@ -2668,6 +2709,29 @@ describe("Test ElvClient", () => {
 
     test.skip("Delete Access Group", async () => {
       await client.DeleteAccessGroup({contractAddress: accessGroupAddress});
+    });
+  });
+
+  describe("Nodes", () => {
+    let matchEndpoint = process.env.NODE_ENDPOINT;
+    let matchNodeId = process.env.NODE_ID;
+
+    test("List Nodes By Endpoint", async () => {
+      const nodes = await client.SpaceNodes({
+        matchEndpoint
+      });
+
+      expect(nodes).toBeDefined();
+      expect(nodes[0]).toBeDefined();
+    });
+
+    test("List Nodes By ID", async () => {
+      const nodes = await client.SpaceNodes({
+        matchNodeId
+      });
+
+      expect(nodes).toBeDefined();
+      expect(nodes[0]).toBeDefined();
     });
   });
 });

@@ -232,13 +232,13 @@ class LiveConf {
     return seg;
   }
 
- /*
+  /*
   * Calculate output timebase from the encoder (codec) timebase. The videoTimeBase parameter
   * represents the encoder timebase. The format muxer will change it so it is greater than 10000.
   */
   calcOutputTimebase(codecTimebase) {
     let outputTimebase = codecTimebase;
-    while (outputTimebase < 10000)
+    while(outputTimebase < 10000)
       outputTimebase = outputTimebase * 2;
     return outputTimebase;
   }
