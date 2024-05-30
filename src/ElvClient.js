@@ -20,12 +20,13 @@ const Pako = require("pako");
 const {
   ValidatePresence
 } = require("./Validation");
-const CBOR = require("cbor-x");
+const UrlJoin = require("url-join");
 
 const networks = {
   "main": "https://main.net955305.contentfabric.io",
   "demo": "https://demov3.net955210.contentfabric.io",
   "demov3": "https://demov3.net955210.contentfabric.io",
+  "local": "http://127.0.0.1:8008/config?qspace=dev&self",
   "test": "https://test.net955203.contentfabric.io"
 };
 
@@ -134,7 +135,7 @@ class ElvClient {
    * @param {Array<string>=} searchURIs - A list of full URIs to search service endpoints
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
-   * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
+   * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth. Also known as an anonymous token containing the space
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    * @param {boolean=} assumeV3=false - If enabled, V3 fabric will be assumed
@@ -272,6 +273,17 @@ class ElvClient {
 
       throw error;
     }
+  }
+
+  /**
+   * Return a list of valid Eluvio Content Fabric network names and their associated configuration URLs
+   *
+   * @methodGroup Miscellaneous
+   *
+   * @return {Object} - An object using network names as keys and configuration URLs as values.
+   */
+  static Networks() {
+    return networks;
   }
 
   /**
@@ -574,78 +586,65 @@ class ElvClient {
    * @param {string=} matchEndpoint - Return node(s) matching the specified endpoint
    * @param {string=} matchNodeId - Return node(s) matching the specified node ID
    *
-   * @return {Array<Object>} - A list of nodes in the space matching the parameters
+   * @return {Promise<Array<Object>>} - A list of nodes in the space matching the parameters
    */
   async SpaceNodes({matchEndpoint, matchNodeId}={}) {
-    let bign = await this.CallContractMethod({
-      contractAddress: this.contentSpaceAddress,
-      methodName: "numActiveNodes",
-    });
-    let n = bign.toNumber();
+    let nodes;
+    this.SetStaticToken();
 
-    return (await Utils.LimitedMap(
-      5,
-      [...new Array(n)],
-      async (_, index) => {
-        let bigi = Ethers.BigNumber.from(index);
-        let addr = await this.CallContractMethod({
-          contractAddress: this.contentSpaceAddress,
-          methodName: "activeNodeAddresses",
-          methodArgs: [bigi],
-          formatArguments: true
-        });
+    if(matchEndpoint) {
+      ({nodes} = await this.utils.ResponseToJson(
+        this.HttpClient.Request({
+          path: UrlJoin("nodes"),
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${this.staticToken}`
+          }
+        })
+      ));
 
-        let nodeId = this.utils.AddressToNodeId(addr);
+      if(!nodes || !Array.isArray(nodes) || nodes.length === 0) {
+        return [];
+      }
 
-        if(matchNodeId && nodeId !== matchNodeId) {
-          return;
-        }
-
-        let locatorsHex = await this.CallContractMethod({
-          contractAddress: this.contentSpaceAddress,
-          methodName: "activeNodeLocators",
-          methodArgs: [bigi]
-        });
-
-        let node = {id: nodeId, endpoints: []};
-
-        // Parse locators CBOR
-        let locators = CBOR.decodeMultiple(
-          Buffer.from(
-            locatorsHex.slice(2, locatorsHex.length),
-            "hex"
-          )
-        );
-
+      return nodes.filter(node => {
         let match = false;
 
-        if(locators.length >= 5) {
-          let fabArray = locators[4].fab;
-          if(fabArray) {
-            for(let i = 0; i < fabArray.length; i ++) {
-              let host = fabArray[i].host;
+        if(
+          node.services &&
+          node.services.fabric_api &&
+          node.services.fabric_api.urls
+        ) {
+          const results = (node.services.fabric_api.urls || []).find(url => url.includes(matchEndpoint));
 
-              if(matchEndpoint && !matchEndpoint.includes(host)) {
-                continue; // Not a match
-              }
-
-              match = true;
-              let endpoint = fabArray[i].scheme + "://" + host;
-
-              if(fabArray[i].port) {
-                endpoint = endpoint + ":" + fabArray[i].port;
-              }
-
-              endpoint = endpoint + "/" + fabArray[i].path;
-              node.endpoints.push(endpoint);
-            }
+          if(results) {
+            match = true;
           }
         }
 
-        return match ? node : undefined;
-      }
-    ))
-      .filter(n => n);
+        if(matchNodeId && node.id === matchNodeId) {
+          match = true;
+        }
+
+        this.ClearStaticToken();
+
+        return match;
+      });
+    } else if(matchNodeId) {
+      this.SetStaticToken();
+      let node = await this.utils.ResponseToJson(
+        this.HttpClient.Request({
+          path: UrlJoin("nodes", matchNodeId),
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${this.staticToken}`
+          }
+        })
+      );
+
+      this.ClearStaticToken();
+      return [node];
+    }
   }
 
   /**
@@ -991,11 +990,11 @@ class ElvClient {
    * @param {string} messasge - A JSON object representing the message to sign
    */
   async CreateSignedMessageJSON({
-      message
+    message
   }) {
 
     // Only one kind of signature supported currently
-    const type = "mje_" // JSON message, EIP192 signature
+    const type = "mje_"; // JSON message, EIP192 signature
 
     const msg = JSON.stringify(message);
     const signature = await this.PersonalSign({message: msg, addEthereumPrefix: true});
@@ -1020,23 +1019,23 @@ class ElvClient {
   })  {
     const type = signedMessage.slice(0,4);
     switch(type) {
-        case "mje_":
-            const msgBytes = Utils.FromB58(signedMessage.slice(4));
-            const signature = msgBytes.slice(0, 65);
-            const msg = msgBytes.slice(65);
-            const obj = JSON.parse(msg);
+      case "mje_":
+        const msgBytes = Utils.FromB58(signedMessage.slice(4));
+        const signature = msgBytes.slice(0, 65);
+        const msg = msgBytes.slice(65);
+        const obj = JSON.parse(msg);
 
-            const prefixedMsgHash = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${msg.length}${msg}`, "utf-8"));
-            const signerAddr = Ethers.utils.recoverAddress(prefixedMsgHash, signature);
+        const prefixedMsgHash = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${msg.length}${msg}`, "utf-8"));
+        const signerAddr = Ethers.utils.recoverAddress(prefixedMsgHash, signature);
 
-            return {
-                type: type,
-                message: obj,
-                signerAddress: signerAddr,
-                signature: "0x" + signature.toString("hex")
-            };
-        default:
-            throw new Error(`Bad message type: ${type}`);
+        return {
+          type: type,
+          message: obj,
+          signerAddress: signerAddr,
+          signature: "0x" + signature.toString("hex")
+        };
+      default:
+        throw new Error(`Bad message type: ${type}`);
     }
   }
 

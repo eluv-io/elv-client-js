@@ -2322,17 +2322,17 @@ exports.EmbedUrl = async function({
         break;
       case "useTicketCodes":
         embedUrl.searchParams.set("ptk", "");
-        if (options.tenantId) {
+        if(options.tenantId) {
           embedUrl.searchParams.set("ten", options.tenantId);
         }
-        if (options.ntpId) {
+        if(options.ntpId) {
           embedUrl.searchParams.set("ntp", options.ntpId);
         }
-        if (options.ticketCode) {
+        if(options.ticketCode) {
           embedUrl.searchParams.set("tk", Buffer.from(options.ticketCode).toString("base64"));
 
         }
-        if (options.ticketSubject) {
+        if(options.ticketSubject) {
           embedUrl.searchParams.set("sbj", Buffer.from(options.ticketSubject).toString("base64"));
         }
         break;

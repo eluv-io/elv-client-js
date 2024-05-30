@@ -395,7 +395,15 @@ class ElvWalletClient {
    *
    * @methodGroup Login
    */
-  LogOut() {
+  async LogOut() {
+    if(this.__authorization.nonce) {
+      try {
+        await this.client.signer.ReleaseCSAT({accessToken: this.AuthToken()});
+      } catch(error) {
+        this.Log("Failed to release token", true, error);
+      }
+    }
+
     this.__authorization = {};
     this.loggedIn = false;
 
@@ -408,6 +416,14 @@ class ElvWalletClient {
       // eslint-disable-next-line no-empty
       } catch(error) {}
     }
+  }
+
+  async TokenStatus() {
+    if(!this.__authorization || !this.__authorization.nonce) {
+      return true;
+    }
+
+    return await this.client.signer.CSATStatus({accessToken: this.AuthToken()});
   }
 
   /**
@@ -457,7 +473,7 @@ class ElvWalletClient {
    * - signingToken - Identical to `authToken`, but also includes the ability to perform arbitrary signatures with the custodial wallet. This token should be protected and should not be
    * shared with third parties.
    */
-  async AuthenticateOAuth({idToken, tenantId, email, signerURIs, shareEmail=false}) {
+  async AuthenticateOAuth({idToken, tenantId, email, signerURIs, shareEmail=false, extraData={}, nonce, createRemoteToken=true, force=false}) {
     let tokenDuration = 24;
 
     if(!tenantId && this.selectedMarketplaceInfo) {
@@ -466,13 +482,21 @@ class ElvWalletClient {
       tenantId = this.selectedMarketplaceInfo.tenantId;
     }
 
-    await this.client.SetRemoteSigner({idToken, tenantId, signerURIs, extraData: { share_email: shareEmail }, unsignedPublicAuth: true});
+    await this.client.SetRemoteSigner({idToken, tenantId, signerURIs, extraData: { ...extraData, share_email: shareEmail }, unsignedPublicAuth: true});
 
-    const expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
-    const fabricToken = await this.client.CreateFabricToken({
-      duration: tokenDuration * 60 * 60 * 1000,
-      //context: email ? {usr: {email}} : {}
-    });
+    let fabricToken, expiresAt;
+    if(createRemoteToken && this.client.signer.remoteSigner) {
+      expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+      const tokenResponse = await this.client.signer.RetrieveCSAT({email, nonce, force});
+      fabricToken = tokenResponse.token;
+      nonce = tokenResponse.nonce;
+    } else {
+      expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
+      fabricToken = await this.client.CreateFabricToken({
+        duration: tokenDuration * 60 * 60 * 1000,
+        context: email ? {usr: {email}} : {}
+      });
+    }
     const address = this.client.utils.FormatAddress(this.client.CurrentAccountAddress());
 
     if(!email) {
@@ -496,7 +520,8 @@ class ElvWalletClient {
         signerURIs,
         walletType: "Custodial",
         walletName: "Eluvio",
-        register: true
+        register: true,
+        nonce
       }),
       signingToken: this.SetAuthorization({
         clusterToken: this.client.signer.authToken,
@@ -507,7 +532,8 @@ class ElvWalletClient {
         expiresAt,
         signerURIs,
         walletType: "Custodial",
-        walletName: "Eluvio"
+        walletName: "Eluvio",
+        nonce
       })
     };
   }
@@ -568,7 +594,7 @@ class ElvWalletClient {
     return this.__authorization.fabricToken;
   }
 
-  SetAuthorization({clusterToken, fabricToken, tenantId, address, email, expiresAt, signerURIs, walletType, walletName, register=false}) {
+  SetAuthorization({clusterToken, fabricToken, tenantId, address, email, expiresAt, signerURIs, walletType, walletName, nonce, register=false}) {
     address = this.client.utils.FormatAddress(address);
 
     this.__authorization = {
@@ -578,7 +604,8 @@ class ElvWalletClient {
       email,
       expiresAt,
       walletType,
-      walletName
+      walletName,
+      nonce
     };
 
     if(clusterToken) {
@@ -1328,7 +1355,7 @@ class ElvWalletClient {
 
           if(op === "nft-claim-entitlement") {
             let [op, marketplace, sku, purchaseId ] = status.op.split(":");
-            confirmationId = purchaseId
+            confirmationId = purchaseId;
             if(status.extra && status.extra["0"]) {
               address = status.extra["0"].token_addr;
               tokenId = status.extra["0"].token_id;

@@ -29,18 +29,18 @@ const CueInfo = async ({eventId, status}) => {
     const lroStatusResponse = await this.utils.ResponseToJson(
       await HttpClient.Fetch(status.lro_status_url)
     );
-    console.log("lroStatusResponse", lroStatusResponse)
+    console.log("lroStatusResponse", lroStatusResponse);
     cues = lroStatusResponse.custom.cues;
-  } catch (error) {
+  } catch(error) {
     console.log("LRO status failed", error);
     return {error: "failed to retrieve status", eventId};
   }
 
   let eventStart, eventEnd;
-  for (const value of Object.values(cues)) {
-    for (const event of Object.values(value.descriptors)) {
-      if (event.id == eventId) {
-        switch (event.type_id) {
+  for(const value of Object.values(cues)) {
+    for(const event of Object.values(value.descriptors)) {
+      if(event.id == eventId) {
+        switch(event.type_id) {
           case 32:
           case 16:
             eventStart = value.insertion_time;
@@ -56,7 +56,7 @@ const CueInfo = async ({eventId, status}) => {
   }
 
   return {eventStart, eventEnd, eventId};
-}
+};
 
 /**
  * Set the offering for the live stream
@@ -860,7 +860,7 @@ exports.StreamStopSession = async function({name}) {
         return {
           state: status.state,
           error: "The stream must be stopped before terminating"
-        }
+        };
       }
 
       await this.DeleteWriteToken({
@@ -1355,7 +1355,10 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
     status.error = "No node matching stream URL " + streamUrl.href;
     return status;
   }
-  const node = nodes[0];
+  const node = {
+    endpoints: nodes[0].services.fabric_api.urls,
+    id: nodes[0].id
+  };
   status.node = node;
   let endpoint = node.endpoints[0];
 
@@ -1547,7 +1550,7 @@ exports.StreamListUrls = async function({siteId}={}) {
           url,
           active: activeUrlMap[url] || false
         };
-      })
+      });
     });
 
     return streamUrlStatus;
