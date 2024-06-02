@@ -9,6 +9,7 @@ const EthClient = require("./EthClient");
 const UserProfileClient = require("./UserProfileClient");
 const HttpClient = require("./HttpClient");
 const RemoteSigner = require("./RemoteSigner");
+const CrossChainOracle = require("./CrossChainOracle");
 
 // const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
@@ -433,6 +434,12 @@ class ElvClient {
       debug: this.debug
     });
 
+    this.crossChainOracle = new CrossChainOracle({
+      client: this,
+      contentSpaceId: this.contentSpaceId,
+      debug: this.debug
+    });
+
     // Initialize crypto wasm
     this.Crypto = Crypto;
     this.Crypto.ElvCrypto();
@@ -767,7 +774,40 @@ class ElvClient {
     ethProvider.pollingInterval = 250;
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
+    await this.SetSignDigest({provider});
     await this.InitializeClients();
+  }
+
+  /**
+   * Set the client SignDigest method from an existing web3 provider.
+   * Called as part of SetSignerFromWeb3Provider.
+   *
+   * @methodGroup Signers
+   * @namedParams
+   * @param {object} provider - The web3 provider object
+   */
+  async SetSignDigest({provider}) {
+    const userAddress = await this.signer.getAddress();
+    let signDigest;
+    if(provider && provider.request) {
+      signDigest = (_message) => {
+        return provider.request({
+          method: "personal_sign",
+          params: [userAddress, _message],
+        });
+      };
+    } else if(provider && provider.provider && provider.provider.request) {
+      signDigest = (_message) => {
+        return provider.provider.request({
+          method: "personal_sign",
+          params: [userAddress, _message],
+        });
+      };
+    } else {
+      this.Log("ERROR: cannot find a signDigest from provider, will use existing default", true);
+    }
+    this.signDigest = signDigest;
+    this.signer.signDigest = signDigest;
   }
 
   /**
@@ -1266,6 +1306,7 @@ class ElvClient {
       "SetRemoteSigner",
       "SetSigner",
       "SetSignerFromWeb3Provider",
+      "SetSignDigestFromWeb3Provider",
       "Sign",
       "ToggleLogging"
     ];

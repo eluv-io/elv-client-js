@@ -806,12 +806,37 @@ class AuthorizationClient {
     return Utils.FormatAddress(ownerAddress);
   }
 
+  async SignDigest(message) {
+    if(!this.client.signer?.signDigest && !this.client.signer?._signingKey()?.signDigest) {
+      const signer = this.client.signer;
+      let signDigest;
+      if(signer.provider && signer.provider.request && signer.address) {
+        signDigest = (_message) => {
+          return signer.provider.request({
+            method: "personal_sign",
+            params: [signer.address, _message],
+          });
+        };
+      } else if(signer.provider && signer.provider.provider && signer.provider.provider.request && signer.address) {
+        signDigest = (_message) => {
+          return signer.provider.provider.request({
+            method: "personal_sign",
+            params: [signer.address, _message],
+          });
+        };
+      } else {
+        throw Error("SignDigest() not available; did you set a valid provider?");
+      }
+      return signDigest(message);
+    }
+
+    return this.client.signer.signDigest ?
+      await this.client.signer.signDigest(message) :
+      await this.client.signer._signingKey().signDigest(message);
+  }
+
   async Sign(message) {
-    return await Ethers.utils.joinSignature(
-      this.client.signer.signDigest ?
-        await this.client.signer.signDigest(message) :
-        await this.client.signer._signingKey().signDigest(message)
-    );
+    return Ethers.utils.joinSignature(await this.SignDigest(message));
   }
 
   async KMSAddress({objectId, versionHash}) {
