@@ -42,7 +42,7 @@ const MezJobMainOfferingKey = function(abrMezOfferings) {
  * @param {string} name - Name of the content
  * @param {string=} description - Description of the content
  * @param {string} contentTypeName - Name of the content type to use
- * @param {string=} writeToken - Write token of the draft. If specified, object will not be finalized.
+ * @param {string=} writeToken - Write token of the draft. If specified, the object will not be finalized.
  * @param {Object=} metadata - Additional metadata for the content object
  * @param {Array<Object>=} fileInfo - Files to upload (See UploadFiles/UploadFilesFromS3 method)
  * @param {boolean=} encrypt=true - (Local or copied files only) - Unless `false` is passed in explicitly, any uploaded/copied files will be stored encrypted
@@ -265,8 +265,8 @@ exports.CreateProductionMaster = async function({
  * @param {boolean=} keepOtherStreams=false - If objectId is specified, whether to preserve existing streams with keys other than the ones specified in production master
  * @param {string} libraryId - ID of the mezzanine library
  * @param {string} masterVersionHash - The version hash of the production master content object
- * @param {masterWriteToken=} - The write token of the production master content object draft. If provided, object will not be finalized
- * @param {writeToken=} - The write token of the mezzanine object draft. If specified, the object will not be finalized
+ * @param {masterWriteToken=} - The write token of the production master content object draft. If provided, the object will not be finalized
+ * @param {writeToken=} - The write token of the mezzanine object draft. This will override objectId. If specified, the object will not be finalized
  * @param {Object=} metadata - Additional metadata for mezzanine content object
  * @param {string} name - Name for mezzanine content object
  * @param {string=} objectId - ID of existing object (if not specified, new object will be created)
@@ -503,6 +503,7 @@ exports.CreateABRMezzanine = async function({
  * @namedParams
  * @param {string} libraryId - ID of the mezzanine library
  * @param {string} objectId - ID of the mezzanine object
+ * @param {string=} writeToken - Write token of the mezzanine object draft. This will override objectId. If provided, the object will not be finalized
  * @param {Array<Object>=} access - Array of S3 credentials, along with path matching regexes - Required if any files in the masters are S3 references (See CreateProductionMaster method)
  * - Format: {region, bucket, accessKey, secret}
  * @param {number[]} jobIndexes - Array of LRO job indexes to start. LROs are listed in a map under metadata key /abr_mezzanine/offerings/(offeringKey)/mez_prep_specs/, and job indexes start with 0, corresponding to map keys in alphabetical order
@@ -512,10 +513,17 @@ exports.CreateABRMezzanine = async function({
 exports.StartABRMezzanineJobs = async function({
   libraryId,
   objectId,
+  writeToken,
   access=[],
   jobIndexes = null
 }) {
   ValidateParameters({libraryId, objectId});
+
+  if(writeToken) {
+    ValidateWriteToken(writeToken);
+
+    objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+  }
 
   const lastJobOfferingsInfo = await this.ContentObjectMetadata({
     libraryId,
