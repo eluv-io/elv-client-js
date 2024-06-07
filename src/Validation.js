@@ -25,7 +25,7 @@ exports.ValidateObject = (objectId) => {
 exports.ValidateVersion = (versionHash) => {
   if(!versionHash) {
     throw Error("Version hash not specified");
-  } else if(!versionHash.toString().startsWith("h")) {
+  } else if(!versionHash.toString().startsWith("h") && !versionHash.toString().startsWith("t")) {
     throw Error(`Invalid version hash: ${versionHash}`);
   }
 };

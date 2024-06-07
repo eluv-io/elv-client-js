@@ -1566,11 +1566,11 @@ exports.SetAuthPolicy = async function({objectId, policyId}) {
  */
 exports.DeleteWriteToken = async function({writeToken, libraryId}) {
   ValidateWriteToken(writeToken);
-  ValidateLibrary(libraryId);
+  let objectId = this.utils.DecodeWriteToken(writeToken).objectId;
 
-  let path = UrlJoin("qlibs", libraryId, "q", writeToken);
+  let path = UrlJoin("qlibs",libraryId,"q", writeToken);
 
-  const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, update: true});
+  const authorizationHeader = await this.authClient.AuthorizationHeader({objectId, update: true});
 
   await this.HttpClient.Request({
     headers: authorizationHeader,

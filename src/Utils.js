@@ -111,8 +111,11 @@ const Utils = {
    * @returns {Object} - Components of the version hash.
    */
   DecodeVersionHash: (versionHash) => {
-    if(!(versionHash.startsWith("hq__") || versionHash.startsWith("tq__"))) {
+    if(!(versionHash.startsWith("hq__") || versionHash.startsWith("tq"))) {
       throw new Error(`Invalid version hash: "${versionHash}"`);
+    }
+    if (versionHash.startsWith("tq")) {
+      return Utils.DecodeWriteToken(versionHash);
     }
 
     versionHash = versionHash.slice(4);
