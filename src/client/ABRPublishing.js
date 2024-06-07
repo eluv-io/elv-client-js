@@ -12,7 +12,8 @@ const UrlJoin = require("url-join");
 const {
   ValidateLibrary,
   ValidateVersion,
-  ValidateParameters
+  ValidateParameters,
+  ValidateWriteToken
 } = require("../Validation");
 
 // When `/abr_mezzanine/offerings` contains more than one entry, only 1 is the 'real' offering, the others are
@@ -41,6 +42,7 @@ const MezJobMainOfferingKey = function(abrMezOfferings) {
  * @param {string} name - Name of the content
  * @param {string=} description - Description of the content
  * @param {string} contentTypeName - Name of the content type to use
+ * @param {string=} writeToken - Write token of the draft. If specified, object will not be finalized.
  * @param {Object=} metadata - Additional metadata for the content object
  * @param {Array<Object>=} fileInfo - Files to upload (See UploadFiles/UploadFilesFromS3 method)
  * @param {boolean=} encrypt=true - (Local or copied files only) - Unless `false` is passed in explicitly, any uploaded/copied files will be stored encrypted
@@ -83,6 +85,7 @@ const MezJobMainOfferingKey = function(abrMezOfferings) {
 exports.CreateProductionMaster = async function({
   libraryId,
   type,
+  writeToken,
   name,
   description,
   metadata={},
@@ -95,11 +98,17 @@ exports.CreateProductionMaster = async function({
   structLogLevel="none"
 }) {
   ValidateLibrary(libraryId);
+  let id;
+  const finalize = !writeToken;
 
-  const {id, write_token} = await this.CreateContentObject({
-    libraryId,
-    options: type ? { type } : {}
-  });
+  if(writeToken) {
+    id = this.utils.DecodeWriteToken(writeToken).objectId;
+  } else {
+    ({id, writeToken} = await this.CreateContentObject({
+      libraryId,
+      options: type ? { type } : {}
+    }));
+  }
 
   // any files specified?
   if(fileInfo) {
@@ -158,7 +167,7 @@ exports.CreateProductionMaster = async function({
           await this.UploadFilesFromS3({
             libraryId,
             objectId: id,
-            writeToken: write_token,
+            writeToken,
             fileInfo: credentialSet.matched,
             region,
             bucket,
@@ -175,7 +184,7 @@ exports.CreateProductionMaster = async function({
       await this.UploadFiles({
         libraryId,
         objectId: id,
-        writeToken: write_token,
+        writeToken,
         fileInfo,
         callback,
         encryption: encrypt ? "cgck" : "none"
@@ -183,12 +192,12 @@ exports.CreateProductionMaster = async function({
     }
   }
 
-  await this.CreateEncryptionConk({libraryId, objectId: id, writeToken: write_token, createKMSConk: true});
+  await this.CreateEncryptionConk({libraryId, objectId: id, writeToken, createKMSConk: true});
 
   const { logs, errors, warnings } = await this.CallBitcodeMethod({
     libraryId,
     objectId: id,
-    writeToken: write_token,
+    writeToken,
     method: UrlJoin("media", "production_master", "init"),
     queryParams: {
       response_log_level: respLogLevel,
@@ -203,7 +212,7 @@ exports.CreateProductionMaster = async function({
   await this.MergeMetadata({
     libraryId,
     objectId: id,
-    writeToken: write_token,
+    writeToken,
     metadata: {
       ...(metadata || {}),
       name,
@@ -218,13 +227,24 @@ exports.CreateProductionMaster = async function({
     }
   });
 
-  const finalizeResponse = await this.FinalizeContentObject({
-    libraryId,
-    objectId: id,
-    writeToken: write_token,
-    commitMessage: "Create master",
-    awaitCommitConfirmation: false
-  });
+  let finalizeResponse;
+
+  if(finalize) {
+    finalizeResponse = await this.FinalizeContentObject({
+      libraryId,
+      objectId: id,
+      writeToken,
+      commitMessage: "Create master",
+      awaitCommitConfirmation: false
+    });
+  } else {
+    finalizeResponse = {
+      write_token: writeToken,
+      type,
+      qlib_id: libraryId,
+      id
+    };
+  }
 
   return {
     errors: errors || [],
@@ -245,6 +265,8 @@ exports.CreateProductionMaster = async function({
  * @param {boolean=} keepOtherStreams=false - If objectId is specified, whether to preserve existing streams with keys other than the ones specified in production master
  * @param {string} libraryId - ID of the mezzanine library
  * @param {string} masterVersionHash - The version hash of the production master content object
+ * @param {masterWriteToken=} - The write token of the production master content object draft. If provided, object will not be finalized
+ * @param {writeToken=} - The write token of the mezzanine object draft. If specified, the object will not be finalized
  * @param {Object=} metadata - Additional metadata for mezzanine content object
  * @param {string} name - Name for mezzanine content object
  * @param {string=} objectId - ID of existing object (if not specified, new object will be created)
@@ -265,6 +287,8 @@ exports.CreateABRMezzanine = async function({
   description,
   metadata,
   masterVersionHash,
+  masterWriteToken,
+  writeToken,
   abrProfile,
   addlOfferingSpecs,
   variant="default",
@@ -275,10 +299,24 @@ exports.CreateABRMezzanine = async function({
   streamKeys
 }) {
   ValidateLibrary(libraryId);
-  ValidateVersion(masterVersionHash);
+
+  if(masterVersionHash) {
+    ValidateVersion(masterVersionHash);
+  } else if(masterWriteToken) {
+    ValidateWriteToken(masterWriteToken);
+
+    const masterObjectId = this.utils.DecodeWriteToken(masterWriteToken).objectId;
+    masterVersionHash = this.LatestVersionHash({objectId: masterObjectId});
+  }
+
+  if(writeToken) {
+    ValidateWriteToken(writeToken);
+
+    objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+  }
 
   if(!masterVersionHash) {
-    throw Error("Master version hash not specified");
+    throw Error("Master version hash or write token not specified");
   }
 
   if(!objectId && (keepOtherStreams)) {
@@ -293,17 +331,16 @@ exports.CreateABRMezzanine = async function({
 
   let options = type ? { type } : {};
 
-  let id, write_token;
-  if(existingMez) {
+  let id;
+  const finalize = !writeToken;
+
+  if(existingMez && !writeToken) {
     // Edit existing
-    const editResponse = await this.EditContentObject({
+    ({writeToken, id} = await this.EditContentObject({
       libraryId,
       objectId,
       options
-    });
-
-    id = editResponse.id;
-    write_token = editResponse.write_token;
+    }));
   } else {
     // Create new
     const createResponse = await this.CreateContentObject({
@@ -312,10 +349,10 @@ exports.CreateABRMezzanine = async function({
     });
 
     id = createResponse.id;
-    write_token = createResponse.write_token;
+    writeToken = createResponse.write_token;
   }
 
-  await this.CreateEncryptionConk({libraryId, objectId: id, writeToken: write_token, createKMSConk: true});
+  await this.CreateEncryptionConk({libraryId, objectId: id, writeToken, createKMSConk: true});
 
   const masterName = await this.ContentObjectMetadata({
     versionHash: masterVersionHash,
@@ -359,14 +396,14 @@ exports.CreateABRMezzanine = async function({
     await this.EncryptionConk({
       libraryId,
       objectId: id,
-      writeToken: write_token
+      writeToken
     });
   }
 
   const {logs, errors, warnings} = await this.CallBitcodeMethod({
     libraryId,
     objectId: id,
-    writeToken: write_token,
+    writeToken,
     method: UrlJoin("media", "abr_mezzanine", "init"),
     queryParams: {
       response_log_level: respLogLevel,
@@ -415,7 +452,7 @@ exports.CreateABRMezzanine = async function({
   const existingMetadata = await this.ContentObjectMetadata({
     libraryId,
     objectId: id,
-    writeToken: write_token,
+    writeToken,
   });
   // newer metadata values replace existing metadata, unless both new and old values are objects,
   // in which case their keys are merged recursively
@@ -430,16 +467,26 @@ exports.CreateABRMezzanine = async function({
   await this.ReplaceMetadata({
     libraryId,
     objectId: id,
-    writeToken: write_token,
+    writeToken,
     metadata
   });
 
-  const finalizeResponse = await this.FinalizeContentObject({
-    libraryId,
-    objectId: id,
-    writeToken: write_token,
-    commitMessage: "Create ABR mezzanine"
-  });
+  let finalizeResponse;
+  if(finalize) {
+    finalizeResponse = await this.FinalizeContentObject({
+      libraryId,
+      objectId: id,
+      writeToken,
+      commitMessage: "Create ABR mezzanine"
+    });
+  } else {
+    finalizeResponse = {
+      write_token: writeToken,
+      type,
+      qlib_id: libraryId,
+      id
+    };
+  }
 
   return {
     logs: logs || [],
