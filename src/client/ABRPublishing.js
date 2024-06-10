@@ -300,13 +300,13 @@ exports.CreateABRMezzanine = async function({
 }) {
   ValidateLibrary(libraryId);
 
+  let masterObjectId;
   if(masterVersionHash) {
     ValidateVersion(masterVersionHash);
   } else if(masterWriteToken) {
     ValidateWriteToken(masterWriteToken);
 
-    const masterObjectId = this.utils.DecodeWriteToken(masterWriteToken).objectId;
-    masterVersionHash = this.LatestVersionHash({objectId: masterObjectId});
+    masterObjectId = this.utils.DecodeWriteToken(masterWriteToken).objectId;
   }
 
   if(writeToken) {
@@ -315,8 +315,8 @@ exports.CreateABRMezzanine = async function({
     objectId = this.utils.DecodeWriteToken(writeToken).objectId;
   }
 
-  if(!masterVersionHash) {
-    throw Error("Master version hash or write token not specified");
+  if(!masterVersionHash && !masterWriteToken) {
+    throw Error("Master version hash and master write token not specified");
   }
 
   if(!objectId && (keepOtherStreams)) {
@@ -354,8 +354,22 @@ exports.CreateABRMezzanine = async function({
 
   await this.CreateEncryptionConk({libraryId, objectId: id, writeToken, createKMSConk: true});
 
+
+  let nameMetaPayload;
+  if(masterWriteToken) {
+    nameMetaPayload = {
+      libraryId,
+      objectId: masterObjectId,
+      writeToken: masterWriteToken
+    };
+  } else if(masterVersionHash) {
+    nameMetaPayload = {
+      versionHash: masterVersionHash
+    };
+  }
+
   const masterName = await this.ContentObjectMetadata({
-    versionHash: masterVersionHash,
+    ...nameMetaPayload,
     metadataSubtree: "public/name"
   });
 
@@ -363,7 +377,7 @@ exports.CreateABRMezzanine = async function({
   let authorizationTokens = [];
   authorizationTokens.push(await this.authClient.AuthorizationToken({libraryId, objectId: id, update: true}));
   authorizationTokens.push(await this.authClient.AuthorizationToken({libraryId}));
-  authorizationTokens.push(await this.authClient.AuthorizationToken({versionHash: masterVersionHash}));
+  authorizationTokens.push(await this.authClient.AuthorizationToken({versionHash: masterVersionHash, objectId: masterObjectId}));
 
   const headers = {
     Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
@@ -373,7 +387,7 @@ exports.CreateABRMezzanine = async function({
     additional_offering_specs: addlOfferingSpecs,
     offering_key: offeringKey,
     keep_other_streams: keepOtherStreams,
-    prod_master_hash: masterVersionHash,
+    prod_master_hash: masterWriteToken || masterVersionHash,
     stream_keys: streamKeys,
     variant_key: variant
   };
@@ -418,9 +432,16 @@ exports.CreateABRMezzanine = async function({
   if(!metadata.public) { metadata.public = {}; }
   if(!metadata.public.asset_metadata) { metadata.public.asset_metadata = {}; }
 
+  let masterId;
+  if(masterWriteToken) {
+    masterId = this.utils.DecodeWriteToken(masterWriteToken).objectId;
+  } else if(masterVersionHash) {
+    masterId = this.utils.DecodeVersionHash(masterVersionHash).objectId
+  }
+
   metadata.master = {
     name: masterName,
-    id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
+    id: masterId,
     hash: masterVersionHash,
     variant
   };
@@ -548,7 +569,16 @@ exports.StartABRMezzanineJobs = async function({
   // Retrieve authorization tokens for all masters and the mezzanine
 
   let authorizationTokens = await Promise.all(
-    masterVersionHashes.map(async versionHash => await this.authClient.AuthorizationToken({versionHash}))
+    masterVersionHashes.map(async versionHash => {
+      let payload = {};
+      // Hash may be a write token since media/abr_mezzanine/init doesn't support write token, only prod_master_hash
+      if(versionHash.startsWith("tqw__")) {
+        payload["objectId"] = this.utils.DecodeWriteToken(versionHash).objectId;
+      } else {
+        payload["versionHash"] = versionHash;
+      }
+      return await this.authClient.AuthorizationToken({...payload});
+    })
   );
 
   authorizationTokens = [
@@ -719,10 +749,17 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeF
   const offeringKey = MezJobMainOfferingKey(lastJobOfferingsInfo);
   const masterHash = lastJobOfferingsInfo[offeringKey].prod_master_hash;
 
+  let authPayload = {};
+  if(masterHash.startsWith("tqw__")) {
+    authPayload["objectId"] = this.utils.DecodeWriteToken(masterHash).objectId;
+  } else {
+    authPayload["versionHash"] = masterHash;
+  }
+
   // Authorization token for mezzanine and master
   let authorizationTokens = [
     await this.authClient.AuthorizationToken({libraryId, objectId, update: true}),
-    await this.authClient.AuthorizationToken({versionHash: masterHash})
+    await this.authClient.AuthorizationToken({...authPayload})
   ];
 
   const headers = {

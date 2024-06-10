@@ -11,12 +11,14 @@ const Finalize = require("./lib/concerns/Finalize");
 const LocalFile = require("./lib/concerns/LocalFile");
 const LRO = require("./lib/concerns/LRO");
 const ArgLibraryId = require("./lib/concerns/ArgLibraryId");
+const ArgTenant = require("./lib/concerns/ArgTenant");
 const {seconds} = require("./lib/helpers");
+const AbrProfile = require("./lib/abr_profiles/abr_profile_clear.json");
 
-class SimpleIngest extends Utility {
+class SampleIngest extends Utility {
   blueprint() {
     return {
-      concerns: [Client, Finalize, LocalFile, ArgLibraryId, LRO],
+      concerns: [Client, Finalize, LocalFile, ArgLibraryId, ArgTenant, LRO],
       options: [
         ModOpt("libraryId", {demand: true, forX: "new media object"}),
         NewOpt("title", {
@@ -47,18 +49,22 @@ class SimpleIngest extends Utility {
     // get metadata from Library
     const libInfo = await this.concerns.ArgLibraryId.libInfo();
 
-    const type = R.path(["metadata", "abr", "mez_content_type"], libInfo);
-    if(R.isNil(type)) throw Error("Library does not specify content type for simple ingests");
+    // get type from Tenant
+    const tenantInfo = await this.concerns.ArgTenant.tenantInfo();
 
-    const libABRProfile = R.path(["metadata", "abr", "default_profile"], libInfo);
-    if(R.isNil(libABRProfile)) throw Error("Library does not specify ABR profile for simple ingests");
+    const type = tenantInfo.typeTitle;
+
+    if(R.isNil(type)) throw Error("Library does not specify content type for sample ingests");
 
     const libMezManageGroups = R.path(["metadata", "abr", "mez_manage_groups"], libInfo);
 
-    const libMezPermission = R.path(["metadata", "abr", "mez_permission_level"], libInfo);
-
     const {drm, libraryId, title} = this.args;
     const encrypt = true;
+
+    const {id, writeToken} = await client.CreateContentObject({
+      libraryId,
+      options: type ? { type } : {}
+    });
 
     logger.log("Uploading files...");
 
@@ -66,14 +72,14 @@ class SimpleIngest extends Utility {
       libraryId,
       type,
       name: title,
-      description: `Media object created via simple ingest: ${title}`,
+      description: `Media object created via sample ingest: ${title}`,
       fileInfo,
       encrypt,
       copy: true,
-      callback: this.concerns.LocalFile.callback
+      callback: this.concerns.LocalFile.callback,
+      writeToken
     });
 
-    const {id, hash} = createMasterResponse;
     // Log object id immediately, in case of error later in script
     // Don't log hash yet, it will change if --streams was provided (or any other revision to object is needed)
     logger.data("object_id", id);
@@ -87,29 +93,16 @@ class SimpleIngest extends Utility {
       "",
       "Production master default variant created:",
       `  Object ID: ${id}`,
-      `  Version Hash: ${hash}`,
       ""
     );
 
-    logger.data("version_hash", hash);
-
     if(!R.isNil(createMasterResponse.errors) && !R.isEmpty(createMasterResponse.errors)) throw Error(`Error(s) encountered while inspecting uploaded files: ${createMasterResponse.errors.join("\n")}`);
-
-    // TODO: replace with a 'waitForNewObject' call (Finalize.waitForPublish throws exception for brand new object not yet visible)
-    await seconds(2);
-
-    await this.concerns.Finalize.waitForPublish({
-      latestHash: hash,
-      libraryId,
-      objectId: id
-    });
-
 
     // get production master metadata
     const masterMetadata = (await client.ContentObjectMetadata({
       libraryId,
       objectId: id,
-      versionHash: hash,
+      writeToken,
       metadataSubtree: "/production_master"
     }));
 
@@ -123,7 +116,7 @@ class SimpleIngest extends Utility {
     }
 
     // generate ABR profile
-    const genProfileRetVal = ABR.ABRProfileForVariant(sources, variant, libABRProfile);
+    const genProfileRetVal = ABR.ABRProfileForVariant(sources, variant, AbrProfile);
     if(!genProfileRetVal.ok) throw Error(`Error(s) encountered while generating ABR profile: ${genProfileRetVal.errors.join("\n")}`);
 
     // filter DRM/clear as needed
@@ -139,7 +132,7 @@ class SimpleIngest extends Utility {
       libraryId,
       objectId: id,
       type,
-      masterVersionHash: hash,
+      masterWriteToken: writeToken,
       variant: "default",
       offeringKey: "default",
       abrProfile: filterProfileRetVal.result
@@ -149,19 +142,13 @@ class SimpleIngest extends Utility {
     const createMezErrors = createMezResponse.errors;
     if(!R.isNil(createMezErrors) && !R.isEmpty(createMezErrors)) throw Error(`Error(s) encountered while setting up media file conversion: ${createMezErrors.join("\n")}`);
 
-    await this.concerns.Finalize.waitForPublish({
-      latestHash: createMezResponse.hash,
-      libraryId,
-      objectId: id
-    });
-
-
     logger.log("Starting conversion to streaming format...");
 
     const startJobsResponse = await client.StartABRMezzanineJobs({
       libraryId,
       objectId: id,
-      offeringKey: "default"
+      offeringKey: "default",
+      writeToken
     });
 
     logger.errorsAndWarnings(startJobsResponse);
@@ -235,30 +222,6 @@ class SimpleIngest extends Utility {
       }
     }
 
-    if(libMezPermission) {
-      if(!["owner", "editable", "viewable", "listable", "public"].includes(libMezPermission)) {
-        logger.warn(`Bad value for mez_permission_level: '${libMezPermission}', skipping permission setting`);
-      } else {
-        logger.log(`Setting object permission to '${libMezPermission}'`);
-        const prevHash = await client.LatestVersionHash({objectId: id});
-
-        await client.SetPermission({
-          objectId: id,
-          permission: libMezPermission
-        });
-
-        const newHash = await client.LatestVersionHash({objectId: id});
-
-        if(prevHash === newHash) {
-          logger.log("Version hash unchanged: " + newHash );
-        } else {
-          logger.log("Previous version hash: " + prevHash );
-          logger.log("New version hash: " + newHash );
-        }
-        logger.data("version_hash", newHash);
-      }
-    }
-
     logger.logList(
       "",
       "Playable media object created:",
@@ -275,12 +238,12 @@ class SimpleIngest extends Utility {
   }
 
   header() {
-    return "Create playable media object via simple ingest";
+    return "Create playable media object via sample ingest";
   }
 }
 
 if(require.main === module) {
-  Utility.cmdLineInvoke(SimpleIngest);
+  Utility.cmdLineInvoke(SampleIngest);
 } else {
-  module.exports = SimpleIngest;
+  module.exports = SampleIngest;
 }
