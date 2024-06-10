@@ -61,27 +61,23 @@ class SampleIngest extends Utility {
     const {drm, libraryId, title} = this.args;
     const encrypt = true;
 
-    const {id, writeToken} = await client.CreateContentObject({
-      libraryId,
-      options: type ? { type } : {}
-    });
-
     logger.log("Uploading files...");
 
     const createMasterResponse = await client.CreateProductionMaster({
       libraryId,
       type,
-      name: title,
+      name: `${title} MASTER`,
       description: `Media object created via sample ingest: ${title}`,
       fileInfo,
       encrypt,
       copy: true,
-      callback: this.concerns.LocalFile.callback,
-      writeToken
+      callback: this.concerns.LocalFile.callback
     });
 
+    const {id, hash} = createMasterResponse;
+
     // Log object id immediately, in case of error later in script
-    // Don't log hash yet, it will change if --streams was provided (or any other revision to object is needed)
+    // Don't log hash yet, it will change if any other revision to object is needed
     logger.data("object_id", id);
 
     // Close file handles (if any)
@@ -93,16 +89,26 @@ class SampleIngest extends Utility {
       "",
       "Production master default variant created:",
       `  Object ID: ${id}`,
+      `  Version Hash: ${hash}`,
       ""
     );
 
     if(!R.isNil(createMasterResponse.errors) && !R.isEmpty(createMasterResponse.errors)) throw Error(`Error(s) encountered while inspecting uploaded files: ${createMasterResponse.errors.join("\n")}`);
 
+    // TODO: replace with a 'waitForNewObject' call (Finalize.waitForPublish throws exception for brand new object not yet visible)
+    await seconds(2);
+
+    await this.concerns.Finalize.waitForPublish({
+      latestHash: hash,
+      libraryId,
+      objectId: id
+    });
+
     // get production master metadata
     const masterMetadata = (await client.ContentObjectMetadata({
       libraryId,
       objectId: id,
-      writeToken,
+      versionHash: hash,
       metadataSubtree: "/production_master"
     }));
 
@@ -127,12 +133,17 @@ class SampleIngest extends Utility {
 
     // set up mezzanine offering
     logger.log("Setting up media file conversion...");
-    const createMezResponse = await client.CreateABRMezzanine({
-      name: title,
+    const {writeToken} = await client.CreateContentObject({
       libraryId,
-      objectId: id,
+      options: type ? { type } : {}
+    });
+
+    const createMezResponse = await client.CreateABRMezzanine({
+      name: `${title} MEZ`,
+      libraryId,
       type,
-      masterWriteToken: writeToken,
+      writeToken,
+      masterVersionHash: hash,
       variant: "default",
       offeringKey: "default",
       abrProfile: filterProfileRetVal.result
