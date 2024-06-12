@@ -46,17 +46,12 @@ class SampleIngest extends Utility {
     // if there is a validation error above
     const client = await this.concerns.Client.get();
 
-    // get metadata from Library
-    const libInfo = await this.concerns.ArgLibraryId.libInfo();
-
     // get type from Tenant
     const tenantInfo = await this.concerns.ArgTenant.tenantInfo();
 
     const type = tenantInfo.typeTitle;
 
     if(R.isNil(type)) throw Error("Library does not specify content type for sample ingests");
-
-    const libMezManageGroups = R.path(["metadata", "abr", "mez_manage_groups"], libInfo);
 
     const {drm, libraryId, title} = this.args;
     const encrypt = true;
@@ -93,6 +88,7 @@ class SampleIngest extends Utility {
       "",
       "Production master default variant created:",
       `  Object ID: ${id}`,
+      `  Write token: ${writeToken}`,
       ""
     );
 
@@ -130,7 +126,7 @@ class SampleIngest extends Utility {
     const createMezResponse = await client.CreateABRMezzanine({
       name: title,
       libraryId,
-      objectId: id,
+      writeToken,
       type,
       masterWriteToken: writeToken,
       variant: "default",
@@ -174,22 +170,13 @@ class SampleIngest extends Utility {
       ""
     );
 
-    // wait for latest version hash to become visible (if publish not finished, then checking progress can fail
-    // as metadata /lro_draft_default will not be found)
-
-    await this.concerns.Finalize.waitForPublish({
-      latestHash: startJobsResponse.hash,
-      libraryId,
-      objectId: id
-    });
-
     logger.log("Progress:");
 
     const lro = this.concerns.LRO;
     let done = false;
     let lastStatus;
     while(!done) {
-      const statusMap = await lro.status({libraryId, objectId: id}); // TODO: check how offering key is used, if at all
+      const statusMap = await lro.status({libraryId, objectId: id, writeToken}); // TODO: check how offering key is used, if at all
       const statusSummary = lro.statusSummary(statusMap);
       lastStatus = statusSummary.run_state;
       if(lastStatus !== LRO.STATE_RUNNING) done = true;
@@ -202,6 +189,7 @@ class SampleIngest extends Utility {
     const finalizeAbrResponse = await client.FinalizeABRMezzanine({
       libraryId,
       objectId: id,
+      writeToken,
       offeringKey: "default"
     });
     const latestHash = finalizeAbrResponse.hash;
@@ -209,18 +197,6 @@ class SampleIngest extends Utility {
     logger.errorsAndWarnings(finalizeAbrResponse);
     const finalizeErrors = finalizeAbrResponse.errors;
     if(!R.isNil(finalizeErrors) && !R.isEmpty(finalizeErrors)) throw Error(`Error(s) encountered while finalizing object: ${finalizeErrors.join("\n")}`);
-
-    if(libMezManageGroups && libMezManageGroups.length > 0){
-      for(const groupAddress of libMezManageGroups){
-        logger.log("Setting access permissions for managers");
-        await client.AddContentObjectGroupPermission({
-          objectId: id,
-          groupAddress,
-          permission: "manage"
-        });
-
-      }
-    }
 
     logger.logList(
       "",

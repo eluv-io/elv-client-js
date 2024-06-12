@@ -255,7 +255,7 @@ exports.CreateProductionMaster = async function({
 };
 
 /**
- * Create (or edit) a mezzanine offering based on the a given master content object version and variant key
+ * Create (or edit) a mezzanine offering based on a given master content object version and variant key
  *
  * @methodGroup ABR Publishing
  * @namedParams
@@ -265,8 +265,8 @@ exports.CreateProductionMaster = async function({
  * @param {boolean=} keepOtherStreams=false - If objectId is specified, whether to preserve existing streams with keys other than the ones specified in production master
  * @param {string} libraryId - ID of the mezzanine library
  * @param {string} masterVersionHash - The version hash of the production master content object
- * @param {masterWriteToken=} - The write token of the production master content object draft. If provided, the object will not be finalized
- * @param {writeToken=} - The write token of the mezzanine object draft. This will override objectId. If specified, the object will not be finalized
+ * @param {string=} masterWriteToken - The write token of the production master content object draft. If provided, the object will not be finalized
+ * @param {string=} writeToken - The write token of the mezzanine object draft. If specified, the object will not be finalized
  * @param {Object=} metadata - Additional metadata for mezzanine content object
  * @param {string} name - Name for mezzanine content object
  * @param {string=} objectId - ID of existing object (if not specified, new object will be created)
@@ -312,11 +312,13 @@ exports.CreateABRMezzanine = async function({
   if(writeToken) {
     ValidateWriteToken(writeToken);
 
-    objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+    if(!objectId) {
+      objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+    }
   }
 
   if(!masterVersionHash && !masterWriteToken) {
-    throw Error("Master version hash and master write token not specified");
+    throw Error("Master version hash and master write token not specified. One must be provided");
   }
 
   if(!objectId && (keepOtherStreams)) {
@@ -334,13 +336,17 @@ exports.CreateABRMezzanine = async function({
   let id;
   const finalize = !writeToken;
 
-  if(existingMez && !writeToken) {
+  if(existingMez) {
     // Edit existing
-    ({writeToken, id} = await this.EditContentObject({
-      libraryId,
-      objectId,
-      options
-    }));
+    if(writeToken) {
+      id = objectId;
+    } else {
+      ({writeToken, id} = await this.EditContentObject({
+        libraryId,
+        objectId,
+        options
+      }));
+    }
   } else {
     // Create new
     const createResponse = await this.CreateContentObject({
@@ -436,7 +442,7 @@ exports.CreateABRMezzanine = async function({
   if(masterWriteToken) {
     masterId = this.utils.DecodeWriteToken(masterWriteToken).objectId;
   } else if(masterVersionHash) {
-    masterId = this.utils.DecodeVersionHash(masterVersionHash).objectId
+    masterId = this.utils.DecodeVersionHash(masterVersionHash).objectId;
   }
 
   metadata.master = {
@@ -524,7 +530,7 @@ exports.CreateABRMezzanine = async function({
  * @namedParams
  * @param {string} libraryId - ID of the mezzanine library
  * @param {string} objectId - ID of the mezzanine object
- * @param {string=} writeToken - Write token of the mezzanine object draft. This will override objectId. If provided, the object will not be finalized
+ * @param {string=} writeToken - Write token of the mezzanine object draft. If provided, the object will not be finalized
  * @param {Array<Object>=} access - Array of S3 credentials, along with path matching regexes - Required if any files in the masters are S3 references (See CreateProductionMaster method)
  * - Format: {region, bucket, accessKey, secret}
  * @param {number[]} jobIndexes - Array of LRO job indexes to start. LROs are listed in a map under metadata key /abr_mezzanine/offerings/(offeringKey)/mez_prep_specs/, and job indexes start with 0, corresponding to map keys in alphabetical order
@@ -543,12 +549,15 @@ exports.StartABRMezzanineJobs = async function({
   if(writeToken) {
     ValidateWriteToken(writeToken);
 
-    objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+    if(!objectId) {
+      objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+    }
   }
 
   const lastJobOfferingsInfo = await this.ContentObjectMetadata({
     libraryId,
     objectId,
+    writeToken,
     metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
   });
   const offeringKey = MezJobMainOfferingKey(lastJobOfferingsInfo);
@@ -590,7 +599,17 @@ exports.StartABRMezzanineJobs = async function({
     Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
   };
 
-  const processingDraft = await this.EditContentObject({libraryId, objectId});
+  let processingDraft;
+  if(writeToken) {
+    const nodeUrl = await this.WriteTokenNodeUrl({writeToken, networkCall: true});
+
+    processingDraft = {
+      write_token: writeToken,
+      nodeUrl
+    };
+  } else {
+    processingDraft = await this.EditContentObject({libraryId, objectId});
+  }
 
   const lroInfo = {
     write_token: processingDraft.write_token,
@@ -599,21 +618,32 @@ exports.StartABRMezzanineJobs = async function({
   };
 
   // Update metadata with LRO version write token
-  const statusDraft = await this.EditContentObject({libraryId, objectId});
-  await this.ReplaceMetadata({
-    libraryId,
-    objectId,
-    writeToken: statusDraft.write_token,
-    metadataSubtree: "lro_draft",
-    metadata: lroInfo
-  });
+  let finalizeResponse;
+  if(writeToken) {
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "lro_draft",
+      metadata: lroInfo
+    });
+  } else {
+    const statusDraft = await this.EditContentObject({libraryId, objectId});
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: statusDraft.write_token,
+      metadataSubtree: "lro_draft",
+      metadata: lroInfo
+    });
 
-  const finalizeResponse = await this.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken: statusDraft.write_token,
-    commitMessage: "Mezzanine LRO status"
-  });
+    finalizeResponse = await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: statusDraft.write_token,
+      commitMessage: "Mezzanine LRO status"
+    });
+  }
 
   const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
     libraryId,
@@ -630,7 +660,7 @@ exports.StartABRMezzanineJobs = async function({
   });
 
   return {
-    hash: finalizeResponse.hash,
+    hash: finalizeResponse ? finalizeResponse.hash : "",
     lro_draft: lroInfo,
     writeToken: processingDraft.write_token,
     nodeUrl: processingDraft.nodeUrl,
@@ -652,10 +682,11 @@ exports.StartABRMezzanineJobs = async function({
  *
  * @return {Promise<Object>} - LRO status
  */
-exports.LRODraftInfo = async function({libraryId, objectId}) {
+exports.LRODraftInfo = async function({libraryId, objectId, writeToken}) {
   const standardPathContents = await this.ContentObjectMetadata({
     libraryId,
     objectId,
+    writeToken,
     metadataSubtree: "lro_draft"
   });
 
@@ -665,6 +696,7 @@ exports.LRODraftInfo = async function({libraryId, objectId}) {
   const lastJobOfferingsInfo = await this.ContentObjectMetadata({
     libraryId,
     objectId,
+    writeToken,
     metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
   });
 
@@ -680,6 +712,7 @@ exports.LRODraftInfo = async function({libraryId, objectId}) {
   const oldPathContents = await this.ContentObjectMetadata({
     libraryId,
     objectId,
+    writeToken,
     metadataSubtree: `lro_draft_${mainOfferingKey}`
   });
   if(oldPathContents) {
@@ -703,17 +736,17 @@ exports.LRODraftInfo = async function({libraryId, objectId}) {
  *
  * @return {Promise<Object>} - LRO status
  */
-exports.LROStatus = async function({libraryId, objectId}) {
+exports.LROStatus = async function({libraryId, objectId, writeToken}) {
   ValidateParameters({libraryId, objectId});
 
-  const lroDraft = await this.LRODraftInfo({libraryId, objectId});
+  const lroDraft = await this.LRODraftInfo({libraryId, objectId, writeToken});
 
   this.RecordWriteToken({writeToken: lroDraft.write_token, fabricNodeUrl: lroDraft.node});
 
   return await this.ContentObjectMetadata({
     libraryId,
     objectId,
-    writeToken: lroDraft.write_token,
+    writeToken,
     metadataSubtree: "lro_status"
   });
 };
@@ -731,18 +764,22 @@ exports.LROStatus = async function({libraryId, objectId}) {
  *
  * @return {Promise<Object>} - The finalize response for the mezzanine object, as well as any logs, warnings and errors from the finalization
  */
-exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeFn, preFinalizeThrow}) {
+exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeFn, preFinalizeThrow, writeToken}) {
   ValidateParameters({libraryId, objectId});
 
-  const lroDraft = await this.LRODraftInfo({libraryId, objectId});
+  if(writeToken) {
+    ValidateWriteToken(writeToken);
+  }
+
+  const nodeUrl = await this.WriteTokenNodeUrl({writeToken, networkCall: true});
 
   // tell http client what node to contact for this write token
-  this.RecordWriteToken({writeToken: lroDraft.write_token, fabricNodeUrl: lroDraft.node});
+  this.RecordWriteToken({writeToken: writeToken, fabricNodeUrl: nodeUrl});
 
   const lastJobOfferingsInfo = await this.ContentObjectMetadata({
     libraryId,
     objectId,
-    writeToken: lroDraft.write_token,
+    writeToken,
     metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
   });
 
@@ -769,7 +806,7 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeF
   const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
     objectId,
     libraryId,
-    writeToken: lroDraft.write_token,
+    writeToken,
     method: UrlJoin("media", "abr_mezzanine", "offerings", offeringKey, "finalize"),
     headers,
     constant: false
@@ -778,9 +815,9 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeF
   let preFinalizeWarnings = [];
   if(preFinalizeFn) {
     const params = {
-      nodeUrl: lroDraft.node,
+      nodeUrl,
       offeringKey,
-      writeToken: lroDraft.write_token
+      writeToken
     };
     try {
       await preFinalizeFn(params);
@@ -797,7 +834,7 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeF
   const finalizeResponse = await this.FinalizeContentObject({
     libraryId,
     objectId: objectId,
-    writeToken: lroDraft.write_token,
+    writeToken,
     commitMessage: "Finalize ABR mezzanine",
     awaitCommitConfirmation: false
   });
