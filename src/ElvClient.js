@@ -9,8 +9,6 @@ const EthClient = require("./EthClient");
 const UserProfileClient = require("./UserProfileClient");
 const HttpClient = require("./HttpClient");
 const RemoteSigner = require("./RemoteSigner");
-
-// const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
 const {LogMessage} = require("./LogMessage");

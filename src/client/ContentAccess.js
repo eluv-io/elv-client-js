@@ -8,6 +8,8 @@ const UrlJoin = require("url-join");
 const objectPath = require("object-path");
 
 const HttpClient = require("../HttpClient");
+// const ContentObjectVerification = require("../ContentObjectVerification");
+const ContentObjectAudit = require("../ContentObjectAudit");
 
 const {
   ValidateLibrary,
@@ -3072,6 +3074,32 @@ exports.VerifyContentObject = async function({libraryId, objectId, versionHash})
     libraryId,
     objectId,
     versionHash
+  });
+};
+
+/**
+ * Audit the specified content object against several content fabric nodes
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
+ * @param {string=} salt - base64-encoded byte sequence for salting the audit hash
+ * @param {Array<number>=} samples - list of percentages used for sampling the content part list; up to 3 values max, 0.0-1.0 values
+ *
+ * @returns {Promise<Object>} - Response describing audit results
+ */
+exports.AuditContentObject = async function({libraryId, objectId, versionHash, salt, samples}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+
+  return await ContentObjectAudit.AuditContentObject({
+    client: this,
+    libraryId,
+    objectId,
+    versionHash,
+    salt,
+    samples
   });
 };
 

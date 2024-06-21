@@ -10,6 +10,8 @@ const fs = require("fs");
 const HttpClient = require("../HttpClient");
 const Fraction = require("fraction.js");
 const {ValidateObject, ValidatePresence} = require("../Validation");
+// const ContentObjectVerification = require("../ContentObjectVerification");
+const ContentObjectAudit = require("../ContentObjectAudit");
 
 const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   const tok = await client.authClient.AuthorizationToken({libraryId, objectId,
@@ -445,7 +447,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     let videoLastFinalizationTimeEpochSec = -1;
     let videoFinalizedParts = 0;
     let sinceLastFinalize = -1;
-    if (period.finalized_parts_info && period.finalized_parts_info.video && period.finalized_parts_info.video.last_finalization_time) {
+    if(period.finalized_parts_info && period.finalized_parts_info.video && period.finalized_parts_info.video.last_finalization_time) {
       videoLastFinalizationTimeEpochSec = period.finalized_parts_info.video.last_finalization_time / 1000000;
       videoFinalizedParts = period.finalized_parts_info.video.n_parts;
       sinceLastFinalize = Math.floor(new Date().getTime() / 1000) - videoLastFinalizationTimeEpochSec;
@@ -733,7 +735,7 @@ exports.StreamCreate = async function({name, start=false}) {
 */
 exports.StreamStartOrStopOrReset = async function({name, op}) {
   try {
-    let status = await this.StreamStatus({name})
+    let status = await this.StreamStatus({name});
     if(status.state != "stopped") {
       if(op === "start") {
         status.error = "Unable to start stream - state: " + status.state;
@@ -1936,4 +1938,32 @@ exports.StreamAddWatermark = async function({
   }
 
   return response;
+};
+
+/**
+ * Audit the specified live stream against several content fabric nodes
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} objectId - Object ID of the live stream
+ * @param {string=} versionHash - Version hash of the live stream -- if not specified, latest version is returned
+ * @param {string=} salt - base64-encoded byte sequence for salting the audit hash
+ * @param {Array<number>=} samples - list of percentages used for sampling the content part list; up to 3 values max, 0.0-1.0 values
+ *
+ * @returns {Promise<Object>} - Response describing audit results
+ */
+exports.StreamAudit = async function({objectId, versionHash, salt, samples}) {
+  ValidateObject(objectId);
+
+  const libraryId = await this.ContentObjectLibraryId({objectId});
+
+  return await ContentObjectAudit.AuditContentObject({
+    client: this,
+    libraryId,
+    objectId,
+    versionHash,
+    salt,
+    samples,
+    live: true
+  });
 };

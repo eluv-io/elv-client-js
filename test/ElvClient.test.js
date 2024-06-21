@@ -845,7 +845,7 @@ describe("Test ElvClient", () => {
       expect(automaticCommit).toBeDefined();
       if(isUsingExternalTenantContractId){
         expect(automaticCommit.author).toContain("tenant-elv-admin");
-      }else{
+      } else {
         expect(client.utils.EqualAddress(automaticCommit.author, automaticCommit.author_address)).toBeTruthy();
       }
 
