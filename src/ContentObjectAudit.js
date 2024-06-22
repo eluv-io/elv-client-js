@@ -25,11 +25,11 @@ const ContentObjectAudit = {
     let audits = [];
     for(response of responses) {
       let url = new URL(response.url);
-      let res = await client.utils.ResponseToJson(response);
       let audit = { host: url.hostname };
       if(!response.ok) {
-        audit.error = res;
+        audit.error = JSON.stringify(response);
       } else {
+        let res = await client.utils.ResponseToJson(response);
         if(auditHash === undefined) {
           auditHash = res.audit_hash;
         } else if(res.audit_hash !== auditHash) {

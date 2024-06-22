@@ -16,7 +16,7 @@ class HttpClient {
   }
 
   BaseURI(uriIndex) {
-    uriIndex = uriIndex || this.uriIndex;
+    if(uriIndex === undefined) { uriIndex = this.uriIndex; }
     return new URI(this.uris[uriIndex]);
   }
 
@@ -63,7 +63,7 @@ class HttpClient {
     allowRetry=true,
     uriIndex
   }) {
-    uriIndex = uriIndex || this.uriIndex;
+    if(uriIndex === undefined) { uriIndex = this.uriIndex; }
 
     let baseURI = this.BaseURI(uriIndex);
 
@@ -191,18 +191,35 @@ class HttpClient {
     n
   }) {
     if(n === undefined) { n = this.uris.length; }
+    if(n > this.uris.length) {
+      const msg = "ElvClient Error: insufficient fabric node urls";
+      const error = {
+        name: "ElvHttpClientError",
+        status: 500,
+        statusText: msg,
+        message: msg
+      };
+      this.Log(JSON.stringify(error, null, 2), true);
+      throw error;
+    }
     let promises = [];
     for(let i = 0; i < n; i++) {
-      promises.push(this.Request({
-        method,
-        path,
-        queryParams,
-        body,
-        bodyType,
-        headers,
-        allowFailover: false,
-        uriIndex: this.uriIndex + i
-      }));
+      promises.push((async () => {
+        try {
+          return await this.Request({
+            method,
+            path,
+            queryParams,
+            body,
+            bodyType,
+            headers,
+            allowFailover: false,
+            uriIndex: (this.uriIndex + i) % this.uris.length
+          });
+        } catch(error) {
+          return error;
+        }
+      })());
     }
     return await Promise.all(promises);
   }
