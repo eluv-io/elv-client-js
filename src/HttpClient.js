@@ -63,8 +63,6 @@ class HttpClient {
     allowRetry=true,
     uriIndex
   }) {
-    if(uriIndex === undefined) { uriIndex = this.uriIndex; }
-
     let baseURI = this.BaseURI(uriIndex);
 
     // If URL contains a write token, it must go to the correct server and can not fail over
