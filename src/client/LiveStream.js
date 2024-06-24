@@ -10,7 +10,6 @@ const fs = require("fs");
 const HttpClient = require("../HttpClient");
 const Fraction = require("fraction.js");
 const {ValidateObject, ValidatePresence} = require("../Validation");
-// const ContentObjectVerification = require("../ContentObjectVerification");
 const ContentObjectAudit = require("../ContentObjectAudit");
 
 const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
@@ -1948,7 +1947,7 @@ exports.StreamAddWatermark = async function({
  * @param {string=} objectId - Object ID of the live stream
  * @param {string=} versionHash - Version hash of the live stream -- if not specified, latest version is returned
  * @param {string=} salt - base64-encoded byte sequence for salting the audit hash
- * @param {Array<number>=} samples - list of percentages (0.0 - <1.0) used for sampling the content part list
+ * @param {Array<number>=} samples - list of percentages (0.0 - <1.0) used for sampling the content part list, up to 3
  *
  * @returns {Promise<Object>} - Response describing audit results
  */

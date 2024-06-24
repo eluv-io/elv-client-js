@@ -18,6 +18,9 @@ const ContentObjectAudit = {
       ];
     }
 
+    // Ensure only a max of 3 samples
+    samples = samples.slice(0, 3);
+
     if(versionHash) {
       objectId = client.utils.DecodeVersionHash(versionHash).objectId;
     }
@@ -48,7 +51,7 @@ const ContentObjectAudit = {
 
     const httpClient = new HttpClient({uris});
 
-    let path = UrlJoin("q", versionHash || objectId, live ? "call/live/audit" : "audit");
+    let path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, live ? "call/live/audit" : "audit");
     let responses = await httpClient.RequestAll({
       headers: await client.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
       queryParams: queryParams,
