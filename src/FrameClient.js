@@ -318,6 +318,8 @@ class FrameClient {
       "AddContentObjectGroupPermission",
       "AddLibraryContentType",
       "AssetMetadata",
+      "AuditContentObject",
+      "AuditStream",
       "AvailableDRMs",
       "AvailableOfferings",
       "AwaitPending",
@@ -497,7 +499,6 @@ class FrameClient {
       "UploadPartChunk",
       "UploadStatus",
       "UseRegion",
-      "VerifyContentObject",
       "Visibility",
       "WriteTokenNodeUrl"
     ];
