@@ -9,8 +9,6 @@ const EthClient = require("./EthClient");
 const UserProfileClient = require("./UserProfileClient");
 const HttpClient = require("./HttpClient");
 const RemoteSigner = require("./RemoteSigner");
-
-// const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
 const {LogMessage} = require("./LogMessage");
@@ -161,6 +159,8 @@ class ElvClient {
     assumeV3=false,
     service="default"
   }) {
+    this.Configuration = ElvClient.Configuration;
+
     this.utils = Utils;
 
     this.contentSpaceId = contentSpaceId;
@@ -390,6 +390,8 @@ class ElvClient {
     });
 
     client.configUrl = configUrl;
+    client.region = region;
+    client.clientIP = clientIP;
 
     return client;
   }
@@ -468,6 +470,8 @@ class ElvClient {
       configUrl: this.configUrl,
       region
     });
+
+    this.region = region;
 
     this.authServiceURIs = authServiceURIs;
     this.fabricURIs = fabricURIs;
