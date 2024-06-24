@@ -143,6 +143,7 @@ class HttpClient {
           bodyType,
           headers,
           attempts: attempts + 1,
+          uriIndex,
           forceFailover
         });
       }
@@ -178,48 +179,33 @@ class HttpClient {
     return response;
   }
 
-  // RequestN sends the same request to N different nodes concurrently
-  async RequestN({
+  async RequestAll({
     method,
     path,
     queryParams={},
     body,
     bodyType="JSON",
     headers={},
-    n
   }) {
-    if(n === undefined) { n = this.uris.length; }
-    if(n > this.uris.length) {
-      const msg = "ElvClient Error: insufficient fabric node urls";
-      const error = {
-        name: "ElvHttpClientError",
-        status: 500,
-        statusText: msg,
-        message: msg
-      };
-      this.Log(JSON.stringify(error, null, 2), true);
-      throw error;
-    }
-    let promises = [];
-    for(let i = 0; i < n; i++) {
-      promises.push((async () => {
-        try {
-          return await this.Request({
-            method,
-            path,
-            queryParams,
-            body,
-            bodyType,
-            headers,
-            allowFailover: false,
-            uriIndex: (this.uriIndex + i) % this.uris.length
-          });
-        } catch(error) {
-          return error;
-        }
-      })());
-    }
-    return await Promise.all(promises);
+    return await Promise.all(
+      Array.from(new Array(this.uris.length).keys())
+        .map(async uriIndex => {
+          try {
+            return await this.Request({
+              method,
+              path,
+              queryParams,
+              body,
+              bodyType,
+              headers,
+              allowFailover: false,
+              uriIndex
+            });
+          } catch(error) {
+            return error;
+          }
+        })
+    );
   }
 
   URL({path, queryParams={}}) {

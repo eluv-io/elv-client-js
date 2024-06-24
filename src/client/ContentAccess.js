@@ -3086,13 +3086,11 @@ exports.VerifyContentObject = async function({libraryId, objectId, versionHash})
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
  * @param {string=} salt - base64-encoded byte sequence for salting the audit hash
- * @param {Array<number>=} samples - list of percentages used for sampling the content part list; up to 3 values max, 0.0-1.0 values
+ * @param {Array<number>=} samples - list of percentages (0.0 - <1.0) used for sampling the content part list
  *
  * @returns {Promise<Object>} - Response describing audit results
  */
 exports.AuditContentObject = async function({libraryId, objectId, versionHash, salt, samples}) {
-  ValidateParameters({libraryId, objectId, versionHash});
-
   return await ContentObjectAudit.AuditContentObject({
     client: this,
     libraryId,

@@ -1948,15 +1948,11 @@ exports.StreamAddWatermark = async function({
  * @param {string=} objectId - Object ID of the live stream
  * @param {string=} versionHash - Version hash of the live stream -- if not specified, latest version is returned
  * @param {string=} salt - base64-encoded byte sequence for salting the audit hash
- * @param {Array<number>=} samples - list of percentages used for sampling the content part list; up to 3 values max, 0.0-1.0 values
+ * @param {Array<number>=} samples - list of percentages (0.0 - <1.0) used for sampling the content part list
  *
  * @returns {Promise<Object>} - Response describing audit results
  */
-exports.StreamAudit = async function({objectId, versionHash, salt, samples}) {
-  ValidateObject(objectId);
-
-  const libraryId = await this.ContentObjectLibraryId({objectId});
-
+exports.AuditStream = async function({objectId, versionHash, salt, samples}) {
   return await ContentObjectAudit.AuditContentObject({
     client: this,
     libraryId,
