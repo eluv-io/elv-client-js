@@ -15,8 +15,9 @@ class HttpClient {
     this.retries = Math.max(3, uris.length);
   }
 
-  BaseURI() {
-    return new URI(this.uris[this.uriIndex]);
+  BaseURI(uriIndex) {
+    if(uriIndex === undefined) { uriIndex = this.uriIndex; }
+    return new URI(this.uris[uriIndex]);
   }
 
   static Fetch(url, params={}) {
@@ -59,9 +60,10 @@ class HttpClient {
     attempts=0,
     allowFailover=true,
     forceFailover=false,
-    allowRetry=true
+    allowRetry=true,
+    uriIndex
   }) {
-    let baseURI = this.BaseURI();
+    let baseURI = this.BaseURI(uriIndex);
 
     // If URL contains a write token, it must go to the correct server and can not fail over
     const writeTokenMatch = path.replace(/^\//, "").match(/(qlibs\/ilib[a-zA-Z0-9]+|q|qid)\/(tqw__[a-zA-Z0-9]+)/);
@@ -141,6 +143,7 @@ class HttpClient {
           bodyType,
           headers,
           attempts: attempts + 1,
+          uriIndex,
           forceFailover
         });
       }
@@ -174,6 +177,35 @@ class HttpClient {
     this.Log(`${response.status} - ${method} ${uri.toString()}`);
 
     return response;
+  }
+
+  async RequestAll({
+    method,
+    path,
+    queryParams={},
+    body,
+    bodyType="JSON",
+    headers={},
+  }) {
+    return await Promise.all(
+      Array.from(new Array(this.uris.length).keys())
+        .map(async uriIndex => {
+          try {
+            return await this.Request({
+              method,
+              path,
+              queryParams,
+              body,
+              bodyType,
+              headers,
+              allowFailover: false,
+              uriIndex
+            });
+          } catch(error) {
+            return error;
+          }
+        })
+    );
   }
 
   URL({path, queryParams={}}) {
