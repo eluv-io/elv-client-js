@@ -589,10 +589,11 @@ class ElvClient {
    * @namedParams
    * @param {string=} matchEndpoint - Return node(s) matching the specified endpoint
    * @param {string=} matchNodeId - Return node(s) matching the specified node ID
+   * * @param {string=} matchWriteToken - Return node(s) matching the specified write token
    *
    * @return {Promise<Array<Object>>} - A list of nodes in the space matching the parameters
    */
-  async SpaceNodes({matchEndpoint, matchNodeId}={}) {
+  async SpaceNodes({matchEndpoint, matchNodeId, matchWriteToken}={}) {
     let nodes;
     this.SetStaticToken();
 
@@ -636,6 +637,7 @@ class ElvClient {
       });
     } else if(matchNodeId) {
       this.SetStaticToken();
+
       let node = await this.utils.ResponseToJson(
         this.HttpClient.Request({
           path: UrlJoin("nodes", matchNodeId),
@@ -648,6 +650,24 @@ class ElvClient {
 
       this.ClearStaticToken();
       return [node];
+    } else if(matchWriteToken) {
+      this.SetStaticToken();
+
+      const {nodes} = await this.utils.ResponseToJson(
+        this.HttpClient.Request({
+          path: UrlJoin("nodes"),
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${this.staticToken}`
+          },
+          queryParams: {
+            token: matchWriteToken
+          }
+        })
+      );
+
+      this.ClearStaticToken();
+      return nodes;
     }
   }
 
@@ -665,8 +685,39 @@ class ElvClient {
     };
   }
 
-  WriteTokenNodeUrl({writeToken}) {
-    const nodeUrl = this.HttpClient.draftURIs[writeToken];
+  /**
+   * Return node url for a given write token
+   *
+   * @methodGroup Nodes
+   * @namedParams
+   * @param {string} writeToken - The write token to match to a node
+   * @param {boolean=} networkCall - If specified, will make a network call to /nodes?token=<writeToken>
+   *
+   * @returns {Promise<string>} - The node url for a write token
+   */
+  async WriteTokenNodeUrl({writeToken, networkCall=false}) {
+    let nodeUrl;
+
+    if(networkCall) {
+      const nodes = await this.SpaceNodes({matchWriteToken: writeToken});
+
+      nodeUrl = (
+        nodes &&
+        nodes[0] &&
+        nodes[0].services &&
+        nodes[0].services.fabric_api &&
+        nodes[0].services.fabric_api.urls &&
+        nodes[0].services.fabric_api.urls[0]
+      );
+
+      if(!nodeUrl) {
+        console.error(`No node url found for write token: ${writeToken}`);
+
+        return "";
+      }
+    } else {
+      nodeUrl = this.HttpClient.draftURIs[writeToken];
+    }
 
     return nodeUrl ? nodeUrl.toString() : undefined;
   }
