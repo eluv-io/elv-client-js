@@ -498,6 +498,9 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       state = lroStatus.state;
       status.warnings = lroStatus.custom && lroStatus.custom.warnings;
       status.quality = lroStatus.custom && lroStatus.custom.quality;
+      if (lroStatus.custom && lroStatus.custom.status) {
+        status.recording_status = lroStatus.custom.status
+      }
     } catch(error) {
       console.log("LRO Status (failed): ", error.response.statusCode);
       status.state = "stopped";
@@ -1954,7 +1957,6 @@ exports.StreamAddWatermark = async function({
 exports.AuditStream = async function({objectId, versionHash, salt, samples}) {
   return await ContentObjectAudit.AuditContentObject({
     client: this,
-    libraryId,
     objectId,
     versionHash,
     salt,
