@@ -1957,7 +1957,6 @@ exports.StreamAddWatermark = async function({
 exports.AuditStream = async function({objectId, versionHash, salt, samples}) {
   return await ContentObjectAudit.AuditContentObject({
     client: this,
-    libraryId,
     objectId,
     versionHash,
     salt,
