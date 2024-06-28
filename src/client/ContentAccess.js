@@ -1223,7 +1223,7 @@ exports.AvailableDRMs = async function() {
   try {
     await navigator.requestMediaKeySystemAccess("com.widevine.alpha", config);
     availableDRMs.push("widevine");
-    console.log("widevine detected");
+    // console.log("widevine detected");
     // eslint-disable-next-line no-empty
   } catch(e) {}
 
@@ -1232,7 +1232,7 @@ exports.AvailableDRMs = async function() {
     //   robustness: "2000" // 150, 2000, or 3000 if we know the secruity level
     await navigator.requestMediaKeySystemAccess("com.microsoft.playready", config);
     availableDRMs.push("playready");
-    console.log("playready detected");
+    // console.log("playready detected");
     // eslint-disable-next-line no-empty
   } catch(e) {}
 
