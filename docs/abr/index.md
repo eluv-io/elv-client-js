@@ -772,7 +772,7 @@ A **Mezzanine** object contains one or more **Offerings**. Each **Offering** spe
 * Original media (which Production Master, and which Variant within)
 * Playout format (DASH and/or HLS)
 * Bitrates and resolutions
-* DRM (Widevine / AES)
+* DRM (FairPlay / PlayReady / Widevine / AES-128 / SAMPLE-AES)
 * Which media streams to offer (e.g. if your Production Master Variant has more than one audio stream)
 * Watermark (text or image)
 * Trimming (entry and exit points)

@@ -100,20 +100,22 @@ const {
  * @namedParams
  * @param {string=} libraryId - ID of the library
  * @param {string=} objectId - ID of the object
+ * @param {string=} path - ID of the object
  * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be used
+ * @param {string=} writeToken - Write token of a draft (incompatible with versionHash)
  */
-exports.ListFiles = async function({libraryId, objectId, versionHash}) {
-  ValidateParameters({libraryId, objectId, versionHash});
+exports.ListFiles = async function({libraryId, objectId, path = "", versionHash, writeToken}) {
+  ValidateParameters({libraryId, objectId, versionHash, writeToken});
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-  let path = UrlJoin("q", versionHash || objectId, "meta", "files");
+  let urlPath = UrlJoin("q", writeToken || versionHash || objectId, "files_list", path);
 
   return this.utils.ResponseToJson(
     this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
       method: "GET",
-      path: path,
+      path: urlPath,
     })
   );
 };
@@ -620,7 +622,7 @@ exports.UploadFileData = async function({libraryId, objectId, writeToken, encryp
   const jobStatus = await this.UploadJobStatus({libraryId, objectId, writeToken, uploadId, jobId});
 
   // Find the status of this file
-  let fileStatus = jobStatus.files.find(item => item.path == filePath);
+  let fileStatus = jobStatus.files.find(item => item.path === filePath);
   if(encryption &amp;&amp; encryption !== "none") {
     fileStatus = fileStatus.encrypted;
   }

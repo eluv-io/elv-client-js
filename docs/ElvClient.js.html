@@ -349,7 +349,7 @@ class ElvClient {
    * @return {Object} - An object using network names as keys and configuration URLs as values.
    */
   static Networks() {
-    return networks;
+    return Object.assign({}, networks);
   }
 
   /**

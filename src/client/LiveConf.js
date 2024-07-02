@@ -301,7 +301,6 @@ class LiveConf {
         break;
       default:
         throw "unsupported frame rate for MPEGTS - " + frameRate;
-        break;
     }
     return seg;
   }
@@ -362,7 +361,6 @@ class LiveConf {
         break;
       default:
         throw "unsupported frame rate for RTMP - " + frameRate;
-        break;
     }
     return seg;
   }

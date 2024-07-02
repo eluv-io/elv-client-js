@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-// Ensures that an existing offering has only strong DRM playout options (Widevine and Fairplay)
+// Ensures that an existing offering has only strong DRM playout options (FairPlay, PlayReady, and Widevine)
 
 const ScriptOffering = require("./parentClasses/ScriptOffering");
 
@@ -49,7 +49,7 @@ class OfferingEnsureStrongDrm extends ScriptOffering {
     for(let i = 0; i < originalFormatCount; i++) {
       const key = playoutFormatKeys[i];
       const drm = metadata.offerings[offeringKey].playout.playout_formats[key].drm;
-      if(!drm || !["DrmWidevine", "DrmFairplay"].includes(drm.type)) {
+      if(!drm || !["DrmWidevine", "DrmFairplay", "DrmPlayReady"].includes(drm.type)) {
         console.log("Deleting playout format '" + key + "'...");
         delete metadata.offerings[offeringKey].playout.playout_formats[key];
         changesMade = true;
