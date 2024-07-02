@@ -1276,20 +1276,29 @@ exports.AvailableDRMs = async function() {
     return availableDRMs;
   }
 
+  const config = [{
+    initDataTypes: ["cenc"],
+    audioCapabilities: [{
+      contentType: "audio/mp4;codecs=\"mp4a.40.2\""
+    }],
+    videoCapabilities: [{
+      contentType: "video/mp4;codecs=\"avc1.42E01E\""
+    }]
+  }];
+
   try {
-    const config = [{
-      initDataTypes: ["cenc"],
-      audioCapabilities: [{
-        contentType: "audio/mp4;codecs=\"mp4a.40.2\""
-      }],
-      videoCapabilities: [{
-        contentType: "video/mp4;codecs=\"avc1.42E01E\""
-      }]
-    }];
-
     await navigator.requestMediaKeySystemAccess("com.widevine.alpha", config);
-
     availableDRMs.push("widevine");
+    // console.log("widevine detected");
+    // eslint-disable-next-line no-empty
+  } catch(e) {}
+
+  try {
+    // unused parameters:
+    //   robustness: "2000" // 150, 2000, or 3000 if we know the secruity level
+    await navigator.requestMediaKeySystemAccess("com.microsoft.playready", config);
+    availableDRMs.push("playready");
+    // console.log("playready detected");
     // eslint-disable-next-line no-empty
   } catch(e) {}
 
@@ -1473,7 +1482,7 @@ exports.AvailableOfferings = async function({
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
  * @param {Array&lt;string>} protocols=["dash","hls"]] - Acceptable playout protocols ("dash", "hls")
- * @param {Array&lt;string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
+ * @param {Array&lt;string>} drms - Acceptable DRM formats ("aes-128", "clear", "fairplay", "playready", "sample-aes", "widevine")
  * @param {string=} handler=playout - The handler to use for playout (not used with links)
  * @param {string=} offering=default - The offering to play
  * @param {string=} playoutType - The type of playout
@@ -1741,7 +1750,7 @@ exports.PlayoutOptions = async function({
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
  * @param {Array&lt;string>} protocols=["dash","hls"]] - Acceptable playout protocols ("dash", "hls")
- * @param {Array&lt;string>} drms - Acceptable DRM formats ("clear", "aes-128", "sample-aes", "widevine")
+ * @param {Array&lt;string>} drms - Acceptable DRM formats ("aes-128", "clear", "fairplay", "playready", "sample-aes", "widevine")
  * @param {string=} handler=playout - The handler to use for playout
  * @param {string=} offering=default - The offering to play
  * @param {string=} playoutType - The type of playout
