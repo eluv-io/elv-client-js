@@ -630,7 +630,10 @@ exports.TenantId = async function({contractAddress, objectId, versionHash}) {
         contractAddress:contractAddress,
         metadataKey:"_tenantId"
       });
-    } else {
+    }
+
+    // If the getMeta method does not exist or is not set in the contract, check the fabric metadata.
+    if(tenantId === undefined) {
       const libraryId = await this.ContentObjectLibraryId({ objectId });
 
       tenantId = await this.ContentObjectMetadata({
@@ -673,7 +676,10 @@ exports.TenantContractId = async function({contractAddress, objectId, versionHas
         contractAddress:contractAddress,
         metadataKey:"_ELV_TENANT_ID"
       });
-    } else {
+    }
+
+    // If the getMeta method does not exist or is not set in the contract, check the fabric metadata.
+    if(tenantContractId === undefined) {
       const libraryId = await this.ContentObjectLibraryId({ objectId });
 
       tenantContractId = await this.ContentObjectMetadata({
