@@ -157,7 +157,7 @@ class LiveConf {
           recordingBitrate: Math.max(this.probeData.streams[index].bit_rate, 128000),
           recordingChannels: this.probeData.streams[index].channels,
           playoutLabel: `Audio ${index}`
-        }
+        };
       }
     }
     return audioStreams;
@@ -232,13 +232,13 @@ class LiveConf {
     return seg;
   }
 
- /*
+  /*
   * Calculate output timebase from the encoder (codec) timebase. The videoTimeBase parameter
   * represents the encoder timebase. The format muxer will change it so it is greater than 10000.
   */
   calcOutputTimebase(codecTimebase) {
     let outputTimebase = codecTimebase;
-    while (outputTimebase < 10000)
+    while(outputTimebase < 10000)
       outputTimebase = outputTimebase * 2;
     return outputTimebase;
   }
@@ -382,36 +382,36 @@ class LiveConf {
     return sync_id;
   }
 
- /*
+  /*
   * Generate audio streams recording configuration based on the optional custom settings.
   * If no custom "audio" section is present, record all the acceptable audio streams found in the probe
   */
   generateAudioStreamsConfig({customSettings}) {
 
     let audioStreams = {};
-    if (customSettings && customSettings.audio) {
-      for (let i = 0; i < Object.keys(customSettings.audio).length; i ++) {
+    if(customSettings && customSettings.audio) {
+      for(let i = 0; i < Object.keys(customSettings.audio).length; i ++) {
         let audioIdx = Object.keys(customSettings.audio)[i];
         let audio = customSettings.audio[audioIdx];
         audioStreams[audioIdx] = {
           recordingBitrate: audio.recording_bitrate || 192000,
           recordingChannels: audio.recording_channels || 2,
         };
-        if (audio.playout) {
-          audioStreams[audioIdx].playoutLabel = audio.playout_label || `Audio ${audioIdx}`
+        if(audio.playout) {
+          audioStreams[audioIdx].playoutLabel = audio.playout_label || `Audio ${audioIdx}`;
         }
       }
     }
 
     // If no audio streams specified in custom config, set up all the suitable audio streams in the probe
-    if (Object.keys(audioStreams).length == 0) {
+    if(!customSettings.audio) {
       audioStreams = this.getAudioStreamsFromProbe();
     }
 
     return audioStreams;
   }
 
- /*
+  /*
   * Generate the live recording config as required by QFAB, based on defaults and optional custom settings.
   */
   generateLiveConf({customSettings}) {
@@ -439,7 +439,7 @@ class LiveConf {
     conf.live_recording.recording_config.recording_params.xc_params.enc_height = videoStream.height;
     conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;
 
-    for (let i =0; i < Object.keys(audioStreams).length; i ++) {
+    for(let i =0; i < Object.keys(audioStreams).length; i ++) {
       conf.live_recording.recording_config.recording_params.xc_params.audio_index[i] = parseInt(Object.keys(audioStreams)[i]);
     }
 
@@ -549,7 +549,7 @@ class LiveConf {
     let globalAudioBitrate = 0;
     let nAudio = 0;
 
-    for (let i = 0; i < Object.keys(audioStreams).length; i ++ ) {
+    for(let i = 0; i < Object.keys(audioStreams).length; i ++ ) {
       let audioLadderSpec = {...LadderSpecAudio};
       const audioIndex = Object.keys(audioStreams)[i];
       const audio = audioStreams[audioIndex];
@@ -561,7 +561,7 @@ class LiveConf {
       audioLadderSpec.stream_label = audio.playoutLabel ? audio.playoutLabel : null;
 
       conf.live_recording.recording_config.recording_params.ladder_specs.push(audioLadderSpec);
-      if (audio.recordingBitrate > globalAudioBitrate) {
+      if(audio.recordingBitrate > globalAudioBitrate) {
         globalAudioBitrate = audio.recordingBitrate;
       }
       nAudio ++;

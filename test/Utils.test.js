@@ -1,4 +1,4 @@
-const {Initialize} = require("./utils/Utils");
+const {Initialize,SetNodes} = require("./utils/Utils");
 const OutputLogger = require("./utils/OutputLogger");
 const {
   describe,
@@ -23,6 +23,7 @@ describe("Test Utils", () => {
     globalThis.window = undefined;
 
     const client = await ElvClient.FromConfigurationUrl({configUrl});
+    SetNodes(client);
 
     expect(client.utils).toBeDefined();
 

@@ -10,6 +10,7 @@ const fs = require("fs");
 const HttpClient = require("../HttpClient");
 const Fraction = require("fraction.js");
 const {ValidateObject, ValidatePresence} = require("../Validation");
+const ContentObjectAudit = require("../ContentObjectAudit");
 
 const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   const tok = await client.authClient.AuthorizationToken({libraryId, objectId,
@@ -29,18 +30,18 @@ const CueInfo = async ({eventId, status}) => {
     const lroStatusResponse = await this.utils.ResponseToJson(
       await HttpClient.Fetch(status.lro_status_url)
     );
-    console.log("lroStatusResponse", lroStatusResponse)
+    console.log("lroStatusResponse", lroStatusResponse);
     cues = lroStatusResponse.custom.cues;
-  } catch (error) {
+  } catch(error) {
     console.log("LRO status failed", error);
     return {error: "failed to retrieve status", eventId};
   }
 
   let eventStart, eventEnd;
-  for (const value of Object.values(cues)) {
-    for (const event of Object.values(value.descriptors)) {
-      if (event.id == eventId) {
-        switch (event.type_id) {
+  for(const value of Object.values(cues)) {
+    for(const event of Object.values(value.descriptors)) {
+      if(event.id == eventId) {
+        switch(event.type_id) {
           case 32:
           case 16:
             eventStart = value.insertion_time;
@@ -56,7 +57,7 @@ const CueInfo = async ({eventId, status}) => {
   }
 
   return {eventStart, eventEnd, eventId};
-}
+};
 
 /**
  * Set the offering for the live stream
@@ -445,7 +446,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     let videoLastFinalizationTimeEpochSec = -1;
     let videoFinalizedParts = 0;
     let sinceLastFinalize = -1;
-    if (period.finalized_parts_info && period.finalized_parts_info.video && period.finalized_parts_info.video.last_finalization_time) {
+    if(period.finalized_parts_info && period.finalized_parts_info.video && period.finalized_parts_info.video.last_finalization_time) {
       videoLastFinalizationTimeEpochSec = period.finalized_parts_info.video.last_finalization_time / 1000000;
       videoFinalizedParts = period.finalized_parts_info.video.n_parts;
       sinceLastFinalize = Math.floor(new Date().getTime() / 1000) - videoLastFinalizationTimeEpochSec;
@@ -497,6 +498,9 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       state = lroStatus.state;
       status.warnings = lroStatus.custom && lroStatus.custom.warnings;
       status.quality = lroStatus.custom && lroStatus.custom.quality;
+      if (lroStatus.custom && lroStatus.custom.status) {
+        status.recording_status = lroStatus.custom.status
+      }
     } catch(error) {
       console.log("LRO Status (failed): ", error.response.statusCode);
       status.state = "stopped";
@@ -733,7 +737,7 @@ exports.StreamCreate = async function({name, start=false}) {
 */
 exports.StreamStartOrStopOrReset = async function({name, op}) {
   try {
-    let status = await this.StreamStatus({name})
+    let status = await this.StreamStatus({name});
     if(status.state != "stopped") {
       if(op === "start") {
         status.error = "Unable to start stream - state: " + status.state;
@@ -860,7 +864,7 @@ exports.StreamStopSession = async function({name}) {
         return {
           state: status.state,
           error: "The stream must be stopped before terminating"
-        }
+        };
       }
 
       await this.DeleteWriteToken({
@@ -1355,7 +1359,10 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
     status.error = "No node matching stream URL " + streamUrl.href;
     return status;
   }
-  const node = nodes[0];
+  const node = {
+    endpoints: nodes[0].services.fabric_api.urls,
+    id: nodes[0].id
+  };
   status.node = node;
   let endpoint = node.endpoints[0];
 
@@ -1547,7 +1554,7 @@ exports.StreamListUrls = async function({siteId}={}) {
           url,
           active: activeUrlMap[url] || false
         };
-      })
+      });
     });
 
     return streamUrlStatus;
@@ -1933,4 +1940,28 @@ exports.StreamAddWatermark = async function({
   }
 
   return response;
+};
+
+/**
+ * Audit the specified live stream against several content fabric nodes
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} objectId - Object ID of the live stream
+ * @param {string=} versionHash - Version hash of the live stream -- if not specified, latest version is returned
+ * @param {string=} salt - base64-encoded byte sequence for salting the audit hash
+ * @param {Array<number>=} samples - list of percentages (0.0 - <1.0) used for sampling the content part list, up to 3
+ *
+ * @returns {Promise<Object>} - Response describing audit results
+ */
+exports.AuditStream = async function({objectId, versionHash, salt, samples}) {
+  return await ContentObjectAudit.AuditContentObject({
+    client: this,
+    libraryId,
+    objectId,
+    versionHash,
+    salt,
+    samples,
+    live: true
+  });
 };

@@ -2,6 +2,7 @@ const Ethers = require("ethers");
 const Utils = require("./Utils");
 const HttpClient = require("./HttpClient");
 const UrlJoin = require("url-join");
+const UUID = require("uuid");
 
 class RemoteSigner extends Ethers.Signer {
   constructor({
@@ -70,6 +71,59 @@ class RemoteSigner extends Ethers.Signer {
 
     this.id = this.address ? `ikms${Utils.AddressToHash(this.address)}` : undefined;
     this.signer = this.provider.getSigner(this.address);
+  }
+
+  async RetrieveCSAT({email, nonce, force=false}) {
+    nonce = nonce || Utils.B58(UUID.parse(UUID.v4()));
+
+    let response = await Utils.ResponseToJson(
+      this.HttpClient.Request({
+        method: "POST",
+        body: {
+          email,
+          nonce,
+          force
+        },
+        path: UrlJoin("as", "wlt", "sign", "csat"),
+        headers: {
+          Authorization: `Bearer ${this.authToken}`
+        },
+      })
+    );
+
+    response.nonce = nonce;
+
+    return response;
+  }
+
+  async CSATStatus({accessToken}) {
+    try {
+      const response = await Utils.ResponseToJson(
+        this.HttpClient.Request({
+          method: "POST",
+          path: UrlJoin("as", "wlt", "login", "status"),
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          },
+        })
+      );
+
+      return response && response.is_active;
+    } catch(error) {
+      return !error || error.status !== 403;
+    }
+  }
+
+  async ReleaseCSAT({accessToken}) {
+    return await Utils.ResponseToJson(
+      this.HttpClient.Request({
+        method: "POST",
+        path: UrlJoin("as", "wlt", "login", "release"),
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        },
+      })
+    );
   }
 
   // Overrides

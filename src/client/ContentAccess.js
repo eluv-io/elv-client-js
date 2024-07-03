@@ -8,6 +8,7 @@ const UrlJoin = require("url-join");
 const objectPath = require("object-path");
 
 const HttpClient = require("../HttpClient");
+const ContentObjectAudit = require("../ContentObjectAudit");
 
 const {
   ValidateLibrary,
@@ -1152,8 +1153,8 @@ exports.LatestVersionHashV2 = async function({objectId, versionHash}) {
     latestHash = q.hash;
 
   } catch(error) {
-    console.log("ERROR", error);
-    throw Error(`Unable to determine latest version hash for ${versionHash || objectId}`);
+    error.message = `Unable to determine latest version hash for ${versionHash || objectId}`;
+    throw error;
   }
   return latestHash;
 };
@@ -2322,17 +2323,17 @@ exports.EmbedUrl = async function({
         break;
       case "useTicketCodes":
         embedUrl.searchParams.set("ptk", "");
-        if (options.tenantId) {
+        if(options.tenantId) {
           embedUrl.searchParams.set("ten", options.tenantId);
         }
-        if (options.ntpId) {
+        if(options.ntpId) {
           embedUrl.searchParams.set("ntp", options.ntpId);
         }
-        if (options.ticketCode) {
+        if(options.ticketCode) {
           embedUrl.searchParams.set("tk", Buffer.from(options.ticketCode).toString("base64"));
 
         }
-        if (options.ticketSubject) {
+        if(options.ticketSubject) {
           embedUrl.searchParams.set("sbj", Buffer.from(options.ticketSubject).toString("base64"));
         }
         break;
@@ -3054,24 +3055,26 @@ exports.Collection = async function({collectionType}) {
 /* Verification */
 
 /**
- * Verify the specified content object
+ * Audit the specified content object against several content fabric nodes
  *
  * @methodGroup Content Objects
  * @namedParams
- * @param {string} libraryId - ID of the library
- * @param {string} objectId - ID of the object
- * @param {string} versionHash - Hash of the content object version
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
+ * @param {string=} salt - base64-encoded byte sequence for salting the audit hash
+ * @param {Array<number>=} samples - list of percentages (0.0 - <1.0) used for sampling the content part list, up to 3
  *
- * @returns {Promise<Object>} - Response describing verification results
+ * @returns {Promise<Object>} - Response describing audit results
  */
-exports.VerifyContentObject = async function({libraryId, objectId, versionHash}) {
-  ValidateParameters({libraryId, objectId, versionHash});
-
-  return await ContentObjectVerification.VerifyContentObject({
+exports.AuditContentObject = async function({libraryId, objectId, versionHash, salt, samples}) {
+  return await ContentObjectAudit.AuditContentObject({
     client: this,
     libraryId,
     objectId,
-    versionHash
+    versionHash,
+    salt,
+    samples
   });
 };
 
