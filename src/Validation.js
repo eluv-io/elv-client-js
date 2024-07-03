@@ -52,8 +52,11 @@ exports.ValidatePartHash = (partHash) => {
   }
 };
 
-exports.ValidateParameters = ({libraryId, objectId, versionHash}) => {
-  if(versionHash) {
+exports.ValidateParameters = ({libraryId, objectId, versionHash, writeToken}) => {
+  if(writeToken) {
+    if(versionHash)  throw Error(`Cannot specify writeToken and versionHash at same time (token:${writeToken}, hash:${versionHash})`);
+    exports.ValidateWriteToken(writeToken);
+  } else if(versionHash) {
     exports.ValidateVersion(versionHash);
   } else {
     exports.ValidateLibrary(libraryId);
