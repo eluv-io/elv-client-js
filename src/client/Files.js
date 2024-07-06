@@ -5,6 +5,7 @@
  */
 
 const Utils = require("../Utils");
+const URI = require("urijs");
 
 let fs;
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
@@ -23,6 +24,170 @@ const {
   ValidateParameters
 } = require("../Validation");
 
+// normalizedURI : string -> URI
+// creates a normalized URI from string
+const normalizedURI = str => URI(str)
+  .normalizeProtocol()
+  .normalizeHostname()
+  .normalizePath()
+  .normalizeQuery()
+  .normalizeHash();
+
+// isHttpUrl : URI -> boolean
+// Returns true if uri looks like a well-formed http or https url
+const isHttpUrl = uri => uri.is("url") && uri.is("absolute") && ["http", "https"].contains(uri.protocol());
+
+// isS3SignedUrl: uri -> boolean
+// returns true if uri looks like an S3 signed URL
+const isSignedS3Url = uri => isHttpUrl(uri) &&
+  // doesn't end in '/'
+  uri.filename() !== "" &&
+  // has a bucket
+  uri.directory() !== "" &&
+  // has at least the following S3 query parameters
+  uri.hasQuery("X-Amz-Credential") &&
+  uri.hasQuery("X-Amz-Security-Token") &&
+  uri.hasQuery("X-Amz-Signature") &&
+  uri.hasQuery("X-Amz-Credential");
+
+// isS3Path : URI -> boolean
+// Returns true if uri looks like an s3 path "s3://bucket/file_path"
+const isS3Path = uri => uri.is("url") &&
+  uri.is("absolute") &&
+  // starts with "s3://"
+  uri.protocol() === "s3" &&
+  // doesn't end in '/'
+  uri.filename() !== "" &&
+  // has a bucket
+  uri.directory() !== "/" &&
+  // doesn't have query params
+  uri.query() === "";
+
+// s3PathBucket : URI -> string
+// Returns a string containing the bucket name, e.g.:
+// s3PathBucket(URI("s3://myHost/myBucket/foo/bar/video.mp4")) === "myBucket"
+const s3PathBucket = uri => "/" + uri.segmentCoded(0);
+
+// s3PathWithoutBucket : URI -> string
+// Returns a string containing the path after the bucket name, e.g.:
+// s3PathWithoutBucket(URI("s3://myHost/myBucket/foo/bar/video.mp4")) === "/foo/bar/video.mp4"
+const s3PathWithoutBucket = uri => "/" + uri.segmentCoded().slice(1).join("/");
+
+// parseSourcePathS3 : string -> Object
+// Parses source path info based on whether it is:
+//   a plain path
+//   an s3 unsigned url "s3://..."
+//   an s3 signed url "http://...?X-Amz-..."
+const parseSourcePathS3 = sourcePath => {
+  let uri;
+
+  let pathBucket;
+  let pathType;
+  let plainSourcePath;
+
+  try {
+    uri = normalizedURI(sourcePath);
+    if(isS3Path(uri)) {
+      pathType = "s3unsigned";
+    } else if(isSignedS3Url(uri)) {
+      pathType = "s3signed";
+    } else pathType = "plain";
+  } catch(e) {
+    pathType = "plain";
+  }
+
+  switch(pathType) {
+    case "plain":
+      plainSourcePath = sourcePath;
+      break;
+    case "s3signed":
+      pathBucket = s3PathBucket(uri);
+      plainSourcePath = s3PathWithoutBucket(uri);
+      break;
+    case "s3unsigned":
+      pathBucket = s3PathBucket(uri);
+      plainSourcePath = s3PathWithoutBucket(uri);
+      break;
+    default:
+      // not expected, but check in case of future code changes:
+      throw Error(`Unrecognized path type "${pathType}"`);
+  }
+
+  return {
+    pathBucket,
+    pathType,
+    plainSourcePath
+  };
+};
+
+// s3op : Object -> Object
+// Creates one ops array element for an S3 file upload job
+// sourcePath is a string containing plain file path, s3://host/bucket/file_path, or pre-signed s3 url http[s]://host/bucket/file_path...?X-Amz-...
+const s3opsElement = ({
+  copy,
+  destPath,
+  encryption,
+  sourcePath,
+  s3accessKey,
+  s3bucket,
+  // s3endpoint,  // AWS_ENDPOINT_URL, not yet supported
+  s3region,
+  s3secret
+}) => {
+
+  const s3pathInfo = parseSourcePathS3(sourcePath);
+  const pathIsSignedUrl = s3pathInfo.pathType === "s3signed";
+  const s3pathBucket = s3pathInfo.pathBucket;
+
+  if(s3bucket && s3pathBucket && s3bucket !== s3pathBucket) {
+    throw Error(`S3 bucket '${s3bucket}' does not match bucket '${s3pathBucket}' in path '${sourcePath}'`);
+  }
+
+  let cloud_credentials;
+  if(s3pathInfo.pathType === "s3signed") {
+    cloud_credentials = {
+      signed_url: sourcePath
+    };
+  }
+  if(s3pathInfo.pathType === "s3unsigned") {
+    cloud_credentials = {
+      access_key_id: s3accessKey,
+      secret_access_key: s3secret
+    };
+  }
+
+  let access = {
+    cloud_credentials,
+    path: pathIsSignedUrl ? undefined : s3bucket,
+    platform: "aws",
+    protocol: "s3",
+    storage_endpoint: {     // eventually add s3endpoint
+      region: s3region
+    }
+  };
+
+  const sourceInfo = {
+    type: "key",
+    path: s3pathInfo.plainSourcePath,
+  };
+  let ingest;
+  let reference;
+
+  if(copy) {
+    ingest = sourceInfo;
+  } else {
+    reference= sourceInfo;
+  }
+
+  return {
+    access,
+    encryption: {scheme: encryption === "cgck" ? "cgck" : "none"},
+    ingest,
+    op: copy ? "ingest-copy" : "add-reference",
+    path: destPath,
+    reference
+  };
+};
 
 /* Files */
 
@@ -64,7 +229,7 @@ exports.ListFiles = async function({libraryId, objectId, path = "", versionHash,
      [
        {
          path: string,
-         source: string // either a full path e.g. "s3://BUCKET_NAME/path..." or just the path part without "s3://BUCKET_NAME/"
+         source: string // a presigned URL "https://BUCKET_NAME/path", an unsigned S3 full path e.g. "s3://BUCKET_NAME/path...", or just the path part without "s3://BUCKET_NAME/"
        }
      ]
  *
@@ -74,12 +239,11 @@ exports.ListFiles = async function({libraryId, objectId, path = "", versionHash,
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
  * @param {string} writeToken - Write token of the draft
- * @param {string} region - AWS region to use
- * @param {string} bucket - AWS bucket to use
+ * @param {string} region - AWS region to use (not needed for presigned URLs)
+ * @param {string} bucket - AWS bucket to use (not needed for presigned URLs)
  * @param {Array<Object>} fileInfo - List of files to reference/copy
- * @param {string} accessKey - AWS access key
- * @param {string} secret - AWS secret
- * @param {string=} signedUrl
+ * @param {string} accessKey - AWS access key (not needed for presigned URLs)
+ * @param {string} secret - AWS secret (not needed for presigned URLs)
  * @param {string} encryption="none" - Encryption for uploaded files (copy only) - cgck | none
  * @param {boolean} copy=false - If true, will copy the data from S3 into the fabric. Otherwise, a reference to the content will be made.
  * @param {function=} callback - If specified, will be periodically called with current upload status
@@ -95,7 +259,6 @@ exports.UploadFilesFromS3 = async function({
   fileInfo,
   accessKey,
   secret,
-  signedUrl,
   encryption="none",
   copy=false,
   callback
@@ -103,25 +266,10 @@ exports.UploadFilesFromS3 = async function({
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
-  const s3prefixRegex = /^s3:\/\/([^/]+)\//i; // for matching and extracting bucket name when full s3:// path is specified
-  // if fileInfo source paths start with s3://bucketName/, check against bucket arg passed in, and strip
-  for(let i = 0; i < fileInfo.length; i++) {
-    const fileSourcePath = fileInfo[i].source;
-    const s3prefixMatch = (s3prefixRegex.exec(fileSourcePath));
-    if(s3prefixMatch) {
-      const bucketName = s3prefixMatch[1];
-      if(bucketName !== bucket) {
-        throw Error("Full S3 file path \"" + fileSourcePath + "\" specified, but does not match provided bucket name '" + bucket + "'");
-      } else {
-        // strip prefix
-        fileInfo[i].source = fileSourcePath.replace(s3prefixRegex,"");
-      }
-    }
-  }
-
   if(copy) {
     this.Log(`Copying files from S3: ${libraryId} ${objectId} ${writeToken}`);
   } else {
+    if(encryption !== "none") throw Error("cannot specify encrypted storage when linking to S3 storage");
     this.Log(`Adding links to files in S3: ${libraryId} ${objectId} ${writeToken}`);
   }
 
@@ -141,54 +289,25 @@ exports.UploadFilesFromS3 = async function({
     encryption_key = `kp__${this.utils.B58(Buffer.from(JSON.stringify(conk)))}`;
   }
 
-  let cloudCredentials = {
-    access_key_id: accessKey,
-    secret_access_key: secret
-  };
-
-  if(signedUrl) {
-    cloudCredentials = {
-      signed_url: signedUrl
-    };
-  }
-
   const defaults = {
     encryption_key,
     access: {
       protocol: "s3",
-      platform: "aws",
-      path: bucket,
-      storage_endpoint: {
-        region
-      },
-      cloud_credentials: cloudCredentials
+      platform: "aws"
     }
   };
 
-  const ops = fileInfo.map(info => {
-    if(copy) {
-      return {
-        op: "ingest-copy",
-        path: info.path,
-        encryption: {
-          scheme: encryption === "cgck" ? "cgck" : "none",
-        },
-        ingest: {
-          type: "key",
-          path: info.source,
-        }
-      };
-    } else {
-      return {
-        op: "add-reference",
-        path: info.path,
-        reference: {
-          type: "key",
-          path: info.source,
-        }
-      };
-    }
-  });
+  const ops = fileInfo.map(info => s3opsElement({
+    copy,
+    destPath: info.path,
+    encryption,
+    sourcePath: info.source,
+    s3accessKey: accessKey,
+    s3bucket: bucket,
+    s3region: region,
+    s3secret: secret
+  })
+  );
 
   // eslint-disable-next-line no-unused-vars
   const {id} = await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops, defaults});
