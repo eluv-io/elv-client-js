@@ -279,6 +279,7 @@ class EthClient {
       while(!success) {
         try {
           result = await contract[methodName](...methodArgs, overrides);
+          if(this.debug) this.Log(`result: ${result}`);
           success = true;
         } catch(error) {
           if(error.code === -32000 || error.code === "REPLACEMENT_UNDERPRICED") {

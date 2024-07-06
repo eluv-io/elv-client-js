@@ -545,18 +545,40 @@ const Utils = {
     });
   },
 
-  ResponseToJson: async (response) => {
-    return Utils.ResponseToFormat("json", response);
+  /**
+   * Interprets an http response body obtained from an http call as JSON and returns result of parsing it.
+   *
+   * @param {Promise} response - An http response from node-fetch
+   * @param {boolean=} debug - Whether or not to log the body
+   * @param {Function} logFn - Log function to use if debug === true
+   * @return {*} - Result of parsing response body as JSON
+   */
+  ResponseToJson: async (response, debug = false, logFn) => {
+    return await Utils.ResponseToFormat("json", response, debug, logFn);
   },
 
-  ResponseToFormat: async (format, response) => {
+  /**
+   * Interprets an http response body obtained from an http call as a requested format and returns result of converting/formatting.
+   *
+   * @param {string} format - The format to use when interpreting response body (e.g. "json", "text" et. al.)
+   * @param {Promise} response - An http response from node-fetch
+   * @param {boolean=} debug - Whether or not to log a debug statement containing the body (ignored for formats other than "json" and "text")
+   * @param {Function} logFn - Log function to use if debug === true
+   * @return {*} - Result of converting response body into the requested format
+   */
+  ResponseToFormat: async (format, response, debug = false, logFn) => {
     response = await response;
+    let formattedBody;
 
     switch(format.toLowerCase()) {
       case "json":
-        return await response.json();
+        formattedBody = await response.json();
+        if(debug) logFn(`response body: ${JSON.stringify(formattedBody, null, 2)}`);
+        return formattedBody;
       case "text":
-        return await response.text();
+        formattedBody = await response.text();
+        if(debug) logFn(`response body: ${formattedBody}`);
+        return formattedBody;
       case "blob":
         return await response.blob();
       case "arraybuffer":

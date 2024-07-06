@@ -45,13 +45,11 @@ exports.ListFiles = async function({libraryId, objectId, path = "", versionHash,
 
   let urlPath = UrlJoin("q", writeToken || versionHash || objectId, "files_list", path);
 
-  return this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
-      method: "GET",
-      path: urlPath,
-    })
-  );
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
+    method: "GET",
+    path: urlPath,
+  });
 };
 
 /**
@@ -121,7 +119,11 @@ exports.UploadFilesFromS3 = async function({
     }
   }
 
-  this.Log(`Uploading files from S3: ${libraryId} ${objectId} ${writeToken}`);
+  if(copy) {
+    this.Log(`Copying files from S3: ${libraryId} ${objectId} ${writeToken}`);
+  } else {
+    this.Log(`Adding links to files in S3: ${libraryId} ${objectId} ${writeToken}`);
+  }
 
   let encryption_key;
   if(encryption === "cgck") {
@@ -485,15 +487,13 @@ exports.CreateFileUploadJob = async function({libraryId, objectId, writeToken, o
 
   const path = UrlJoin("q", writeToken, "file_jobs");
 
-  return this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
-      method: "POST",
-      path: path,
-      body,
-      allowFailover: false
-    })
-  );
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
+    method: "POST",
+    path: path,
+    body,
+    allowFailover: false
+  });
 };
 
 exports.UploadStatus = async function({libraryId, objectId, writeToken, uploadId}) {
@@ -502,14 +502,12 @@ exports.UploadStatus = async function({libraryId, objectId, writeToken, uploadId
 
   const path = UrlJoin("q", writeToken, "file_jobs", uploadId);
 
-  return this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-      method: "GET",
-      path: path,
-      allowFailover: false
-    })
-  );
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "GET",
+    path: path,
+    allowFailover: false
+  });
 };
 
 exports.UploadJobStatus = async function({libraryId, objectId, writeToken, uploadId, jobId}) {
@@ -518,26 +516,22 @@ exports.UploadJobStatus = async function({libraryId, objectId, writeToken, uploa
 
   const path = UrlJoin("q", writeToken, "file_jobs", uploadId, "uploads", jobId);
 
-  let response = await this.utils.ResponseToJson(
-    this.HttpClient.Request({
+  let response = await this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "GET",
+    path: path,
+    allowFailover: false,
+    queryParams: { start: 0, limit: 10000 }
+  });
+
+  while(response.next !== response.total && response.next >= 0) {
+    const newResponse = await this.HttpClient.RequestJsonBody({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "GET",
       path: path,
       allowFailover: false,
-      queryParams: { start: 0, limit: 10000 }
-    })
-  );
-
-  while(response.next !== response.total && response.next >= 0) {
-    const newResponse = await this.utils.ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-        method: "GET",
-        path: path,
-        allowFailover: false,
-        queryParams: { start: response.next }
-      })
-    );
+      queryParams: { start: response.next }
+    });
 
     response.files = [
       ...response.files,
@@ -570,20 +564,18 @@ exports.UploadFileData = async function({libraryId, objectId, writeToken, encryp
 
   let path = UrlJoin("q", writeToken, "file_jobs", uploadId, jobId);
 
-  return await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      method: "POST",
-      path: path,
-      body: fileData,
-      bodyType: "BINARY",
-      headers: {
-        "Content-type": "application/octet-stream",
-        ...(await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}))
-      },
-      allowFailover: false,
-      allowRetry: false
-    })
-  );
+  return await this.HttpClient.RequestJsonBody({
+    method: "POST",
+    path: path,
+    body: fileData,
+    bodyType: "BINARY",
+    headers: {
+      "Content-type": "application/octet-stream",
+      ...(await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}))
+    },
+    allowFailover: false,
+    allowRetry: false
+  });
 };
 
 exports.FinalizeUploadJob = async function({libraryId, objectId, writeToken}) {
@@ -815,13 +807,11 @@ exports.ContentParts = async function({libraryId, objectId, versionHash}) {
 
   const path = UrlJoin("q", versionHash || objectId, "parts");
 
-  const response = await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
-      method: "GET",
-      path: path
-    })
-  );
+  const response = await this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
+    method: "GET",
+    path: path
+  });
 
   return response.parts;
 };
@@ -849,13 +839,11 @@ exports.ContentPart = async function({libraryId, objectId, versionHash, partHash
 
   let path = UrlJoin("q", versionHash || objectId, "parts", partHash);
 
-  return await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
-      method: "GET",
-      path: path
-    })
-  );
+  return await this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
+    method: "GET",
+    path: path
+  });
 };
 
 /**
@@ -1079,16 +1067,14 @@ exports.CreatePart = async function({libraryId, objectId, writeToken, encryption
 
   const path = UrlJoin("q", writeToken, "parts");
 
-  const openResponse = await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
-      method: "POST",
-      path,
-      bodyType: "BINARY",
-      body: "",
-      allowFailover: false
-    })
-  );
+  const openResponse = await this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
+    method: "POST",
+    path,
+    bodyType: "BINARY",
+    body: "",
+    allowFailover: false
+  });
 
   return openResponse.part.write_token;
 };
@@ -1118,16 +1104,14 @@ exports.UploadPartChunk = async function({libraryId, objectId, writeToken, partW
   }
 
   const path = UrlJoin("q", writeToken, "parts");
-  await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
-      method: "POST",
-      path: UrlJoin(path, partWriteToken),
-      body: chunk,
-      bodyType: "BINARY",
-      allowFailover: false
-    })
-  );
+  await this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
+    method: "POST",
+    path: UrlJoin(path, partWriteToken),
+    body: chunk,
+    bodyType: "BINARY",
+    allowFailover: false
+  });
 };
 
 /**
@@ -1149,16 +1133,14 @@ exports.FinalizePart = async function({libraryId, objectId, writeToken, partWrit
   ValidateWriteToken(writeToken);
 
   const path = UrlJoin("q", writeToken, "parts");
-  return await this.utils.ResponseToJson(
-    await this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
-      method: "POST",
-      path: UrlJoin(path, partWriteToken),
-      bodyType: "BINARY",
-      body: "",
-      allowFailover: false
-    })
-  );
+  return await this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
+    method: "POST",
+    path: UrlJoin(path, partWriteToken),
+    bodyType: "BINARY",
+    body: "",
+    allowFailover: false
+  });
 };
 
 /**
