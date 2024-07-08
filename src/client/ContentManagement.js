@@ -1006,7 +1006,8 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
   });
 
   const abi = await this.ContractAbi({id: objectId});
-  const fromBlock = commit.blockNumber + 1;
+  const fromBlock = commit.blockNumber - 10; // due to block re-org
+
   const objectHash = await this.ExtractValueFromEvent({
     abi,
     event: commit,
@@ -1023,18 +1024,21 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
     throw Error(`Pending version hash mismatch on ${objectId}: expected ${objectHash}, currently ${pendingHash}`);
   }
 
+  let confirmCommitFound = false;
   if(awaitCommitConfirmation) {
     this.Log(`Awaiting commit confirmation for ${objectHash}`);
     const pollingInterval = this.ethClient.Provider().pollingInterval || 500;
+    const startTime = Date.now();
+    const duration = 2 * 60 * 1000; // 2 minutes
 
-    // eslint-disable-next-line no-constant-condition
-    while(true) {
+    while(Date.now() - startTime < duration) {
       await new Promise(resolve => setTimeout(resolve, pollingInterval));
 
       const events = await this.ContractEvents({
         contractAddress: this.utils.HashToAddress(objectId),
         abi,
         fromBlock,
+        topics: [ Ethers.utils.id("VersionConfirm(address,address,string)") ],
         count: 1000
       });
 
@@ -1045,39 +1049,46 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
       if(confirmEvent) {
         // Found confirmation
         this.Log(`Commit confirmed on chain: ${objectHash}`);
+        confirmCommitFound=true;
         break;
       }
     }
+
+    if(!confirmCommitFound){
+      this.Log(`Commit with hash ${objectHash} was not confirmed on chain, due to confirmCommit event not found within the duration (${duration})`);
+    }
+
   }
 
-  // APIv2 ensure the fabric API returns the correct hash
-  if(awaitCommitConfirmation) {
-    const pollingInterval = 500; // ms
-    let tries = 20;
-    while(tries > 0) {
-      let h;
+  if(confirmCommitFound) {
+    // APIv2 ensure the fabric API returns the correct hash
+    if(awaitCommitConfirmation) {
+      const pollingInterval = 500; // ms
+      let tries = 20;
+      while(tries > 0) {
+        let h;
 
-      try {
-        h = await this.LatestVersionHashV2({objectId});
+        try {
+          h = await this.LatestVersionHashV2({objectId});
 
-        if(h === versionHash) {
-          this.Log(`Commit confirmed on fabric node: ${versionHash}`);
-          break;
-        } else {
+          if(h === versionHash) {
+            this.Log(`Commit confirmed on fabric node: ${versionHash}`);
+            break;
+          } else {
+            tries--;
+            await new Promise(resolve => setTimeout(resolve, pollingInterval));
+          }
+        } catch(error) {
+          if(error.status !== 404) {
+            throw error;
+          }
+
           tries--;
           await new Promise(resolve => setTimeout(resolve, pollingInterval));
         }
-      } catch(error) {
-        if(error.status !== 404) {
-          throw error;
-        }
-
-        tries--;
-        await new Promise(resolve => setTimeout(resolve, pollingInterval));
       }
     }
   }
-
 };
 
 /**
