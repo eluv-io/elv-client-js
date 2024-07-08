@@ -390,7 +390,7 @@ exports.ContentLibrary = async function({libraryId}) {
 
   const path = UrlJoin("qlibs", libraryId);
 
-  const library = await this.HttpClient.RequestJSON({
+  const library = await this.HttpClient.RequestJsonBody({
     headers: await this.authClient.AuthorizationHeader({libraryId}),
     method: "GET",
     path: path
