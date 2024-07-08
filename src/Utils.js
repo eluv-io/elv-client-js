@@ -550,7 +550,7 @@ const Utils = {
    *
    * @param {Promise} response - An http response from node-fetch
    * @param {boolean=} debug - Whether or not to log the body
-   * @param {Function} logFn - Log function to use if debug === true
+   * @param {Function} logFn - Log function to use if debug is truthy
    * @return {*} - Result of parsing response body as JSON
    */
   ResponseToJson: async (response, debug = false, logFn) => {
@@ -563,7 +563,7 @@ const Utils = {
    * @param {string} format - The format to use when interpreting response body (e.g. "json", "text" et. al.)
    * @param {Promise} response - An http response from node-fetch
    * @param {boolean=} debug - Whether or not to log a debug statement containing the body (ignored for formats other than "json" and "text")
-   * @param {Function} logFn - Log function to use if debug === true
+   * @param {Function} logFn - Log function to use if debug is truthy
    * @return {*} - Result of converting response body into the requested format
    */
   ResponseToFormat: async (format, response, debug = false, logFn) => {

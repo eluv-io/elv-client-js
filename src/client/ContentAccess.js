@@ -2374,15 +2374,17 @@ exports.ContentObjectGraph = async function({libraryId, objectId, versionHash, a
   let path = UrlJoin("q", versionHash || objectId, "links");
 
   try {
-    return await this.HttpClient.RequestJsonBody({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
-      queryParams: {
-        auto_update: autoUpdate,
-        select
-      },
-      method: "GET",
-      path: path,
-    });
+    return await this.utils.ResponseToJson(
+      this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
+        queryParams: {
+          auto_update: autoUpdate,
+          select
+        },
+        method: "GET",
+        path: path,
+      })
+    );
   } catch(error) {
     // If a cycle is present, do some work to present useful information about it
     let errorInfo;
@@ -3088,11 +3090,13 @@ exports.Proofs = async function({libraryId, objectId, versionHash, partHash}) {
 
   let path = UrlJoin("q", versionHash || objectId, "data", partHash, "proofs");
 
-  return this.HttpClient.RequestJsonBody({
-    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
-    method: "GET",
-    path: path
-  });
+  return this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
+      method: "GET",
+      path: path
+    })
+  );
 };
 
 /**
