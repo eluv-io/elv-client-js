@@ -101,9 +101,6 @@ const parseSourcePathS3 = sourcePath => {
       plainSourcePath = sourcePath;
       break;
     case "s3signed":
-      pathBucket = s3PathBucket(uri);
-      plainSourcePath = s3PathWithoutBucket(uri);
-      break;
     case "s3unsigned":
       pathBucket = s3PathBucket(uri);
       plainSourcePath = s3PathWithoutBucket(uri);
@@ -137,19 +134,22 @@ const s3opsElement = ({
 
   const s3pathInfo = parseSourcePathS3(sourcePath);
   const pathIsSignedUrl = s3pathInfo.pathType === "s3signed";
-  const s3pathBucket = s3pathInfo.pathBucket;
+  const s3bucketFromPath = s3pathInfo.pathBucket;
 
-  if(s3bucket && s3pathBucket && s3bucket !== s3pathBucket) {
-    throw Error(`S3 bucket '${s3bucket}' does not match bucket '${s3pathBucket}' in path '${sourcePath}'`);
+  if(s3bucket && s3bucketFromPath && s3bucket !== s3bucketFromPath) {
+    throw Error(`S3 bucket '${s3bucket}' does not match bucket '${s3bucketFromPath}' in path '${sourcePath}'`);
   }
 
   let cloud_credentials;
-  if(s3pathInfo.pathType === "s3signed") {
+  if(pathIsSignedUrl) {
     cloud_credentials = {
       signed_url: sourcePath
     };
-  }
-  if(s3pathInfo.pathType === "s3unsigned") {
+  } else {
+    if(!s3accessKey) throw Error(`AWS_KEY needed for source file ${sourcePath}`);
+    if(!s3secret) throw Error(`AWS_SECRET needed for source file ${sourcePath}`);
+    if(!s3region) throw Error(`AWS_REGION needed for source file ${sourcePath}`);
+    if(!s3bucket && !s3bucketFromPath) throw Error(`AWS_BUCKET needed for source file ${sourcePath}`);
     cloud_credentials = {
       access_key_id: s3accessKey,
       secret_access_key: s3secret
@@ -158,7 +158,7 @@ const s3opsElement = ({
 
   let access = {
     cloud_credentials,
-    path: pathIsSignedUrl ? undefined : s3bucket,
+    path: pathIsSignedUrl ? undefined : (s3bucketFromPath || s3bucket),
     platform: "aws",
     protocol: "s3",
     storage_endpoint: {     // eventually add s3endpoint
@@ -170,13 +170,13 @@ const s3opsElement = ({
     type: "key",
     path: s3pathInfo.plainSourcePath,
   };
+
   let ingest;
   let reference;
-
   if(copy) {
     ingest = sourceInfo;
   } else {
-    reference= sourceInfo;
+    reference = sourceInfo;
   }
 
   return {
