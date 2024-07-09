@@ -1024,14 +1024,12 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
     throw Error(`Pending version hash mismatch on ${objectId}: expected ${objectHash}, currently ${pendingHash}`);
   }
 
-  let confirmCommitFound = false;
   if(awaitCommitConfirmation) {
     this.Log(`Awaiting commit confirmation for ${objectHash}`);
     const pollingInterval = this.ethClient.Provider().pollingInterval || 500;
-    const startTime = Date.now();
-    const duration = 2 * 60 * 1000; // 2 minutes
 
-    while(Date.now() - startTime < duration) {
+    // eslint-disable-next-line no-constant-condition
+    while(true) {
       await new Promise(resolve => setTimeout(resolve, pollingInterval));
 
       const events = await this.ContractEvents({
@@ -1049,43 +1047,36 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
       if(confirmEvent) {
         // Found confirmation
         this.Log(`Commit confirmed on chain: ${objectHash}`);
-        confirmCommitFound=true;
         break;
       }
     }
-
-    if(!confirmCommitFound){
-      this.Log(`Commit with hash ${objectHash} was not confirmed on chain, due to confirmCommit event not found within the duration (${duration})`);
-    }
-
   }
 
-  if(confirmCommitFound) {
-    // APIv2 ensure the fabric API returns the correct hash
-    if(awaitCommitConfirmation) {
-      const pollingInterval = 500; // ms
-      let tries = 20;
-      while(tries > 0) {
-        let h;
 
-        try {
-          h = await this.LatestVersionHashV2({objectId});
+  // APIv2 ensure the fabric API returns the correct hash
+  if(awaitCommitConfirmation) {
+    const pollingInterval = 500; // ms
+    let tries = 20;
+    while(tries > 0) {
+      let h;
 
-          if(h === versionHash) {
-            this.Log(`Commit confirmed on fabric node: ${versionHash}`);
-            break;
-          } else {
-            tries--;
-            await new Promise(resolve => setTimeout(resolve, pollingInterval));
-          }
-        } catch(error) {
-          if(error.status !== 404) {
-            throw error;
-          }
+      try {
+        h = await this.LatestVersionHashV2({objectId});
 
+        if(h === versionHash) {
+          this.Log(`Commit confirmed on fabric node: ${versionHash}`);
+          break;
+        } else {
           tries--;
           await new Promise(resolve => setTimeout(resolve, pollingInterval));
         }
+      } catch(error) {
+        if(error.status !== 404) {
+          throw error;
+        }
+
+        tries--;
+        await new Promise(resolve => setTimeout(resolve, pollingInterval));
       }
     }
   }
