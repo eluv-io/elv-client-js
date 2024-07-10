@@ -61,7 +61,8 @@ class AuthorizationClient {
     LogMessage(this, message, error);
   }
 
-  constructor({client, contentSpaceId, debug=false, noCache=false, noAuth=false}) {
+  constructor({client, contentSpaceId, debug=false, noCache=false, noAuth=false,
+               ignoreNonOwnerCaps=false}) {
     this.ACCESS_TYPES = ACCESS_TYPES;
     this.CONTRACTS = CONTRACTS;
 
@@ -70,6 +71,7 @@ class AuthorizationClient {
     this.noCache = noCache;
     this.noAuth = noAuth;
     this.debug = debug;
+    this.ignoreNonOwnerCaps = ignoreNonOwnerCaps;
 
     this.accessTransactions = {};
     this.modifyTransactions = {};
@@ -194,7 +196,9 @@ class AuthorizationClient {
     if(encryption && encryption !== "none" && objectId && await this.AccessType(objectId) === ACCESS_TYPES.OBJECT) {
       const owner = await this.Owner({id: objectId});
       const ownerCapKey = `eluv.caps.iusr${Utils.AddressToHash(this.client.signer.address)}`;
-      const ownerCap = await this.client.ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree: ownerCapKey});
+      const ownerCap = this.ignoreNonOwnerCaps ?
+                       null :
+                       await this.client.ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree: ownerCapKey});
 
       if(!Utils.EqualAddress(owner, this.client.signer.address) && !ownerCap) {
         const cap = await this.ReEncryptionConk({libraryId, objectId});
