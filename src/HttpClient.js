@@ -100,11 +100,19 @@ class HttpClient {
     let response;
     this.Log(`${method} - ${uri.toString()}`);
     try {
+      if (this.debug > 5) {
+        this.Log(fetchParameters)
+      }
+
       response =
         await HttpClient.Fetch(
           uri.toString(),
           fetchParameters
         );
+
+      if (this.debug > 5) {
+        this.Log(response)
+      }
     } catch(error) {
       response = {
         ok: false,
@@ -113,6 +121,9 @@ class HttpClient {
         url: uri.toString(),
         stack: error.stack
       };
+      if (this.debug > 5) {
+        this.Log(response, error = true)
+      }
     }
 
     if(!response.ok) {
