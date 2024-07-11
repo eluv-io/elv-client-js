@@ -1,6 +1,7 @@
 const URI = require("urijs");
 const Fetch = typeof fetch !== "undefined" ? fetch : require("node-fetch").default;
 const {LogMessage} = require("./LogMessage");
+const Utils = require("./Utils");
 
 class HttpClient {
   Log(message, error=false) {
@@ -100,7 +101,10 @@ class HttpClient {
     }
 
     let response;
-    this.Log(`${method} - ${uri.toString()}`);
+    if(this.debug) {
+      this.Log(`${method} - ${uri.toString()}`);
+      this.Log(`fetchParameters: ${JSON.stringify(fetchParameters, null, 2)}`);
+    }
     try {
       response =
         await HttpClient.Fetch(
@@ -166,7 +170,7 @@ class HttpClient {
         requestParams: fetchParameters
       };
 
-      this.Log(
+      if(this.debug) this.Log(
         JSON.stringify(error, null, 2),
         true
       );
@@ -205,6 +209,16 @@ class HttpClient {
             return error;
           }
         })
+    );
+  }
+
+  // Perform http request and then return response body parsed as JSON
+  // ResponseToJson() will log response if this.debug === true
+  async RequestJsonBody(params) {
+    return Utils.ResponseToJson(
+      this.Request(params),
+      this.debug,
+      this.Log.bind(this)
     );
   }
 
