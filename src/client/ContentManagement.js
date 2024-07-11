@@ -183,8 +183,13 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
     path: path
   });
   // extract the url for the node that handled the request
+  // TODO: remove/simplify after we start using /nodes API call to get node URLs for write tokens
   const nodeUrl = (new URL(rawCreateResponse.url)).origin;
-  const createResponse = await this.utils.ResponseToJson(rawCreateResponse);
+  const createResponse = await this.utils.ResponseToJson(
+    rawCreateResponse,
+    this.HttpClient.debug,
+    this.HttpClient.Log.bind(this.HttpClient)
+  );
 
   // Record the node used in creating this write token
   this.RecordWriteToken({writeToken: createResponse.write_token, fabricNodeUrl: nodeUrl});
@@ -602,8 +607,14 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
     path: path,
     body: options
   });
+  // extract the url for the node that handled the request
+  // TODO: remove/simplify after we start using /nodes API call to get node URLs for write tokens
   const nodeUrl = (new URL(rawCreateResponse.url)).origin;
-  const createResponse = await this.utils.ResponseToJson(rawCreateResponse);
+  const createResponse = await this.utils.ResponseToJson(
+    rawCreateResponse,
+    this.HttpClient.debug,
+    this.HttpClient.Log.bind(this.HttpClient)
+  );
 
   // Record the node used in creating this write token
   this.RecordWriteToken({writeToken: createResponse.write_token, fabricNodeUrl: nodeUrl});
@@ -773,8 +784,13 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
     body: options
   });
   // extract the url for the node that handled the request
+  // TODO: remove/simplify after we start using /nodes API call to get node URLs for write tokens
   const nodeUrl = (new URL(rawEditResponse.url)).origin;
-  const editResponse = await this.utils.ResponseToJson(rawEditResponse);
+  const editResponse = await this.utils.ResponseToJson(
+    rawEditResponse,
+    this.HttpClient.debug,
+    this.HttpClient.Log.bind(this.HttpClient)
+  );
 
   // Record the node used in creating this write token
   this.RecordWriteToken({writeToken: editResponse.write_token, fabricNodeUrl: nodeUrl});
@@ -957,14 +973,12 @@ exports.FinalizeContentObject = async function({
 
   let path = UrlJoin("q", writeToken);
 
-  const finalizeResponse = await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-      method: "POST",
-      path: path,
-      allowFailover: false
-    })
-  );
+  const finalizeResponse = await this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "POST",
+    path: path,
+    allowFailover: false
+  });
 
   this.Log(`Finalized: ${finalizeResponse.hash}`);
 
