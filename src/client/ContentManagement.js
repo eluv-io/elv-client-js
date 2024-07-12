@@ -1020,7 +1020,8 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
   });
 
   const abi = await this.ContractAbi({id: objectId});
-  const fromBlock = commit.blockNumber + 1;
+  const fromBlock = commit.blockNumber - 30; // due to block re-org
+
   const objectHash = await this.ExtractValueFromEvent({
     abi,
     event: commit,
@@ -1049,6 +1050,7 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
         contractAddress: this.utils.HashToAddress(objectId),
         abi,
         fromBlock,
+        topics: [ Ethers.utils.id("VersionConfirm(address,address,string)") ],
         count: 1000
       });
 
@@ -1091,7 +1093,6 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
       }
     }
   }
-
 };
 
 /**
