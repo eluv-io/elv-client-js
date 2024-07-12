@@ -1006,7 +1006,7 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
   });
 
   const abi = await this.ContractAbi({id: objectId});
-  const fromBlock = commit.blockNumber - 10; // due to block re-org
+  const fromBlock = commit.blockNumber - 30; // due to block re-org
 
   const objectHash = await this.ExtractValueFromEvent({
     abi,
@@ -1051,7 +1051,6 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
       }
     }
   }
-
 
   // APIv2 ensure the fabric API returns the correct hash
   if(awaitCommitConfirmation) {
