@@ -1350,7 +1350,11 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
   status.user_config = userConfig;
 
   // Get node URI from user config
-  const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").replace("srt://", "").split(":")[0];
+  const parsedName = userConfig.url
+    .replace("udp://", "https://")
+    .replace("rtmp://", "https://")
+    .replace("srt://", "https://");
+  const hostName = new URL(parsedName).hostname;
   const streamUrl = new URL(userConfig.url);
 
   console.log("Retrieving nodes - matching", hostName);
