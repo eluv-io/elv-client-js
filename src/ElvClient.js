@@ -589,7 +589,7 @@ class ElvClient {
    * @namedParams
    * @param {string=} matchEndpoint - Return node(s) matching the specified endpoint
    * @param {string=} matchNodeId - Return node(s) matching the specified node ID
-   * * @param {string=} matchWriteToken - Return node(s) matching the specified write token
+   * @param {string=} matchWriteToken - Return node(s) matching the specified write token
    *
    * @return {Promise<Array<Object>>} - A list of nodes in the space matching the parameters
    */
@@ -695,10 +695,10 @@ class ElvClient {
    *
    * @returns {Promise<string>} - The node url for a write token
    */
-  async WriteTokenNodeUrl({writeToken, networkCall=false}) {
-    let nodeUrl;
+  async WriteTokenNodeUrl({writeToken}) {
+    let nodeUrl = this.HttpClient.draftURIs[writeToken];
 
-    if(networkCall) {
+    if(!nodeUrl) {
       const nodes = await this.SpaceNodes({matchWriteToken: writeToken});
 
       nodeUrl = (
@@ -715,8 +715,6 @@ class ElvClient {
 
         return "";
       }
-    } else {
-      nodeUrl = this.HttpClient.draftURIs[writeToken];
     }
 
     return nodeUrl ? nodeUrl.toString() : undefined;
