@@ -5,7 +5,7 @@ const UUID = require("uuid").v4;
 const {ValidateParameters} = require("./Validation");
 
 const ContentObjectAudit = {
-  async AuditContentObject({client, libraryId, objectId, versionHash, salt, samples, live=false}) {
+  async AuditContentObject({client, libraryId, objectId, versionHash, salt, samples, live=false, authorizationToken}) {
     if(!salt){
       salt = client.utils.B64(UUID());
     }
@@ -53,7 +53,9 @@ const ContentObjectAudit = {
 
     let path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, live ? "call/live/audit" : "audit");
     let responses = await httpClient.RequestAll({
-      headers: await client.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
+      headers: authorizationToken ?
+        { Authorization: `Bearer ${authorizationToken}`} :
+        await client.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
       queryParams: queryParams,
       method: "GET",
       path
