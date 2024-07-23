@@ -46,6 +46,7 @@ const testFileSize = 100000;
 let client, accessClient;
 let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
 let mediaLibraryId, masterId, masterHash, mezzanineId, linkLibraryId, linkObjectId;
+let ingestWriteToken;
 let s3Access;
 let tenantId, tenantAdminAddress, contentAdminAddress;
 let isUsingExternalTenantContractId;
@@ -1806,6 +1807,161 @@ describe("Test ElvClient", () => {
       masterHash = hash;
     });
 
+    test("Create Production Master With a Write Token", async () => {
+      mediaLibraryId = await client.CreateContentLibrary({
+        name: "Test Media Library",
+        metadata: {
+          "abr_profile": {
+            "drm_optional": true,
+            "store_clear": true,
+            "ladder_specs": {
+              "{\"media_type\":\"audio\",\"channels\":2}": {
+                "rung_specs": [
+                  {
+                    "media_type": "audio",
+                    "bit_rate": 128000,
+                    "pregenerate": true
+                  }
+                ]
+              },
+              "{\"media_type\":\"video\",\"aspect_ratio_height\":3,\"aspect_ratio_width\":4}": {
+                "rung_specs": [
+                  {
+                    "media_type": "video",
+                    "bit_rate": 4900000,
+                    "pregenerate": true,
+                    "height": 1080,
+                    "width": 1452
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 3375000,
+                    "pregenerate": false,
+                    "height": 720,
+                    "width": 968
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 1500000,
+                    "pregenerate": false,
+                    "height": 540,
+                    "width": 726
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 825000,
+                    "pregenerate": false,
+                    "height": 432,
+                    "width": 580
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 300000,
+                    "pregenerate": false,
+                    "height": 360,
+                    "width": 484
+                  }
+                ]
+              },
+              "{\"media_type\":\"video\",\"aspect_ratio_height\":9,\"aspect_ratio_width\":16}": {
+                "rung_specs": [
+                  {
+                    "media_type": "video",
+                    "bit_rate": 6500000,
+                    "pregenerate": true,
+                    "height": 1080,
+                    "width": 1920
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 4500000,
+                    "pregenerate": false,
+                    "height": 720,
+                    "width": 1280
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 2000000,
+                    "pregenerate": false,
+                    "height": 540,
+                    "width": 960
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 1100000,
+                    "pregenerate": false,
+                    "height": 432,
+                    "width": 768
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 400000,
+                    "pregenerate": false,
+                    "height": 360,
+                    "width": 640
+                  }
+                ]
+              }
+            },
+            "playout_formats": {
+              "dash-clear": {
+                "drm": null,
+                "protocol": {
+                  "min_buffer_length": 2,
+                  "type": "ProtoDash"
+                }
+              },
+              "hls-clear": {
+                "drm": null,
+                "protocol": {
+                  "type": "ProtoHls"
+                }
+              }
+            },
+            "segment_specs": {
+              "audio": {
+                "segs_per_chunk": 15,
+                "target_dur": 2
+              },
+              "video": {
+                "segs_per_chunk": 15,
+                "target_dur": 2.03
+              }
+            }
+          }
+        }
+      });
+
+      const buffer = fs.readFileSync(Path.resolve(__dirname, "files", "Video.mp4"));
+      const data = client.utils.BufferToArrayBuffer(buffer);
+      const fileInfo = [{
+        path: "Video.mp4",
+        mime_type: "video/mp4",
+        size: data.byteLength,
+        data: data
+      }];
+
+      const {writeToken} = await client.CreateContentObject({
+        libraryId: mediaLibraryId,
+        options: {type: "Production Master"}
+      });
+
+      const {id, hash} = await client.CreateProductionMaster({
+        libraryId: mediaLibraryId,
+        writeToken,
+        type: "Production Master",
+        name: "Production Master Test",
+        description: "Production Master Test Description",
+        metadata: {test: "master"},
+        fileInfo
+      });
+
+      expect(id).toBeDefined();
+      expect(hash).toBeUndefined();
+
+      ingestWriteToken = writeToken;
+    });
+
     test("Create Mezzanine", async () => {
       const {id, hash} = await client.CreateABRMezzanine({
         libraryId: mediaLibraryId,
@@ -1836,6 +1992,21 @@ describe("Test ElvClient", () => {
       });
 
       mezzanineId = id;
+    });
+
+    test("Create Mezzanine With A Write Token", async () => {
+      const {id, hash} = await client.CreateABRMezzanine({
+        libraryId: mediaLibraryId,
+        masterWriteToken: ingestWriteToken,
+        writeToken: ingestWriteToken,
+        type: "ABR Master",
+        name: "Mezzanine Test",
+        description: "Mezzanine Test Description",
+        metadata: {test: "mezzanine"}
+      });
+
+      expect(id).toBeDefined();
+      expect(hash).toBeUndefined();
     });
 
     test("Process Mezzanine", async () => {
@@ -1881,6 +2052,65 @@ describe("Test ElvClient", () => {
         await client.FinalizeABRMezzanine({
           libraryId: mediaLibraryId,
           objectId: mezzanineId,
+          offeringKey: "default"
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      } catch(error) {
+        console.log("\n\nERROR:");
+        console.log(JSON.stringify(error, null, 2));
+        console.log();
+      }
+    });
+
+    test("Process Mezzanine With a Write Token", async () => {
+      try {
+        const startResponse = await client.StartABRMezzanineJobs({
+          libraryId: mediaLibraryId,
+          objectId: mezzanineId,
+          writeToken: ingestWriteToken,
+          offeringKey: "default"
+        });
+
+        expect(startResponse).toBeDefined();
+        expect(startResponse.lro_draft).toBeDefined();
+        expect(startResponse.lro_draft.write_token).toBeDefined();
+        expect(startResponse.lro_draft.node).toBeDefined();
+        epxect(startResponse.hash).toBeUndefined();
+
+        // eslint-disable-next-line no-constant-condition
+        while(true) {
+          const status = await client.LROStatus({
+            libraryId: mediaLibraryId,
+            objectId: mezzanineId,
+            writeToken: ingestWriteToken
+          });
+
+          let done = true;
+          Object.keys(status).forEach(id => {
+            const info = status[id];
+
+            if(!info.end) {
+              done = false;
+            }
+          });
+
+          if(done) {
+            break;
+          }
+
+          if(new Date().getTime() - startTime > 120000) {
+            // If processing takes too long, start logging status for debugging
+            console.log(status);
+          }
+
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+
+        await client.FinalizeABRMezzanine({
+          libraryId: mediaLibraryId,
+          objectId: mezzanineId,
+          writeToken: ingestWriteToken,
           offeringKey: "default"
         });
 
