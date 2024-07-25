@@ -109,8 +109,9 @@ class OfferingDownloadMedia extends ScriptBase {
     let partsfile = path.join(dirPath, "/parts_" + streamKey + ".txt");
 
     console.log("Downloading parts...");
-    for(const partHash of parts) {
-      console.log(partHash);
+    for(const [index, partHash] of parts.entries()){
+      let ph = (index+1).toString().padStart(4, "0") + "." + partHash;
+      console.log(`processing ${ph}...`);
       const buf = await client.DownloadPart({
         libraryId,
         objectId,
@@ -122,12 +123,12 @@ class OfferingDownloadMedia extends ScriptBase {
         }
       });
 
-      let partFile = path.join(mtpath, partHash + ".mp4");
+      let partFile = path.join(mtpath, ph + ".mp4");
       fs.appendFile(partFile, buf, (err) => {
         if(err)
           console.log(err);
       });
-      fs.appendFile(partsfile, "file '" + streamKey + "/" + partHash + ".mp4'\n", (err) => {
+      fs.appendFile(partsfile, "file '" + streamKey + "/" + ph + ".mp4'\n", (err) => {
         if(err)
           console.log(err);
       });
