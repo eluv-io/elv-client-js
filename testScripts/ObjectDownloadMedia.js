@@ -3,6 +3,8 @@ const ScriptBase = require("./parentClasses/ScriptBase");
 const utils = require("../src/Utils");
 const Fraction = require("fraction.js");
 const {JSONPath} = require("jsonpath-plus");
+const fs = require("fs");
+const path = require("path");
 
 class ObjectDownloadMedia extends ScriptBase {
   async body() {
@@ -13,6 +15,7 @@ class ObjectDownloadMedia extends ScriptBase {
     const offeringType = this.args.offeringType || "default";
     const startTime = this.args.startTime;
     const endTime = this.args.endTime;
+    const out = this.args.out || "./out";
 
     if(objectId === undefined){
       if(versionHash===undefined){
@@ -21,6 +24,15 @@ class ObjectDownloadMedia extends ScriptBase {
       const res = utils.DecodeVersionHash(versionHash);
       objectId = res.objectId;
     }
+
+    const dirPath = path.resolve(out);
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+      console.log(`Directory created at ${dirPath}`);
+    } else {
+      throw Error(`Directory already exists at ${dirPath}`);
+    }
+
 
     const sourcesJsonPath = "offerings." + offeringType + ".media_struct.streams.video.sources[*]";
     const libraryId = await client.ContentObjectLibraryId({objectId, versionHash});
@@ -77,11 +89,26 @@ class ObjectDownloadMedia extends ScriptBase {
         parts.push(item.source);
       }
     });
+
+    console.log("PARTS:");
     console.log(parts);
+    console.log();
+
+    console.log("Downloading parts...");
+    for(const partHash of parts) {
+      console.log(partHash);
+      const arrayBuffer = await client.DownloadPart({
+        libraryId,
+        objectId,
+        partHash
+      });
+      let filePath = path.join(dirPath, partHash);
+      fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
+    }
   }
 
   header() {
-    return `Downloading parts for objectId ${this.args.objectId} from startTime: ${this.args.startTime}s to endTime: ${this.args.endTime}s`;
+    return `Downloading parts from startTime: ${this.args.startTime}s to endTime: ${this.args.endTime}s`;
   }
 
   options() {
@@ -107,6 +134,10 @@ class ObjectDownloadMedia extends ScriptBase {
       .option("endTime", {
         describe: "end time to retrieve parts",
         type: "number"
+      })
+      .option("out",{
+        describe: "output directory",
+        type: "string"
       });
   }
 }
