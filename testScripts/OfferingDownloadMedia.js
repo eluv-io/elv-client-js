@@ -9,45 +9,45 @@ const { execSync } = require("child_process");
 
 class OfferingDownloadMedia extends ScriptBase {
   async body() {
-    const client = await this.client();
+    const client=await this.client();
 
-    let objectId = this.args.objectId;
-    const versionHash = this.args.versionHash;
-    const offeringKey = this.args.offeringKey;
-    const streamKey = this.args.streamKey;
-    const startTime = this.args.startTime;
-    const endTime = this.args.endTime;
-    const out = this.args.out;
+    let objectId=this.args.objectId;
+    const versionHash=this.args.versionHash;
+    const offeringKey=this.args.offeringKey;
+    const streamKey=this.args.streamKey;
+    const startTime=this.args.startTime;
+    let endTime=this.args.endTime;
+    const out=this.args.out;
 
 
-    if(objectId === undefined){
-      if(versionHash===undefined){
+    if(objectId === undefined) {
+      if(versionHash === undefined) {
         throw Error("require object-id or object-hash to be provided");
       }
-      const res = utils.DecodeVersionHash(versionHash);
-      objectId = res.objectId;
+      const res=utils.DecodeVersionHash(versionHash);
+      objectId=res.objectId;
     }
 
-    const dirPath = path.resolve(out);
+    const dirPath=path.resolve(out);
     if(!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true });
+      fs.mkdirSync(dirPath, {recursive: true});
       console.log(`Directory created at ${dirPath}`);
     } else {
       throw Error(`Directory already exists at ${dirPath}`);
     }
 
 
-    const sourcesJsonPath = "offerings." + offeringKey + ".media_struct.streams.video.sources[*]";
-    const libraryId = await client.ContentObjectLibraryId({objectId, versionHash});
-    const totalDurationJsonPath = "offerings." + offeringKey + ".media_struct.streams." + streamKey + ".duration";
+    const sourcesJsonPath="offerings." + offeringKey + ".media_struct.streams.video.sources[*]";
+    const libraryId=await client.ContentObjectLibraryId({objectId, versionHash});
+    const totalDurationJsonPath="offerings." + offeringKey + ".media_struct.streams." + streamKey + ".duration";
 
     // get object metadata
-    let metadata = await client.ContentObjectMetadata({
+    let metadata=await client.ContentObjectMetadata({
       libraryId,
       objectId
     });
 
-    let sourcesMetadata = JSONPath({
+    let sourcesMetadata=JSONPath({
       json: metadata,
       path: sourcesJsonPath,
       wrap: false
@@ -56,7 +56,7 @@ class OfferingDownloadMedia extends ScriptBase {
       throw new Error("no matching offerings metadata found");
     }
 
-    let totalDurationMetadata = JSONPath({
+    let totalDurationMetadata=JSONPath({
       json: metadata,
       path: totalDurationJsonPath,
       wrap: false
@@ -65,22 +65,26 @@ class OfferingDownloadMedia extends ScriptBase {
       throw new Error("no matching total duration metadata found");
     }
 
-    const totalDurationTimeBase = new Fraction(totalDurationMetadata.time_base);
-    const totalDuration = new Fraction(totalDurationMetadata.ts).mul(totalDurationTimeBase);
-    if(startTime < 0 || endTime > totalDuration) {
-      throw new Error(`start or end time provided are not within range: ${totalDuration}s`);
+    const totalDurationTimeBase=new Fraction(totalDurationMetadata.time_base);
+    const totalDuration=new Fraction(totalDurationMetadata.ts).mul(totalDurationTimeBase);
+    if(startTime < 0) {
+      throw new Error(`start time provided needs to be greater than 0: start=${startTime}s`);
     }
-    if(startTime === endTime) {
-      throw new Error(`end time needs to be greater than start time, value provided: ${startTime}s`);
+    if(startTime >= endTime) {
+      throw new Error(`end time needs to be greater than start time, values provided: start=${startTime}s, end=${endTime}s`);
+    }
+    if(endTime > totalDuration) {
+      console.warn(`end time exceeds total duration. Setting end time to total duration: ${totalDuration}s`);
+      endTime=totalDuration;
     }
 
-    const sourcesTimeInfo = sourcesMetadata.map((part) => {
+    const sourcesTimeInfo=sourcesMetadata.map((part) => {
       // start = part.timeline_start.ts * part.timeline_start.time_base
-      const startTimeBase = new Fraction(part.timeline_start.time_base);
-      const start = new Fraction(part.timeline_start.ts).mul(startTimeBase);
+      const startTimeBase=new Fraction(part.timeline_start.time_base);
+      const start=new Fraction(part.timeline_start.ts).mul(startTimeBase);
       // end = part.timeline_start.ts * part.timeline_end.time_base
-      const endTimeBase = new Fraction(part.timeline_end.time_base);
-      const end = new Fraction(part.timeline_end.ts).mul(endTimeBase);
+      const endTimeBase=new Fraction(part.timeline_end.time_base);
+      const end=new Fraction(part.timeline_end.ts).mul(endTimeBase);
 
       return {
         start: start.valueOf(),
@@ -89,10 +93,19 @@ class OfferingDownloadMedia extends ScriptBase {
       };
     });
 
-    let parts = [];
+    let parts=[];
+    // for trimming video
+    let minStart=null;
+    let maxEnd=null;
     sourcesTimeInfo.forEach(item => {
-      if(startTime < item.end && endTime > item.start){
+      if(startTime < item.end && endTime > item.start) {
         parts.push(item.source);
+        if(minStart === null || item.start < minStart) {
+          minStart=item.start;
+        }
+        if(maxEnd === null || item.end > maxEnd) {
+          maxEnd=item.end;
+        }
       }
     });
 
@@ -101,18 +114,18 @@ class OfferingDownloadMedia extends ScriptBase {
     console.log();
 
 
-    let mtpath = path.join(dirPath, streamKey);
+    let mtpath=path.join(dirPath, streamKey);
     if(!fs.existsSync(mtpath)) {
-      fs.mkdirSync(mtpath, { recursive: true });
+      fs.mkdirSync(mtpath, {recursive: true});
       console.log(`Directory created at ${mtpath}`);
     }
-    let partsfile = path.join(dirPath, "/parts_" + streamKey + ".txt");
+    let partsfile=path.join(dirPath, "/parts_" + streamKey + ".txt");
 
     console.log("Downloading parts...");
-    for(const [index, partHash] of parts.entries()){
-      let ph = (index+1).toString().padStart(4, "0") + "." + partHash;
+    for(const [index, partHash] of parts.entries()) {
+      let ph=(index + 1).toString().padStart(4, "0") + "." + partHash;
       console.log(`processing ${ph}...`);
-      const buf = await client.DownloadPart({
+      const buf=await client.DownloadPart({
         libraryId,
         objectId,
         partHash,
@@ -123,21 +136,63 @@ class OfferingDownloadMedia extends ScriptBase {
         }
       });
 
-      let partFile = path.join(mtpath, ph + ".mp4");
-      fs.appendFile(partFile, buf, (err) => {
-        if(err)
+      let partFile=path.join(mtpath, ph + ".mp4");
+      console.log("partFile:", partFile);
+      fs.appendFileSync(partFile, buf, (err) => {
+        if(err) {
           console.log(err);
+        }
       });
-      fs.appendFile(partsfile, "file '" + streamKey + "/" + ph + ".mp4'\n", (err) => {
-        if(err)
+
+      fs.appendFileSync(partsfile, `file '${partFile}'\n`, (err) => {
+        if(err) {
           console.log(err);
+        }
       });
     }
 
+    console.log("partsFile:", partsfile);
+    // console.log("partsfile content:", fs.readFileSync(partsfile, "utf8"));
+
     // Concatenate parts into one mp4
-    let cmd = "ffmpeg -f concat -safe 0 -i " + partsfile + " -c copy " + dirPath + "/" + streamKey + ".mp4";
+    let cmd=`ffmpeg -f concat -safe 0 -i ${partsfile} -c copy ${path.join(dirPath, streamKey + ".mp4")}`;
     console.log("Running", cmd);
-    execSync(cmd);
+    try {
+      execSync(cmd);
+      console.log("Concatenation complete.");
+    } catch(error) {
+      console.error("Error running ffmpeg:", error);
+    }
+
+    const secondsToHms=function(seconds, separator) {
+      const date=new Date(seconds * 1000);
+      const hh=String(date.getUTCHours()).padStart(2, "0");
+      const mm=String(date.getUTCMinutes()).padStart(2, "0");
+      const ss=String(date.getUTCSeconds()).padStart(2, "0");
+      const ms=String(date.getUTCMilliseconds()).padStart(3, "0");
+      return `${hh}${separator}${mm}${separator}${ss}.${ms}`;
+    };
+
+    let trimStartTime=null;
+    let trimEndTime=null;
+    // since new concatenated video starts from 0s
+    if(minStart !== null && maxEnd !== null) {
+      trimStartTime=startTime - minStart;
+      trimEndTime=endTime - minStart;
+    }
+    const trimDuration=trimEndTime - trimStartTime;
+    console.log(`Duration to be trimmed in concatenated MP4 file:${trimDuration}s`);
+
+    let trimmedOutputFile=path.join(dirPath, streamKey + "_" + secondsToHms(startTime, "-") + "_" + secondsToHms(endTime, "-") + ".mp4");
+    // Trim the MP4 file to the specified start and end times
+    cmd=`ffmpeg -i ${path.join(dirPath, streamKey + ".mp4")} -ss ${secondsToHms(trimStartTime, ":")} -to ${secondsToHms(trimEndTime, ":")} -c copy ${trimmedOutputFile}`;
+    console.log("Running", cmd);
+    try {
+      execSync(cmd);
+      console.log(`Trimmed file: ${trimmedOutputFile}`);
+    } catch(error) {
+      console.error("Error running ffmpeg:", error);
+    }
   }
 
   header() {
@@ -167,12 +222,12 @@ class OfferingDownloadMedia extends ScriptBase {
         default: "video",
       })
       .option("startTime", {
-        describe: "start time to retrieve parts",
+        describe: "start time to retrieve parts in seconds",
         demandOption: true,
         type: "number",
       })
       .option("endTime", {
-        describe: "end time to retrieve parts",
+        describe: "end time to retrieve parts in seconds",
         demandOption: true,
         type: "number",
       })
