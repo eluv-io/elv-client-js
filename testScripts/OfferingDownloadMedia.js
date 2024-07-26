@@ -164,24 +164,13 @@ class OfferingDownloadMedia extends ScriptBase {
       console.error("Error running ffmpeg:", error);
     }
 
-    // const secondsToHms=function(seconds, separator) {
-    //   const date=new Date(seconds * 1000);
-    //   const hh=String(date.getUTCHours()).padStart(2, "0");
-    //   const mm=String(date.getUTCMinutes()).padStart(2, "0");
-    //   const ss=String(date.getUTCSeconds()).padStart(2, "0");
-    //   const ms=String(date.getUTCMilliseconds()).padStart(3, "0");
-    //   return `${hh}${separator}${mm}${separator}${ss}.${ms}`;
-    // };
-
-    const secondsToHms = (seconds, separator = ":") => {
-      const totalSeconds = Math.floor(seconds);
-      const ms = Math.round((seconds - totalSeconds) * 1000);
-      const hh = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-      const mm = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
-      const ss = String(totalSeconds % 60).padStart(2, "0");
-      const milliseconds = String(ms).padStart(3, "0");
-
-      return `${hh}${separator}${mm}${separator}${ss}.${milliseconds}`;
+    const secondsToHms=function(seconds, separator) {
+      const date=new Date(seconds * 1000);
+      const hh=String(date.getUTCHours()).padStart(2, "0");
+      const mm=String(date.getUTCMinutes()).padStart(2, "0");
+      const ss=String(date.getUTCSeconds()).padStart(2, "0");
+      const ms=String(date.getUTCMilliseconds()).padStart(3, "0");
+      return `${hh}${separator}${mm}${separator}${ss}.${ms}`;
     };
 
     let trimStartTime=null;
