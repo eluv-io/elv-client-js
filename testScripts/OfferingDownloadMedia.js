@@ -185,7 +185,7 @@ class OfferingDownloadMedia extends ScriptBase {
 
     let trimmedOutputFile=path.join(dirPath, streamKey + "_" + secondsToHms(startTime, "-") + "_" + secondsToHms(endTime, "-") + ".mp4");
     // Trim the MP4 file to the specified start and end times
-    cmd=`ffmpeg -i ${path.join(dirPath, streamKey + ".mp4")} -ss ${secondsToHms(trimStartTime, ":")} -to ${secondsToHms(trimEndTime, ":")} -c copy ${trimmedOutputFile}`;
+    cmd=`ffmpeg -i ${path.join(dirPath, streamKey + ".mp4")} -ss ${secondsToHms(trimStartTime, ":")} -to ${secondsToHms(trimEndTime, ":")} ${trimmedOutputFile}`;
     console.log("Running", cmd);
     try {
       execSync(cmd);
