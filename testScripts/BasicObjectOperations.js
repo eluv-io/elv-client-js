@@ -3,7 +3,7 @@
 const { ElvClient } = require("../src/ElvClient");
 
 const configUrl = "https://test.net955205.contentfabric.io/config";
-const libraryId = "iliboE2t6fcJxUKPJ1G9q9hUd3bFBaG"; // to create and edit content
+const libraryId = "ilibE6vhm2YCR6vZCtW9mope6Dbo2Tn"; // to create and edit content
 
 const Tool = async () => {
 
