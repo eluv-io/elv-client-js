@@ -1890,6 +1890,24 @@ const AbrProfileLiveDrm = {
       "protocol": {
         "type": "ProtoHls"
       }
+    },
+    "hls-widevine-cenc": {
+      "drm": {
+        "enc_scheme_name": "cenc",
+        "type": "DrmWidevine"
+      },
+      "protocol": {
+        "type": "ProtoHls"
+      }
+    },
+    "hls-playready-cenc": {
+      "drm": {
+        "enc_scheme_name": "cenc",
+        "type": "DrmPlayReady"
+      },
+      "protocol": {
+        "type": "ProtoHls"
+      }
     }
   },
   "segment_specs": {
