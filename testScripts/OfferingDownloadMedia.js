@@ -19,15 +19,13 @@ class OfferingDownloadMedia extends ScriptBase {
     let endTime=this.args.endTime;
     const out=this.args.out;
 
+    if(!objectId && !versionHash) throw new Error("Require object-id or object-hash to be provided");
+    if(!objectId) {
+      objectId = utils.DecodeVersionHash(versionHash).objectId;
+    }
+
     const client=await this.client();
     const libraryId=await client.ContentObjectLibraryId({objectId, versionHash});
-    if(objectId === undefined) {
-      if(versionHash === undefined) {
-        throw Error("require object-id or object-hash to be provided");
-      }
-      const res=utils.DecodeVersionHash(versionHash);
-      objectId=res.objectId;
-    }
 
     const dirPath=path.resolve(out);
     if(!fs.existsSync(dirPath)) {
@@ -37,136 +35,81 @@ class OfferingDownloadMedia extends ScriptBase {
       console.log(`Directory already exists at ${dirPath}`);
     }
 
-    let contentObjDirPath=path.join(dirPath, objectId + "_" + this.secondsToHms(startTime, "-") + "_" + this.secondsToHms(endTime, "-"));
-    if(!fs.existsSync(contentObjDirPath)) {
-      fs.mkdirSync(contentObjDirPath, {recursive: true});
-      console.log(`Directory created at ${contentObjDirPath}`);
-    } else {
-      throw new Error(`Directory already exists at ${contentObjDirPath}`);
-    }
+    const contentObjDirPath = path.join(dirPath, `${objectId}_${this.secondsToHms(startTime, "-")}_${this.secondsToHms(endTime, "-")}`);
+    if(fs.existsSync(contentObjDirPath)) throw new Error(`Directory already exists at ${contentObjDirPath}`);
+    fs.mkdirSync(contentObjDirPath, { recursive: true });
+    console.log(`Directory created at ${contentObjDirPath}`);
 
     // get object metadata
-    let metadata=await client.ContentObjectMetadata({
-      libraryId,
-      objectId
-    });
+    const metadata = await client.ContentObjectMetadata({ libraryId, objectId });
 
-    let audioFile, videoFile, mediaFile;
-    let minStart, maxEnd; // for trimmed video
-    if(streamKey === "both"){
+    let audioFile = "", videoFile = "", audioVideoFile = "";
+    let minStart, maxEnd;
+    const processStream = async (key) => {
       try {
-        ({mediaFile,minStart,maxEnd} = await this.processAudioOrVideoStream({
+        const result = await this.processAudioOrVideoStream({
           libraryId,
           objectId,
           metadata,
-          streamKey: "video",
+          streamKey: key,
           offeringKey,
           startTime,
           endTime,
           out: contentObjDirPath,
-        }));
-        videoFile = mediaFile;
-        console.log("VIDEO MEDIA FILE:", mediaFile);
+        });
+        console.log(`${key.toUpperCase()} MEDIA FILE:`, result.mediaFile);
+        return result;
       } catch(error) {
-        console.error("Error processing video:", error);
+        throw new Error(`Error processing ${key}: ${error}`);
       }
+    };
 
-      try {
-        ({mediaFile,minStart,maxEnd} = await this.processAudioOrVideoStream({
-          libraryId,
-          objectId,
-          metadata,
-          streamKey: "audio",
-          offeringKey,
-          startTime,
-          endTime,
-          out: contentObjDirPath,
-        }));
-        audioFile = mediaFile;
-        console.log("AUDIO MEDIA FILE:", mediaFile);
-      } catch(error) {
-        console.error("Error processing video:", error);
+    if(streamKey === "both") {
+      const videoRes = await processStream("video");
+      const audioRes = await processStream("audio");
+      videoFile = videoRes.mediaFile;
+      audioFile = audioRes.mediaFile;
+      minStart = videoRes.minStart;
+      maxEnd = videoRes.maxEnd;
+    } else if(streamKey === "audio" || streamKey === "video") {
+      const res = await processStream(streamKey);
+      if(streamKey === "audio") {
+        audioFile = res.mediaFile;
+      } else {
+        videoFile = res.mediaFile;
       }
-    } else if((streamKey === "audio") || (streamKey === "video")) {
-      try {
-        ({mediaFile,minStart,maxEnd} = await this.processAudioOrVideoStream({
-          libraryId,
-          objectId,
-          metadata,
-          streamKey,
-          offeringKey,
-          startTime,
-          endTime,
-          out: contentObjDirPath,
-        }));
-
-        if(streamKey === "audio"){
-          audioFile = mediaFile;
-        } else {
-          videoFile = mediaFile;
-        }
-        console.log(`${streamKey} MEDIA FILE:`, mediaFile);
-      } catch(error) {
-        console.error("Error processing video:", error);
-      }
+      minStart = res.minStart;
+      maxEnd = res.maxEnd;
     } else {
-      throw new Error("invalid streamKey: " + streamKey);
+      throw new Error("Invalid streamKey: " + streamKey);
     }
 
-    let audioVideoFile;
-    if(audioFile !== "" && videoFile !== ""){
-      audioVideoFile=path.join(contentObjDirPath, "out.mp4");
-      let cmd=`ffmpeg -i ${videoFile} -i ${audioFile} -c:v copy -c:a copy -map 0:v -map 1:a ${audioVideoFile}`;
-      console.log("Running", cmd);
+    if(audioFile && videoFile) {
+      audioVideoFile = path.join(contentObjDirPath, "out.mp4");
+      const cmd = `ffmpeg -i ${videoFile} -i ${audioFile} -c:v copy -c:a copy -map 0:v -map 1:a ${audioVideoFile}`;
       try {
         execSync(cmd);
         console.log("Concatenation complete.");
       } catch(error) {
-        console.error("Error running ffmpeg:", error);
+        throw new Error("Error running ffmpeg: " + error);
       }
     }
 
-    if(audioVideoFile !== ""){
+    const fileToTrim = audioVideoFile || audioFile || videoFile;
+    if(fileToTrim){
       try {
         await this.trimAudioVideoFiles({
-          mediaFile: audioVideoFile,
+          mediaFile: fileToTrim,
           startTime,
           endTime,
           minStart,
           maxEnd,
           out: contentObjDirPath,
         });
-      } catch(error) {
-        console.error(error);
-      }
-    } else if(audioFile !== ""){
-      try {
-        await this.trimAudioVideoFiles({
-          mediaFile: audioFile,
-          startTime,
-          endTime,
-          minStart,
-          maxEnd,
-          out: contentObjDirPath,
-        });
-      } catch(error) {
-        console.error(error);
-      }
-    } else if(videoFile !== ""){
-      try {
-        await this.trimAudioVideoFiles({
-          mediaFile: videoFile,
-          startTime,
-          endTime,
-          minStart,
-          maxEnd,
-          out: contentObjDirPath,
-        });
-      } catch(error) {
-        console.error(error);
+      } catch(e) {
+        throw new Error(e);
       }
     }
-
   }
 
   async processAudioOrVideoStream({
@@ -179,16 +122,17 @@ class OfferingDownloadMedia extends ScriptBase {
     endTime,
     out}) {
 
-    let sourcesJsonPath="offerings." + offeringKey + ".media_struct.streams." + streamKey + ".sources[*]";
-    let totalDurationJsonPath="offerings." + offeringKey + ".media_struct.streams." + streamKey + ".duration";
+    const sourcesJsonPath = `offerings.${offeringKey}.media_struct.streams.${streamKey}.sources[*]`;
+    const totalDurationJsonPath = `offerings.${offeringKey}.media_struct.streams.${streamKey}.duration`;
+
 
     const sourcesMetadata=JSONPath({
       json: metadata,
       path: sourcesJsonPath,
       wrap: false
     });
-    if(sourcesMetadata === undefined) {
-      throw new Error(`no matching ${offeringKey}_${streamKey} offerings metadata found`);
+    if(!sourcesMetadata) {
+      throw new Error(`No matching ${offeringKey}_${streamKey} offerings metadata found`);
     }
     //console.log(sourcesMetadata);
 
@@ -197,13 +141,13 @@ class OfferingDownloadMedia extends ScriptBase {
       path: totalDurationJsonPath,
       wrap: false
     });
-    if(totalDurationMetadata === undefined) {
-      throw new Error("no matching total duration metadata found");
+    if(!totalDurationMetadata) {
+      throw new Error("No matching total duration metadata found");
     }
     //console.log(totalDurationMetadata);
 
-    const totalDurationTimeBase=new Fraction(totalDurationMetadata.time_base);
-    const totalDuration=new Fraction(totalDurationMetadata.ts).mul(totalDurationTimeBase);
+
+    const totalDuration = new Fraction(totalDurationMetadata.ts).mul(new Fraction(totalDurationMetadata.time_base));
     if(startTime < 0) {
       throw new Error(`start time provided needs to be greater than 0: start=${startTime}s`);
     }
@@ -217,18 +161,17 @@ class OfferingDownloadMedia extends ScriptBase {
 
     const sourcesTimeInfo=sourcesMetadata.map((part) => {
       // start = part.timeline_start.ts * part.timeline_start.time_base
-      const startTimeBase=new Fraction(part.timeline_start.time_base);
-      const start=new Fraction(part.timeline_start.ts).mul(startTimeBase);
+      const start = new Fraction(part.timeline_start.ts).mul(new Fraction(part.timeline_start.time_base));
       // end = part.timeline_start.ts * part.timeline_end.time_base
-      const endTimeBase=new Fraction(part.timeline_end.time_base);
-      const end=new Fraction(part.timeline_end.ts).mul(endTimeBase);
-
+      const end = new Fraction(part.timeline_end.ts).mul(new Fraction(part.timeline_end.time_base));
       return {
         start: start.valueOf(),
         end: end.valueOf(),
         source: part.source
       };
     });
+
+
 
     let parts=[];
     // for trimming video/audio
@@ -257,7 +200,7 @@ class OfferingDownloadMedia extends ScriptBase {
       fs.mkdirSync(mtPath, {recursive: true});
       console.log(`Directory created at ${mtPath}`);
     }
-    const partsFile=path.join(out, "/parts_" + streamKey + ".txt");
+    const partsFile = path.join(out, `parts_${streamKey}.txt`);
     console.log("partsFile:", partsFile);
 
     const client=await this.client();
@@ -276,15 +219,15 @@ class OfferingDownloadMedia extends ScriptBase {
         }
       });
 
-      let prtFile=path.join(mtPath, ph + ".mp4");
-      console.log("partFile:", prtFile);
-      fs.appendFileSync(prtFile, buf, (err) => {
+      let partFile=path.join(mtPath, ph + ".mp4");
+      console.log("partFile:", partFile);
+      fs.appendFileSync(partFile, buf, (err) => {
         if(err) {
           console.log(err);
         }
       });
 
-      fs.appendFileSync(partsFile, `file '${prtFile}'\n`, (err) => {
+      fs.appendFileSync(partsFile, `file '${partFile}'\n`, (err) => {
         if(err) {
           console.log(err);
         }
@@ -294,7 +237,7 @@ class OfferingDownloadMedia extends ScriptBase {
     console.log("partsFile:", partsFile);
     // console.log("partsfile content:", fs.readFileSync(videoPartsFile, "utf8"));
 
-    let mediaFile=path.join(out, streamKey + ".mp4");
+    let mediaFile=path.join(out, `${streamKey}.mp4`);
     let cmd=`ffmpeg -f concat -safe 0 -i ${partsFile} -c copy ${mediaFile}`;
     console.log("Running", cmd);
     try {
@@ -326,7 +269,7 @@ class OfferingDownloadMedia extends ScriptBase {
     const trimDuration=trimEndTime - trimStartTime;
     console.log(`Duration to be trimmed in concatenated MP4 file:${trimDuration}s`);
 
-    let trimmedOutputFile=path.join(out, "out_" + this.secondsToHms(startTime, "-") + "_" + this.secondsToHms(endTime, "-") + ".mp4");
+    const trimmedOutputFile = path.join(out, `out_${this.secondsToHms(startTime, "-")}_${this.secondsToHms(endTime, "-")}.mp4`);
     // Trim the MP4 file to the specified start and end times
     let cmd=`ffmpeg -i ${mediaFile} -ss ${this.secondsToHms(trimStartTime, ":")} -to ${this.secondsToHms(trimEndTime, ":")} ${trimmedOutputFile}`;
     console.log("Running", cmd);
