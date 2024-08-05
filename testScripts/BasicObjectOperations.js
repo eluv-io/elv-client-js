@@ -15,7 +15,7 @@ const Tool = async () => {
   });
 
   client.SetSigner({signer});
-  client.ToggleLogging(true);
+  //client.ToggleLogging(true);
 
 
   try {
