@@ -90,6 +90,11 @@ class OfferingDownloadMedia2 extends ScriptBase {
     fs.mkdirSync(contentObjDirPath, { recursive: true });
     console.log(`Directory created at ${contentObjDirPath}`);
 
+    const trimmedDirectory = path.join(contentObjDirPath, "trimmed");
+    if(!fs.existsSync(trimmedDirectory)) {
+      fs.mkdirSync(trimmedDirectory, { recursive: true });
+    }
+
     // Download and concatenate the parts for each streamKey
     // Then, trim the concatenated media
     for(const streamKey of Object.keys(partsMap)) {
@@ -117,7 +122,7 @@ class OfferingDownloadMedia2 extends ScriptBase {
         trimEndTime=endTime - minStart;
       }
 
-      let mediaTrimmedFile=path.join(contentObjDirPath, `${streamKey}_trimmed.mp4`);
+      let mediaTrimmedFile=path.join(trimmedDirectory, `${streamKey}_trimmed.mp4`);
       cmd=`ffmpeg -i ${mediaFile} -ss ${this.secondsToHms(trimStartTime, ":")} -t ${this.secondsToHms(trimEndTime - trimStartTime, ":")} ${mediaTrimmedFile}`;
       console.log("Running", cmd);
       try {
