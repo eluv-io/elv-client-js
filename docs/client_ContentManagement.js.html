@@ -1116,7 +1116,11 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
         contractAddress: this.utils.HashToAddress(objectId),
         abi,
         fromBlock,
-        topics: [ Ethers.utils.id("VersionConfirm(address,address,string)") ],
+        topics: [
+          await this.authClient.IsV3({id: objectId}) ?
+            Ethers.utils.id("VersionConfirm(address,address,string)") :
+            Ethers.utils.id("VersionConfirm(address,string)")
+        ],
         count: 1000
       });
 
