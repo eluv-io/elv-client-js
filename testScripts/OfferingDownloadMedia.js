@@ -86,9 +86,12 @@ class OfferingDownloadMedia2 extends ScriptBase {
     }
     // create directory for object provided : iq_XXX_start-time_end-time
     const contentObjDirPath = path.join(dirPath, `${objectId}_${this.secondsToHms(startTime, "-")}_${this.secondsToHms(endTime, "-")}`);
-    if(fs.existsSync(contentObjDirPath)) throw new Error(`Directory already exists at ${contentObjDirPath}`);
-    fs.mkdirSync(contentObjDirPath, { recursive: true });
-    console.log(`Directory created at ${contentObjDirPath}`);
+    // if(fs.existsSync(contentObjDirPath)) throw new Error(`Directory already exists at ${contentObjDirPath}`);
+    // fs.mkdirSync(contentObjDirPath, { recursive: true });
+    if(!fs.existsSync(contentObjDirPath)) {
+      fs.mkdirSync(contentObjDirPath, { recursive: true });
+      console.log(`Directory created at ${contentObjDirPath}`);
+    }
 
     const trimmedDirectory = path.join(contentObjDirPath, "trimmed");
     if(!fs.existsSync(trimmedDirectory)) {
@@ -191,12 +194,14 @@ class OfferingDownloadMedia2 extends ScriptBase {
   }
 
   async downloadParts(outDir, libraryId, objectId, streamKey, parts) {
-
     const mtPath=path.join(outDir, streamKey);
     if(!fs.existsSync(mtPath)) {
       fs.mkdirSync(mtPath, {recursive: true});
       console.log(`Directory created at ${mtPath}`);
+    } else {
+      throw new Error(`Directory already exists at ${mtPath}`);
     }
+
     const partsFile=path.join(outDir, `parts_${streamKey}.txt`);
     const client=await this.client();
 
