@@ -396,7 +396,7 @@ class ElvWalletClient {
    * @methodGroup Login
    */
   async LogOut() {
-    if(this.__authorization.nonce) {
+    if(this.__authorization && this.__authorization.nonce) {
       try {
         await this.client.signer.ReleaseCSAT({accessToken: this.AuthToken()});
       } catch(error) {
