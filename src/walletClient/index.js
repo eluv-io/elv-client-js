@@ -1388,7 +1388,7 @@ class ElvWalletClient {
     }
   }
 
-  async DeployTenant({tenantId, tenantSlug="", tenantHash}) {
+  async DeployTenant({tenantId, tenantSlug="", tenantHash, environment="production"}) {
     if(!tenantHash) {
       const tenantLink = await this.client.ContentObjectMetadata({
         libraryId: this.mainSiteLibraryId,
@@ -1412,7 +1412,7 @@ class ElvWalletClient {
       tenantHash = await this.client.LatestVersionHash({versionHash: deployedTenantHash});
     }
 
-    const body = { content_hash: tenantHash, ts: Date.now() };
+    const body = { content_hash: tenantHash, env: environment, ts: Date.now() };
     const token = await this.client.Sign(JSON.stringify(body));
     await this.client.authClient.MakeAuthServiceRequest({
       path: UrlJoin("as", "tnt", "config", tenantId, "metadata"),
