@@ -68,11 +68,6 @@ class MediaIngest extends Utility {
     status.name = "VOD TEST - " + title;
     status.library_id = libraryId;
 
-    // RESUME STATUS
-    //status.object_id = "iq__jF4cpTUz4LnanJrhr2QGQ1971AC";
-    //status.access_token = "eyJxc3BhY2VfaWQiOiJpc3BjM0FOb1ZTek5BM1A2dDdhYkxSNjlobzVZUFBaVSIsImFkZHIiOiIweDc2MWY0NTI4N2VhMzY0ZGI2YjIxNmJkNjU1OTEwNDMwYWZhM2U4MzkiLCJ0eF9pZCI6IjB4MDQ1ODBlNTI4YTU0NWNkNTE1OGM1YTMwZWM5ZGRlNzM3MmYzZThlYTczNzAxMmExOTE0Y2Q5NDYzZDM4NTk2MCIsInFsaWJfaWQiOiJpbGliMkhXQnh3c1hyZ3RSemdNVlZ4QXptMW9QSDUzVSJ9.RVMyNTZLXzNwMlRvY0RuWUV3N2ZWZGlNZEFvcmYxbU5wNU41Wlg0VEdxQ0g4WjQ4Vm1meDZ6cmtiMUFkcURnV1NxNDhydmFYZldjeWcycThUVUgzaUtZN3NTUWVDZ2NB";
-    //status.write_token = "tqw__HSRzdpiWfWsKm1EP7fCxg3iSqsJHdCeU35woWkLwJ6sMJmHdxUj2ypxjpifkSDjvM4kxMixxbriaHEpG44r";
-
     // Create and finalize content object
     // The reason to finalize is that we need two separate write tokens for master and mez
     const {id} = await client.CreateAndFinalizeContentObject({
@@ -81,7 +76,8 @@ class MediaIngest extends Utility {
         type,
         meta: {
           public : {
-            name: "VOD TEST - " + title,
+            name: status.name,
+            description: "Source: " + fileInfo[0].path,
             asset_metadata: {
               title: title
             }
@@ -194,7 +190,7 @@ class MediaIngest extends Utility {
     // set up mezzanine offering
     logger.log("Setting up media file conversion");
     const createMezResponse = await client.CreateABRMezzanine({
-      name: "VOD TEST - " + title,
+      name: status.name,
       libraryId,
       writeToken: mezWriteToken,
       type,
