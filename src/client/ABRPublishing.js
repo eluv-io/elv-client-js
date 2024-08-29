@@ -831,6 +831,7 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeF
     }
   }
 
+  /*
   const finalizeResponse = await this.FinalizeContentObject({
     libraryId,
     objectId: objectId,
@@ -838,6 +839,8 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeF
     commitMessage: "Finalize ABR mezzanine",
     awaitCommitConfirmation: false
   });
+  */
+ const finalizeResponse = {};
 
   return {
     data,
