@@ -1960,6 +1960,24 @@
       "protocol": {
         "type": "ProtoHls"
       }
+    },
+    "hls-fairplay": {
+      "drm": {
+        "enc_scheme_name": "cbcs",
+        "type": "DrmFairplay"
+      },
+      "protocol": {
+        "type": "ProtoHls"
+      }
+    },
+    "hls-playready-cenc": {
+      "drm": {
+        "enc_scheme_name": "cenc",
+        "type": "DrmPlayReady"
+      },
+      "protocol": {
+        "type": "ProtoHls"
+      }
     }
   },
   "segment_specs": {
