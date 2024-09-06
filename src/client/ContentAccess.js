@@ -390,13 +390,11 @@ exports.ContentLibrary = async function({libraryId}) {
 
   const path = UrlJoin("qlibs", libraryId);
 
-  const library = await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId}),
-      method: "GET",
-      path: path
-    })
-  );
+  const library = await this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId}),
+    method: "GET",
+    path: path
+  });
 
   return {
     ...library,
@@ -566,14 +564,12 @@ exports.ContentObjects = async function({libraryId, filterOptions={}}) {
   this.Log("Filter options:");
   this.Log(filterOptions);
 
-  return await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId}),
-      method: "GET",
-      path: path,
-      queryParams
-    })
-  );
+  return await this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId}),
+    method: "GET",
+    path: path,
+    queryParams
+  });
 };
 
 /**
@@ -597,13 +593,11 @@ exports.ContentObject = async function({libraryId, objectId, versionHash, writeT
 
   let path = UrlJoin("q", writeToken || versionHash || objectId);
 
-  return await this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
-      method: "GET",
-      path: path
-    })
-  );
+  return await this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
+    method: "GET",
+    path: path
+  });
 };
 
 /**
@@ -919,22 +913,20 @@ exports.ContentObjectMetadata = async function({
 
   let metadata;
   try {
-    metadata = await this.utils.ResponseToJson(
-      this.HttpClient.Request({
-        headers: { "Authorization": authTokens.map(token => `Bearer ${token}`) },
-        queryParams: {
-          ...queryParams,
-          select,
-          remove,
-          link_depth: linkDepthLimit,
-          resolve: resolveLinks,
-          resolve_include_source: resolveIncludeSource,
-          resolve_ignore_errors: resolveIgnoreErrors,
-        },
-        method: "GET",
-        path: path
-      })
-    );
+    metadata = await this.HttpClient.RequestJsonBody({
+      headers: { "Authorization": authTokens.map(token => `Bearer ${token}`) },
+      queryParams: {
+        ...queryParams,
+        select,
+        remove,
+        link_depth: linkDepthLimit,
+        resolve: resolveLinks,
+        resolve_include_source: resolveIncludeSource,
+        resolve_ignore_errors: resolveIgnoreErrors,
+      },
+      method: "GET",
+      path: path
+    });
   } catch(error) {
     if(error.status !== 404) {
       throw error;
@@ -1066,13 +1058,11 @@ exports.ContentObjectVersions = async function({libraryId, objectId}) {
 
   let path = UrlJoin("qid", objectId);
 
-  return this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
-      method: "GET",
-      path: path
-    })
-  );
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+    method: "GET",
+    path: path
+  });
 };
 
 /**
@@ -1143,13 +1133,11 @@ exports.LatestVersionHashV2 = async function({objectId, versionHash}) {
   try {
     let path = UrlJoin("q", objectId);
 
-    let q = await this.utils.ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({objectId}),
-        method: "GET",
-        path: path
-      })
-    );
+    let q = await this.HttpClient.RequestJsonBody({
+      headers: await this.authClient.AuthorizationHeader({objectId}),
+      method: "GET",
+      path: path
+    });
     latestHash = q.hash;
 
   } catch(error) {
@@ -1210,20 +1198,29 @@ exports.AvailableDRMs = async function() {
     return availableDRMs;
   }
 
+  const config = [{
+    initDataTypes: ["cenc"],
+    audioCapabilities: [{
+      contentType: "audio/mp4;codecs=\"mp4a.40.2\""
+    }],
+    videoCapabilities: [{
+      contentType: "video/mp4;codecs=\"avc1.42E01E\""
+    }]
+  }];
+
   try {
-    const config = [{
-      initDataTypes: ["cenc"],
-      audioCapabilities: [{
-        contentType: "audio/mp4;codecs=\"mp4a.40.2\""
-      }],
-      videoCapabilities: [{
-        contentType: "video/mp4;codecs=\"avc1.42E01E\""
-      }]
-    }];
-
     await navigator.requestMediaKeySystemAccess("com.widevine.alpha", config);
-
     availableDRMs.push("widevine");
+    // console.log("widevine detected");
+    // eslint-disable-next-line no-empty
+  } catch(e) {}
+
+  try {
+    // unused parameters:
+    //   robustness: "2000" // 150, 2000, or 3000 if we know the secruity level
+    await navigator.requestMediaKeySystemAccess("com.microsoft.playready", config);
+    availableDRMs.push("playready");
+    // console.log("playready detected");
     // eslint-disable-next-line no-empty
   } catch(e) {}
 
@@ -1370,15 +1367,13 @@ exports.AvailableOfferings = async function({
       .flat()
       .filter(token => token);
 
-    return await this.utils.ResponseToJson(
-      this.HttpClient.Request({
-        path: path,
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${authorization.join(",")}`
-        }
-      })
-    );
+    return await this.HttpClient.RequestJsonBody({
+      path: path,
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${authorization.join(",")}`
+      }
+    });
   } catch(error) {
     if(error.status && parseInt(error.status) === 500) {
       return {};
@@ -1407,7 +1402,7 @@ exports.AvailableOfferings = async function({
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
  * @param {Array<string>} protocols=["dash","hls"]] - Acceptable playout protocols ("dash", "hls")
- * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
+ * @param {Array<string>} drms - Acceptable DRM formats ("aes-128", "clear", "fairplay", "playready", "sample-aes", "widevine")
  * @param {string=} handler=playout - The handler to use for playout (not used with links)
  * @param {string=} offering=default - The offering to play
  * @param {string=} playoutType - The type of playout
@@ -1517,13 +1512,11 @@ exports.PlayoutOptions = async function({
   };
 
   const playoutOptions = Object.values(
-    await this.utils.ResponseToJson(
-      this.HttpClient.Request({
-        path,
-        method: "GET",
-        queryParams
-      })
-    )
+    await this.HttpClient.RequestJsonBody({
+      path,
+      method: "GET",
+      queryParams
+    })
   );
 
   if(!signedLink && linkTarget.versionHash) {
@@ -1629,17 +1622,14 @@ exports.PlayoutOptions = async function({
     playoutMap.multiview = true;
 
     playoutMap.AvailableViews = async () => {
-      return await this.utils.ResponseToFormat(
-        "json",
-        await this.HttpClient.Request({
-          path: UrlJoin("q", linkTarget.versionHash || versionHash, "rep", handler, offering, "views.json"),
-          method: "GET",
-          queryParams: {
-            sid: sessionId,
-            authorization
-          }
-        })
-      );
+      return await this.HttpClient.RequestJsonBody({
+        path: UrlJoin("q", linkTarget.versionHash || versionHash, "rep", handler, offering, "views.json"),
+        method: "GET",
+        queryParams: {
+          sid: sessionId,
+          authorization
+        }
+      });
     };
 
     playoutMap.SwitchView = async (view) => {
@@ -1675,7 +1665,7 @@ exports.PlayoutOptions = async function({
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
  * @param {Array<string>} protocols=["dash","hls"]] - Acceptable playout protocols ("dash", "hls")
- * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "sample-aes", "widevine")
+ * @param {Array<string>} drms - Acceptable DRM formats ("aes-128", "clear", "fairplay", "playready", "sample-aes", "widevine")
  * @param {string=} handler=playout - The handler to use for playout
  * @param {string=} offering=default - The offering to play
  * @param {string=} playoutType - The type of playout
@@ -1873,7 +1863,9 @@ exports.CallBitcodeMethod = async function({
       path,
       queryParams,
       allowFailover: false
-    })
+    }),
+    this.HttpClient.debug,
+    this.HttpClient.Log.bind(this.HttpClient)
   );
 };
 
@@ -3064,17 +3056,19 @@ exports.Collection = async function({collectionType}) {
  * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
  * @param {string=} salt - base64-encoded byte sequence for salting the audit hash
  * @param {Array<number>=} samples - list of percentages (0.0 - <1.0) used for sampling the content part list, up to 3
+ * @param {string=} authorizationToken - Additional authorization token for this request
  *
  * @returns {Promise<Object>} - Response describing audit results
  */
-exports.AuditContentObject = async function({libraryId, objectId, versionHash, salt, samples}) {
+exports.AuditContentObject = async function({libraryId, objectId, versionHash, salt, samples, authorizationToken}) {
   return await ContentObjectAudit.AuditContentObject({
     client: this,
     libraryId,
     objectId,
     versionHash,
     salt,
-    samples
+    samples,
+    authorizationToken
   });
 };
 

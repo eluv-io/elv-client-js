@@ -396,7 +396,7 @@ class ElvWalletClient {
    * @methodGroup Login
    */
   async LogOut() {
-    if(this.__authorization.nonce) {
+    if(this.__authorization && this.__authorization.nonce) {
       try {
         await this.client.signer.ReleaseCSAT({accessToken: this.AuthToken()});
       } catch(error) {
@@ -702,7 +702,7 @@ class ElvWalletClient {
     return response;
   }
 
-  async SetCodeAuth({code, address, type, authToken}) {
+  async SetCodeAuth({code, address, type, authToken, expiresAt, ...additionalPayload}) {
     await Utils.ResponseToJson(
       this.client.authClient.MakeAuthServiceRequest({
         path: UrlJoin("as", "wlt", "login", "session", code),
@@ -718,7 +718,9 @@ class ElvWalletClient {
             addr: Utils.FormatAddress(address),
             eth: address ? `ikms${Utils.AddressToHash(address)}` : "",
             type,
-            token: authToken
+            token: authToken,
+            expiresAt,
+            ...additionalPayload
           })
         }
       })
@@ -1386,7 +1388,7 @@ class ElvWalletClient {
     }
   }
 
-  async DeployTenant({tenantId, tenantSlug="", tenantHash}) {
+  async DeployTenant({tenantId, tenantSlug="", tenantHash, environment="production"}) {
     if(!tenantHash) {
       const tenantLink = await this.client.ContentObjectMetadata({
         libraryId: this.mainSiteLibraryId,
@@ -1410,7 +1412,7 @@ class ElvWalletClient {
       tenantHash = await this.client.LatestVersionHash({versionHash: deployedTenantHash});
     }
 
-    const body = { content_hash: tenantHash, ts: Date.now() };
+    const body = { content_hash: tenantHash, env: environment, ts: Date.now() };
     const token = await this.client.Sign(JSON.stringify(body));
     await this.client.authClient.MakeAuthServiceRequest({
       path: UrlJoin("as", "tnt", "config", tenantId, "metadata"),
