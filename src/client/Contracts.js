@@ -860,7 +860,7 @@ exports.SetTenantContractId = async function({contractAddress, objectId, version
  *
  * @returns {Promise<void>}
  */
-exports.RemoveTenant = async function({contractAddress, objectId, versionHash}) {
+exports.ResetTenantId = async function({contractAddress, objectId, versionHash}) {
 
   objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
   contractAddress = objectInfo.contractAddress;

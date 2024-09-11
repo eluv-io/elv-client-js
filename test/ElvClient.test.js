@@ -2619,7 +2619,7 @@ describe("Test ElvClient", () => {
 
     test("Clear Tenancy", async () => {
 
-      await client.RemoveTenant({
+      await client.ResetTenantId({
         objectId: libraryId
       });
 
@@ -2633,7 +2633,7 @@ describe("Test ElvClient", () => {
       expect(tenantContractId).toEqual("");
 
       // Remove tenantId from user metadata
-      await client.userProfileClient.RemoveTenant();
+      await client.userProfileClient.ResetTenantId();
 
       tenantId = await client.userProfileClient.TenantId();
       tenantContractId = await client.userProfileClient.TenantContractId();
