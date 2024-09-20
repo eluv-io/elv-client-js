@@ -1331,9 +1331,10 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @return {Promise<Object>} - The status response for the stream
  *
  */
-exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) {
+exports.StreamConfig = async function({name, customSettings={}, probeMetadata, controller}) {
   let objectId = name;
   let status = {name};
+  let timeoutId;
 
   let libraryId = await this.ContentObjectLibraryId({objectId});
   status.library_id = libraryId;
@@ -1357,6 +1358,7 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
   const hostName = new URL(parsedName).hostname;
   const streamUrl = new URL(userConfig.url);
 
+  console.log("CLIENT - controller", controller)
   console.log("Retrieving nodes - matching", hostName);
   let nodes = await this.SpaceNodes({matchEndpoint: hostName});
   if(nodes.length < 1) {
@@ -1375,12 +1377,16 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
 
     // Probe the stream
     probe = {};
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
+
+    if(!controller) {
+      controller = new AbortController();
+    }
+
+    timeoutId = setTimeout(() => {
       controller.abort();
     }, 60 * 1000); // milliseconds
-    try {
 
+    try {
       let probeUrl = await this.Rep({
         libraryId,
         objectId,
@@ -1404,11 +1410,16 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
         throw probe.errors[0];
       }
     } catch(error) {
+      clearTimeout(timeoutId);
       if(error.code === "ETIMEDOUT") {
         throw "Stream probe time out - make sure the stream source is available";
+      } else if(error.name === "AbortError") {
+        throw "Request was aborted by the user.";
       } else {
         throw error;
       }
+    } finally {
+      timeoutId = null;
     }
 
     probe.format.filename = streamUrl.href;
