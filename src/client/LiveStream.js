@@ -1358,7 +1358,6 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata, c
   const hostName = new URL(parsedName).hostname;
   const streamUrl = new URL(userConfig.url);
 
-  console.log("CLIENT - controller", controller)
   console.log("Retrieving nodes - matching", hostName);
   let nodes = await this.SpaceNodes({matchEndpoint: hostName});
   if(nodes.length < 1) {
