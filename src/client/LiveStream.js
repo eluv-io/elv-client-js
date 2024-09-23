@@ -498,8 +498,8 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       state = lroStatus.state;
       status.warnings = lroStatus.custom && lroStatus.custom.warnings;
       status.quality = lroStatus.custom && lroStatus.custom.quality;
-      if (lroStatus.custom && lroStatus.custom.status) {
-        status.recording_status = lroStatus.custom.status
+      if(lroStatus.custom && lroStatus.custom.status) {
+        status.recording_status = lroStatus.custom.status;
       }
     } catch(error) {
       console.log("LRO Status (failed): ", error.response.statusCode);
@@ -1349,7 +1349,11 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
   status.user_config = userConfig;
 
   // Get node URI from user config
-  const hostName = userConfig.url.replace("udp://", "").replace("rtmp://", "").replace("srt://", "").split(":")[0];
+  const parsedName = userConfig.url
+    .replace("udp://", "https://")
+    .replace("rtmp://", "https://")
+    .replace("srt://", "https://");
+  const hostName = new URL(parsedName).hostname;
   const streamUrl = new URL(userConfig.url);
 
   console.log("Retrieving nodes - matching", hostName);
@@ -1950,17 +1954,18 @@ exports.StreamAddWatermark = async function({
  * @param {string=} versionHash - Version hash of the live stream -- if not specified, latest version is returned
  * @param {string=} salt - base64-encoded byte sequence for salting the audit hash
  * @param {Array<number>=} samples - list of percentages (0.0 - <1.0) used for sampling the content part list, up to 3
+ * @param {string=} authorizationToken - Additional authorization token for this request
  *
  * @returns {Promise<Object>} - Response describing audit results
  */
-exports.AuditStream = async function({objectId, versionHash, salt, samples}) {
+exports.AuditStream = async function({objectId, versionHash, salt, samples, authorizationToken}) {
   return await ContentObjectAudit.AuditContentObject({
     client: this,
-    libraryId,
     objectId,
     versionHash,
     salt,
     samples,
-    live: true
+    live: true,
+    authorizationToken
   });
 };
