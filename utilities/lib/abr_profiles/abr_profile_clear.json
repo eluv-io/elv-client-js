@@ -20,6 +20,15 @@
         }
       ]
     },
+    "{\"media_type\":\"audio\",\"channels\":6}": {
+      "rung_specs": [
+        {
+          "bit_rate": 384000,
+          "media_type": "audio",
+          "pregenerate": true
+        }
+      ]
+    },
     "{\"media_type\":\"video\",\"aspect_ratio_height\":1,\"aspect_ratio_width\":2}": {
       "aspect_ratio_float": 2,
       "width": 2160,
