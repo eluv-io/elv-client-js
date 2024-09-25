@@ -57,6 +57,8 @@ const LiveconfTemplate = {
       ingress_node_id: ""
     },
     playout_config: {
+      dvr_enabled: true,
+      dvr_max_duration: 0,
       rebroadcast_start_time_sec_epoch: 0,
       vod_enabled: false
     },
