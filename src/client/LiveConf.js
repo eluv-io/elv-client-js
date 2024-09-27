@@ -87,7 +87,7 @@ const LiveconfTemplate = {
             0
           ],
           audio_seg_duration_ts: null,
-          connection_timeout: 60,
+          connection_timeout: 600,
           ecodec2: "aac",
           enc_height: null,
           enc_width: null,
