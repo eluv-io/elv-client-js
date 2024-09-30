@@ -132,7 +132,7 @@ const FormatNFTMetadata = function(walletClient, nft) {
         if(mediaType === "image") {
           return {
             ...media,
-            embed_url: media.media_file.url
+            embed_url: media.media_file && media.media_file.url
           };
         }
 
@@ -148,7 +148,7 @@ const FormatNFTMetadata = function(walletClient, nft) {
           embedUrl.searchParams.set("vid", LinkTargetHash(media.media_link));
           embedUrl.searchParams.set("ct", "h");
           embedUrl.searchParams.set("ap", "");
-        } else if(mediaType === "ebook") {
+        } else if(mediaType === "ebook" && media.media_file) {
           embedUrl.searchParams.set("type", "ebook");
           embedUrl.searchParams.set("vid", media.media_file["."].container);
           embedUrl.searchParams.set("murl", btoa(media.media_file.url));
