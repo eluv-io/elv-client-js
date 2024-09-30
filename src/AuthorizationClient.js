@@ -328,12 +328,24 @@ class AuthorizationClient {
 
       // Make the request
       let accessRequest;
-      if(update) {
-        this.Log(`Making update request on ${accessType} ${id}`);
-        accessRequest = await this.UpdateRequest({id, abi});
-      } else {
-        this.Log(`Making access request on ${accessType} ${id}`);
-        accessRequest = await this.AccessRequest({id, args: accessArgs, checkAccessCharge});
+      try {
+        if(update) {
+          this.Log(`Making update request on ${accessType} ${id}`);
+          accessRequest = await this.UpdateRequest({id, abi});
+        } else {
+          this.Log(`Making access request on ${accessType} ${id}`);
+          accessRequest = await this.AccessRequest({id, args: accessArgs, checkAccessCharge});
+        }
+      } catch(error) {
+        // Handle specific errors like permission denied
+        if(error.message.includes("UNPREDICTABLE_GAS_LIMIT")) {
+          this.Log(`Permission denied for ${id}: ${error.message}`);
+          throw Error(`Permission denied for ${Utils.FormatAddress(this.client.signer.address)} on ${id}`);
+        }
+
+        // Handle other unexpected errors
+        this.Log(`Error during request for ${id}: ${error.message}`);
+        throw error;
       }
 
       const cache = update ? this.modifyTransactions : this.accessTransactions;
