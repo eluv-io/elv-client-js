@@ -1584,6 +1584,16 @@ exports.PlayoutOptions = async function({
                 noAuth: true,
                 queryParams
               }),
+          globalPlayoutUrl:
+            signedLink ?
+              await this.GlobalUrl({versionHash, path: UrlJoin(linkPath, offering, playoutPath), queryParams}) :
+              await this.GlobalUrl({
+                libraryId: linkTarget.libraryId || libraryId,
+                objectId: linkTarget.objectId || objectId,
+                versionHash: linkTarget.versionHash || versionHash,
+                path: UrlJoin("rep", handler, offering, playoutPath),
+                queryParams
+              }),
           drms: drm ? {[drm]: {licenseServers, cert}} : undefined
         }
       }
@@ -1789,6 +1799,107 @@ exports.BitmovinPlayoutOptions = async function({
 
   return config;
 };
+
+/**
+ * Create a 'global' URL with the specified parameters
+ *
+ * A global URL is a URL that will resolve to a Fabric node close to the resolver. This is useful in cases where URLS are being passed to clients that may be in a different geographical location from where the URL was created.
+ *
+ * @methodGroup URL Generation
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object
+ * @param {string=} writeToken - Write token of an object draft
+ * @param {string=} path - Path of the URL
+ * @param {string=} authorizationToken - Authorization token for the URL. If not specified and `noAuth` is false, the client will generate the token automatically
+ * @param {boolean=} noAuth=false - Set to true if the URL is for publicly accessible content
+ * @param {boolean=} resolve=false - Whether links should resolve (if this URL is for metadata)
+ * @param {Object=} queryParams={} - Additional URL query params
+ *
+ * @returns {Promise<string>} - The generated global URL
+ */
+exports.GlobalUrl = async function({
+  libraryId,
+  objectId,
+  writeToken,
+  versionHash,
+  path="/",
+  authorizationToken,
+  noAuth=false,
+  resolve=true,
+  queryParams={}
+}) {
+  const network = this.NetworkInfo().name;
+  let url = new URL(
+    network === "main" ?
+      "https://main.net955305.contentfabric.io" :
+      "https://demov3.net955210.contentfabric.io"
+  );
+
+  // Pull auth out of query params
+  if(
+    queryParams.authorization &&
+    (
+      typeof queryParams.authorization === "string" ||
+      (Array.isArray(queryParams.authorization) && queryParams.authorization.length === 1)
+    )
+  ) {
+    queryParams = {...queryParams};
+    authorizationToken = typeof queryParams.authorization === "string" ?
+      queryParams.authorization :
+      queryParams.authorization[0];
+  }
+
+  if(writeToken) {
+    let fabricNodeUrl = this.HttpClient.draftURIs[writeToken];
+
+    if(fabricNodeUrl) {
+      url = new URL(fabricNodeUrl);
+    }
+  }
+
+  let urlPath = UrlJoin("s", network);
+  if(!noAuth || authorizationToken) {
+    urlPath = UrlJoin(
+      "t",
+      authorizationToken || await this.authClient.AuthorizationToken({
+        libraryId,
+        objectId,
+        versionHash,
+        noAuth
+      })
+    );
+  }
+
+  if(versionHash) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  } else {
+    // Ensure library ID is loaded for this object
+    libraryId = libraryId || await this.ContentObjectLibraryId({objectId});
+  }
+
+  if(path.startsWith("/qfab")) {
+    urlPath = UrlJoin(urlPath, path.replace(/^\/qfab/, "q"));
+  } else if(versionHash) {
+    urlPath = UrlJoin(urlPath, "q", writeToken || versionHash, path);
+  } else {
+    urlPath = UrlJoin(urlPath, "qlibs", libraryId, "q", writeToken || objectId, path);
+  }
+
+  url.pathname = urlPath;
+
+  if(resolve) {
+    url.searchParams.set("resolve", "true");
+  }
+
+  Object.keys(queryParams).forEach(key =>
+    url.searchParams.set(key, queryParams[key])
+  );
+
+  return url.toString();
+};
+
 
 /**
  * Call the specified bitcode method on the specified object
