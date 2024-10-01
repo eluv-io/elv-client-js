@@ -57,6 +57,8 @@ const LiveconfTemplate = {
       ingress_node_id: ""
     },
     playout_config: {
+      dvr_enabled: true,
+      dvr_max_duration: 0,
       rebroadcast_start_time_sec_epoch: 0,
       vod_enabled: false
     },
@@ -85,7 +87,7 @@ const LiveconfTemplate = {
             0
           ],
           audio_seg_duration_ts: null,
-          connection_timeout: 60,
+          connection_timeout: 600,
           ecodec2: "aac",
           enc_height: null,
           enc_width: null,
@@ -451,6 +453,10 @@ class LiveConf {
 
     if(customSettings.part_ttl) {
       conf.live_recording.recording_config.recording_params.part_ttl = customSettings.part_ttl;
+    }
+
+    if(customSettings.connection_timeout) {
+      conf.live_recording.recording_config.recording_params.xc_params.connection_timeout = customSettings.connection_timeout;
     }
 
     // Fill in specifics for protocol
