@@ -74,6 +74,7 @@ const LiveconfTemplate = {
         part_ttl: 3600,
         playout_type: "live",
         source_timescale: null,
+        reconnect_timeout: 600,
         xc_params: {
           audio_bitrate: 384000,
           audio_index: [
@@ -88,7 +89,6 @@ const LiveconfTemplate = {
           ],
           audio_seg_duration_ts: null,
           connection_timeout: 600,
-          reconnect_timeout: 600,
           ecodec2: "aac",
           enc_height: null,
           enc_width: null,
