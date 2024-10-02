@@ -460,6 +460,10 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.xc_params.connection_timeout = customSettings.connection_timeout;
     }
 
+    if(customSettings.reconnect_timeout) {
+      conf.live_recording.recording_config.recording_params.reconnect_timeout = customSettings.reconnect_timeout;
+    }
+
     // Fill in specifics for protocol
     switch(this.probeKind()) {
       case "udp":
