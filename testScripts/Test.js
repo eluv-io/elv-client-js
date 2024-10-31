@@ -9,9 +9,6 @@ const Test = async () => {
     const client = await ElvClient.FromNetworkName({
       networkName: "demo"
     });
-    // const client = await ElvClient.FromConfigurationUrl({
-    //   configUrl: "http://localhost:8008/config?qspace=demov3&self"
-    // });
 
     const wallet = client.GenerateWallet();
     const signer = wallet.AddAccount({
@@ -20,12 +17,7 @@ const Test = async () => {
 
     client.SetSigner({signer});
 
-    const versionHash = "";
-
-    const url = await client.FabricUrl({
-      versionHash
-    });
-    console.log("url", url)
+    console.log(await client.ContentLibraries());
   } catch(error) {
     console.error(error);
     console.error(JSON.stringify(error, null, 2));
