@@ -74,6 +74,7 @@ const LiveconfTemplate = {
         part_ttl: 3600,
         playout_type: "live",
         source_timescale: null,
+        reconnect_timeout: 600,
         xc_params: {
           audio_bitrate: 384000,
           audio_index: [
@@ -457,6 +458,10 @@ class LiveConf {
 
     if(customSettings.connection_timeout) {
       conf.live_recording.recording_config.recording_params.xc_params.connection_timeout = customSettings.connection_timeout;
+    }
+
+    if(customSettings.reconnect_timeout) {
+      conf.live_recording.recording_config.recording_params.reconnect_timeout = customSettings.reconnect_timeout;
     }
 
     // Fill in specifics for protocol
