@@ -1900,6 +1900,58 @@ exports.GlobalUrl = async function({
   return url.toString();
 };
 
+exports.MakeFileServiceRequest = async function({
+  libraryId,
+  objectId,
+  versionHash,
+  writeToken,
+  path,
+  method="GET",
+  queryParams={},
+  body,
+  bodyType="JSON",
+  format="json",
+  headers={},
+  authorizationToken
+}) {
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  if(objectId && !libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  ValidateParameters({libraryId, objectId, versionHash});
+
+  let queryPath = UrlJoin("q", writeToken || versionHash || objectId, path);
+
+  if(libraryId && !versionHash) {
+    queryPath = UrlJoin("qlibs", libraryId, queryPath);
+  }
+
+  let authorization = [
+    authorizationToken,
+    await this.authClient.AuthorizationToken({objectId})
+  ]
+    .flat()
+    .filter(token => token);
+
+  headers.Authorization = headers.Authorization || authorization.map(token => `Bearer ${token}`);
+
+  return this.utils.ResponseToFormat(
+    format,
+    await this.FileServiceHttpClient.Request({
+      body,
+      bodyType,
+      headers,
+      method,
+      path: queryPath,
+      queryParams
+    }),
+    this.FileServiceHttpClient.debug,
+    this.FileServiceHttpClient.Log.bind(this.FileServiceHttpClient)
+  );
+};
+
 
 /**
  * Call the specified bitcode method on the specified object
@@ -1939,7 +1991,7 @@ exports.CallBitcodeMethod = async function({
 
   let path = UrlJoin("q", writeToken || versionHash || objectId, "call", method);
 
-  if(libraryId) {
+  if(libraryId && !versionHash) {
     path = UrlJoin("qlibs", libraryId, path);
   }
 
@@ -2153,6 +2205,8 @@ exports.FabricUrl = async function({
     httpClient = this.SearchHttpClient;
   } else if(service === "auth") {
     httpClient = this.AuthHttpClient;
+  } else if(service === "files") {
+    httpClient = this.FileServiceHttpClient;
   }
 
   return httpClient.URL({
