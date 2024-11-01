@@ -1863,6 +1863,16 @@ const AbrProfileLiveDrm = {
     }
   },
   "playout_formats": {
+    "dash-playready-cenc": {
+      "drm": {
+        "enc_scheme_name": "cenc",
+        "type": "DrmPlayReady"
+      },
+      "protocol": {
+        "min_buffer_length": 2,
+        "type": "ProtoDash"
+      }
+    },
     "dash-widevine": {
       "drm": {
         "content_id": "",
