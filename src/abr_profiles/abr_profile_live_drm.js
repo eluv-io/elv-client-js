@@ -1863,6 +1863,18 @@ const AbrProfileLiveDrm = {
     }
   },
   "playout_formats": {
+    "dash-widevine": {
+      "drm": {
+        "content_id": "",
+        "enc_scheme_name": "cenc",
+        "license_servers": [],
+        "type": "DrmWidevine"
+      },
+      "protocol": {
+        "min_buffer_length": 2,
+        "type": "ProtoDash"
+      }
+    },
     "hls-fairplay": {
       "drm": {
         "enc_scheme_name": "cbcs",
