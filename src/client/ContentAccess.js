@@ -1911,6 +1911,7 @@ exports.MakeFileServiceRequest = async function({
   body,
   bodyType="JSON",
   format="json",
+  encryption,
   headers={},
   authorizationToken
 }) {
@@ -1930,7 +1931,7 @@ exports.MakeFileServiceRequest = async function({
 
   let authorization = [
     authorizationToken,
-    await this.authClient.AuthorizationToken({objectId})
+    await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, encryption, makeAccessRequest: encryption === "cgck"})
   ]
     .flat()
     .filter(token => token);
