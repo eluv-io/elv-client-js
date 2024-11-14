@@ -487,7 +487,7 @@ class ElvWalletClient {
     let fabricToken, expiresAt;
     if(createRemoteToken && this.client.signer.remoteSigner) {
       expiresAt = Date.now() + 24 * 60 * 60 * 1000;
-      const tokenResponse = await this.client.signer.RetrieveCSAT({email, nonce, force});
+      const tokenResponse = await this.client.signer.RetrieveCSAT({email, nonce, tenantId, force});
       fabricToken = tokenResponse.token;
       nonce = tokenResponse.nonce;
     } else {
@@ -763,17 +763,13 @@ class ElvWalletClient {
       select: [
         "info/marketplace_order",
         "tenants/*/.",
-        "tenants/*/info/branding",
+        "tenants/*/info/branding/show",
+        "tenants/*/info/branding/name",
         "tenants/*/marketplaces/*/.",
         "tenants/*/marketplaces/*/info/tenant_id",
         "tenants/*/marketplaces/*/info/tenant_name",
-        "tenants/*/marketplaces/*/info/branding",
-        "tenants/*/marketplaces/*/info/storefront/background",
-        "tenants/*/marketplaces/*/info/storefront/background_mobile"
-      ],
-      remove: [
-        "tenants/*/info/branding/wallet_css",
-        "tenants/*/marketplaces/*/info/branding/custom_css"
+        "tenants/*/marketplaces/*/info/branding/show",
+        "tenants/*/marketplaces/*/info/branding/name"
       ]
     });
 

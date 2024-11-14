@@ -70,7 +70,11 @@ class ElvClient {
       this.authClient,
       this.ethClient,
       this.HttpClient,
-      this.userProfileClient].forEach(setDebug);
+      this.AuthHttpClient,
+      this.FileServiceHttpClient,
+      this.SearchHttpClient,
+      this.userProfileClient
+    ].forEach(setDebug);
 
     if(enable) {
       this.Log(
@@ -78,7 +82,8 @@ class ElvClient {
         Content Space: ${this.contentSpaceId}
         Fabric URLs: [\n\t\t${this.fabricURIs.join(", \n\t\t")}\n\t]
         Ethereum URLs: [\n\t\t${this.ethereumURIs.join(", \n\t\t")}\n\t]
-        Auth Service URLs: [\n\t\t${this.authServiceURIs.join(", \n\t\t")}\n\t]
+        Auth Service URLs: [\\n\\t\\t${this.authServiceURIs.join(", \n\t\t")}\\n\\t]
+        File Service URLs: [\\n\\t\\t${this.fileServiceURIs.join(", \n\t\t")}\\n\\t]
         `
       );
     }
@@ -130,6 +135,7 @@ class ElvClient {
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
    * @param {Array<string>} authServiceURIs - A list of full URIs to auth service endpoints
+   * @param {Array<string>} fileServiceURIs - A list of full URIs to file service endpoints
    * @param {Array<string>=} searchURIs - A list of full URIs to search service endpoints
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
@@ -150,6 +156,7 @@ class ElvClient {
     fabricURIs,
     ethereumURIs,
     authServiceURIs,
+    fileServiceURIs,
     searchURIs,
     ethereumContractTimeout = 10,
     trustAuthorityId,
@@ -175,6 +182,7 @@ class ElvClient {
 
     this.fabricURIs = fabricURIs;
     this.authServiceURIs = authServiceURIs;
+    this.fileServiceURIs = fileServiceURIs || fabricURIs;
     this.ethereumURIs = ethereumURIs;
     this.searchURIs = searchURIs;
     this.ethereumContractTimeout = ethereumContractTimeout;
@@ -249,6 +257,11 @@ class ElvClient {
         authServiceURIs = authServiceURIs.filter(filterHTTPS);
       }
 
+      let fileServiceURIs = fabricInfo.network.services.file_service || fabricURIs;
+      if(fileServiceURIs.find(filterHTTPS)) {
+        fileServiceURIs = fileServiceURIs.filter(filterHTTPS);
+      }
+
       const searchURIs = fabricInfo.network.services.search || [];
 
       const fabricVersion = Math.max(...(fabricInfo.network.api_versions || [2]));
@@ -261,6 +274,7 @@ class ElvClient {
         fabricURIs,
         ethereumURIs,
         authServiceURIs,
+        fileServiceURIs,
         kmsURIs: kmsUrls,
         searchURIs,
         fabricVersion
@@ -364,6 +378,7 @@ class ElvClient {
       fabricURIs,
       ethereumURIs,
       authServiceURIs,
+      fileServiceURIs,
       searchURIs,
       fabricVersion
     } = await ElvClient.Configuration({
@@ -380,6 +395,7 @@ class ElvClient {
       fabricURIs,
       ethereumURIs,
       authServiceURIs,
+      fileServiceURIs,
       searchURIs,
       ethereumContractTimeout,
       trustAuthorityId,
@@ -410,6 +426,7 @@ class ElvClient {
     const uris = this.service === "search" ? this.searchURIs : this.fabricURIs;
     this.HttpClient = new HttpClient({uris, debug: this.debug});
     this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, debug: this.debug});
+    this.FileServiceHttpClient = new HttpClient({uris: this.fileServiceURIs, debug: this.debug});
     this.SearchHttpClient = new HttpClient({uris: this.searchURIs || [], debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, networkId: this.networkId, debug: this.debug, timeout: this.ethereumContractTimeout});
 
@@ -466,27 +483,26 @@ class ElvClient {
       throw Error("Unable to change region: Configuration URL not set");
     }
 
-    const {fabricURIs, ethereumURIs, authServiceURIs, searchURIs} = await ElvClient.Configuration({
+    const {fabricURIs, ethereumURIs, authServiceURIs, fileServiceURIs, searchURIs} = await ElvClient.Configuration({
       configUrl: this.configUrl,
       region
     });
 
     this.region = region;
 
-    this.authServiceURIs = authServiceURIs;
-    this.fabricURIs = fabricURIs;
-    this.ethereumURIs = ethereumURIs;
-    this.searchURIs = searchURIs;
-
-    this.HttpClient.uris = fabricURIs;
-    this.HttpClient.uriIndex = 0;
-
-    this.ethClient.ethereumURIs = ethereumURIs;
-    this.ethClient.ethereumURIIndex = 0;
+    this.SetNodes({
+      fabricURIs,
+      ethereumURIs,
+      authServiceURIs,
+      fileServiceURIs,
+      searchURIs
+    });
 
     return {
       fabricURIs,
       ethereumURIs,
+      fileServiceURIs,
+      authServiceURIs,
       searchURIs
     };
   }
@@ -541,6 +557,7 @@ class ElvClient {
       fabricURIs: this.fabricURIs,
       ethereumURIs: this.ethereumURIs,
       authServiceURIs: this.authServiceURIs,
+      fileServiceURIs: this.fileServiceURIs,
       searchURIs: this.searchURIs
     };
   }
@@ -552,11 +569,12 @@ class ElvClient {
    * @param {Array<string>=} fabricURIs - A list of URLs for the fabric, in preference order
    * @param {Array<string>=} ethereumURIs - A list of URLs for the blockchain, in preference order
    * @param {Array<string>=} authServiceURIs - A list of URLs for the auth service, in preference order
+   * @param {Array<string>=} fileServiceURIs - A list of URLs for file service jobs, in preference order
    * @param {Array<string>=} searchURIs - A list of URLs for the search nodes, in preference order
    *
    * @methodGroup Nodes
    */
-  SetNodes({fabricURIs, ethereumURIs, authServiceURIs, searchURIs}) {
+  SetNodes({fabricURIs, ethereumURIs, authServiceURIs, fileServiceURIs, searchURIs}) {
     if(fabricURIs) {
       this.fabricURIs = fabricURIs;
 
@@ -573,12 +591,23 @@ class ElvClient {
 
     if(authServiceURIs) {
       this.authServiceURIs = authServiceURIs;
+
       this.AuthHttpClient.uris = authServiceURIs;
       this.AuthHttpClient.uriIndex = 0;
     }
 
+    if(fileServiceURIs) {
+      this.fileServiceURIs = fileServiceURIs;
+
+      this.FileServiceHttpClient.uris = fileServiceURIs;
+      this.FileServiceHttpClient.uriIndex = 0;
+    }
+
     if(searchURIs) {
       this.searchURIs = searchURIs;
+
+      this.SearchHttpClient.uris = searchURIs;
+      this.SearchHttpClient.uriIndex = 0;
     }
   }
 

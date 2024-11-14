@@ -1863,6 +1863,28 @@ const AbrProfileLiveDrm = {
     }
   },
   "playout_formats": {
+    "dash-playready-cenc": {
+      "drm": {
+        "enc_scheme_name": "cenc",
+        "type": "DrmPlayReady"
+      },
+      "protocol": {
+        "min_buffer_length": 2,
+        "type": "ProtoDash"
+      }
+    },
+    "dash-widevine": {
+      "drm": {
+        "content_id": "",
+        "enc_scheme_name": "cenc",
+        "license_servers": [],
+        "type": "DrmWidevine"
+      },
+      "protocol": {
+        "min_buffer_length": 2,
+        "type": "ProtoDash"
+      }
+    },
     "hls-fairplay": {
       "drm": {
         "enc_scheme_name": "cbcs",
@@ -1886,6 +1908,24 @@ const AbrProfileLiveDrm = {
       "drm": {
         "enc_scheme_name": "aes-128",
         "type": "DrmAes128"
+      },
+      "protocol": {
+        "type": "ProtoHls"
+      }
+    },
+    "hls-widevine-cenc": {
+      "drm": {
+        "enc_scheme_name": "cenc",
+        "type": "DrmWidevine"
+      },
+      "protocol": {
+        "type": "ProtoHls"
+      }
+    },
+    "hls-playready-cenc": {
+      "drm": {
+        "enc_scheme_name": "cenc",
+        "type": "DrmPlayReady"
       },
       "protocol": {
         "type": "ProtoHls"

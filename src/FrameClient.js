@@ -430,6 +430,7 @@ class FrameClient {
       "LRODraftInfo",
       "LROStatus",
       "MakeAuthServiceRequest",
+      "MakeFileServiceRequest",
       "MergeContractMetadata",
       "MergeMetadata",
       "MetadataAuth",

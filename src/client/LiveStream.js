@@ -1029,6 +1029,18 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
         };
         continue;
       }
+      if(formats[i] === "dash-clear") {
+        abrProfile.drm_optional = true;
+        playoutFormats["dash-clear"] = {
+          "drm": null,
+          "protocol": {
+            "min_buffer_length": 2,
+            "type": "ProtoDash"
+          }
+        }
+        continue;
+      }
+
       playoutFormats[formats[i]] = abrProfile.playout_formats[formats[i]];
     }
   } else if(!drm) {
@@ -1038,6 +1050,13 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
         "drm": null,
         "protocol": {
           "type": "ProtoHls"
+        }
+      },
+      "dash-clear": {
+        "drm": null,
+        "protocol": {
+          "min_buffer_length": 2,
+          "type": "ProtoDash"
         }
       }
     };
@@ -1356,7 +1375,7 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
   const hostName = new URL(parsedName).hostname;
   const streamUrl = new URL(userConfig.url);
 
-  console.log("Retrieving nodes - matching", hostName);
+  this.Log(`Retrieving nodes - matching: ${hostName}`);
   let nodes = await this.SpaceNodes({matchEndpoint: hostName});
   if(nodes.length < 1) {
     status.error = "No node matching stream URL " + streamUrl.href;
@@ -1374,12 +1393,7 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
 
     // Probe the stream
     probe = {};
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, 60 * 1000); // milliseconds
     try {
-
       let probeUrl = await this.Rep({
         libraryId,
         objectId,
@@ -1392,12 +1406,9 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
             "filename": streamUrl.href,
             "listen": true
           }),
-          method: "POST",
-          signal: controller.signal
+          method: "POST"
         })
       );
-
-      if(probe) { clearTimeout(timeoutId); }
 
       if(probe.errors) {
         throw probe.errors[0];
