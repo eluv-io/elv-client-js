@@ -1,4 +1,3 @@
-
 const DefaultABRLadder = {
   "video" : [
     {
@@ -526,7 +525,7 @@ class LiveConf {
 
       // Find ladder rung for the specific channel layout (2 or 6 channels)
       for (let i = 0; i < ladderProfile.audio.length; i ++) {
-        let elem = ladderProfile.video[i];
+        let elem = ladderProfile.audio[i];
         if (elem.channels == audio.recordingChannels) {
           audioLadderSpec = elem;
           break;
@@ -534,15 +533,14 @@ class LiveConf {
       }
       if (audioLadderSpec == {}) {
         // If no channels layout match, just use the first element in the ladder
-        audioLadderSpec = ladderProfile.video[0];
+        audioLadderSpec = ladderProfile.audio[0];
       }
 
-      audioLadderSpec.representation = `audioaudio_aac@${audio.recordingBitrate}`;
+      audioLadderSpec.representation = `audioaudio_aac@${audioLadderSpec.bit_rate}`;
       audioLadderSpec.channels = audio.recordingChannels;
       audioLadderSpec.stream_index = parseInt(audioIndex);
       audioLadderSpec.stream_name = `audio_${audioIndex}`;
       audioLadderSpec.stream_label = audio.playoutLabel ? audio.playoutLabel : null;
-      audioLadderSpec.codecs = "mp4a.40.2";
       audioLadderSpec.media_type = 2;
 
       conf.live_recording.recording_config.recording_params.ladder_specs.push(audioLadderSpec);
