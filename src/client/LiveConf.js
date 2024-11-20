@@ -1,53 +1,49 @@
-const LadderTemplate = {
-  "2160": {
-    bit_rate: 14000000,
-    codecs: "avc1.640028,mp4a.40.2",
-    height: 2160,
-    media_type: 1,
-    representation: "videovideo_3840x2160_h264@14000000",
-    stream_name: "video",
-    width: 3840
-  },
-  "1080": {
-    bit_rate: 9500000,
-    codecs: "avc1.640028,mp4a.40.2",
-    height: 1080,
-    media_type: 1,
-    representation: "videovideo_1920x1080_h264@9500000",
-    stream_name: "video",
-    stream_index: 0,
-    width: 1920
-  },
-  "720": {
-    bit_rate: 4500000,
-    codecs: "avc1.640028,mp4a.40.2",
-    height: 720,
-    media_type: 1,
-    representation: "videovideo_1280x720_h264@4500000",
-    stream_name: "video",
-    stream_index: 0,
-    width: 1280
-  },
-  "540": {
-    bit_rate: 2000000,
-    codecs: "avc1.640028,mp4a.40.2",
-    height: 540,
-    media_type: 1,
-    representation: "videovideo_960x540_h264@2000000",
-    stream_name: "video",
-    stream_index: 0,
-    width: 960
-  },
-  "540_low": {
-    bit_rate: 900000,
-    codecs: "avc1.640028,mp4a.40.2",
-    height: 540,
-    media_type: 1,
-    representation: "videovideo_960x540_h264@900000",
-    stream_name: "video",
-    stream_index: 0,
-    width: 960
-  }
+
+const DefaultABRLadder = {
+  "video" : [
+    {
+      bit_rate: 14000000,
+      codecs: "avc1.640028,mp4a.40.2",
+      height: 2160,
+      width: 3840
+    },
+    {
+      bit_rate: 9500000,
+      codecs: "avc1.640028,mp4a.40.2",
+      height: 1080,
+      width: 1920
+    },
+    {
+      bit_rate: 4500000,
+      codecs: "avc1.640028,mp4a.40.2",
+      height: 720,
+      width: 1280
+    },
+    {
+      bit_rate: 2000000,
+      codecs: "avc1.640028,mp4a.40.2",
+      height: 540,
+      width: 960
+    },
+    {
+      bit_rate: 900000,
+      codecs: "avc1.640028,mp4a.40.2",
+      height: 540,
+      width: 960
+    }
+  ],
+  "audio" : [
+    {
+      bit_rate: 192000,
+      channels: 2,
+      codecs: "mp4a.40.2",
+    },
+    {
+      bit_rate: 384000,
+      channels: 6,
+      codecs: "mp4a.40.2",
+    }
+  ]
 };
 
 const LiveconfTemplate = {
@@ -113,16 +109,6 @@ const LiveconfTemplate = {
       }
     }
   }
-};
-
-const LadderSpecAudio = {
-  bit_rate: 384000,
-  channels: 2,
-  codecs: "mp4a.40.2",
-  media_type: 2,
-  representation: "audioaudio_aac@384000",
-  stream_name: "audio",
-  stream_index: 0
 };
 
 class LiveConf {
@@ -390,7 +376,7 @@ class LiveConf {
   generateAudioStreamsConfig({customSettings}) {
 
     let audioStreams = {};
-    if(customSettings && customSettings.audio) {
+    if(customSettings && customSettings.audio && Object.keys(customSettings.audio).length > 0) {
       for(let i = 0; i < Object.keys(customSettings.audio).length; i ++) {
         let audioIdx = Object.keys(customSettings.audio)[i];
         let audio = customSettings.audio[audioIdx];
@@ -405,7 +391,7 @@ class LiveConf {
     }
 
     // If no audio streams specified in custom config, set up all the suitable audio streams in the probe
-    if(!customSettings.audio) {
+    if(!customSettings.audio || Object.keys(customSettings.audio).length == 0) {
       audioStreams = this.getAudioStreamsFromProbe();
     }
 
@@ -506,68 +492,58 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs;
     }
 
-    switch(videoStream.height) {
-      case 2160:
-        conf.live_recording.recording_config.recording_params.ladder_specs.unshift(
-          LadderTemplate[2160],
-          LadderTemplate[1080],
-          LadderTemplate[720],
-          LadderTemplate[540],
-          LadderTemplate["540_low"]
-        );
-        conf.live_recording.recording_config.recording_params.xc_params.video_bitrate = LadderTemplate[2160].bit_rate;
-        conf.live_recording.recording_config.recording_params.xc_params.enc_height = 2160;
-        conf.live_recording.recording_config.recording_params.xc_params.enc_width = 3840;
+    const ladderProfile = DefaultABRLadder;  // TODO: if custom ladder is specified, use it
 
-        break;
-      case 1080:
-        conf.live_recording.recording_config.recording_params.ladder_specs.unshift(
-          LadderTemplate[1080],
-          LadderTemplate[720],
-          LadderTemplate[540],
-          LadderTemplate["540_low"]
-        );
-        conf.live_recording.recording_config.recording_params.xc_params.video_bitrate = LadderTemplate[1080].bit_rate;
-        conf.live_recording.recording_config.recording_params.xc_params.enc_height = 1080;
-        conf.live_recording.recording_config.recording_params.xc_params.enc_width = 1920;
-        break;
-      case 720:
-        conf.live_recording.recording_config.recording_params.ladder_specs.unshift(
-          LadderTemplate[720],
-          LadderTemplate[540],
-          LadderTemplate["540_low"]
-        );
-        conf.live_recording.recording_config.recording_params.xc_params.video_bitrate = LadderTemplate[720].bit_rate;
-        conf.live_recording.recording_config.recording_params.xc_params.enc_height = 720;
-        conf.live_recording.recording_config.recording_params.xc_params.enc_width = 1280;
-        break;
-      case 540:
-        conf.live_recording.recording_config.recording_params.ladder_specs.unshift(
-          LadderTemplate[540],
-          LadderTemplate["540_low"]
-        );
-        conf.live_recording.recording_config.recording_params.xc_params.video_bitrate = LadderTemplate[540].bit_rate;
-        conf.live_recording.recording_config.recording_params.xc_params.enc_height = 540;
-        conf.live_recording.recording_config.recording_params.xc_params.enc_width = 960;
-        break;
-      default:
-        throw new Error("ERROR: Probed stream does not conform to one of the following built in resolution ladders [4096, 2160], [1920, 1080] [1280, 720], [960, 540]");
+    conf.live_recording.recording_config.recording_params.xc_params.enc_height = videoStream.height;
+    conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;
+
+    // Determine video recording bitrate and ABR ladder
+    let topLadderRate = 0
+    for (let i = 0; i < ladderProfile.video.length; i ++) {
+      let elem = ladderProfile.video[i];
+      if (elem.height > videoStream.height)
+        continue;
+      if (elem.bit_rate > topLadderRate) {
+        topLadderRate = elem.bit_rate
+      }
+      elem.media_type = 1;
+      elem.stream_name = "video";
+      elem.stream_index = 0;
+      elem.representation = "videovideo_" + videoStream.width + "x" + videoStream.height + "@" + elem.bit_rate;
+      conf.live_recording.recording_config.recording_params.ladder_specs.push(elem);
     }
+    // Currently the recording bitrate is the top bitrate of the ladder (it will be configurable separately in the future)
+    conf.live_recording.recording_config.recording_params.xc_params.video_bitrate = topLadderRate;
 
-
+    // Determine audio recording bitrate and ABR ladder
     let globalAudioBitrate = 0;
     let nAudio = 0;
 
     for(let i = 0; i < Object.keys(audioStreams).length; i ++ ) {
-      let audioLadderSpec = {...LadderSpecAudio};
+      let audioLadderSpec = {};
       const audioIndex = Object.keys(audioStreams)[i];
       const audio = audioStreams[audioIndex];
-      audioLadderSpec.bit_rate = audio.recordingBitrate;
+
+      // Find ladder rung for the specific channel layout (2 or 6 channels)
+      for (let i = 0; i < ladderProfile.audio.length; i ++) {
+        let elem = ladderProfile.video[i];
+        if (elem.channels == audio.recordingChannels) {
+          audioLadderSpec = elem;
+          break;
+        }
+      }
+      if (audioLadderSpec == {}) {
+        // If no channels layout match, just use the first element in the ladder
+        audioLadderSpec = ladderProfile.video[0];
+      }
+
       audioLadderSpec.representation = `audioaudio_aac@${audio.recordingBitrate}`;
       audioLadderSpec.channels = audio.recordingChannels;
       audioLadderSpec.stream_index = parseInt(audioIndex);
       audioLadderSpec.stream_name = `audio_${audioIndex}`;
       audioLadderSpec.stream_label = audio.playoutLabel ? audio.playoutLabel : null;
+      audioLadderSpec.codecs = "mp4a.40.2";
+      audioLadderSpec.media_type = 2;
 
       conf.live_recording.recording_config.recording_params.ladder_specs.push(audioLadderSpec);
       if(audio.recordingBitrate > globalAudioBitrate) {
@@ -583,4 +559,5 @@ class LiveConf {
     return conf;
   }
 }
+
 exports.LiveConf = LiveConf;
