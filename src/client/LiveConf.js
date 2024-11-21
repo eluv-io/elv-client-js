@@ -491,7 +491,7 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs;
     }
 
-    const ladderProfile = DefaultABRLadder;  // TODO: if custom ladder is specified, use it
+    const ladderProfile = customSettings.ladder_profile || DefaultABRLadder;  // TODO: if custom ladder is specified, use it
 
     conf.live_recording.recording_config.recording_params.xc_params.enc_height = videoStream.height;
     conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;
@@ -524,16 +524,16 @@ class LiveConf {
       const audio = audioStreams[audioIndex];
 
       // Find ladder rung for the specific channel layout (2 or 6 channels)
-      for (let i = 0; i < ladderProfile.audio.length; i ++) {
-        let elem = ladderProfile.audio[i];
+      for (let j = 0; j < ladderProfile.audio.length; j ++) {
+        let elem = ladderProfile.audio[j];
         if (elem.channels == audio.recordingChannels) {
-          audioLadderSpec = elem;
+          audioLadderSpec = {...elem};
           break;
         }
       }
-      if (audioLadderSpec == {}) {
+      if (Object.keys(audioLadderSpec).length === 0) {
         // If no channels layout match, just use the first element in the ladder
-        audioLadderSpec = ladderProfile.audio[0];
+        audioLadderSpec = {...ladderProfile.audio[0]};
       }
 
       audioLadderSpec.representation = `audioaudio_aac@${audioLadderSpec.bit_rate}`;
