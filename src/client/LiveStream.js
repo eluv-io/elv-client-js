@@ -1030,6 +1030,18 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
         };
         continue;
       }
+      if(formats[i] === "dash-clear") {
+        abrProfile.drm_optional = true;
+        playoutFormats["dash-clear"] = {
+          "drm": null,
+          "protocol": {
+            "min_buffer_length": 2,
+            "type": "ProtoDash"
+          }
+        }
+        continue;
+      }
+
       playoutFormats[formats[i]] = abrProfile.playout_formats[formats[i]];
     }
   } else if(!drm) {
@@ -1039,6 +1051,13 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
         "drm": null,
         "protocol": {
           "type": "ProtoHls"
+        }
+      },
+      "dash-clear": {
+        "drm": null,
+        "protocol": {
+          "min_buffer_length": 2,
+          "type": "ProtoDash"
         }
       }
     };
