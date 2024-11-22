@@ -508,7 +508,7 @@ class LiveConf {
       elem.media_type = 1;
       elem.stream_name = "video";
       elem.stream_index = 0;
-      elem.representation = "videovideo_" + videoStream.width + "x" + videoStream.height + "@" + elem.bit_rate;
+      elem.representation = "videovideo_" + videoStream.width + "x" + videoStream.height + "_h264@" + elem.bit_rate;
       conf.live_recording.recording_config.recording_params.ladder_specs.push(elem);
     }
     // Currently the recording bitrate is the top bitrate of the ladder (it will be configurable separately in the future)
