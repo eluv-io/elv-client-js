@@ -491,7 +491,7 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs;
     }
 
-    const ladderProfile = customSettings.ladder_profile || DefaultABRLadder;  // TODO: if custom ladder is specified, use it
+    const ladderProfile = customSettings.ladder_profile || DefaultABRLadder;
 
     conf.live_recording.recording_config.recording_params.xc_params.enc_height = videoStream.height;
     conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;
