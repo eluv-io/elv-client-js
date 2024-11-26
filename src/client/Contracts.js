@@ -717,7 +717,8 @@ exports.SetTenantId = async function({contractAddress, objectId, versionHash, te
   if(objectVersion !== this.authClient.ACCESS_TYPES.GROUP &&
     objectVersion !== this.authClient.ACCESS_TYPES.WALLET &&
     objectVersion !== this.authClient.ACCESS_TYPES.LIBRARY &&
-    objectVersion !== this.authClient.ACCESS_TYPES.TYPE) {
+    objectVersion !== this.authClient.ACCESS_TYPES.TYPE &&
+    objectVersion !== this.authClient.ACCESS_TYPES.TENANT) {
     throw Error(`Invalid object ID: ${objectId}, 
     applicable only for wallet,group, library or content_type object.`);
   }
@@ -773,7 +774,8 @@ exports.SetTenantContractId = async function({contractAddress, objectId, version
   if(objectVersion !== this.authClient.ACCESS_TYPES.GROUP &&
     objectVersion !== this.authClient.ACCESS_TYPES.WALLET &&
     objectVersion !== this.authClient.ACCESS_TYPES.LIBRARY &&
-    objectVersion !== this.authClient.ACCESS_TYPES.TYPE) {
+    objectVersion !== this.authClient.ACCESS_TYPES.TYPE &&
+    objectVersion !== this.authClient.ACCESS_TYPES.TENANT) {
     throw Error(`Invalid object ID: ${objectId}, 
     applicable only for wallet,group, library or content_type object.`);
   }
@@ -870,7 +872,8 @@ exports.ResetTenantId = async function({contractAddress, objectId, versionHash})
   if(objectVersion !== this.authClient.ACCESS_TYPES.GROUP &&
     objectVersion !== this.authClient.ACCESS_TYPES.WALLET &&
     objectVersion !== this.authClient.ACCESS_TYPES.LIBRARY &&
-    objectVersion !== this.authClient.ACCESS_TYPES.TYPE) {
+    objectVersion !== this.authClient.ACCESS_TYPES.TYPE &&
+    objectVersion !== this.authClient.ACCESS_TYPES.TENANT) {
     throw Error(`Invalid object ID: ${objectId}, 
     applicable only for wallet,group, library or content_type object.`);
   }
