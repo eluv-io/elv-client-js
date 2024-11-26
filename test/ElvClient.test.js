@@ -410,10 +410,10 @@ describe("Test ElvClient", () => {
 
       expect(privateMetadata).toEqual({meta: "data"});
 
-      const tcId = await client.TenantContractId({objectId: libraryObjectId});
-      expect(tcId).toEqual(tenantContractId);
+      const tid = await client.TenantId({objectId: libraryObjectId});
+      expect(tid).toEqual(tenantId);
 
-      console.log(`\n\nLibraryId: ${libraryId}\nTenant Contract ID: ${tcId}\n`);
+      console.log(`\n\nLibraryId: ${libraryId}\nTenant ID: ${tenantId}\n`);
     });
 
     test("List Content Libraries", async () => {
@@ -2618,68 +2618,34 @@ describe("Test ElvClient", () => {
     });
 
     test("Clear Tenancy", async () => {
-      // Remove the tenant contract ID from the library
-      await client.CallContractMethodAndWait({
-        contractAddress: client.utils.HashToAddress(libraryId),
-        methodName: "putMeta",
-        methodArgs: [
-          "_tenantId",
-          ""
-        ]
-      });
-      await client.CallContractMethodAndWait({
-        contractAddress: client.utils.HashToAddress(libraryId),
-        methodName: "putMeta",
-        methodArgs: [
-          "_ELV_TENANT_ID",
-          ""
-        ]
+
+      await client.ResetTenantId({
+        objectId: libraryId
       });
 
-      // if tenant contract id not found in contract or fabric metadata returns error
-      try {
-        const tid = await client.TenantContractId({objectId: libraryId});
-        expect(tid).not.toBeDefined();
-      } catch(e) {
-        expect(e).toBeDefined();
-      }
+      let tenantId = await client.TenantId({
+        objectId:libraryId
+      });
+      let tenantContractId = await client.TenantContractId({
+        objectId:libraryId
+      });
+      expect(tenantId).toEqual("");
+      expect(tenantContractId).toEqual("");
 
-      const libraryTenantContract = await client.CallContractMethod({
-        contractAddress: client.utils.HashToAddress(libraryId),
-        methodName: "getMeta",
-        methodArgs: [
-          "_tenantId"
-        ]
-      });
-      expect(libraryTenantContract).toEqual("0x");
+      // Remove tenantId from user metadata
+      await client.userProfileClient.ResetTenantId();
 
-      // Remove tenant details from user
-      await client.CallContractMethodAndWait({
-        contractAddress: client.userProfileClient.walletAddress,
-        methodName: "putMeta",
-        methodArgs: [
-          "_tenantId",
-          ""
-        ]
-      });
-      await client.CallContractMethodAndWait({
-        contractAddress: client.userProfileClient.walletAddress,
-        methodName: "putMeta",
-        methodArgs: [
-          "_ELV_TENANT_ID",
-          ""
-        ]
-      });
-      client.userProfileClient.tenantContractId = undefined;
-      client.userProfileClient.tenantId = undefined;
+      tenantId = await client.userProfileClient.TenantId();
+      tenantContractId = await client.userProfileClient.TenantContractId();
+      expect(tenantId).toEqual("");
+      expect(tenantContractId).toEqual("");
 
       // Create a new library and ensure tenant ID is not set
-      try {
-        const lid = await client.CreateContentLibrary({name: "No Tenant ID"});
-        expect(lid).not.toBeDefined();
-      } catch(e) {
-        expect(e).toBeDefined();
-      }
+      const newLibraryId = await client.CreateContentLibrary({name: "No Tenant ID"});
+      tenantId = await client.TenantId({objectId:newLibraryId});
+      tenantContractId = await client.TenantContractId({objectId:newLibraryId});
+      expect(tenantId).toEqual("");
+      expect(tenantContractId).toEqual("");
     });
 
     /*
