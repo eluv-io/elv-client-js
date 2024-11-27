@@ -76,7 +76,7 @@ await client.userProfileClient.UserMetadata()
 
         // Don't attempt to create a user wallet if user has no funds
         const balance = await this.client.GetBalance({address: this.client.signer.address});
-        if(balance < 0.1) {
+        if(balance < 0.05) {
           return undefined;
         }
 
