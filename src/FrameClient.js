@@ -515,7 +515,6 @@ class FrameClient {
       "MergeUserMetadata",
       "PublicUserMetadata",
       "ReplaceUserMetadata",
-      "TenantContractId",
       "TenantId",
       "UserMetadata",
       "UserProfileImage",
