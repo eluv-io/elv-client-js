@@ -415,16 +415,23 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
 
     status.edge_write_token = edgeWriteToken;
     status.stream_id = edgeWriteToken; // By convention the stream ID is its write token
-    let edgeMeta = await this.ContentObjectMetadata({
-      libraryId: libraryId,
-      objectId: objectId,
-      writeToken: edgeWriteToken,
-      select: [
-        "live_recording"
-      ]
-    });
+    let edgeMeta;
+    try {
+      edgeMeta = await this.ContentObjectMetadata({
+        libraryId: libraryId,
+        objectId: objectId,
+        writeToken: edgeWriteToken,
+        select: [
+          "live_recording"
+        ]
+      });
+    } catch(error) {
+      console.error("Unable to read edge write token metadata. Has token been deleted?", error);
+      status.state = "inactive";
+      return status;
+    }
 
-    status.edge_meta_size = JSON.stringify(edgeMeta).length;
+    status.edge_meta_size = JSON.stringify(edgeMeta || "").length;
 
     // If a stream has never been started return state 'inactive'
     if(edgeMeta.live_recording === undefined ||
