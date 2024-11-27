@@ -515,10 +515,18 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       return status;
     }
 
+    const segDurationMeta = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: "live_recording/recording_config/recording_params/xc_params/seg_duration"
+    });
+
+    const segDuration = segDurationMeta ? (parseInt(segDurationMeta) + 5) : 32.9;
+
     // Convert LRO 'state' to desired 'state'
     if(state === "running" && videoLastFinalizationTimeEpochSec <= 0) {
       state = "starting";
-    } else if(state === "running" && sinceLastFinalize > 32.9) {
+    } else if(state === "running" && sinceLastFinalize > segDuration) {
       state = "stalled";
     } else if(state == "terminated") {
       state = "stopped";
