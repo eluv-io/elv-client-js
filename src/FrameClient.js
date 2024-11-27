@@ -490,7 +490,6 @@ class FrameClient {
       "StreamStartOrStopOrReset",
       "StreamStopSession",
       "SuspendNTPInstance",
-      "TenantContractId",
       "UnlinkAccessGroupFromOauth",
       "UpdateContentObjectGraph",
       "UpdateNTPInstance",
