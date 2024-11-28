@@ -20,10 +20,7 @@ const Test = async () => {
 
     client.SetSigner({signer});
 
-    const status = await client.StreamStatus({
-      name: "iq__kq6NgDdMLGKgA6zk92gsdZ7kLcj"
-    })
-    console.log('status', status)
+    console.log(await client.ContentLibraries());
   } catch(error) {
     console.error(error);
     console.error(JSON.stringify(error, null, 2));
