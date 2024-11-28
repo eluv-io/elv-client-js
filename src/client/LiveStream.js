@@ -877,7 +877,6 @@ exports.StreamStopSession = async function({name}) {
       }
 
       await this.DeleteWriteToken({
-        libraryId,
         writeToken: metaEdgeWriteToken
       });
     } catch(error) {
