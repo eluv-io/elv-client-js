@@ -515,10 +515,12 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       return status;
     }
 
+    const segDurationMeta = edgeMeta.live_recording.recording_config.recording_params.xc_params.seg_duration
+
     // Convert LRO 'state' to desired 'state'
     if(state === "running" && videoLastFinalizationTimeEpochSec <= 0) {
       state = "starting";
-    } else if(state === "running" && sinceLastFinalize > 32.9) {
+    } else if(state === "running" && segDurationMeta !== undefined && sinceLastFinalize > (parseInt(segDurationMeta) + 5)) {
       state = "stalled";
     } else if(state == "terminated") {
       state = "stopped";
