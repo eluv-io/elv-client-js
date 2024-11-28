@@ -514,7 +514,6 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       status.error = error.response;
       return status;
     }
-    console.log("edge meta", edgeMeta.live_recording.recording_config.recording_params.xc_params.seg_duration)
 
     const segDurationMeta = edgeMeta.live_recording.recording_config.recording_params.xc_params.seg_duration
 
