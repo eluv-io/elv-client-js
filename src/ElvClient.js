@@ -435,7 +435,7 @@ class ElvClient {
       const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
 
       this.SetSigner({signer, reset: false});
-      this.SetStaticToken({token: staticToken});
+      await this.SetStaticToken({token: staticToken});
     }
 
     this.authClient = new AuthorizationClient({
@@ -623,7 +623,7 @@ class ElvClient {
    */
   async SpaceNodes({matchEndpoint, matchNodeId}={}) {
     let nodes;
-    this.SetStaticToken();
+    await this.SetStaticToken();
 
     if(matchEndpoint) {
       ({nodes} = await this.utils.ResponseToJson(
@@ -664,7 +664,7 @@ class ElvClient {
         return match;
       });
     } else if(matchNodeId) {
-      this.SetStaticToken();
+      await this.SetStaticToken();
       let node = await this.utils.ResponseToJson(
         this.HttpClient.Request({
           path: UrlJoin("nodes", matchNodeId),
@@ -877,7 +877,13 @@ class ElvClient {
     Sign
   }) {
     if(!Sign) {
-      Sign = async message => this.authClient.Sign(message);
+      // Same as authClient.Sign, but authClient may not yet be initialized
+      Sign = async message =>
+        Ethers.utils.joinSignature(
+          this.signer.signDigest ?
+            await this.signer.signDigest(message) :
+            await this.signer._signingKey().signDigest(message)
+        );
     }
 
     if(addEthereumPrefix) {
@@ -1171,12 +1177,13 @@ class ElvClient {
    * @namedParams
    * @param {string=} token - The static token to use. If not provided, the default static token will be set.
    */
-  SetStaticToken({token}={}) {
-    if(!token) {
-      token = this.utils.B64(JSON.stringify({qspace_id: this.contentSpaceId}));
+  async SetStaticToken({token}={}) {
+    if(token) {
+      this.staticToken = token;
+    } else {
+      this.CreateFabricToken({duration: 7 * 24 * 60 * 60 * 1000})
+        .then(token => this.staticToken = token);
     }
-
-    this.staticToken = token;
   }
 
   /**
@@ -1196,7 +1203,7 @@ class ElvClient {
    * @param {string} objectId - The ID of the policy object
    */
   async SetPolicyAuthorization({objectId}) {
-    this.SetStaticToken({
+    await this.SetStaticToken({
       token: await this.GenerateStateChannelToken({objectId})
     });
   }
