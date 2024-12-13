@@ -435,7 +435,7 @@ class ElvClient {
       const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
 
       this.SetSigner({signer, reset: false});
-      await this.SetStaticToken({token: staticToken});
+      this.SetStaticToken({token: staticToken});
     }
 
     this.authClient = new AuthorizationClient({
@@ -623,7 +623,7 @@ class ElvClient {
    */
   async SpaceNodes({matchEndpoint, matchNodeId}={}) {
     let nodes;
-    await this.SetStaticToken();
+    this.SetStaticToken();
 
     if(matchEndpoint) {
       ({nodes} = await this.utils.ResponseToJson(
@@ -664,7 +664,7 @@ class ElvClient {
         return match;
       });
     } else if(matchNodeId) {
-      await this.SetStaticToken();
+      this.SetStaticToken();
       let node = await this.utils.ResponseToJson(
         this.HttpClient.Request({
           path: UrlJoin("nodes", matchNodeId),
@@ -1177,12 +1177,11 @@ class ElvClient {
    * @namedParams
    * @param {string=} token - The static token to use. If not provided, the default static token will be set.
    */
-  async SetStaticToken({token}={}) {
+  SetStaticToken({token}={}) {
     if(token) {
       this.staticToken = token;
     } else {
-      this.CreateFabricToken({duration: 7 * 24 * 60 * 60 * 1000})
-        .then(token => this.staticToken = token);
+      this.staticToken = this.utils.B64(JSON.stringify({qspace_id: this.contentSpaceId}));
     }
   }
 
@@ -1203,7 +1202,7 @@ class ElvClient {
    * @param {string} objectId - The ID of the policy object
    */
   async SetPolicyAuthorization({objectId}) {
-    await this.SetStaticToken({
+    this.SetStaticToken({
       token: await this.GenerateStateChannelToken({objectId})
     });
   }
