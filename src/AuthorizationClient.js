@@ -136,7 +136,7 @@ class AuthorizationClient {
       );
 
     // User wallet requests can't use static token
-    if(this.client.staticToken && !isWalletRequest) {
+    if(this.client.staticToken && !isWalletRequest && !update) {
       return this.client.staticToken;
     }
 
