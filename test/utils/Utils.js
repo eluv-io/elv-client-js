@@ -135,7 +135,7 @@ const CreateClient = async (name, bux="0.2") => {
 const ReturnBalance = async (client) => {
   const balance = await client.GetBalance({address: client.signer.address});
 
-  if(balance < 0.5) {
+  if(balance < 0.02) {
     return;
   }
 
@@ -145,8 +145,9 @@ const ReturnBalance = async (client) => {
   console.log(`\n${client.clientName} used ${(client.initialBalance - balance).toFixed(3)} ether\n`);
   await client.SendFunds({
     recipient: fundedSigner.address,
-    ether: balance - 0.25
+    ether: balance - 0.02
   });
+
 };
 
 const Initialize = () => {
