@@ -1,6 +1,6 @@
 {
   "name": "@eluvio/elv-client-js",
-  "version": "4.0.113",
+  "version": "4.0.114",
   "description": "Javascript client for the Eluvio Content Fabric",
   "main": "src/index.js",
   "author": "Kevin Talmadge",
