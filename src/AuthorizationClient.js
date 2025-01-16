@@ -150,8 +150,7 @@ class AuthorizationClient {
 
       if(channelAuth && this.client.signer && this.client.signer.remoteSigner) {
         // Channel auth not supported for remote signer, use a self-signed no-auth token instead
-        noAuth = true;
-        channelAuth = false;
+        return this.client.CreateFabricToken({context});
       }
 
       let authorizationToken;
