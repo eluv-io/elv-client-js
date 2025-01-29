@@ -327,12 +327,25 @@ class AuthorizationClient {
 
       // Make the request
       let accessRequest;
-      if(update) {
-        this.Log(`Making update request on ${accessType} ${id}`);
-        accessRequest = await this.UpdateRequest({id, abi});
-      } else {
-        this.Log(`Making access request on ${accessType} ${id}`);
-        accessRequest = await this.AccessRequest({id, args: accessArgs, checkAccessCharge});
+      try {
+        if(update) {
+          this.Log(`Making update request on ${accessType} ${id}`);
+          accessRequest = await this.UpdateRequest({id, abi});
+        } else {
+          this.Log(`Making access request on ${accessType} ${id}`);
+          accessRequest = await this.AccessRequest({id, args: accessArgs, checkAccessCharge});
+        }
+      } catch(error) {
+        // Handle specific errors like permission denied
+        if(error.message.includes("UNPREDICTABLE_GAS_LIMIT")) {
+          this.Log(`Permission denied for ${id}: ${error.message}`);
+          throw Error(`Permission denied for ${Utils.FormatAddress(this.client.signer.address)} on ${id} or 
+          ${Utils.FormatAddress(this.client.signer.address)} have insufficient funds`);
+        }
+
+        // Handle other unexpected errors
+        this.Log(`Error during request for ${id}: ${error.message}`);
+        throw error;
       }
 
       const cache = update ? this.modifyTransactions : this.accessTransactions;
@@ -380,6 +393,9 @@ class AuthorizationClient {
           const accessChargeArgs = isV3 ? [0, [], []] : [args[0], args[3], args[4]];
           // Access charge is in wei, but methods take ether - convert to charge to ether
           accessCharge = Utils.WeiToEther(await this.GetAccessCharge({objectId: id, args: accessChargeArgs}));
+          if(isNaN(accessCharge) || !accessCharge){
+            accessCharge = 0;
+          }
         } catch(error) {
           this.Log("Failed to get access charge for", id);
           this.Log(error);
