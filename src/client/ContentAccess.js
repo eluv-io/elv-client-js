@@ -1557,6 +1557,7 @@ exports.PlayoutOptions = async function({
 
     const licenseServers = option.properties.license_servers;
     const cert = option.properties.cert;
+    const thumbnailTrackUri = option.properties.thumbnails_webvtt_uri;
 
     if(hlsjsProfile && protocol === "hls" && drm === "aes-128") {
       queryParams.player_profile = "hls-js";
@@ -1594,7 +1595,15 @@ exports.PlayoutOptions = async function({
                 path: UrlJoin("rep", handler, offering, playoutPath),
                 queryParams
               }),
-          drms: drm ? {[drm]: {licenseServers, cert}} : undefined
+          drms: drm ? {[drm]: {licenseServers, cert}} : undefined,
+          thumbnailTrack: !thumbnailTrackUri ? undefined :
+            await this.Rep({
+              libraryId: linkTarget.libraryId || libraryId,
+              objectId: linkTarget.objectId || objectId,
+              versionHash: linkTarget.versionHash || versionHash,
+              rep: UrlJoin(handler, offering, thumbnailTrackUri),
+              queryParams
+            }),
         }
       }
     };
