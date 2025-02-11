@@ -76,7 +76,7 @@ await client.userProfileClient.UserMetadata()
 
         // Don't attempt to create a user wallet if user has no funds
         const balance = await this.client.GetBalance({address: this.client.signer.address});
-        if(balance < 0.1) {
+        if(balance < 0.05) {
           return undefined;
         }
 
@@ -420,20 +420,20 @@ await client.userProfileClient.UserMetadata()
   }
 
   /**
-   * Return the ID of the tenant this user belongs to, if set.
+   * Return the ID of the tenant admin group set for current user
    *
    * @return {Promise<string>} - Tenant ID
    */
   async TenantId() {
     if(!this.tenantId) {
-      this.tenantId = await this.UserMetadata({metadataSubtree: "tenantId"});
+      const {objectId} = await this.UserWalletObjectInfo();
+      this.tenantId = await this.client.TenantId({ objectId });
     }
-
     return this.tenantId;
   }
 
   /**
-   * Set the current user's tenant
+   * Set the current user's tenant admin group ID
    *
    * Note: This method is not accessible to applications. Eluvio core will drop the request.
    *
@@ -441,7 +441,8 @@ await client.userProfileClient.UserMetadata()
    * @param {string} id - The tenant ID in hash format
    * @param {string} address - The group address to use in the hash if id is not provided
    */
-  async SetTenantId({id, address}) {
+  async SetTenantId({ id, address }) {
+
     if(id && (!id.startsWith("iten") || !Utils.ValidHash(id))) {
       throw Error(`Invalid tenant ID: ${id}`);
     }
@@ -454,19 +455,11 @@ await client.userProfileClient.UserMetadata()
       id = `iten${Utils.AddressToHash(address)}`;
     }
 
-    try {
-      const version = await this.client.AccessType({id});
+    const {objectId} = await this.UserWalletObjectInfo();
 
-      if(version !== this.client.authClient.ACCESS_TYPES.GROUP) {
-        throw Error("Invalid tenant ID: " + id);
-      }
-    } catch(error) {
-      throw Error("Invalid tenant ID: " + id);
-    }
-
-    await this.ReplaceUserMetadata({metadataSubtree: "tenantId", metadata: id});
-
-    this.tenantId = id;
+    const tenantInfo = await this.client.SetTenantId({ objectId, tenantId: id });
+    this.tenantContractId = tenantInfo.tenantContractId;
+    this.tenantId = tenantInfo.tenantId;
   }
 
   /**
@@ -477,9 +470,7 @@ await client.userProfileClient.UserMetadata()
   async TenantContractId() {
     if(!this.tenantContractId) {
       const {objectId} = await this.UserWalletObjectInfo();
-      this.tenantContractId = await this.client.TenantContractId({
-        contractAddress: this.client.utils.HashToAddress(objectId)
-      });
+      this.tenantContractId = await this.client.TenantContractId({ objectId });
     }
     return this.tenantContractId;
   }
@@ -498,6 +489,14 @@ await client.userProfileClient.UserMetadata()
 
     const tenantInfo = await this.client.SetTenantContractId({ objectId,tenantContractId });
     this.tenantContractId = tenantInfo.tenantContractId;
+    this.tenantId = tenantInfo.tenantId;
+  }
+
+  async ResetTenantId(){
+    const {objectId} = await this.UserWalletObjectInfo();
+    await this.client.ResetTenantId({objectId});
+    this.tenantId = this.client.TenantId({objectId});
+    this.tenantContractId = this.client.TenantContractId({objectId});
   }
 
   /**

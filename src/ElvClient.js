@@ -928,7 +928,13 @@ class ElvClient {
     Sign
   }) {
     if(!Sign) {
-      Sign = async message => this.authClient.Sign(message);
+      // Same as authClient.Sign, but authClient may not yet be initialized
+      Sign = async message =>
+        Ethers.utils.joinSignature(
+          this.signer.signDigest ?
+            await this.signer.signDigest(message) :
+            await this.signer._signingKey().signDigest(message)
+        );
     }
 
     if(addEthereumPrefix) {
@@ -1223,11 +1229,11 @@ class ElvClient {
    * @param {string=} token - The static token to use. If not provided, the default static token will be set.
    */
   SetStaticToken({token}={}) {
-    if(!token) {
-      token = this.utils.B64(JSON.stringify({qspace_id: this.contentSpaceId}));
+    if(token) {
+      this.staticToken = token;
+    } else {
+      this.staticToken = this.utils.B64(JSON.stringify({qspace_id: this.contentSpaceId}));
     }
-
-    this.staticToken = token;
   }
 
   /**
