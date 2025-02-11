@@ -1,3 +1,5 @@
+/* eslint no-console: 0 */
+
 /**
  * Methods for Live Stream creation and management
  *
@@ -515,7 +517,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       return status;
     }
 
-    const segDurationMeta = edgeMeta.live_recording.recording_config.recording_params.xc_params.seg_duration
+    const segDurationMeta = edgeMeta.live_recording.recording_config.recording_params.xc_params.seg_duration;
 
     // Convert LRO 'state' to desired 'state'
     if(state === "running" && videoLastFinalizationTimeEpochSec <= 0) {
@@ -1047,7 +1049,7 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
             "min_buffer_length": 2,
             "type": "ProtoDash"
           }
-        }
+        };
         continue;
       }
 
@@ -1983,12 +1985,12 @@ exports.StreamAddWatermark = async function({
   }
 
   const watermarkArgCount = [simpleWatermark, imageWatermark, forensicWatermark].filter(i => !!i).length;
-  console.log("watermark arg count", watermarkArgCount)
+  console.log("watermark arg count", watermarkArgCount);
 
   if(watermarkArgCount === 0) {
     throw Error("No watermark was provided");
   } else if(watermarkArgCount > 1) {
-    throw Error("Only one watermark is allowed")
+    throw Error("Only one watermark is allowed");
   }
 
   if(simpleWatermark) {

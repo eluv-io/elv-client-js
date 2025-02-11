@@ -85,16 +85,8 @@ class AuthorizationClient {
     this.requestIds = {};
 
     this.providers = {};
-  }
 
-  CreateStaticToken({libraryId}) {
-    let token = { qspace_id: this.client.contentSpaceId };
-
-    if(libraryId) {
-      token.qlib_id = libraryId;
-    }
-
-    return Utils.B64(JSON.stringify(token));
+    this.CreateStaticToken = client.CreateStaticToken;
   }
 
   // Return authorization token in appropriate headers
@@ -164,7 +156,7 @@ class AuthorizationClient {
         });
       } else {
         if(noAuth && this.client.signer && this.client.signer.remoteSigner && this.client.signer.unsignedPublicAuth) {
-          return this.CreateStaticToken({libraryId});
+          return this.client.CreateStaticToken({libraryId});
         }
 
         authorizationToken = await this.GenerateAuthorizationToken({
