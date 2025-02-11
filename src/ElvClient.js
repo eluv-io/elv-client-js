@@ -1171,6 +1171,25 @@ class ElvClient {
   }
 
   /**
+   * Create a static authorization token
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {string=} libraryId - The library ID to associate with the static token
+   *
+   * @return {string} - The created static token
+   */
+  CreateStaticToken({libraryId}) {
+    let token = { qspace_id: this.client.contentSpaceId };
+
+    if(libraryId) {
+      token.qlib_id = libraryId;
+    }
+
+    return Utils.B64(JSON.stringify(token));
+  }
+
+  /**
    * Set a static token for the client to use for all authorization
    *
    * @methodGroup Authorization
