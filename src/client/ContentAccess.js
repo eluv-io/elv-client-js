@@ -2386,6 +2386,7 @@ const EmbedMediaTypes = {
   - `ticketCode` - Ticket code, optional with tickets authorization
   - `ticketSubject` - Ticket subject, optional with tickets authorization
  - `verifyContent` - Verify content
+ - `additionalParameters` - Additional search params that will be appended to the URL
  *
  * @returns {Promise<string>} - Will return an embed URL
  */
@@ -2394,7 +2395,8 @@ exports.EmbedUrl = async function({
   versionHash,
   duration=86400000,
   mediaType="video",
-  options={}
+  options={},
+  additionalParameters={}
 }) {
   if(versionHash) {
     ValidateVersion(versionHash);
@@ -2508,6 +2510,10 @@ exports.EmbedUrl = async function({
       case "verifyContent":
         embedUrl.searchParams.set("vc", "");
     }
+  }
+
+  for(let item of Object.keys(additionalParameters)) {
+    embedUrl.searchParams.set(item, additionalParameters[item]);
   }
 
   if(Object.keys(data).length > 0) {
