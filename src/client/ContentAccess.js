@@ -2385,6 +2385,7 @@ const EmbedMediaTypes = {
   - `ntpId` - NTP ID, required for tickets authorization
   - `ticketCode` - Ticket code, optional with tickets authorization
   - `ticketSubject` - Ticket subject, optional with tickets authorization
+ - `verifyContent` - Verify content
  *
  * @returns {Promise<string>} - Will return an embed URL
  */
@@ -2504,6 +2505,8 @@ exports.EmbedUrl = async function({
           embedUrl.searchParams.set("sbj", Buffer.from(options.ticketSubject).toString("base64"));
         }
         break;
+      case "verifyContent":
+        embedUrl.searchParams.set("vc", "");
     }
   }
 
