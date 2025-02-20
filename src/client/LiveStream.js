@@ -475,7 +475,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       libraryId: libraryId,
       objectId: objectId,
       writeToken: edgeWriteToken,
-      call: "live/status/" + tlro
+      call: "live/status"
     });
 
     status.insertions = [];
@@ -1568,20 +1568,72 @@ exports.StreamListUrls = async function({siteId}={}) {
       resolveIgnoreErrors: true
     });
 
-    if(!streamUrls) {
-      throw Error("No pre-allocated URLs configured");
+    if(streamUrls) {
+
+      Object.keys(streamUrls || {}).forEach(protocol => {
+        streamUrlStatus[protocol] = streamUrls[protocol].map(url => {
+          return {
+            url,
+            active: activeUrlMap[url] || false
+          };
+        });
+      });
     }
 
-    Object.keys(streamUrls || {}).forEach(protocol => {
-      streamUrlStatus[protocol] = streamUrls[protocol].map(url => {
-        return {
-          url,
-          active: activeUrlMap[url] || false
-        };
-      });
+    const playoutProfiles = await this.ContentObjectMetadata({
+      libraryId: await this.ContentObjectLibraryId({objectId: siteId}),
+      objectId: siteId,
+      metadataSubtree: "/public/asset_metadata/profiles",
+      resolveLinks: true,
+      resolveIgnoreErrors: true
     });
 
-    return streamUrlStatus;
+    console.log("Get live streams now");
+    const streams = await this.ContentObjectMetadata({
+      libraryId: await this.ContentObjectLibraryId({objectId: siteId}),
+      objectId: siteId,
+      metadataSubtree: "/public/asset_metadata/live_streams",
+      resolveLinks: true,
+      resolveIgnoreErrors: true,
+      resolveIncludeSource: true,
+    });
+
+    let streamStatus = [];
+    for (const [k, v] of Object.entries(streams)) {
+      //console.log("LOOP", k, v);
+      const title = v.display_title || v.title;
+      const slug = v.slug;
+      const sourceHash = v["."]["source"];
+      const objectId = this.utils.DecodeVersionHash(sourceHash).objectId;
+
+      //console.log("Try", objectId);
+
+      const config = await this.ContentObjectMetadata({
+        libraryId: await this.ContentObjectLibraryId({objectId}),
+        objectId,
+        metadataSubtree: "/live_recording_config",
+        resolveLinks: false
+      });
+
+      if (config != undefined) {
+        url = config.reference_url || config.url;
+      }
+
+      streamStatus.push({title, slug, id: objectId, url});
+      const i = title.split(" - ");
+
+      const date = i[2];
+      const match = i[3];
+
+      //console.log(`CSV,${date},${objectId},${slug},${url},${match}`);
+    }
+
+    let status = {
+      stream_urls: streamUrlStatus,
+      profiles: playoutProfiles,
+      streams: streamStatus
+    }
+    return status;
   } catch(error) {
     console.error(error);
   }
