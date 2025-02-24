@@ -758,7 +758,7 @@ exports.LROStatus = async function({libraryId, objectId, writeToken}) {
  * @namedParams
  * @param {string} libraryId - ID of the mezzanine library
  * @param {string} objectId - ID of the mezzanine object
- * @param {string} writeToken - Write token for the mezzanine object
+ * @param {string} writeToken - Write token for the mezzanine object. If specified, the object will not be finalized.
  * @param {function=} preFinalizeFn - A function to call before finalizing changes, to allow further modifications to offering. The function will be invoked with {elvClient, nodeUrl, writeToken} to allow access to the draft and MUST NOT finalize the draft.
  * @param {boolean=} preFinalizeThrow - If set to `true` then any error thrown by preFinalizeFn will not be caught. Otherwise, any exception will be appended to the `warnings` array returned after finalization.
  *
@@ -831,13 +831,16 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeF
     }
   }
 
-  const finalizeResponse = await this.FinalizeContentObject({
-    libraryId,
-    objectId: objectId,
-    writeToken,
-    commitMessage: "Finalize ABR mezzanine",
-    awaitCommitConfirmation: false
-  });
+  const finalizeResponse = {};
+  if (!writeToken) {
+    finalizeResponse = await this.FinalizeContentObject({
+      libraryId,
+      objectId: objectId,
+      writeToken,
+      commitMessage: "Finalize ABR mezzanine",
+      awaitCommitConfirmation: false
+    });
+  }
 
   return {
     data,
