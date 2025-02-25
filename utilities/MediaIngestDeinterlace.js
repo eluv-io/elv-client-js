@@ -1,0 +1,380 @@
+/*
+ * Media ingest streamlined.
+ *
+ * This script is hard wired for deinterlacing
+ * Example run:
+ * node ./utilities/MediaIngest.js  --config-url 'https://host-76-74-28-233.contentfabric.io/config?qspace=demov3&self' --files ~/ELV/MEDIA/TST/RFD_CHNFR201401-01.1min.mxf --library-id ilib2HWBxwsXrgtRzgMVVxAzm1oPH53U --title "VOD TEST - Test Cowboy 401-01 1min - I07"
+ */
+
+const R = require("ramda");
+
+const {ModOpt, NewOpt} = require("./lib/options");
+const Utility = require("./lib/Utility");
+
+const ABR = require("@eluvio/elv-abr-profile");
+
+const Client = require("./lib/concerns/Client");
+const Finalize = require("./lib/concerns/Finalize");
+const LocalFile = require("./lib/concerns/LocalFile");
+const LRO = require("./lib/concerns/LRO");
+const ArgLibraryId = require("./lib/concerns/ArgLibraryId");
+const ArgTenant = require("./lib/concerns/ArgTenant");
+const {seconds} = require("./lib/helpers");
+
+//const AbrProfile = require("./lib/abr_profiles/abr_profile_clear.json");
+const AbrProfile = require("./lib/abr_profiles/abr-profile-crf-bitrate.json");
+
+class MediaIngest extends Utility {
+  blueprint() {
+    return {
+      concerns: [Client, Finalize, LocalFile, ArgLibraryId, ArgTenant, LRO],
+      options: [
+        ModOpt("libraryId", {
+          demand: false,
+          forX: "new media object"
+        }),
+        NewOpt("objectId", {
+          demand: false,
+          descTemplate: "Existing mezzanine object",
+          type: "string"
+        }),
+        NewOpt("title", {
+          demand: true,
+          descTemplate: "Title for new media object",
+          type: "string"
+        }),
+        NewOpt("drm", {
+          default: false,
+          descTemplate: "Use DRM for playback",
+          type: "boolean"
+        }),
+        ModOpt("files", {forX: "for new media object"})
+      ]
+    };
+  }
+
+  async body() {
+    const logger = this.logger;
+
+    let {libraryId, objectId, drm, title} = this.args;
+    const encrypt = true;
+
+    if (!libraryId && !objectId) {
+      throw Error("One of library or object IDs must be specified");
+    }
+
+    let fileHandles = [];
+    const fileInfo = this.concerns.LocalFile.fileInfo(fileHandles);
+
+    // delay getting elvClient until this point so script exits faster
+    // if there is a validation error above
+    const client = await this.concerns.Client.get();
+    client.ToggleLogging(false);
+
+    const status = {
+      state: "starting"
+    }
+
+    // get type from Tenant
+    const tenantInfo = await this.concerns.ArgTenant.tenantInfo();
+    const type = tenantInfo.typeTitle;
+
+    if(R.isNil(type)) throw Error("Library does not specify content type for sample ingests");
+
+    status.content_type = type;
+    status.name = "VOD - " + title;
+    status.library_id = libraryId;
+
+    let mezEdit;
+
+    if (!objectId) {
+
+      // Create a new content object in the specified library
+      mezEdit = await client.CreateContentObject({
+        libraryId,
+        options: {
+          type,
+          meta: {
+            public : {
+              name: status.name,
+              description: "Source: " + fileInfo[0].path,
+              asset_metadata: {
+                title: title
+              }
+            }
+          }
+        }
+      });
+      objectId = mezEdit.objectId;
+    }
+
+    status.access_token = await client.authClient.GenerateAuthorizationToken({
+      libraryId,
+      objectId,
+      update: true
+    });
+
+    if (!mezEdit) {
+
+      mezEdit = await client.EditContentObject({
+        libraryId,
+        objectId,
+        options: {
+          type,
+          meta: {
+            public : {
+              name: status.name,
+              description: "Source: " + fileInfo[0].path,
+              asset_metadata: {
+                title: title
+              }
+            }
+          }
+        }
+      });
+      console.log("edit", mezEdit)
+
+    }
+
+    status.object_id = objectId;
+    status.state = "created";
+
+    const masterWriteToken = mezEdit.writeToken;
+    const mezWriteToken = mezEdit.writeToken;
+
+    status.master_write_token = masterWriteToken;
+    status.write_token = mezWriteToken;
+
+    logger.log("Object", status);
+
+    logger.log("Uploading files...");
+
+    const createMasterResponse = await client.CreateProductionMaster({
+      libraryId,
+      writeToken: masterWriteToken,
+      type,
+      name: "VOD MASTER - " + title,
+      description: `Media object created: ${title}`,
+      fileInfo,
+      encrypt: false,
+      copy: true,
+      callback: this.concerns.LocalFile.callback
+    });
+
+    // Close file handles (if any)
+    this.concerns.LocalFile.closeFileHandles(fileHandles);
+
+    logger.errorsAndWarnings(createMasterResponse);
+
+    if(!R.isNil(createMasterResponse.errors) && !R.isEmpty(createMasterResponse.errors)) throw Error(`Error(s) encountered while inspecting uploaded files: ${createMasterResponse.errors.join("\n")}`);
+
+  // Get production master metadata
+    const masterMetadata = (await client.ContentObjectMetadata({
+      libraryId,
+      objectId: status.object_id,
+      writeToken: masterWriteToken,
+      metadataSubtree: "/production_master"
+    }));
+
+    console.log("mastermeta", JSON.stringify(masterMetadata, null, 2));
+
+    let streams = masterMetadata.variants.default.streams;
+
+    streams.video.deinterlace = "bwdif_field";
+    streams.video.target_frame_rate = "50";
+    streams.video.target_timebase = "1/1600"
+
+    /*
+
+    logger.log("Set audio specs");
+
+    // Set audio specs 2MONO_1STEREO
+    let streams = masterMetadata.variants.default.streams;
+    streams.audio = {
+        default_for_media_type: true,
+        label: "audio",
+        language: "",
+        mapping_info: "2MONO_1STEREO",
+        sources: [
+          {
+            files_api_path: fileInfo[0].path,
+            stream_index: 1
+          },
+          {
+            files_api_path: fileInfo[0].path,
+            stream_index: 2
+          }
+        ],
+        type: "audio"
+    }
+    */
+
+    console.log("Replace master metadata");
+    await client.ReplaceMetadata({
+      libraryId,
+      objectId: status.object_id,
+      writeToken: masterWriteToken,
+      metadataSubtree: "/production_master",
+      metadata: masterMetadata
+    });
+
+    status.state = "created_master";
+
+    let abrProfile;
+
+    const generateAbrProfile = false;
+    if (generateAbrProfile) {
+      // generate ABR profile
+      const sources = R.prop("sources", masterMetadata);
+      const variant = R.path(["variants", "default"], masterMetadata);
+      const genProfileRetVal = ABR.ABRProfileForVariant(sources, variant, AbrProfile);
+      if(!genProfileRetVal.ok) throw Error(`Error(s) encountered while generating ABR profile: ${genProfileRetVal.errors.join("\n")}`);
+
+      // filter DRM/clear as needed
+      const filterProfileRetVal = drm ?
+        ABR.ProfileExcludeClear(genProfileRetVal.result) :
+        ABR.ProfileExcludeDRM(genProfileRetVal.result);
+      if(!filterProfileRetVal.ok) throw Error(`Error(s) encountered while setting playout formats: ${filterProfileRetVal.errors.join("\n")}`);
+
+      abrProfile = filterProfileRetVal.result
+    } else {
+      abrProfile = AbrProfile
+    }
+
+    // set up mezzanine offering
+    logger.log("Setting up media file conversion");
+    const createMezResponse = await client.CreateABRMezzanine({
+      name: status.name,
+      libraryId,
+      writeToken: mezWriteToken,
+      type,
+      masterWriteToken: masterWriteToken,
+      variant: "default",
+      offeringKey: "default",
+      abrProfile
+    });
+
+    logger.errorsAndWarnings(createMezResponse);
+    const createMezErrors = createMezResponse.errors;
+    if(!R.isNil(createMezErrors) && !R.isEmpty(createMezErrors)) throw Error(`Error(s) encountered while setting up media file conversion: ${createMezErrors.join("\n")}`);
+
+    status.state = "created_mez";
+
+    let m = await client.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      writeToken: mezWriteToken
+    });
+
+    // PENDING(SS) Set deinterlacing parameters
+    logger.log("Set deinterlacing parameters");
+
+//    m.abr_mezzanine.offerings.default.mez_prep_specs.video.deinterlace = "bwdif_frame";
+//    m.abr_mezzanine.offerings.default.mez_prep_specs.video.video_time_base = 60000;
+//    m.abr_mezzanine.offerings.default.mez_prep_specs.video.video_frame_duration_ts = 1001;
+//    m.abr_mezzanine.offerings.default.mez_prep_specs.video.key_frame_interval = 120;
+//    m.abr_mezzanine.offerings.default.mez_prep_specs.video.bit_rate = 0;
+//    m.abr_mezzanine.offerings.default.mez_prep_specs.video.crf = 22;
+
+    console.log("Replace metadata");
+    await client.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: mezWriteToken,
+      metadataSubtree: "/",
+      metadata: m
+    });
+
+    logger.log("Starting conversion to streaming format");
+
+    const startJobsResponse = await client.StartABRMezzanineJobs({
+      libraryId,
+      objectId,
+      offeringKey: "default",
+      writeToken: mezWriteToken
+    });
+
+    console.log("Jobs", startJobsResponse);
+
+    logger.errorsAndWarnings(startJobsResponse);
+    const startJobsErrors = createMezResponse.errors;
+    if(!R.isNil(startJobsErrors) && !R.isEmpty(startJobsErrors)) throw Error(`Error(s) encountered while starting file conversion: ${startJobsErrors.join("\n")}`);
+
+    const lroWriteToken = R.path(["lro_draft", "write_token"], startJobsResponse);
+    const lroNode = R.path(["lro_draft", "node"], startJobsResponse);
+
+    logger.log("Progress:");
+
+    const lro = this.concerns.LRO;
+    let done = false;
+    let lastStatus;
+    while(!done) {
+      const statusMap = await lro.status({libraryId, objectId, writeToken: mezWriteToken}); // TODO: check how offering key is used, if at all
+      const statusSummary = lro.statusSummary(statusMap);
+      lastStatus = statusSummary.run_state;
+      if(lastStatus !== LRO.STATE_RUNNING) done = true;
+      logger.log(`run_state: ${lastStatus}`);
+      const eta = statusSummary.estimated_time_left_h_m_s;
+      if(eta) logger.log(`estimated time left: ${eta}`);
+      await seconds(10);
+    }
+
+    status.state = "mez_complete";
+
+    console.log("Calling ABR finalize");
+    const finalizeAbrResponse = await client.FinalizeABRMezzanine({
+      libraryId,
+      objectId,
+      writeToken: mezWriteToken,
+      offeringKey: "default"
+    });
+
+    status.state = "mez_finalized";
+    console.log("Finalize", finalizeAbrResponse);
+
+    logger.errorsAndWarnings(finalizeAbrResponse);
+    const finalizeErrors = finalizeAbrResponse.errors;
+    if(!R.isNil(finalizeErrors) && !R.isEmpty(finalizeErrors)) throw Error(`Error(s) encountered while finalizing object: ${finalizeErrors.join("\n")}`);
+
+    // Delete source file (this currently not needed becuase we have a separate master write token)
+    logger.log("Delete source files");
+    await client.DeleteFiles({
+      libraryId,
+      objectId,
+      writeToken: masterWriteToken,
+      filePaths: [
+        fileInfo[0].path
+      ]
+    });
+
+    console.log("Status", status);
+
+    logger.log("Finalze content object");
+    const finRes = await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: mezWriteToken,
+    });
+    console.log("Finalize", finRes);
+    status.hash = finRes.hash;
+
+    logger.log("Wait for publish");
+    await this.concerns.Finalize.waitForPublish({
+      latestHash: status.hash,
+      libraryId,
+      objectId
+    });
+
+    console.log("Finalized Status", status);
+  }
+
+  header() {
+    return "Create playable media object";
+  }
+}
+
+if(require.main === module) {
+  Utility.cmdLineInvoke(MediaIngest);
+} else {
+  module.exports = MediaIngest;
+}

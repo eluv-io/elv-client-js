@@ -1,0 +1,84 @@
+{
+    "audio_individual_drm_keys": false,
+    "drm_optional": true,
+    "store_clear": true,
+    "ladder_specs":
+    {
+        "{\"media_type\":\"audio\",\"channels\":1}": {
+            "rung_specs":
+            [
+                {
+                    "bit_rate": 128000,
+                    "media_type": "audio",
+                    "pregenerate": true
+                }
+            ]
+        },
+        "{\"media_type\":\"audio\",\"channels\":2}": {
+            "rung_specs":
+            [
+                {
+                    "bit_rate": 192000,
+                    "media_type": "audio",
+                    "pregenerate": true
+                }
+            ]
+        },
+        "{\"media_type\":\"audio\",\"channels\":6}": {
+            "rung_specs":
+            [
+                {
+                    "bit_rate": 384000,
+                    "media_type": "audio",
+                    "pregenerate": true
+                }
+            ]
+        },
+        "{\"media_type\":\"video\",\"aspect_ratio_height\":9,\"aspect_ratio_width\":16}": {
+            "rung_specs":
+            [
+                {
+                    "bit_rate": 20000000,
+                    "crf": 19,
+                    "height": 1080,
+                    "media_type": "video",
+                    "pregenerate": true,
+                    "width": 1920
+                }
+            ]
+        }
+    },
+    "playout_formats":
+    {
+        "dash-clear":
+        {
+            "drm": null,
+            "protocol":
+            {
+                "min_buffer_length": 2,
+                "type": "ProtoDash"
+            }
+        },
+        "hls-clear":
+        {
+            "drm": null,
+            "protocol":
+            {
+                "type": "ProtoHls"
+            }
+        }
+    },
+    "segment_specs":
+    {
+        "audio":
+        {
+            "segs_per_chunk": 15,
+            "target_dur": 2
+        },
+        "video":
+        {
+            "segs_per_chunk": 15,
+            "target_dur": 2
+        }
+    }
+}
