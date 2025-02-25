@@ -19,6 +19,8 @@ const Test = async () => {
     });
 
     client.SetSigner({signer});
+
+    console.log(await client.ContentLibraries());
   } catch(error) {
     console.error(error);
     console.error(JSON.stringify(error, null, 2));

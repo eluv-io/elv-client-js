@@ -40,10 +40,11 @@ const {
   CreateClient,
   ReturnBalance
 } = require("./utils/Utils");
+const {ethers}=require("ethers");
 
 const testFileSize = 100000;
 
-let client, accessClient;
+let client, accessClient, client2;
 let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
 let mediaLibraryId, masterId, masterHash, mezzanineId, linkLibraryId, linkObjectId;
 let ingestWriteToken;
@@ -62,6 +63,7 @@ describe("Test ElvClient", () => {
   beforeAll(async () => {
     client = OutputLogger(ElvClient, await CreateClient("ElvClient"));
     accessClient = OutputLogger(ElvClient, await CreateClient("ElvClient Access"));
+    client2 = OutputLogger(ElvClient, await CreateClient("ElvClient MakeAccessRequest"));
 
     testFile1 = RandomBytes(testFileSize);
     testFile2 = RandomBytes(testFileSize);
@@ -191,7 +193,7 @@ describe("Test ElvClient", () => {
   });
 
   afterAll(async () => {
-    await Promise.all([client, accessClient].map(async client => ReturnBalance(client)));
+    await Promise.all([client, accessClient, client2].map(async client => ReturnBalance(client)));
 
     console.log("\nPlayout Options:");
     console.log(JSON.stringify(playoutResult, null, 2));
@@ -411,10 +413,10 @@ describe("Test ElvClient", () => {
 
       expect(privateMetadata).toEqual({meta: "data"});
 
-      const tcId = await client.TenantContractId({objectId: libraryObjectId});
-      expect(tcId).toEqual(tenantContractId);
+      const tid = await client.TenantId({objectId: libraryObjectId});
+      expect(tid).toEqual(tenantId);
 
-      console.log(`\n\nLibraryId: ${libraryId}\nTenant Contract ID: ${tcId}\n`);
+      console.log(`\n\nLibraryId: ${libraryId}\nTenant ID: ${tenantId}\n`);
     });
 
     test("List Content Libraries", async () => {
@@ -2499,6 +2501,114 @@ describe("Test ElvClient", () => {
       expect(accessRequest.transactionHash).toBeDefined();
     });
 
+    test("MakeAccessRequest test errors", async () => {
+      // Create new account
+      const newWallet = await client2.GenerateWallet();
+      const newAccount = await newWallet.AddAccountFromMnemonic({ mnemonic: newWallet.GenerateMnemonic() });
+      const newAccountAddr = await newAccount.getAddress();
+      console.log("New Account Address:", newAccountAddr);
+
+      // Send funds to new account
+      const fundAmt = 0.5;
+      const txRct = await client.SendFunds({ recipient: newAccountAddr, ether: fundAmt });
+      expect(txRct).toBeDefined();
+
+      // Set signer and update tenant contract ID
+      client2.SetSigner({ signer: newAccount });
+      await client2.userProfileClient.WalletAddress();
+      await client2.userProfileClient.SetTenantContractId({ tenantContractId });
+      expect(client2.userProfileClient.tenantContractId).toEqual(tenantContractId);
+
+      // New account creates a library
+      const newAccountLibraryId = await client2.CreateContentLibrary({
+        name: "Test Library By New Account",
+        description: "Test Library Description By New Account",
+        metadata: { private: { meta: "data" } }
+      });
+      expect(newAccountLibraryId).toBeDefined();
+
+      // New account creates content object
+      const createResponse = await client2.CreateContentObject({
+        libraryId: newAccountLibraryId,
+        options: { visibility: 1 }
+      });
+      const writeToken = createResponse.write_token;
+      expect(createResponse).toBeDefined();
+      const newAccountObjectId = createResponse.id;
+
+      // Finalize the content object
+      const finalizeResponse = await client2.FinalizeContentObject({
+        libraryId: newAccountLibraryId,
+        objectId: newAccountObjectId,
+        writeToken
+      });
+      expect(finalizeResponse).toBeDefined();
+
+      /*
+       * Transfer client2 signers remaining balance and test MakeAccessRequest failure
+       * due to insufficient funds
+       */
+      let balanceWei = await client2.ethClient.Provider().getBalance(client2.signer.address);
+      expect(balanceWei).toBeDefined();
+
+      // Get gas fee data
+      const feeData = await client2.ethClient.Provider().getFeeData();
+      const maxFeePerGas = feeData.maxFeePerGas || ethers.utils.parseUnits("0", "gwei");
+      expect(maxFeePerGas).toBeDefined();
+
+      // Estimate gas limit for the transaction
+      const recipientAddress = client.signer.address;
+      const estimatedGasLimit = await client2.ethClient.Provider().estimateGas({
+        from: client2.signer.address,
+        to: recipientAddress,
+        value: balanceWei
+      });
+      expect(estimatedGasLimit).toBeDefined();
+
+      // Calculate total gas cost
+      const gasCost = maxFeePerGas.mul(estimatedGasLimit);
+      expect(gasCost).toBeDefined();
+
+      // Ensure balance covers gas cost
+      if (balanceWei.lte(gasCost)) {
+        throw new Error("Insufficient funds to cover gas cost.");
+      }
+
+      // Calculate amount to send after subtracting gas cost
+      const amountToSendWei = balanceWei.sub(gasCost);
+      const txResponse = await client2.signer.sendTransaction({
+        to: recipientAddress,
+        value: amountToSendWei,
+        gasLimit: estimatedGasLimit,
+        maxFeePerGas: maxFeePerGas
+      });
+      expect(txResponse.hash).toBeDefined();
+
+      // Wait for transaction confirmation
+      await txResponse.wait();
+
+      // Attempt MakeAccessRequest by a client with insufficient funds
+      try {
+        await client2.authClient.MakeAccessRequest({
+          libraryId: newAccountLibraryId,
+          objectId: newAccountObjectId,
+        });
+      } catch(e) {
+        expect(e.message).toContain("Permission denied");
+      }
+
+      // Attempt MakeAccessRequest by a client without access
+      try {
+        const out2 = await client.authClient.MakeAccessRequest({
+          libraryId: newAccountLibraryId,
+          objectId: newAccountObjectId,
+        });
+        console.log(out2.transactionHash);
+      } catch(e) {
+        expect(e.message).toContain("Permission denied");
+      }
+    });
+
     test("Access Complete", async () => {
       const accessComplete = await client.ContentObjectAccessComplete({objectId, score: 90});
       expect(accessComplete).toBeDefined();
@@ -2848,68 +2958,34 @@ describe("Test ElvClient", () => {
     });
 
     test("Clear Tenancy", async () => {
-      // Remove the tenant contract ID from the library
-      await client.CallContractMethodAndWait({
-        contractAddress: client.utils.HashToAddress(libraryId),
-        methodName: "putMeta",
-        methodArgs: [
-          "_tenantId",
-          ""
-        ]
-      });
-      await client.CallContractMethodAndWait({
-        contractAddress: client.utils.HashToAddress(libraryId),
-        methodName: "putMeta",
-        methodArgs: [
-          "_ELV_TENANT_ID",
-          ""
-        ]
+
+      await client.ResetTenantId({
+        objectId: libraryId
       });
 
-      // if tenant contract id not found in contract or fabric metadata returns error
-      try {
-        const tid = await client.TenantContractId({objectId: libraryId});
-        expect(tid).not.toBeDefined();
-      } catch(e) {
-        expect(e).toBeDefined();
-      }
+      let tenantId = await client.TenantId({
+        objectId:libraryId
+      });
+      let tenantContractId = await client.TenantContractId({
+        objectId:libraryId
+      });
+      expect(tenantId).toEqual("");
+      expect(tenantContractId).toEqual("");
 
-      const libraryTenantContract = await client.CallContractMethod({
-        contractAddress: client.utils.HashToAddress(libraryId),
-        methodName: "getMeta",
-        methodArgs: [
-          "_tenantId"
-        ]
-      });
-      expect(libraryTenantContract).toEqual("0x");
+      // Remove tenantId from user metadata
+      await client.userProfileClient.ResetTenantId();
 
-      // Remove tenant details from user
-      await client.CallContractMethodAndWait({
-        contractAddress: client.userProfileClient.walletAddress,
-        methodName: "putMeta",
-        methodArgs: [
-          "_tenantId",
-          ""
-        ]
-      });
-      await client.CallContractMethodAndWait({
-        contractAddress: client.userProfileClient.walletAddress,
-        methodName: "putMeta",
-        methodArgs: [
-          "_ELV_TENANT_ID",
-          ""
-        ]
-      });
-      client.userProfileClient.tenantContractId = undefined;
-      client.userProfileClient.tenantId = undefined;
+      tenantId = await client.userProfileClient.TenantId();
+      tenantContractId = await client.userProfileClient.TenantContractId();
+      expect(tenantId).toEqual("");
+      expect(tenantContractId).toEqual("");
 
       // Create a new library and ensure tenant ID is not set
-      try {
-        const lid = await client.CreateContentLibrary({name: "No Tenant ID"});
-        expect(lid).not.toBeDefined();
-      } catch(e) {
-        expect(e).toBeDefined();
-      }
+      const newLibraryId = await client.CreateContentLibrary({name: "No Tenant ID"});
+      tenantId = await client.TenantId({objectId:newLibraryId});
+      tenantContractId = await client.TenantContractId({objectId:newLibraryId});
+      expect(tenantId).toEqual("");
+      expect(tenantContractId).toEqual("");
     });
 
     /*

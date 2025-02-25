@@ -73,7 +73,7 @@ class RemoteSigner extends Ethers.Signer {
     this.signer = this.provider.getSigner(this.address);
   }
 
-  async RetrieveCSAT({email, nonce, force=false}) {
+  async RetrieveCSAT({email, nonce, tenantId, force=false}) {
     nonce = nonce || Utils.B58(UUID.parse(UUID.v4()));
 
     let response = await Utils.ResponseToJson(
@@ -82,7 +82,8 @@ class RemoteSigner extends Ethers.Signer {
         body: {
           email,
           nonce,
-          force
+          force,
+          tid: tenantId
         },
         path: UrlJoin("as", "wlt", "sign", "csat"),
         headers: {

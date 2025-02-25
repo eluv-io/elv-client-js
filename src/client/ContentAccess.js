@@ -1557,6 +1557,7 @@ exports.PlayoutOptions = async function({
 
     const licenseServers = option.properties.license_servers;
     const cert = option.properties.cert;
+    const thumbnailTrackUri = option.properties.thumbnails_webvtt_uri;
 
     if(hlsjsProfile && protocol === "hls" && drm === "aes-128") {
       queryParams.player_profile = "hls-js";
@@ -1584,7 +1585,25 @@ exports.PlayoutOptions = async function({
                 noAuth: true,
                 queryParams
               }),
-          drms: drm ? {[drm]: {licenseServers, cert}} : undefined
+          globalPlayoutUrl:
+            signedLink ?
+              await this.GlobalUrl({versionHash, path: UrlJoin(linkPath, offering, playoutPath), queryParams}) :
+              await this.GlobalUrl({
+                libraryId: linkTarget.libraryId || libraryId,
+                objectId: linkTarget.objectId || objectId,
+                versionHash: linkTarget.versionHash || versionHash,
+                path: UrlJoin("rep", handler, offering, playoutPath),
+                queryParams
+              }),
+          drms: drm ? {[drm]: {licenseServers, cert}} : undefined,
+          thumbnailTrack: !thumbnailTrackUri ? undefined :
+            await this.Rep({
+              libraryId: linkTarget.libraryId || libraryId,
+              objectId: linkTarget.objectId || objectId,
+              versionHash: linkTarget.versionHash || versionHash,
+              rep: UrlJoin(handler, offering, thumbnailTrackUri),
+              queryParams
+            }),
         }
       }
     };
@@ -1791,6 +1810,160 @@ exports.BitmovinPlayoutOptions = async function({
 };
 
 /**
+ * Create a 'global' URL with the specified parameters
+ *
+ * A global URL is a URL that will resolve to a Fabric node close to the resolver. This is useful in cases where URLS are being passed to clients that may be in a different geographical location from where the URL was created.
+ *
+ * @methodGroup URL Generation
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object
+ * @param {string=} writeToken - Write token of an object draft
+ * @param {string=} path - Path of the URL
+ * @param {string=} authorizationToken - Authorization token for the URL. If not specified and `noAuth` is false, the client will generate the token automatically
+ * @param {boolean=} noAuth=false - Set to true if the URL is for publicly accessible content
+ * @param {boolean=} resolve=false - Whether links should resolve (if this URL is for metadata)
+ * @param {Object=} queryParams={} - Additional URL query params
+ *
+ * @returns {Promise<string>} - The generated global URL
+ */
+exports.GlobalUrl = async function({
+  libraryId,
+  objectId,
+  writeToken,
+  versionHash,
+  path="/",
+  authorizationToken,
+  noAuth=false,
+  resolve=true,
+  queryParams={}
+}) {
+  const network = this.NetworkInfo().name;
+  let url = new URL(
+    network === "main" ?
+      "https://main.net955305.contentfabric.io" :
+      "https://demov3.net955210.contentfabric.io"
+  );
+
+  // Pull auth out of query params
+  if(
+    queryParams.authorization &&
+    (
+      typeof queryParams.authorization === "string" ||
+      (Array.isArray(queryParams.authorization) && queryParams.authorization.length === 1)
+    )
+  ) {
+    queryParams = {...queryParams};
+    authorizationToken = typeof queryParams.authorization === "string" ?
+      queryParams.authorization :
+      queryParams.authorization[0];
+  }
+
+  if(writeToken) {
+    let fabricNodeUrl = this.HttpClient.draftURIs[writeToken];
+
+    if(fabricNodeUrl) {
+      url = new URL(fabricNodeUrl);
+    }
+  }
+
+  let urlPath = UrlJoin("s", network);
+  if(!noAuth || authorizationToken) {
+    urlPath = UrlJoin(
+      "t",
+      authorizationToken || await this.authClient.AuthorizationToken({
+        libraryId,
+        objectId,
+        versionHash,
+        noAuth
+      })
+    );
+  }
+
+  if(versionHash) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  } else {
+    // Ensure library ID is loaded for this object
+    libraryId = libraryId || await this.ContentObjectLibraryId({objectId});
+  }
+
+  if(path.startsWith("/qfab")) {
+    urlPath = UrlJoin(urlPath, path.replace(/^\/qfab/, "q"));
+  } else if(versionHash) {
+    urlPath = UrlJoin(urlPath, "q", writeToken || versionHash, path);
+  } else {
+    urlPath = UrlJoin(urlPath, "qlibs", libraryId, "q", writeToken || objectId, path);
+  }
+
+  url.pathname = urlPath;
+
+  if(resolve) {
+    url.searchParams.set("resolve", "true");
+  }
+
+  Object.keys(queryParams).forEach(key =>
+    url.searchParams.set(key, queryParams[key])
+  );
+
+  return url.toString();
+};
+
+exports.MakeFileServiceRequest = async function({
+  libraryId,
+  objectId,
+  versionHash,
+  writeToken,
+  path,
+  method="GET",
+  queryParams={},
+  body,
+  bodyType="JSON",
+  format="json",
+  encryption,
+  headers={},
+  authorizationToken
+}) {
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  if(objectId && !libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  ValidateParameters({libraryId, objectId, versionHash});
+
+  let queryPath = UrlJoin("q", writeToken || versionHash || objectId, path);
+
+  if(libraryId && !versionHash) {
+    queryPath = UrlJoin("qlibs", libraryId, queryPath);
+  }
+
+  let authorization = [
+    authorizationToken,
+    await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, encryption, makeAccessRequest: encryption === "cgck"})
+  ]
+    .flat()
+    .filter(token => token);
+
+  headers.Authorization = headers.Authorization || authorization.map(token => `Bearer ${token}`);
+
+  return this.utils.ResponseToFormat(
+    format,
+    await this.FileServiceHttpClient.Request({
+      body,
+      bodyType,
+      headers,
+      method,
+      path: queryPath,
+      queryParams
+    }),
+    this.FileServiceHttpClient.debug,
+    this.FileServiceHttpClient.Log.bind(this.FileServiceHttpClient)
+  );
+};
+
+
+/**
  * Call the specified bitcode method on the specified object
  *
  * @methodGroup URL Generation
@@ -1828,7 +2001,7 @@ exports.CallBitcodeMethod = async function({
 
   let path = UrlJoin("q", writeToken || versionHash || objectId, "call", method);
 
-  if(libraryId) {
+  if(libraryId && !versionHash) {
     path = UrlJoin("qlibs", libraryId, path);
   }
 
@@ -2042,6 +2215,8 @@ exports.FabricUrl = async function({
     httpClient = this.SearchHttpClient;
   } else if(service === "auth") {
     httpClient = this.AuthHttpClient;
+  } else if(service === "files") {
+    httpClient = this.FileServiceHttpClient;
   }
 
   return httpClient.URL({
@@ -2210,6 +2385,8 @@ const EmbedMediaTypes = {
   - `ntpId` - NTP ID, required for tickets authorization
   - `ticketCode` - Ticket code, optional with tickets authorization
   - `ticketSubject` - Ticket subject, optional with tickets authorization
+ - `verifyContent` - Verify content
+ - `additionalParameters` - Additional search params that will be appended to the URL
  *
  * @returns {Promise<string>} - Will return an embed URL
  */
@@ -2218,7 +2395,8 @@ exports.EmbedUrl = async function({
   versionHash,
   duration=86400000,
   mediaType="video",
-  options={}
+  options={},
+  additionalParameters={}
 }) {
   if(versionHash) {
     ValidateVersion(versionHash);
@@ -2329,7 +2507,13 @@ exports.EmbedUrl = async function({
           embedUrl.searchParams.set("sbj", Buffer.from(options.ticketSubject).toString("base64"));
         }
         break;
+      case "verifyContent":
+        embedUrl.searchParams.set("vc", "");
     }
+  }
+
+  for(let item of Object.keys(additionalParameters)) {
+    embedUrl.searchParams.set(item, additionalParameters[item]);
   }
 
   if(Object.keys(data).length > 0) {

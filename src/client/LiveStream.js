@@ -1,3 +1,5 @@
+/* eslint no-console: 0 */
+
 /**
  * Methods for Live Stream creation and management
  *
@@ -415,16 +417,23 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
 
     status.edge_write_token = edgeWriteToken;
     status.stream_id = edgeWriteToken; // By convention the stream ID is its write token
-    let edgeMeta = await this.ContentObjectMetadata({
-      libraryId: libraryId,
-      objectId: objectId,
-      writeToken: edgeWriteToken,
-      select: [
-        "live_recording"
-      ]
-    });
+    let edgeMeta;
+    try {
+      edgeMeta = await this.ContentObjectMetadata({
+        libraryId: libraryId,
+        objectId: objectId,
+        writeToken: edgeWriteToken,
+        select: [
+          "live_recording"
+        ]
+      });
+    } catch(error) {
+      console.error("Unable to read edge write token metadata. Has token been deleted?", error);
+      status.state = "inactive";
+      return status;
+    }
 
-    status.edge_meta_size = JSON.stringify(edgeMeta).length;
+    status.edge_meta_size = JSON.stringify(edgeMeta || "").length;
 
     // If a stream has never been started return state 'inactive'
     if(edgeMeta.live_recording === undefined ||
@@ -508,10 +517,12 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       return status;
     }
 
+    const segDurationMeta = edgeMeta.live_recording.recording_config.recording_params.xc_params.seg_duration;
+
     // Convert LRO 'state' to desired 'state'
     if(state === "running" && videoLastFinalizationTimeEpochSec <= 0) {
       state = "starting";
-    } else if(state === "running" && sinceLastFinalize > 32.9) {
+    } else if(state === "running" && segDurationMeta !== undefined && sinceLastFinalize > (parseInt(segDurationMeta) + 5)) {
       state = "stalled";
     } else if(state == "terminated") {
       state = "stopped";
@@ -1029,6 +1040,18 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
         };
         continue;
       }
+      if(formats[i] === "dash-clear") {
+        abrProfile.drm_optional = true;
+        playoutFormats["dash-clear"] = {
+          "drm": null,
+          "protocol": {
+            "min_buffer_length": 2,
+            "type": "ProtoDash"
+          }
+        };
+        continue;
+      }
+
       playoutFormats[formats[i]] = abrProfile.playout_formats[formats[i]];
     }
   } else if(!drm) {
@@ -1038,6 +1061,13 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
         "drm": null,
         "protocol": {
           "type": "ProtoHls"
+        }
+      },
+      "dash-clear": {
+        "drm": null,
+        "protocol": {
+          "min_buffer_length": 2,
+          "type": "ProtoDash"
         }
       }
     };
@@ -1356,7 +1386,7 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
   const hostName = new URL(parsedName).hostname;
   const streamUrl = new URL(userConfig.url);
 
-  console.log("Retrieving nodes - matching", hostName);
+  this.Log(`Retrieving nodes - matching: ${hostName}`);
   let nodes = await this.SpaceNodes({matchEndpoint: hostName});
   if(nodes.length < 1) {
     status.error = "No node matching stream URL " + streamUrl.href;
@@ -1374,12 +1404,7 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
 
     // Probe the stream
     probe = {};
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, 60 * 1000); // milliseconds
     try {
-
       let probeUrl = await this.Rep({
         libraryId,
         objectId,
@@ -1392,12 +1417,9 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
             "filename": streamUrl.href,
             "listen": true
           }),
-          method: "POST",
-          signal: controller.signal
+          method: "POST"
         })
       );
-
-      if(probe) { clearTimeout(timeoutId); }
 
       if(probe.errors) {
         throw probe.errors[0];
@@ -1773,26 +1795,36 @@ exports.StreamCopyToVod = async function({
  *
  * @methodGroup Live Stream
  * @namedParams
+ * @param {string=} libraryId - Library ID of the live stream
  * @param {string} objectId - Object ID of the live stream
+ * @param {string=} writeToken - Write token of the draft
  * @param {Array<string>} types - Specify which type of watermark to remove. Possible values:
  * - "image"
  * - "text"
+ * - "forensic"
  * @param {boolean=} finalize - If enabled, target object will be finalized after removing watermark
  *
  * @return {Promise<Object>} - The finalize response
  */
 exports.StreamRemoveWatermark = async function({
+  libraryId,
   objectId,
+  writeToken,
   types,
   finalize=true
 }) {
   ValidateObject(objectId);
 
-  const libraryId = await this.ContentObjectLibraryId({objectId});
-  const {writeToken} = await this.EditContentObject({
-    objectId,
-    libraryId
-  });
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  if(!writeToken) {
+    ({writeToken} = await this.EditContentObject({
+      objectId,
+      libraryId
+    }));
+  }
 
   this.Log(`Removing watermark types: ${types.join(", ")} ${libraryId} ${objectId}`);
 
@@ -1802,25 +1834,27 @@ exports.StreamRemoveWatermark = async function({
     metadataSubtree: "/live_recording/fabric_config/edge_write_token"
   });
 
-  const recordingParamsPath = "live_recording/recording_config/recording_params";
+  const metadataPath = "live_recording/playout_config";
 
-  const recordingMetadata = await this.ContentObjectMetadata({
+  const objectMetadata = await this.ContentObjectMetadata({
     libraryId,
     objectId,
     writeToken,
-    metadataSubtree: recordingParamsPath,
+    metadataSubtree: metadataPath,
     resolveLinks: false
   });
 
-  if(!recordingMetadata) {
-    throw Error("Stream object must be configured");
+  if(!objectMetadata) {
+    throw Error("Stream object must be configured before removing a watermark");
   }
 
   types.forEach(type => {
     if(type === "text") {
-      delete recordingMetadata.simple_watermark;
+      delete objectMetadata.simple_watermark;
     } else if(type === "image") {
-      delete recordingMetadata.image_watermark;
+      delete objectMetadata.image_watermark;
+    } else if(type === "forensic") {
+      delete objectMetadata.forensic_watermark;
     }
   });
 
@@ -1828,8 +1862,8 @@ exports.StreamRemoveWatermark = async function({
     libraryId,
     objectId,
     writeToken,
-    metadataSubtree: recordingParamsPath,
-    metadata: recordingMetadata
+    metadataSubtree: metadataPath,
+    metadata: objectMetadata
   });
 
   if(edgeWriteToken) {
@@ -1837,8 +1871,8 @@ exports.StreamRemoveWatermark = async function({
       libraryId,
       objectId,
       writeToken: edgeWriteToken,
-      metadataSubtree: recordingParamsPath,
-      metadata: recordingMetadata
+      metadataSubtree: metadataPath,
+      metadata: objectMetadata
     });
   }
 
@@ -1859,26 +1893,72 @@ exports.StreamRemoveWatermark = async function({
  *
  * @methodGroup Live Stream
  * @namedParams
+ * @param {string=} libraryId - Library ID of the live stream
  * @param {string} objectId - Object ID of the live stream
+ * @param {string=} writeToken - Write token of the draft
  * @param {Object} simpleWatermark - Text watermark
  * @param {Object} imageWatermark - Image watermark
+ * @param {Object} forensicWatermark - Forensic watermark
  * @param {boolean=} finalize - If enabled, target object will be finalized after adding watermark
+ * Watermark examples:
+ *
+ * Simple Watermark:
+   {
+     "font_color": "",
+     "font_relative_height": 0,
+     "shadow": false,
+     "template": "",
+     "timecode": "",
+     "timecode_rate": 0,
+     "x": "",
+     "y": ""
+   }
+ *
+ * Image watermark:
+   {
+     "image": "",
+     "align_h": "",
+     "align_v": "",
+     "target_video_height": 0,
+     "wm_enabled": false
+   }
+ *
+ * Forensic watermark:
+   {
+     "algo": 6,
+     "forensic_duration": 0,
+     "forensic_start": "",
+     "image_a": <path_to_image>,
+     "image_b": <path_to_image>,
+     "is_stub": true,
+     "payload_bit_nb": 23,
+     "wm_enabled": true
+   }
+ *
  *
  * @return {Promise<Object>} - The finalize response
  */
 exports.StreamAddWatermark = async function({
+  libraryId,
   objectId,
+  writeToken,
   simpleWatermark,
   imageWatermark,
+  forensicWatermark,
   finalize=true
 }) {
   ValidateObject(objectId);
 
-  const libraryId = await this.ContentObjectLibraryId({objectId});
-  const {writeToken} = await this.EditContentObject({
-    objectId,
-    libraryId
-  });
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  if(!writeToken) {
+    ({writeToken} = await this.EditContentObject({
+      objectId,
+      libraryId
+    }));
+  }
 
   const edgeWriteToken = await this.ContentObjectMetadata({
     objectId,
@@ -1886,34 +1966,46 @@ exports.StreamAddWatermark = async function({
     metadataSubtree: "/live_recording/fabric_config/edge_write_token"
   });
 
-  this.Log(`Adding watermarking type: ${imageWatermark ? "image" : "text"} ${libraryId} ${objectId}`);
+  const watermarkType = imageWatermark ? "image" : forensicWatermark ? "forensic" : "text";
+  const metadataPath = "live_recording/playout_config";
 
-  const recordingParamsPath = "live_recording/recording_config/recording_params";
+  this.Log(`Adding watermarking type: ${watermarkType} ${libraryId} ${objectId}`);
 
-  const recordingMetadata = await this.ContentObjectMetadata({
+  const objectMetadata = await this.ContentObjectMetadata({
     libraryId,
     objectId,
     writeToken,
-    metadataSubtree: recordingParamsPath,
+    metadataSubtree: metadataPath,
     resolveLinks: false
   });
 
-  if(!recordingMetadata) {
-    throw Error("Stream object must be configured");
+  if(!objectMetadata) {
+    throw Error("Stream object must be configured before adding a watermark");
+  }
+
+  const watermarkArgCount = [simpleWatermark, imageWatermark, forensicWatermark].filter(i => !!i).length;
+  console.log("watermark arg count", watermarkArgCount);
+
+  if(watermarkArgCount === 0) {
+    throw Error("No watermark was provided");
+  } else if(watermarkArgCount > 1) {
+    throw Error("Only one watermark is allowed");
   }
 
   if(simpleWatermark) {
-    recordingMetadata.simple_watermark = simpleWatermark;
+    objectMetadata.simple_watermark = simpleWatermark;
   } else if(imageWatermark) {
-    recordingMetadata.image_watermark = imageWatermark;
+    objectMetadata.image_watermark = imageWatermark;
+  } else if(forensicWatermark) {
+    objectMetadata.forensic_watermark = forensicWatermark;
   }
 
   await this.ReplaceMetadata({
     libraryId,
     objectId,
     writeToken,
-    metadataSubtree: recordingParamsPath,
-    metadata: recordingMetadata
+    metadataSubtree: metadataPath,
+    metadata: objectMetadata
   });
 
   if(edgeWriteToken) {
@@ -1921,14 +2013,15 @@ exports.StreamAddWatermark = async function({
       libraryId,
       objectId,
       writeToken: edgeWriteToken,
-      metadataSubtree: recordingParamsPath,
-      metadata: recordingMetadata
+      metadataSubtree: metadataPath,
+      metadata: objectMetadata
     });
   }
 
   const response = {
-    "imageWatermark": recordingMetadata.image_watermark,
-    "textWatermark": recordingMetadata.simple_watermark
+    "imageWatermark": objectMetadata.image_watermark,
+    "textWatermark": objectMetadata.simple_watermark,
+    "forensicWatermark": objectMetadata.forensic_watermark
   };
 
   if(finalize) {
