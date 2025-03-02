@@ -1,3 +1,5 @@
+/* eslint no-console: 0 */
+
 const DefaultABRLadder = {
   "video" : [
     {
@@ -498,11 +500,11 @@ class LiveConf {
 
     // Determine video recording bitrate and ABR ladder
     let topLadderRate = 0;
-    for (let i = 0; i < ladderProfile.video.length; i ++) {
+    for(let i = 0; i < ladderProfile.video.length; i ++) {
       let elem = ladderProfile.video[i];
-      if (elem.height > videoStream.height)
+      if(elem.height > videoStream.height)
         continue;
-      if (elem.bit_rate > topLadderRate) {
+      if(elem.bit_rate > topLadderRate) {
         topLadderRate = elem.bit_rate;
       }
       elem.media_type = 1;
@@ -524,14 +526,14 @@ class LiveConf {
       const audio = audioStreams[audioIndex];
 
       // Find ladder rung for the specific channel layout (2 or 6 channels)
-      for (let j = 0; j < ladderProfile.audio.length; j ++) {
+      for(let j = 0; j < ladderProfile.audio.length; j ++) {
         let elem = ladderProfile.audio[j];
-        if (elem.channels == audio.recordingChannels) {
+        if(elem.channels == audio.recordingChannels) {
           audioLadderSpec = {...elem};
           break;
         }
       }
-      if (Object.keys(audioLadderSpec).length === 0) {
+      if(Object.keys(audioLadderSpec).length === 0) {
         // If no channels layout match, just use the first element in the ladder
         audioLadderSpec = {...ladderProfile.audio[0]};
       }

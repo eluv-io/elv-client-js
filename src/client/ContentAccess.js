@@ -1557,6 +1557,7 @@ exports.PlayoutOptions = async function({
 
     const licenseServers = option.properties.license_servers;
     const cert = option.properties.cert;
+    const thumbnailTrackUri = option.properties.thumbnails_webvtt_uri;
 
     if(hlsjsProfile && protocol === "hls" && drm === "aes-128") {
       queryParams.player_profile = "hls-js";
@@ -1594,7 +1595,15 @@ exports.PlayoutOptions = async function({
                 path: UrlJoin("rep", handler, offering, playoutPath),
                 queryParams
               }),
-          drms: drm ? {[drm]: {licenseServers, cert}} : undefined
+          drms: drm ? {[drm]: {licenseServers, cert}} : undefined,
+          thumbnailTrack: !thumbnailTrackUri ? undefined :
+            await this.Rep({
+              libraryId: linkTarget.libraryId || libraryId,
+              objectId: linkTarget.objectId || objectId,
+              versionHash: linkTarget.versionHash || versionHash,
+              rep: UrlJoin(handler, offering, thumbnailTrackUri),
+              queryParams
+            }),
         }
       }
     };
@@ -2376,6 +2385,8 @@ const EmbedMediaTypes = {
   - `ntpId` - NTP ID, required for tickets authorization
   - `ticketCode` - Ticket code, optional with tickets authorization
   - `ticketSubject` - Ticket subject, optional with tickets authorization
+ - `verifyContent` - Verify content
+ - `additionalParameters` - Additional search params that will be appended to the URL
  *
  * @returns {Promise<string>} - Will return an embed URL
  */
@@ -2384,7 +2395,8 @@ exports.EmbedUrl = async function({
   versionHash,
   duration=86400000,
   mediaType="video",
-  options={}
+  options={},
+  additionalParameters={}
 }) {
   if(versionHash) {
     ValidateVersion(versionHash);
@@ -2495,7 +2507,13 @@ exports.EmbedUrl = async function({
           embedUrl.searchParams.set("sbj", Buffer.from(options.ticketSubject).toString("base64"));
         }
         break;
+      case "verifyContent":
+        embedUrl.searchParams.set("vc", "");
     }
+  }
+
+  for(let item of Object.keys(additionalParameters)) {
+    embedUrl.searchParams.set(item, additionalParameters[item]);
   }
 
   if(Object.keys(data).length > 0) {
