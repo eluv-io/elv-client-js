@@ -259,7 +259,7 @@ class LiveConf {
         break;
       case "30000/1001":
         //seg.videoFrameDurationTs = 3003;
-        seg.video = sourceTimescale * 30;
+        seg.video = sourceTimescale * 30.03;
         seg.keyint = 60;
         seg.duration = "30.03";
         break;
@@ -497,13 +497,13 @@ class LiveConf {
     conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;
 
     // Determine video recording bitrate and ABR ladder
-    let topLadderRate = 0
+    let topLadderRate = 0;
     for (let i = 0; i < ladderProfile.video.length; i ++) {
       let elem = ladderProfile.video[i];
       if (elem.height > videoStream.height)
         continue;
       if (elem.bit_rate > topLadderRate) {
-        topLadderRate = elem.bit_rate
+        topLadderRate = elem.bit_rate;
       }
       elem.media_type = 1;
       elem.stream_name = "video";
