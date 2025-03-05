@@ -17,6 +17,7 @@ const ABR = require("@eluvio/elv-abr-profile");
 
 const Client = require("./lib/concerns/Client");
 const Finalize = require("./lib/concerns/Finalize");
+const CloudFile = require("./lib/concerns/CloudFile");
 const LocalFile = require("./lib/concerns/LocalFile");
 const LRO = require("./lib/concerns/LRO");
 const ArgLibraryId = require("./lib/concerns/ArgLibraryId");
@@ -27,7 +28,7 @@ const {seconds} = require("./lib/helpers");
 class MediaIngest extends Utility {
   blueprint() {
     return {
-      concerns: [Client, Finalize, LocalFile, ArgLibraryId, ArgTenant, LRO],
+      concerns: [Client, Finalize, LocalFile, CloudFile, ArgLibraryId, ArgTenant, LRO],
       options: [
         ModOpt("libraryId", {
           demand: false,
@@ -56,15 +57,20 @@ class MediaIngest extends Utility {
   async body() {
     const logger = this.logger;
 
-    let {libraryId, objectId, drm, title} = this.args;
-    const encrypt = true;
+    let {libraryId, s3Copy, s3Reference, objectId, drm, title} = this.args;
+    let access;
+    if(this.args.s3Reference || this.args.s3Copy) {
+      access = this.concerns.CloudFile.credentialSet();
+    }
 
     if (!libraryId && !objectId) {
       throw Error("One of library or object IDs must be specified");
     }
 
     let fileHandles = [];
-    const fileInfo = this.concerns.LocalFile.fileInfo(fileHandles);
+    const fileInfo = access
+      ? this.concerns.CloudFile.fileInfo()
+      : this.concerns.LocalFile.fileInfo(fileHandles);
 
     // delay getting elvClient until this point so script exits faster
     // if there is a validation error above
@@ -72,7 +78,7 @@ class MediaIngest extends Utility {
 
     const status = {
       state: "starting"
-    }
+    };
 
     // get type from Tenant
     const tenantInfo = await this.concerns.ArgTenant.tenantInfo();
@@ -154,8 +160,9 @@ class MediaIngest extends Utility {
       name: "VOD - " + title,
       fileInfo,
       encrypt: false,
-      copy: true,
-      callback: this.concerns.LocalFile.callback
+      access,
+      copy: access ? s3Copy && !s3Reference : true,
+      callback: (access ? this.concerns.CloudFile : this.concerns.LocalFile).callback
     });
 
     // Close file handles (if any)
@@ -175,14 +182,16 @@ class MediaIngest extends Utility {
       metadataSubtree: "/production_master"
     }));
 
+    // (NOTE: VARIABLE 'streams' IS NEVER USED, CURRENTLY THIS WILL NOT DO ANYTHING EVEN IF UNCOMMENTED)
     // Update master metadata for special features
-    let streams = masterMetadata.variants.default.streams;
+    // let streams = masterMetadata.variants.default.streams;
     // Update streams.video or audio as needed (deinterlacing, special audio specs)
     // Example:
     //     streams.video.deinterlace = "bwdif_field";
     //     streams.video.target_frame_rate = "50";
     //     streams.video.target_timebase = "1/100"
 
+    // eslint-disable-next-line no-console
     console.log("Replace master metadata");
     await client.ReplaceMetadata({
       libraryId,
@@ -231,6 +240,7 @@ class MediaIngest extends Utility {
       libraryId,
       objectId,
       writeToken,
+      access,
       offeringKey: "default"
     });
 
@@ -270,6 +280,7 @@ class MediaIngest extends Utility {
     });
 
     status.state = "mez_finalized";
+    // eslint-disable-next-line no-console
     console.log("Finalize", finalizeAbrResponse);
 
     logger.errorsAndWarnings(finalizeAbrResponse);
