@@ -682,7 +682,7 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, ignoreBitrat
     method: UrlJoin("media", "abr_mezzanine", "offerings", offeringKey, "finalize"),
     headers,
     constant: false,
-    body: {ignoreBitrateLimit}
+    body: {ignore_bitrate_limit: ignoreBitrateLimit}
   });
 
   let preFinalizeWarnings = [];
