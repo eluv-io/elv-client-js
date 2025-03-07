@@ -1600,3 +1600,67 @@ exports.DeleteWriteToken = async function({writeToken, libraryId}) {
 
   await this.HttpClient.ClearWriteToken({writeToken});
 };
+
+
+
+
+/**
+ * Get node information for a write token
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string} writeToken - write token to look up
+ *
+ * @returns {Promise<object>} - Response containing info for the write token's node
+ */
+exports.WriteTokenNodeInfo = async function({writeToken}) {
+  ValidateWriteToken(writeToken);
+
+  this.Log(`Looking up node for write token: ${writeToken}`);
+
+  const authToken = await this.authClient.AuthorizationToken({
+    noAuth: true  // Don't create an accessRequest blockchain transaction
+  });
+  
+  const response = await this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      path: "nodes",
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      },
+      queryParams: {
+        token: writeToken
+      }
+    })
+  );
+
+  if(response.nodes.length === 0) {
+    throw Error("No node found for write token");
+  }
+
+  if(response.nodes.length > 1) {
+    throw Error(`Unexpected number of nodes found (${list.length})`);
+  }
+
+  return response.nodes[0];
+};
+
+/**
+ * Get node URL for a write token
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string} writeToken - write token to look up
+ *
+ * @returns {Promise<object>} - String with URL for write token's node
+ */
+exports.WriteTokenNodeURL = async function({writeToken}) {
+  ValidateWriteToken(writeToken);
+
+  this.Log(`Looking up node URL for write token: ${writeToken}`);
+
+  const nodeInfo = await WriteTokenNodeInfo({writeToken});
+
+  return nodeInfo.services.fabric_api.urls[0];
+};

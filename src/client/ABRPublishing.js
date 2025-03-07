@@ -641,12 +641,13 @@ exports.LROStatus = async function({libraryId, objectId}) {
  * @param {string} libraryId - ID of the mezzanine library
  * @param {string} objectId - ID of the mezzanine object
  * @param {string} writeToken - Write token for the mezzanine object
+ * @param {boolean=} ignoreBitrateLimit - Finalize even if transcoded stream's bitrate greatly exceeds target rate
  * @param {function=} preFinalizeFn - A function to call before finalizing changes, to allow further modifications to offering. The function will be invoked with {elvClient, nodeUrl, writeToken} to allow access to the draft and MUST NOT finalize the draft.
  * @param {boolean=} preFinalizeThrow - If set to `true` then any error thrown by preFinalizeFn will not be caught. Otherwise, any exception will be appended to the `warnings` array returned after finalization.
  *
  * @return {Promise<Object>} - The finalize response for the mezzanine object, as well as any logs, warnings and errors from the finalization
  */
-exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeFn, preFinalizeThrow}) {
+exports.FinalizeABRMezzanine = async function({libraryId, objectId, ignoreBitrateLimit, preFinalizeFn, preFinalizeThrow}) {
   ValidateParameters({libraryId, objectId});
 
   const lroDraft = await this.LRODraftInfo({libraryId, objectId});
@@ -680,7 +681,8 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeF
     writeToken: lroDraft.write_token,
     method: UrlJoin("media", "abr_mezzanine", "offerings", offeringKey, "finalize"),
     headers,
-    constant: false
+    constant: false,
+    body: {ignoreBitrateLimit}
   });
 
   let preFinalizeWarnings = [];
