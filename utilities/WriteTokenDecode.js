@@ -1,4 +1,4 @@
-// Retrieve part list from object
+// Get information about a write token
 const Utility = require("./lib/Utility");
 
 const Client = require("./lib/concerns/Client");
@@ -26,7 +26,7 @@ class WriteTokenDecode extends Utility {
   async body() {
     const {writeToken, node} = this.args;
     const tokenInfo = this.concerns.Draft.decode({writeToken});
-    let result = {};
+    let result;
     if(node) {
       const client = await this.concerns.Client.get();
       const nodeInfo = await client.WriteTokenNodeInfo({writeToken});

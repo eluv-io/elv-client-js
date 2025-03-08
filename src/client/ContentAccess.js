@@ -1147,6 +1147,60 @@ exports.LatestVersionHashV2 = async function({objectId, versionHash}) {
   return latestHash;
 };
 
+
+/**
+ * Check to see if version hash is available.
+ * Used after finalizing a draft to determine if publishing has finished.
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string=} versionHash - Version hash of the object
+ *
+ * @returns {Promise<boolean>} - Whether or not the version hash is visible
+ */
+exports.VersionAvailable = async function({versionHash}) {
+  this.Log(`Checking if version is available: ${versionHash}`);
+
+  ValidateParameters({versionHash});
+
+  const status = await VersionStatus({versionHash});
+  return status.available;
+};
+
+/**
+ * Get status of version hash
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string=} versionHash - Version hash of the object
+ *
+ * @returns {Promise<object>} - Information about the version hash
+ */
+exports.VersionStatus = async function({versionHash}) {
+  this.Log(`Querying status of version: ${versionHash}`);
+
+  ValidateParameters({versionHash});
+
+  // For now, no auth required for this call
+
+  // const authToken = await this.authClient.AuthorizationToken({
+  //   noAuth: true  // Don't create an accessRequest blockchain transaction
+  // });
+
+  return await this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      path: UrlJoin("q", versionHash, "status"),
+      method: "GET"
+      // headers: {
+      //   Authorization: `Bearer ${authToken}`
+      // }
+    })
+  );
+};
+
+
+
+
 /* URL Methods */
 
 /**
