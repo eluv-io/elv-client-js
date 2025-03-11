@@ -1618,11 +1618,9 @@ exports.WriteTokenNodeInfo = async function({writeToken}) {
 
   this.Log(`Looking up node for write token: ${writeToken}`);
 
-  // For now, no auth required for this call
-
-  // const authToken = await this.authClient.AuthorizationToken({
-  //   noAuth: true  // Don't create an accessRequest blockchain transaction
-  // });
+  const authToken = await this.authClient.AuthorizationToken({
+    noAuth: true  // Don't create an accessRequest blockchain transaction
+  });
   
   const response = await this.utils.ResponseToJson(
     this.HttpClient.Request({
@@ -1630,10 +1628,10 @@ exports.WriteTokenNodeInfo = async function({writeToken}) {
       method: "GET",
       headers: {
         Authorization: `Bearer ${authToken}`
+      },
+      queryParams: {
+        token: writeToken
       }
-      // queryParams: {
-      //   token: writeToken
-      // }
     })
   );
 

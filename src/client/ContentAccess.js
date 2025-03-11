@@ -1181,19 +1181,17 @@ exports.VersionStatus = async function({versionHash}) {
 
   ValidateParameters({versionHash});
 
-  // For now, no auth required for this call
-
-  // const authToken = await this.authClient.AuthorizationToken({
-  //   noAuth: true  // Don't create an accessRequest blockchain transaction
-  // });
+  const authToken = await this.authClient.AuthorizationToken({
+    noAuth: true  // Don't create an accessRequest blockchain transaction
+  });
 
   return await this.utils.ResponseToJson(
     this.HttpClient.Request({
       path: UrlJoin("q", versionHash, "status"),
-      method: "GET"
-      // headers: {
-      //   Authorization: `Bearer ${authToken}`
-      // }
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
     })
   );
 };
