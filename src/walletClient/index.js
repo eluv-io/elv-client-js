@@ -187,7 +187,8 @@ class ElvWalletClient {
 
     walletClient.topLevelInfo = await client.utils.ResponseToJson(
       client.MakeAuthServiceRequest({
-        path: "/as/mw/toplevel"
+        path: "/as/mw/toplevel",
+        queryParams: { env: mode }
       })
     );
 
