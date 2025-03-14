@@ -768,12 +768,13 @@ class ElvWalletClient {
       availableMarketplaces[marketplaceInfo.tenant_slug] = availableMarketplaces[marketplaceInfo.tenant_slug] || {};
 
       availableMarketplaces[marketplaceInfo.tenant_slug][marketplaceSlug] = {
+        ...marketplaceInfo,
         tenantName: marketplaceInfo.tenant_slug,
         tenantSlug: marketplaceInfo.tenant_slug,
         tenantId: marketplaceInfo.tenant_id,
         marketplaceSlug: marketplaceSlug,
         marketplaceId,
-        marketplaceHash: marketplaceInfo.source_hash,
+        marketplaceHash: marketplaceInfo.source_hash
       };
 
       availableMarketplacesById[marketplaceId] = availableMarketplaces[marketplaceInfo.tenant_slug][marketplaceSlug];
