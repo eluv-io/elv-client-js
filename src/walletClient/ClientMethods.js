@@ -1288,7 +1288,7 @@ exports.ListingPurchaseStatus = async function({listingId, confirmationId}) {
 exports.PurchaseStatus = async function({marketplaceParams, confirmationId}) {
   try {
     const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
-    const statuses = await this.MintingStatus({tenantId: marketplaceInfo.tenant_id});
+    const statuses = await this.MintingStatus({tenantId: marketplaceInfo.tenantId});
 
     return statuses.find(status => status.op === "nft-buy" && status.confirmationId === confirmationId) || { status: "none" };
   } catch(error) {
