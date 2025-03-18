@@ -27,13 +27,16 @@ const New = context => {
 
   const partList = async () => await context.concerns.ArgVersionHash.verPartList();
 
+  const status = async () => await context.concerns.ArgVersionHash.verStatus();
+
   return {
     argsProc,
     del,
     libraryId,
     metadata,
     objectId,
-    partList
+    partList,
+    status
   };
 };
 

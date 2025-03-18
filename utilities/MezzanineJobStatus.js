@@ -16,6 +16,11 @@ class MezzanineJobStatus extends Utility {
       options: [
         ModOpt("objectId", {ofX: "mezzanine", demand: true}),
         ModOpt("libraryId", {forX: "mezzanine"}),
+        NewOpt("ignoreBitrateLimit", {
+          descTemplate: "Finalize even if transcoded stream average bitrate greatly exceeds target rate",
+          implies: "finalize",
+          type: "boolean"
+        }),
         NewOpt("finalize", {
           descTemplate: "If specified, will finalize the mezzanine if all jobs are completed",
           type: "boolean"
@@ -35,7 +40,7 @@ class MezzanineJobStatus extends Utility {
     const logger = this.logger;
     const lro = this.concerns.LRO;
 
-    const {finalize, libraryId, objectId, force} = await this.concerns.ArgObjectId.argsProc();
+    const {finalize, libraryId, objectId, force, ignoreBitrateLimit} = await this.concerns.ArgObjectId.argsProc();
     //const offeringKey = this.args.offeringKey;
 
     let statusMap;
@@ -84,7 +89,7 @@ class MezzanineJobStatus extends Utility {
         logger.log("Finalizing mezzanine...");
       }
 
-      const finalizeResponse = await client.FinalizeABRMezzanine({libraryId, objectId});
+      const finalizeResponse = await client.FinalizeABRMezzanine({libraryId, objectId, ignoreBitrateLimit});
       const latestHash = finalizeResponse.hash;
       logger.logList(
         "",

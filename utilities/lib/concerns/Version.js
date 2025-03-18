@@ -66,13 +66,21 @@ const New = context => {
     return await context.concerns.Part.list({libraryId, objectId, versionHash});
   };
 
+  const status = async ({versionHash}) => {
+    if(!versionHash) throw Error("Version.status() - missing versionHash");
+    const client = await context.concerns.Client.get();
+    logger.log(`Checking status of version hash ${versionHash}...`);
+    return await client.VersionStatus({versionHash});
+  };
+
   return {
     decode,
     del,
     list,
     metadata,
     objectId,
-    partList
+    partList,
+    status
   };
 };
 
