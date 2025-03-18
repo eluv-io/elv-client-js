@@ -51,12 +51,15 @@ const New = context => {
     });
   };
 
+  const verStatus = async () => await context.concerns.Version.status({versionHash: context.args.versionHash});
+
   return {
     argsProc,
     verDelete,
     verLibraryId,
     verMetadata,
-    verPartList
+    verPartList,
+    verStatus
   };
 };
 

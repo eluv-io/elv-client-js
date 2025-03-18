@@ -935,7 +935,7 @@ exports.ContentObjectMetadata = async function({
     const errQwtoken = objectPath.get(error.body, "errors.0.cause.cause.cause.qwtoken");
     if(errQwtoken) {
       // if so, throw 'write token not found' error
-      throw Error(`Write token ${writeToken} not found  - draft already finalized or wrong node queried?`);
+      throw Error(`Write token ${writeToken} not found  - draft already finalized or node unavailable?`);
     } else {
       // For all other 404 errors (not just 'subtree not found'), suppress error and
       // return an empty value. (there are function call chains that depend on this behavior,
@@ -1181,17 +1181,11 @@ exports.VersionStatus = async function({versionHash}) {
 
   ValidateParameters({versionHash});
 
-  const authToken = await this.authClient.AuthorizationToken({
-    noAuth: true  // Don't create an accessRequest blockchain transaction
-  });
-
   return await this.utils.ResponseToJson(
     this.HttpClient.Request({
       path: UrlJoin("q", versionHash, "status"),
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${authToken}`
-      }
+      headers: await this.authClient.AuthorizationHeader({versionHash})
     })
   );
 };
