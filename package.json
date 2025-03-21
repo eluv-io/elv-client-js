@@ -9,7 +9,7 @@
   "scripts": {
     "bump-version": "npm --git-tag-version --no-commit-hooks version patch",
     "build": "npm run build-docs && npm run build-dist && npm run build-frame-client && npm run build-permissions-client && npm run build-wallet-client-web && npm run build-wallet-client-node && npm run build-prod",
-    "build-docs": "node build/BuildDocs.js && npm run build-client-docs && npm run build-wallet-client-docs",
+    "build-docs": "npm run build-client-docs && npm run build-wallet-client-docs",
     "build-client-docs": "./node_modules/.bin/jsdoc --configure ./.jsdoc.json --readme README.md",
     "build-wallet-client-docs": "./node_modules/.bin/jsdoc --configure ./.jsdoc-mc.json --readme ./src/walletClient/README.md",
     "build-dist": "node ./node_modules/@babel/cli/bin/babel.js --source-type=unambiguous --presets=@babel/preset-env --plugins @babel/plugin-transform-runtime src --out-dir dist/src",
