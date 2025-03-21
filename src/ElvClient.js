@@ -750,6 +750,9 @@ class ElvClient {
     signer.provider.pollingInterval = 500;
     this.signer = signer;
 
+    this.CreateFabricToken({})
+      .then(token => this.signedToken = token);
+
     if(reset) {
       this.InitializeClients();
     }
@@ -1299,8 +1302,11 @@ class ElvClient {
     );
   }
 
-  async MakeAuthServiceRequest({kmsId, objectId, versionHash, method="GET", path, bodyType, body={}, queryParams={}, headers}) {
-    return this.authClient.MakeAuthServiceRequest({kmsId, objectId, versionHash, method, path, bodyType, body, queryParams, headers});
+  async MakeAuthServiceRequest({kmsId, objectId, versionHash, method="GET", path, bodyType, body={}, queryParams={}, headers, format}) {
+    const response = this.authClient.MakeAuthServiceRequest({kmsId, objectId, versionHash, method, path, bodyType, body, queryParams, headers});
+
+    return !format ? response :
+      this.utils.ResponseToFormat(format, response);
   }
 
   /* FrameClient related */
@@ -1416,5 +1422,6 @@ Object.assign(ElvClient.prototype, require("./client/LiveStream"));
 Object.assign(ElvClient.prototype, require("./client/ContentManagement"));
 Object.assign(ElvClient.prototype, require("./client/NTP"));
 Object.assign(ElvClient.prototype, require("./client/NFT"));
+Object.assign(ElvClient.prototype, require("./client/Shares"));
 
 exports.ElvClient = ElvClient;
