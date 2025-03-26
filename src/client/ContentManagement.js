@@ -1600,3 +1600,144 @@ exports.DeleteWriteToken = async function({writeToken, libraryId}) {
 
   await this.HttpClient.ClearWriteToken({writeToken});
 };
+
+/* Content group creation, modification, deletion */
+
+/**
+ * Create content tags
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Array<string>} tags - List of tags
+ *
+ * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
+ */
+exports.CreateContentTags = async function({libraryId, writeToken, tags}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+  ValidatePresence("tags", tags);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "tags");
+
+  this.Log(`Adding tags: ${tags.join(", ")}`);
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, writeToken, update: true}),
+    method: "POST",
+    path: path,
+    body: tags,
+    allowFailover: false
+  });
+};
+
+/**
+ * Create content query fields
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Object} queryFields - List of query fields where each object contains:
+ *  - 'name' (string): The key of the field
+ *  - 'description' (string): The value of the field
+ *
+ * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
+ */
+exports.CreateContentQueryFields = async function({libraryId, writeToken, queryFields}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+  ValidatePresence("queryFields", queryFields);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "query_fields");
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, writeToken, update: true}),
+    method: "POST",
+    path: path,
+    body: queryFields,
+    allowFailover: false
+  });
+};
+
+/**
+ * Create a content group
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string=} name - Internal content management name of the group
+ * @param {string=} displayTitle - Public-facing title of the group
+ * @param {Array<string>=} tags - List of tags
+ * @param {Object=} queryFields - List of query fields where each object contains:
+ *  - 'name' (string): The key of the field
+ *  - 'description' (string): The value of the field
+ *
+ * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
+ */
+exports.CreateContentGroup = async function({libraryId, name, displayTitle, tags=[], queryFields={}}) {
+  ValidateLibrary(libraryId);
+
+  const {objectId, writeToken} = await this.CreateContentObject({
+    libraryId,
+    options: {
+      meta: {
+        public: {
+          name,
+          asset_metadata: {
+            display_title: displayTitle
+          }
+        }
+      }
+    }
+  });
+
+  this.Log(`Created content group: ${objectId}`);
+
+  await this.CreateContentTags({
+    libraryId,
+    writeToken,
+    tags: ["elv:folder", ...tags]
+  });
+
+  if(Object.keys(queryFields).length > 0) {
+    this.Log(`Query fields specified: \n${JSON.stringify(queryFields, null, 2)}`);
+    await this.CreateContentQueryFields({
+      libraryId,
+      writeToken,
+      queryFields
+    });
+  }
+
+  return {
+    objectId,
+    writeToken
+  };
+};
+
+/**
+ * Add a content object to given groups
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Array<string>} groupIds - List of group IDs to associate with content object
+ *
+ * @returns {Promise<Array<string>>} - Response containing the newly created object groups
+ */
+exports.AddContentObjectGroup = async function({libraryId, writeToken, groupIds=[]}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "groups");
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, writeToken, update: true}),
+    method: "POST",
+    path: path,
+    body: groupIds,
+    allowFailover: false
+  });
+};
