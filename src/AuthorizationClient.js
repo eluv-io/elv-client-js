@@ -130,6 +130,8 @@ class AuthorizationClient {
     // User wallet requests can't use static token
     if(this.client.staticToken && !isWalletRequest && !update) {
       return this.client.staticToken;
+    } else if(this.client.staticUpdateToken && !isWalletRequest) {
+      return this.client.staticUpdateToken;
     }
 
     const initialNoCache = this.noCache;
