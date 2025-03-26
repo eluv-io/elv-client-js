@@ -3384,6 +3384,39 @@ exports.ContentQueryFields = async function({libraryId, objectId, versionHash, w
 };
 
 /**
+ * Get content object groups
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Hash of the object version
+ * @param {string=} writeToken - Write token of the draft
+ *
+ * @returns {Promise<Array<string>>} - Response containing the list of groups a content object belongs to
+ */
+exports.ContentObjectGroups = async function({libraryId, objectId, versionHash, writeToken}) {
+  ValidateLibrary(libraryId);
+  ValidateParameters({libraryId, objectId, versionHash, writeToken});
+
+  const id = objectId || versionHash || writeToken;
+  let path = UrlJoin("qlibs", libraryId, "q", id, "groups");
+
+  const token = await this.GenerateStateChannelToken({
+    libraryId,
+    objectId
+  });
+
+  return this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      headers: { "Authorization": `Bearer ${token}` },
+      method: "GET",
+      path: path
+    })
+  );
+};
+
+/**
  * Get tenant content
  *
  * @methodGroup Tenants
