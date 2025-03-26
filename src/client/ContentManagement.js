@@ -1662,7 +1662,7 @@ exports.CreateContentQueryFields = async function({libraryId, writeToken, queryF
 };
 
 /**
- * Create a content group
+ * Create a content group (folder)
  *
  * @methodGroup Content Groups
  * @namedParams
@@ -1676,7 +1676,7 @@ exports.CreateContentQueryFields = async function({libraryId, writeToken, queryF
  *
  * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
  */
-exports.CreateContentGroup = async function({libraryId, name, displayTitle, tags=[], queryFields={}}) {
+exports.CreateContentFolder = async function({libraryId, name, displayTitle, tags=[], queryFields={}}) {
   ValidateLibrary(libraryId);
 
   const {objectId, writeToken} = await this.CreateContentObject({
@@ -1717,7 +1717,7 @@ exports.CreateContentGroup = async function({libraryId, name, displayTitle, tags
 };
 
 /**
- * Add a content object to given groups
+ * Add a content object to given groups (folders)
  *
  * @methodGroup Content Groups
  * @namedParams
@@ -1727,7 +1727,7 @@ exports.CreateContentGroup = async function({libraryId, name, displayTitle, tags
  *
  * @returns {Promise<Array<string>>} - Response containing the newly created object groups
  */
-exports.AddContentObjectGroup = async function({libraryId, writeToken, groupIds=[]}) {
+exports.AddContentObjectFolders = async function({libraryId, writeToken, groupIds=[]}) {
   ValidateLibrary(libraryId);
   ValidateWriteToken(writeToken);
 

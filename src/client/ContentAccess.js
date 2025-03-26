@@ -3382,7 +3382,7 @@ exports.ContentQueryFields = async function({libraryId, objectId, versionHash, w
 };
 
 /**
- * Get content object groups
+ * Get content object groups (folders)
  *
  * @methodGroup Content Groups
  * @namedParams
@@ -3393,7 +3393,7 @@ exports.ContentQueryFields = async function({libraryId, objectId, versionHash, w
  *
  * @returns {Promise<Array<string>>} - Response containing the list of groups a content object belongs to
  */
-exports.ContentObjectGroups = async function({libraryId, objectId, versionHash, writeToken}) {
+exports.ContentObjectFolders = async function({libraryId, objectId, versionHash, writeToken}) {
   ValidateLibrary(libraryId);
   ValidateParameters({libraryId, objectId, versionHash, writeToken});
 
