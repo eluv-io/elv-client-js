@@ -28,6 +28,7 @@ exports.CreateShare = async function({objectId, expiresAt, params={}}) {
   return await this.MakeAuthServiceRequest({
     path: UrlJoin("as", "sharing", tenantId, "share"),
     method: "POST",
+    format: "JSON",
     body: params,
     headers: {
       Authorization: `Bearer ${this.signedToken}`
