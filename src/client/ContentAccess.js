@@ -3422,12 +3422,14 @@ exports.ContentObjectFolders = async function({libraryId, objectId, versionHash,
  *  - 'field' (string): The field to sort by
  *  - 'asc' (string): Determines whether the order is ascending
  * @param {Array<string>=} filter - Filter options
+ * @param {Array<string>=} select - List of metadata subtree paths to return
  *
  * @returns {Promise<Object>} - Response containing the tenant content
  */
 exports.TenantContent = async function({
   sortOptions,
-  filter=[]
+  filter=[],
+  select=[]
 }) {
   const tenantId = await this.userProfileClient.TenantContractId();
 
@@ -3439,7 +3441,8 @@ exports.TenantContent = async function({
   });
 
   const queryParams = {
-    filter
+    filter,
+    select
   };
 
   // Filter comparators
