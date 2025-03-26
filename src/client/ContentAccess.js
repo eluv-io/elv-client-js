@@ -1454,7 +1454,7 @@ exports.PlayoutOptions = async function({
 
   try {
     // If public/asset_metadata/sources/<offering> exists, use that instead of directly calling on object
-    if(!linkPath) {
+    if(!linkPath && handler === "playout") {
       const offeringPath = UrlJoin("public", "asset_metadata", "sources", offering);
       const link = await this.ContentObjectMetadata({
         libraryId,
@@ -1573,6 +1573,7 @@ exports.PlayoutOptions = async function({
             signedLink ?
               await this.LinkUrl({
                 versionHash,
+                writeToken,
                 linkPath: UrlJoin(linkPath, offering, playoutPath),
                 queryParams,
                 noAuth: true
@@ -1581,6 +1582,7 @@ exports.PlayoutOptions = async function({
                 libraryId: linkTarget.libraryId || libraryId,
                 objectId: linkTarget.objectId || objectId,
                 versionHash: linkTarget.versionHash || versionHash,
+                writeToken,
                 rep: UrlJoin(handler, offering, playoutPath),
                 noAuth: true,
                 queryParams
@@ -2051,6 +2053,7 @@ exports.CallBitcodeMethod = async function({
  * @namedParams
  * @param {string=} libraryId - ID of the library
  * @param {string=} objectId - ID of the object
+ * @param {string=} writeToken - A write token for a draft of the object (requires libraryId)
  * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
  * @param {string} rep - Representation to use
  * @param {Object=} queryParams - Query params to add to the URL
@@ -2066,11 +2069,11 @@ exports.CallBitcodeMethod = async function({
  *
  * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
  */
-exports.Rep = async function({libraryId, objectId, versionHash, rep, queryParams={}, service="fabric", makeAccessRequest=false, channelAuth=false, noAuth=false, noCache=false}) {
+exports.Rep = async function({libraryId, objectId, versionHash, writeToken, rep, queryParams={}, service="fabric", makeAccessRequest=false, channelAuth=false, noAuth=false, noCache=false}) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(!rep) { throw "Rep not specified"; }
 
-  return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, service, makeAccessRequest, channelAuth, noAuth, noCache});
+  return this.FabricUrl({libraryId, objectId, versionHash, writeToken, rep, queryParams, service, makeAccessRequest, channelAuth, noAuth, noCache});
 };
 
 /**
