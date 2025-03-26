@@ -3342,8 +3342,6 @@ exports.ContentTags = async function({libraryId, objectId, versionHash, writeTok
   return this.utils.ResponseToJson(
     this.HttpClient.Request({
       headers: { "Authorization": `Bearer ${token}` },
-      // headers: { "Authorization": authTokens.map(token => `Bearer ${token}`) },
-      // headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, writeToken}),
       method: "GET",
       path: path
     })
