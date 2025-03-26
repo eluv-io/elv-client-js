@@ -1265,13 +1265,16 @@ class ElvClient {
    * @methodGroup Authorization
    * @namedParams
    * @param {string=} token - The static token to use. If not provided, the default static token will be set.
+   * @param {boolean=} update=false - If specified, the static token will be used for update operations as well
    */
-  SetStaticToken({token}={}) {
+  SetStaticToken({token, update=false}={}) {
     if(token) {
       this.staticToken = token;
     } else {
       this.staticToken = this.utils.B64(JSON.stringify({qspace_id: this.contentSpaceId}));
     }
+
+    this.staticUpdateToken = update ? this.staticToken : undefined;
   }
 
   /**
