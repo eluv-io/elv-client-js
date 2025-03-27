@@ -1727,7 +1727,7 @@ exports.CreateContentFolder = async function({libraryId, name, displayTitle, tag
  *
  * @returns {Promise<Array<string>>} - Response containing the newly created object groups
  */
-exports.AddContentObjectFolders = async function({libraryId, writeToken, groupIds=[]}) {
+exports.AddContentObjectFolders = async function({libraryId, writeToken, groupIds}) {
   ValidateLibrary(libraryId);
   ValidateWriteToken(writeToken);
 

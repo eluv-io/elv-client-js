@@ -3423,13 +3423,17 @@ exports.ContentObjectFolders = async function({libraryId, objectId, versionHash,
  *  - 'asc' (string): Determines whether the order is ascending
  * @param {Array<string>=} filter - Filter options
  * @param {Array<string>=} select - List of metadata subtree paths to return
+ * @param {number=} start - Index of the first content object to retrieve. Defaults to the first content
+ * @param {number=} limit - Integer specifying the number of contents to return. Defaults to 100
  *
  * @returns {Promise<Object>} - Response containing the tenant content
  */
 exports.TenantContent = async function({
   sortOptions,
   filter=[],
-  select=[]
+  select=[],
+  start,
+  limit
 }) {
   const tenantId = await this.userProfileClient.TenantContractId();
 
@@ -3442,7 +3446,9 @@ exports.TenantContent = async function({
 
   const queryParams = {
     filter,
-    select
+    select,
+    start,
+    limit
   };
 
   // Filter comparators
