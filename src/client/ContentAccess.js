@@ -3418,9 +3418,9 @@ exports.ContentObjectFolders = async function({libraryId, objectId, versionHash,
  * Get tenant content
  *
  * @methodGroup Tenants
- * @param {Object<field: string, asc: boolean>=} sortOptions - Options to sort by where
+ * @param {Object<field: string, desc: boolean>=} sortOptions - Options to sort by where
  *  - 'field' (string): The field to sort by
- *  - 'asc' (string): Determines whether the order is ascending
+ *  - 'desc' (boolean): Determines whether the order is descending
  * @param {Array<string>=} filter - Filter options
  * @param {Array<string>=} select - List of metadata subtree paths to return
  * @param {number=} start - Index of the first content object to retrieve. Defaults to the first content
@@ -3463,7 +3463,7 @@ exports.TenantContent = async function({
 
   if(sortOptions && sortOptions.field) {
     queryParams["sort_by"] = sortOptions.field;
-    queryParams["sort_descending"] = !sortOptions.asc;
+    queryParams["sort_descending"] = sortOptions.desc;
   }
 
   return this.utils.ResponseToJson(
