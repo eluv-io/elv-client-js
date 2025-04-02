@@ -1357,10 +1357,19 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @param {string} name - Object ID or name of the live stream object
  * @param {Object=} customSettings - Additional options to customize configuration settings
  * @param {Object=} probeMetadata - Metadata for the probe. If not specified, a new probe will be configured
+ * @param {string=} writeToken - Write token of the draft
+ * @param {boolean=} finalize - If enabled, target object will be finalized after configuring
+ *
  * @return {Promise<Object>} - The status response for the stream
  *
  */
-exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) {
+exports.StreamConfig = async function({
+  name,
+  customSettings={},
+  probeMetadata,
+  writeToken,
+  finalize=true
+}) {
   let objectId = name;
   let status = {name};
 
@@ -1443,11 +1452,13 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
   });
 
   // Store live recording config into the stream object
-  let e = await this.EditContentObject({
-    libraryId,
-    objectId: objectId
-  });
-  let writeToken = e.write_token;
+  if(!writeToken) {
+    let e = await this.EditContentObject({
+      libraryId,
+      objectId: objectId
+    });
+    writeToken = e.write_token;
+  }
 
   await this.ReplaceMetadata({
     libraryId,
@@ -1465,12 +1476,14 @@ exports.StreamConfig = async function({name, customSettings={}, probeMetadata}) 
     metadata: probe
   });
 
-  status.fin = await this.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken,
-    commitMessage: "Apply live stream configuration"
-  });
+  if(finalize) {
+    status.fin = await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Apply live stream configuration"
+    });
+  }
 
   return status;
 };

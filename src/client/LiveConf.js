@@ -261,7 +261,7 @@ class LiveConf {
         break;
       case "30000/1001":
         //seg.videoFrameDurationTs = 3003;
-        seg.video = sourceTimescale * 30;
+        seg.video = sourceTimescale * 30.03;
         seg.keyint = 60;
         seg.duration = "30.03";
         break;

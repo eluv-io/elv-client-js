@@ -801,6 +801,9 @@ class ElvClient {
     signer.provider.pollingInterval = 500;
     this.signer = signer;
 
+    this.CreateFabricToken({})
+      .then(token => this.signedToken = token);
+
     if(reset) {
       this.InitializeClients();
     }
@@ -1246,13 +1249,16 @@ class ElvClient {
    * @methodGroup Authorization
    * @namedParams
    * @param {string=} token - The static token to use. If not provided, the default static token will be set.
+   * @param {boolean=} update=false - If specified, the static token will be used for update operations as well
    */
-  SetStaticToken({token}={}) {
+  SetStaticToken({token, update=false}={}) {
     if(token) {
       this.staticToken = token;
     } else {
       this.staticToken = this.utils.B64(JSON.stringify({qspace_id: this.contentSpaceId}));
     }
+
+    this.staticUpdateToken = update ? this.staticToken : undefined;
   }
 
   /**
@@ -1350,8 +1356,11 @@ class ElvClient {
     );
   }
 
-  async MakeAuthServiceRequest({kmsId, objectId, versionHash, method="GET", path, bodyType, body={}, queryParams={}, headers}) {
-    return this.authClient.MakeAuthServiceRequest({kmsId, objectId, versionHash, method, path, bodyType, body, queryParams, headers});
+  async MakeAuthServiceRequest({kmsId, objectId, versionHash, method="GET", path, bodyType, body={}, queryParams={}, headers, format}) {
+    const response = this.authClient.MakeAuthServiceRequest({kmsId, objectId, versionHash, method, path, bodyType, body, queryParams, headers});
+
+    return !format ? response :
+      this.utils.ResponseToFormat(format, response);
   }
 
   /* FrameClient related */
@@ -1467,5 +1476,6 @@ Object.assign(ElvClient.prototype, require("./client/LiveStream"));
 Object.assign(ElvClient.prototype, require("./client/ContentManagement"));
 Object.assign(ElvClient.prototype, require("./client/NTP"));
 Object.assign(ElvClient.prototype, require("./client/NFT"));
+Object.assign(ElvClient.prototype, require("./client/Shares"));
 
 exports.ElvClient = ElvClient;
