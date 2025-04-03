@@ -1940,15 +1940,13 @@ exports.MakeFileServiceRequest = async function({
     queryPath = UrlJoin("qlibs", libraryId, queryPath);
   }
 
-  let authorization = [
+  queryParams.authorization = [
     authorizationToken,
     await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, encryption, makeAccessRequest: encryption === "cgck"})
   ]
     .flat()
     .filter(token => token);
-
-  headers.Authorization = headers.Authorization || authorization.map(token => `Bearer ${token}`);
-
+  
   return this.utils.ResponseToFormat(
     format,
     await this.FileServiceHttpClient.Request({
