@@ -1620,11 +1620,12 @@ exports.CreateContentTags = async function({libraryId, writeToken, tags}) {
   ValidatePresence("tags", tags);
 
   const path = UrlJoin("qlibs", libraryId, "q", writeToken, "tags");
+  const objectId = this.utils.DecodeWriteToken(writeToken).objectId;
 
   this.Log(`Adding tags: ${tags.join(", ")}`);
 
   return this.HttpClient.RequestJsonBody({
-    headers: await this.authClient.AuthorizationHeader({libraryId, writeToken, update: true}),
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
     method: "POST",
     path: path,
     body: tags,
@@ -1651,9 +1652,10 @@ exports.CreateContentQueryFields = async function({libraryId, writeToken, queryF
   ValidatePresence("queryFields", queryFields);
 
   const path = UrlJoin("qlibs", libraryId, "q", writeToken, "query_fields");
+  const objectId = this.utils.DecodeWriteToken(writeToken).objectId;
 
   return this.HttpClient.RequestJsonBody({
-    headers: await this.authClient.AuthorizationHeader({libraryId, writeToken, update: true}),
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
     method: "POST",
     path: path,
     body: queryFields,
@@ -1679,19 +1681,25 @@ exports.CreateContentQueryFields = async function({libraryId, writeToken, queryF
 exports.CreateContentFolder = async function({libraryId, name, displayTitle, tags=[], queryFields={}}) {
   ValidateLibrary(libraryId);
 
-  const {objectId, writeToken} = await this.CreateContentObject({
-    libraryId,
-    options: {
-      meta: {
-        public: {
-          name,
-          asset_metadata: {
-            display_title: displayTitle
+  let objectId, writeToken;
+  try {
+    ({objectId, writeToken} = await this.CreateContentObject({
+      libraryId,
+      options: {
+        meta: {
+          public: {
+            name,
+            asset_metadata: {
+              display_title: displayTitle
+            }
           }
         }
       }
-    }
-  });
+    }));
+  } catch(error) {
+    this.Log("Failed to create content folder");
+    throw error;
+  }
 
   this.Log(`Created content group: ${objectId}`);
 
