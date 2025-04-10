@@ -28,6 +28,7 @@ exports.CreateShare = async function({objectId, expiresAt, params={}}) {
   return await this.MakeAuthServiceRequest({
     path: UrlJoin("as", "sharing", tenantId, "share"),
     method: "POST",
+    format: "JSON",
     body: params,
     headers: {
       Authorization: `Bearer ${this.signedToken}`
@@ -42,17 +43,18 @@ exports.CreateShare = async function({objectId, expiresAt, params={}}) {
  * @param {string=} objectId - If specified, the results will be limited shares for the specified object
  * @param {number=} limit=100 - Maximum number of results to return
  * @param {number=} offset=0 - Offset from which to return results
+ * @param {Object=} params={} - Additional parameters
  *
  * @returns {Promise<Array<Object>>} - Info about the shares
  */
-exports.Shares = async function({objectId, limit=100, offset=0}={}) {
+exports.Shares = async function({objectId, limit=100, offset=0, params={}}={}) {
   const tenantId = await this.userProfileClient.TenantContractId();
 
   const response = await this.MakeAuthServiceRequest({
     path: UrlJoin("as", "sharing", tenantId, "shares"),
-    method: objectId ? "POST" : "GET",
+    method: objectId || Object.keys(params).length > 0 ? "POST" : "GET",
     queryParams: { limit, offset },
-    body: objectId ? {object_id: objectId} : undefined,
+    body: objectId ? {object_id: objectId, ...params} : undefined,
     format: "JSON",
     headers: {
       Authorization: `Bearer ${this.signedToken}`
