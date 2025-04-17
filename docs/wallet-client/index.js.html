@@ -239,6 +239,13 @@ class ElvWalletClient {
       }
     }
 
+    walletClient.topLevelInfo = await client.utils.ResponseToJson(
+      client.MakeAuthServiceRequest({
+        path: "/as/mw/toplevel",
+        queryParams: { env: mode }
+      })
+    );
+
     if(!skipMarketplaceLoad) {
       await walletClient.LoadAvailableMarketplaces();
     }
@@ -541,7 +548,7 @@ class ElvWalletClient {
     let fabricToken, expiresAt;
     if(createRemoteToken &amp;&amp; this.client.signer.remoteSigner) {
       expiresAt = Date.now() + 24 * 60 * 60 * 1000;
-      const tokenResponse = await this.client.signer.RetrieveCSAT({email, nonce, force});
+      const tokenResponse = await this.client.signer.RetrieveCSAT({email, nonce, tenantId, force});
       fabricToken = tokenResponse.token;
       nonce = tokenResponse.nonce;
     } else {
@@ -756,7 +763,7 @@ class ElvWalletClient {
     return response;
   }
 
-  async SetCodeAuth({code, address, type, authToken}) {
+  async SetCodeAuth({code, address, type, authToken, expiresAt, ...additionalPayload}) {
     await Utils.ResponseToJson(
       this.client.authClient.MakeAuthServiceRequest({
         path: UrlJoin("as", "wlt", "login", "session", code),
@@ -772,7 +779,9 @@ class ElvWalletClient {
             addr: Utils.FormatAddress(address),
             eth: address ? `ikms${Utils.AddressToHash(address)}` : "",
             type,
-            token: authToken
+            token: authToken,
+            expiresAt,
+            ...additionalPayload
           })
         }
       })
@@ -801,140 +810,30 @@ class ElvWalletClient {
       return;
     }
 
-    let metadata = await this.client.ContentObjectMetadata({
-      libraryId: this.mainSiteLibraryId,
-      objectId: this.mainSiteId,
-      metadataSubtree: "public/asset_metadata",
-      resolveLinks: true,
-      linkDepthLimit: 2,
-      resolveIncludeSource: true,
-      resolveIgnoreErrors: true,
-      produceLinkUrls: true,
-      authorizationToken: this.publicStaticToken,
-      noAuth: true,
-      select: [
-        "info/marketplace_order",
-        "tenants/*/.",
-        "tenants/*/info/branding",
-        "tenants/*/marketplaces/*/.",
-        "tenants/*/marketplaces/*/info/tenant_id",
-        "tenants/*/marketplaces/*/info/tenant_name",
-        "tenants/*/marketplaces/*/info/branding",
-        "tenants/*/marketplaces/*/info/storefront/background",
-        "tenants/*/marketplaces/*/info/storefront/background_mobile"
-      ],
-      remove: [
-        "tenants/*/info/branding/wallet_css",
-        "tenants/*/marketplaces/*/info/branding/custom_css"
-      ]
-    });
-
-    const marketplaceOrder = ((metadata || {}).info || {}).marketplace_order || [];
-    metadata = (metadata || {}).tenants || {};
-
-    // If preview marketplace is specified, load it appropriately
-    if(this.previewMarketplaceId) {
-      let previewTenantSlug = "PREVIEW";
-      let previewMarketplaceSlug, previewMarketplaceMetadata;
-      Object.keys(metadata || {}).forEach(tenantSlug =>
-        Object.keys(metadata[tenantSlug].marketplaces || {}).forEach(marketplaceSlug => {
-          const versionHash = metadata[tenantSlug].marketplaces[marketplaceSlug]["."].source;
-          const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-
-          if(objectId === this.previewMarketplaceId) {
-            // Marketplace exists in site meta
-            previewTenantSlug = tenantSlug;
-            previewMarketplaceSlug = marketplaceSlug;
-
-            // Deployed marketplace is same as preview marketplace
-            if(versionHash === this.previewMarketplaceHash) {
-              previewMarketplaceMetadata = metadata[tenantSlug].marketplaces[marketplaceSlug];
-            }
-          }
-        })
-      );
-
-      // Marketplace not present in branch, or preview version is different - Load metadata directly
-      if(!previewMarketplaceMetadata) {
-        previewMarketplaceMetadata = await this.client.ContentObjectMetadata({
-          versionHash: this.previewMarketplaceHash,
-          metadataSubtree: "public/asset_metadata",
-          produceLinkUrls: true,
-          authorizationToken: this.publicStaticToken,
-          noAuth: true,
-          select: [
-            "slug",
-            "info/tenant_id",
-            "info/tenant_name",
-            "info/branding",
-          ],
-          remove: [
-            "info/branding/custom_css"
-          ]
-        });
-
-        if(!previewMarketplaceSlug) {
-          previewMarketplaceSlug = previewMarketplaceMetadata.slug;
-        }
-      }
-
-      previewMarketplaceMetadata["."] = {
-        source: this.previewMarketplaceHash
-      };
-
-      previewMarketplaceMetadata.info["."] = {
-        source: this.previewMarketplaceHash
-      };
-
-      previewMarketplaceMetadata.info.branding.preview = true;
-      previewMarketplaceMetadata.info.branding.show = true;
-
-      metadata[previewTenantSlug] = metadata[previewTenantSlug] || {};
-      metadata[previewTenantSlug].marketplaces = metadata[previewTenantSlug].marketplaces || {};
-      metadata[previewTenantSlug].marketplaces[previewMarketplaceSlug] = previewMarketplaceMetadata;
-    }
+    const marketplaces = this.topLevelInfo.marketplaces;
 
     let availableMarketplaces = { ...(this.availableMarketplaces || {}) };
     let availableMarketplacesById = { ...(this.availableMarketplacesById || {}) };
-    Object.keys(metadata || {}).forEach(tenantSlug => {
-      try {
-        availableMarketplaces[tenantSlug] = metadata[tenantSlug]["."] ?
-          { versionHash: metadata[tenantSlug]["."].source } : { };
 
-        Object.keys(metadata[tenantSlug].marketplaces || {}).forEach(marketplaceSlug => {
-          try {
-            const versionHash = metadata[tenantSlug].marketplaces[marketplaceSlug]["."].source;
-            const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    marketplaces.map(marketplaceInfo => {
+      const marketplaceId = Utils.DecodeVersionHash(marketplaceInfo.source_hash).objectId;
+      const marketplaceSlug = marketplaceInfo.slug || marketplaceInfo.name;
 
-            availableMarketplaces[tenantSlug][marketplaceSlug] = {
-              ...(metadata[tenantSlug].marketplaces[marketplaceSlug].info || {}),
-              tenantName: metadata[tenantSlug].marketplaces[marketplaceSlug].info.tenant_name,
-              tenantId: metadata[tenantSlug].marketplaces[marketplaceSlug].info.tenant_id,
-              tenantSlug,
-              marketplaceSlug,
-              marketplaceId: objectId,
-              marketplaceHash: versionHash,
-              tenantBranding: (metadata[tenantSlug].info || {}).branding || {},
-              order: marketplaceOrder.findIndex(slug => slug === marketplaceSlug)
-            };
+      availableMarketplaces[marketplaceInfo.tenant_slug] = availableMarketplaces[marketplaceInfo.tenant_slug] || {};
 
-            availableMarketplacesById[objectId] = availableMarketplaces[tenantSlug][marketplaceSlug];
+      availableMarketplaces[marketplaceInfo.tenant_slug][marketplaceSlug] = {
+        ...marketplaceInfo,
+        tenantName: marketplaceInfo.tenant_slug,
+        tenantSlug: marketplaceInfo.tenant_slug,
+        tenantId: marketplaceInfo.tenant_id,
+        marketplaceSlug: marketplaceSlug,
+        marketplaceId,
+        marketplaceHash: marketplaceInfo.source_hash
+      };
 
-            this.marketplaceHashes[objectId] = versionHash;
+      availableMarketplacesById[marketplaceId] = availableMarketplaces[marketplaceInfo.tenant_slug][marketplaceSlug];
 
-            // Fill out selected marketplace info
-            if(this.selectedMarketplaceInfo) {
-              if((this.selectedMarketplaceInfo.tenantSlug === tenantSlug &amp;&amp; this.selectedMarketplaceInfo.marketplaceSlug === marketplaceSlug) || this.selectedMarketplaceInfo.marketplaceId === objectId) {
-                this.selectedMarketplaceInfo = availableMarketplaces[tenantSlug][marketplaceSlug];
-              }
-            }
-          } catch(error) {
-            this.Log(`Eluvio Wallet Client: Unable to load info for marketplace ${tenantSlug}/${marketplaceSlug}`, true);
-          }
-        });
-      } catch(error) {
-        this.Log(`Eluvio Wallet Client: Failed to load tenant info ${tenantSlug}`, true, error);
-      }
+      this.marketplaceHashes[marketplaceId] = marketplaceInfo.source_hash;
     });
 
     this.availableMarketplaces = availableMarketplaces;
@@ -1408,6 +1307,7 @@ class ElvWalletClient {
           }
 
           if(op === "nft-claim-entitlement") {
+            // eslint-disable-next-line no-unused-vars
             let [op, marketplace, sku, purchaseId ] = status.op.split(":");
             confirmationId = purchaseId;
             if(status.extra &amp;&amp; status.extra["0"]) {
@@ -1490,7 +1390,7 @@ exports.ElvWalletClient = ElvWalletClient;
 
 
         <footer class="footer">
-          Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a>
+          Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.0</a>
         </footer>
       </div>
     </div>

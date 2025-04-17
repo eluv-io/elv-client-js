@@ -6,7 +6,7 @@
   <link rel="shortcut icon" href="images/favicon.png" >
 
   <title>
-    ElvClient/LiveStream - Documentation
+    ElvClient/Shares - Documentation
   </title>
 
   <script src="scripts/prettify/prettify.js"></script>
@@ -54,7 +54,7 @@
       <div class="main-content">
         
         <h1 class="page-title">
-          ElvClient/LiveStream
+          ElvClient/Shares
         </h1>
         
 
@@ -70,7 +70,7 @@
       
         
             <div class="description">
-              <p>Methods for Live Stream creation and management</p>
+              <p>Methods for creating and managing shared authorization tokens</p>
             </div>
         
 
@@ -107,7 +107,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_LiveStream.js.html">client/LiveStream.js</a>, <a href="client_LiveStream.js.html#line3">line 3</a>
+          <a href="client_Shares.js.html">client/Shares.js</a>, <a href="client_Shares.js.html#line1">line 1</a>
         </li>
       </ul>
     </dd>
@@ -145,11 +145,11 @@
   
 
   <span class='name-container'>
-    <a class="link-icon" href="#.AuditStream">
+    <a class="link-icon" href="#.CreateShare">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
-    <h4 class="name" id=".AuditStream">
-      <span class="type-signature">static </span>AuditStream<span class="signature">({<div class="block-param">objectId<span class="signature-attributes">optional</span>,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">salt<span class="signature-attributes">optional</span>,</div><div class="block-param">samples<span class="signature-attributes">optional</span>,</div><div class="block-param">authorizationToken<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
+    <h4 class="name" id=".CreateShare">
+      <span class="type-signature">static </span>CreateShare<span class="signature">({<div class="block-param">objectId,</div><div class="block-param">expiresAt,</div><div class="block-param">params<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
     </h4>
   </span>
 
@@ -158,7 +158,7 @@
 
 
   <div class="description">
-    <p>Audit the specified live stream against several content fabric nodes</p>
+    <p>Create a share</p>
   </div>
 
 
@@ -167,7 +167,7 @@
 
 
   <div class="return-description-block">
-    Returns: <span class="return-description">Response describing audit results</span>
+    Returns: <span class="return-description">Info about the created share</span>
   </div>
 
 
@@ -223,7 +223,42 @@
         
           <td class="attributes">
             
-              &lt;optional><br>
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>The object to create a share for</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>expiresAt</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      Date
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
             
 
             
@@ -235,7 +270,7 @@
         
 
         <td class="description last">
-          <p>Object ID of the live stream</p>
+          <p>The expiration time of the share</p>
           
         </td>
       </tr>
@@ -243,14 +278,14 @@
     
       <tr>
         
-          <td class="name"><code>versionHash</code></td>
+          <td class="name"><code>params</code></td>
         
 
         <td class="type">
           
             
     <span class="param-type">
-      string
+      Object
     </span>
 
     
@@ -274,124 +309,7 @@
         
 
         <td class="description last">
-          <p>Version hash of the live stream -- if not specified, latest version is returned</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>salt</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>base64-encoded byte sequence for salting the audit hash</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>samples</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      Array.&lt;number>
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>list of percentages (0.0 - &lt;1.0) used for sampling the content part list, up to 3</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>authorizationToken</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Additional authorization token for this request</p>
+          <p>Additional parameters</p>
           
         </td>
       </tr>
@@ -447,7 +365,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_LiveStream.js.html">client/LiveStream.js</a>, <a href="client_LiveStream.js.html#line2068">line 2068</a>
+          <a href="client_Shares.js.html">client/Shares.js</a>, <a href="client_Shares.js.html#line19">line 19</a>
         </li>
       </ul>
     </dd>
@@ -466,11 +384,11 @@
   
 
   <span class='name-container'>
-    <a class="link-icon" href="#.StreamAddWatermark">
+    <a class="link-icon" href="#.RedeemShareToken">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
-    <h4 class="name" id=".StreamAddWatermark">
-      <span class="type-signature">static </span>StreamAddWatermark<span class="signature">({<div class="block-param">libraryId<span class="signature-attributes">optional</span>,</div><div class="block-param">objectId,</div><div class="block-param">writeToken<span class="signature-attributes">optional</span>,</div><div class="block-param">simpleWatermark,</div><div class="block-param">imageWatermark,</div><div class="block-param">forensicWatermark,</div><div class="block-param">finalize<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
+    <h4 class="name" id=".RedeemShareToken">
+      <span class="type-signature">static </span>RedeemShareToken<span class="signature">({<span class="inline-param">shareId</span>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
     </h4>
   </span>
 
@@ -479,7 +397,7 @@
 
 
   <div class="description">
-    <p>Create a watermark for a live stream</p>
+    <p>Retrieve the authorization token for the specified share</p>
   </div>
 
 
@@ -488,7 +406,459 @@
 
 
   <div class="return-description-block">
-    Returns: <span class="return-description">The finalize response</span>
+    Returns: <span class="return-description">The authorization token for the share</span>
+  </div>
+
+
+
+
+
+
+
+
+
+  <h5>Parameters:</h5>
+  
+
+<table class="params">
+  <thead>
+    <tr>
+      
+        <th>Name</th>
+      
+
+      <th>Type</th>
+
+      
+
+      
+
+      <th class="last">Description</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    
+      <tr>
+        
+          <td class="name"><code>shareId</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+
+        
+
+        <td class="description last">
+          <p>The ID of the share</p>
+          
+        </td>
+      </tr>
+
+    
+  </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source">
+      <ul class="dummy">
+        <li>
+          <a href="client_Shares.js.html">client/Shares.js</a>, <a href="client_Shares.js.html#line156">line 156</a>
+        </li>
+      </ul>
+    </dd>
+  
+
+  
+
+  
+</dl>
+
+
+      
+        
+
+
+  
+
+  <span class='name-container'>
+    <a class="link-icon" href="#.RevokeShare">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+    </a>
+    <h4 class="name" id=".RevokeShare">
+      <span class="type-signature">static </span>RevokeShare<span class="signature">({<span class="inline-param">shareId</span>})</span><span class="type-signature"></span>
+    </h4>
+  </span>
+
+  
+
+
+
+  <div class="description">
+    <p>Revoke the specified share</p>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+  <h5>Parameters:</h5>
+  
+
+<table class="params">
+  <thead>
+    <tr>
+      
+        <th>Name</th>
+      
+
+      <th>Type</th>
+
+      
+
+      
+
+      <th class="last">Description</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    
+      <tr>
+        
+          <td class="name"><code>shareId</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+
+        
+
+        <td class="description last">
+          <p>The ID of the share to modify</p>
+          
+        </td>
+      </tr>
+
+    
+  </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source">
+      <ul class="dummy">
+        <li>
+          <a href="client_Shares.js.html">client/Shares.js</a>, <a href="client_Shares.js.html#line109">line 109</a>
+        </li>
+      </ul>
+    </dd>
+  
+
+  
+
+  
+</dl>
+
+
+      
+        
+
+
+  
+
+  <span class='name-container'>
+    <a class="link-icon" href="#.ShareInfo">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+    </a>
+    <h4 class="name" id=".ShareInfo">
+      <span class="type-signature">static </span>ShareInfo<span class="signature">({<span class="inline-param">shareId</span>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
+    </h4>
+  </span>
+
+  
+
+
+
+  <div class="description">
+    <p>Retrieve info about the specified share</p>
+  </div>
+
+
+
+  
+
+
+  <div class="return-description-block">
+    Returns: <span class="return-description">Info about the share</span>
+  </div>
+
+
+
+
+
+
+
+
+
+  <h5>Parameters:</h5>
+  
+
+<table class="params">
+  <thead>
+    <tr>
+      
+        <th>Name</th>
+      
+
+      <th>Type</th>
+
+      
+
+      
+
+      <th class="last">Description</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    
+      <tr>
+        
+          <td class="name"><code>shareId</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+
+        
+
+        <td class="description last">
+          <p>The ID of the share</p>
+          
+        </td>
+      </tr>
+
+    
+  </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source">
+      <ul class="dummy">
+        <li>
+          <a href="client_Shares.js.html">client/Shares.js</a>, <a href="client_Shares.js.html#line130">line 130</a>
+        </li>
+      </ul>
+    </dd>
+  
+
+  
+
+  
+</dl>
+
+
+      
+        
+
+
+  
+
+  <span class='name-container'>
+    <a class="link-icon" href="#.Shares">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+    </a>
+    <h4 class="name" id=".Shares">
+      <span class="type-signature">static </span>Shares<span class="signature">({<div class="block-param">objectId<span class="signature-attributes">optional</span>,</div><div class="block-param">limit<span class="signature-attributes">optional</span>,</div><div class="block-param">offset<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Array.&lt;Object>></span>
+    </h4>
+  </span>
+
+  
+
+
+
+  <div class="description">
+    <p>List shares associated with your tenancy</p>
+  </div>
+
+
+
+  
+
+
+  <div class="return-description-block">
+    Returns: <span class="return-description">Info about the shares</span>
   </div>
 
 
@@ -516,51 +886,14 @@
       
 
       
+        <th>Default</th>
+      
 
       <th class="last">Description</th>
     </tr>
   </thead>
 
   <tbody>
-    
-      <tr>
-        
-          <td class="name"><code>libraryId</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Library ID of the live stream</p>
-          
-        </td>
-      </tr>
-
     
       <tr>
         
@@ -583,6 +916,8 @@
         
           <td class="attributes">
             
+              &lt;optional><br>
+            
 
             
 
@@ -591,9 +926,13 @@
         
 
         
+          <td class="default">
+            
+          </td>
+        
 
         <td class="description last">
-          <p>Object ID of the live stream</p>
+          <p>If specified, the results will be limited shares for the specified object</p>
           
         </td>
       </tr>
@@ -601,14 +940,14 @@
     
       <tr>
         
-          <td class="name"><code>writeToken</code></td>
+          <td class="name"><code>limit</code></td>
         
 
         <td class="type">
           
             
     <span class="param-type">
-      string
+      number
     </span>
 
     
@@ -630,46 +969,15 @@
         
 
         
-
-        <td class="description last">
-          <p>Write token of the draft</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>simpleWatermark</code></td>
-        
-
-        <td class="type">
-          
+          <td class="default">
             
-    <span class="param-type">
-      Object
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
+              100
             
           </td>
         
 
-        
-
         <td class="description last">
-          <p>Text watermark</p>
+          <p>Maximum number of results to return</p>
           
         </td>
       </tr>
@@ -677,88 +985,14 @@
     
       <tr>
         
-          <td class="name"><code>imageWatermark</code></td>
+          <td class="name"><code>offset</code></td>
         
 
         <td class="type">
           
             
     <span class="param-type">
-      Object
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Image watermark</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>forensicWatermark</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      Object
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Forensic watermark</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>finalize</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      boolean
+      number
     </span>
 
     
@@ -780,40 +1014,15 @@
         
 
         
+          <td class="default">
+            
+              0
+            
+          </td>
+        
 
         <td class="description last">
-          <p>If enabled, target object will be finalized after adding watermark
-Watermark examples:</p>
-<p>Simple Watermark:
-{
-&quot;font_color&quot;: &quot;&quot;,
-&quot;font_relative_height&quot;: 0,
-&quot;shadow&quot;: false,
-&quot;template&quot;: &quot;&quot;,
-&quot;timecode&quot;: &quot;&quot;,
-&quot;timecode_rate&quot;: 0,
-&quot;x&quot;: &quot;&quot;,
-&quot;y&quot;: &quot;&quot;
-}</p>
-<p>Image watermark:
-{
-&quot;image&quot;: &quot;&quot;,
-&quot;align_h&quot;: &quot;&quot;,
-&quot;align_v&quot;: &quot;&quot;,
-&quot;target_video_height&quot;: 0,
-&quot;wm_enabled&quot;: false
-}</p>
-<p>Forensic watermark:
-{
-&quot;algo&quot;: 6,
-&quot;forensic_duration&quot;: 0,
-&quot;forensic_start&quot;: &quot;&quot;,
-&quot;image_a&quot;: &lt;path_to_image&gt;,
-&quot;image_b&quot;: &lt;path_to_image&gt;,
-&quot;is_stub&quot;: true,
-&quot;payload_bit_nb&quot;: 23,
-&quot;wm_enabled&quot;: true
-}</p>
+          <p>Offset from which to return results</p>
           
         </td>
       </tr>
@@ -869,7 +1078,7 @@ Watermark examples:</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_LiveStream.js.html">client/LiveStream.js</a>, <a href="client_LiveStream.js.html#line1955">line 1955</a>
+          <a href="client_Shares.js.html">client/Shares.js</a>, <a href="client_Shares.js.html#line49">line 49</a>
         </li>
       </ul>
     </dd>
@@ -888,11 +1097,11 @@ Watermark examples:</p>
   
 
   <span class='name-container'>
-    <a class="link-icon" href="#.StreamConfig">
+    <a class="link-icon" href="#.UpdateShare">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
-    <h4 class="name" id=".StreamConfig">
-      <span class="type-signature">static </span>StreamConfig<span class="signature">({<div class="block-param">name,</div><div class="block-param">customSettings<span class="signature-attributes">optional</span>,</div><div class="block-param">probeMetadata<span class="signature-attributes">optional</span>,</div><div class="block-param">writeToken<span class="signature-attributes">optional</span>,</div><div class="block-param">finalize<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
+    <h4 class="name" id=".UpdateShare">
+      <span class="type-signature">static </span>UpdateShare<span class="signature">({<div class="block-param">shareId,</div><div class="block-param">expiresAt<span class="signature-attributes">optional</span>,</div><div class="block-param">params<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
     </h4>
   </span>
 
@@ -901,25 +1110,7 @@ Watermark examples:</p>
 
 
   <div class="description">
-    <p>Configure the stream based on built-in logic and optional custom settings.</p>
-<p>Custom settings format:
-{
-&quot;audio&quot; {
-&quot;1&quot; : {  // This is the stream index
-&quot;tags&quot; : &quot;language: english&quot;,
-&quot;codec&quot; : &quot;aac&quot;,
-&quot;bitrate&quot;: 204000,
-&quot;record&quot;:  true,
-&quot;recording_bitrate&quot; : 192000,
-&quot;recording_channels&quot; : 2,
-&quot;playout&quot;: bool
-&quot;playout_label&quot;: &quot;English (Stereo)&quot;
-},
-&quot;3&quot;: {
-...
-}
-}
-}</p>
+    <p>Update the specified share</p>
   </div>
 
 
@@ -928,7 +1119,7 @@ Watermark examples:</p>
 
 
   <div class="return-description-block">
-    Returns: <span class="return-description">The status response for the stream</span>
+    Returns: <span class="return-description">Info about the updated share</span>
   </div>
 
 
@@ -965,7 +1156,7 @@ Watermark examples:</p>
     
       <tr>
         
-          <td class="name"><code>name</code></td>
+          <td class="name"><code>shareId</code></td>
         
 
         <td class="type">
@@ -994,7 +1185,7 @@ Watermark examples:</p>
         
 
         <td class="description last">
-          <p>Object ID or name of the live stream object</p>
+          <p>The ID of the share to modify</p>
           
         </td>
       </tr>
@@ -1002,7 +1193,46 @@ Watermark examples:</p>
     
       <tr>
         
-          <td class="name"><code>customSettings</code></td>
+          <td class="name"><code>expiresAt</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      Date
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>The new expiration time of the share</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>params</code></td>
         
 
         <td class="type">
@@ -1033,124 +1263,7 @@ Watermark examples:</p>
         
 
         <td class="description last">
-          <p>Additional options to customize configuration settings</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>probeMetadata</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      Object
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Metadata for the probe. If not specified, a new probe will be configured</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>writeToken</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Write token of the draft</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>finalize</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      boolean
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>If enabled, target object will be finalized after configuring</p>
+          <p>Additional parameters</p>
           
         </td>
       </tr>
@@ -1206,3076 +1319,7 @@ Watermark examples:</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_LiveStream.js.html">client/LiveStream.js</a>, <a href="client_LiveStream.js.html#line1367">line 1367</a>
-        </li>
-      </ul>
-    </dd>
-  
-
-  
-
-  
-</dl>
-
-
-      
-        
-
-
-  
-
-  <span class='name-container'>
-    <a class="link-icon" href="#.StreamCreate">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-    </a>
-    <h4 class="name" id=".StreamCreate">
-      <span class="type-signature">static </span>StreamCreate<span class="signature">({<div class="block-param">name,</div><div class="block-param">start<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
-    </h4>
-  </span>
-
-  
-
-
-
-  <div class="description">
-    <p>Create a new edge write token</p>
-  </div>
-
-
-
-  
-
-
-  <div class="return-description-block">
-    Returns: <span class="return-description">The status response for the object</span>
-  </div>
-
-
-
-
-
-
-
-
-
-  <h5>Parameters:</h5>
-  
-
-<table class="params">
-  <thead>
-    <tr>
-      
-        <th>Name</th>
-      
-
-      <th>Type</th>
-
-      
-        <th>Attributes</th>
-      
-
-      
-
-      <th class="last">Description</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    
-      <tr>
-        
-          <td class="name"><code>name</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Object ID or name of the live stream object</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>start</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      boolean
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>If specified, will start the stream after creation</p>
-          
-        </td>
-      </tr>
-
-    
-  </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source">
-      <ul class="dummy">
-        <li>
-          <a href="client_LiveStream.js.html">client/LiveStream.js</a>, <a href="client_LiveStream.js.html#line639">line 639</a>
-        </li>
-      </ul>
-    </dd>
-  
-
-  
-
-  
-</dl>
-
-
-      
-        
-
-
-  
-
-  <span class='name-container'>
-    <a class="link-icon" href="#.StreamInitialize">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-    </a>
-    <h4 class="name" id=".StreamInitialize">
-      <span class="type-signature">static </span>StreamInitialize<span class="signature">({<div class="block-param">name,</div><div class="block-param">drm<span class="signature-attributes">optional</span>,</div><div class="block-param">format<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
-    </h4>
-  </span>
-
-  
-
-
-
-  <div class="description">
-    <p>Initialize the stream object</p>
-  </div>
-
-
-
-  
-
-
-  <div class="return-description-block">
-    Returns: <span class="return-description">The name, object ID, and state of the stream</span>
-  </div>
-
-
-
-
-
-
-
-
-
-  <h5>Parameters:</h5>
-  
-
-<table class="params">
-  <thead>
-    <tr>
-      
-        <th>Name</th>
-      
-
-      <th>Type</th>
-
-      
-        <th>Attributes</th>
-      
-
-      
-
-      <th class="last">Description</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    
-      <tr>
-        
-          <td class="name"><code>name</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Object ID or name of the live stream object</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>drm</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      boolean
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>If specified, playout will be DRM protected</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>format</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Specify the list of playout formats and DRM to support,
-comma-separated (hls-clear, hls-aes128, hls-sample-aes,
-hls-fairplay)</p>
-          
-        </td>
-      </tr>
-
-    
-  </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source">
-      <ul class="dummy">
-        <li>
-          <a href="client_LiveStream.js.html">client/LiveStream.js</a>, <a href="client_LiveStream.js.html#line948">line 948</a>
-        </li>
-      </ul>
-    </dd>
-  
-
-  
-
-  
-</dl>
-
-
-      
-        
-
-
-  
-
-  <span class='name-container'>
-    <a class="link-icon" href="#.StreamInsertion">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-    </a>
-    <h4 class="name" id=".StreamInsertion">
-      <span class="type-signature">static </span>StreamInsertion<span class="signature">({<div class="block-param">name,</div><div class="block-param">insertionTime,</div><div class="block-param">sinceStart<span class="signature-attributes">optional</span>,</div><div class="block-param">duration<span class="signature-attributes">optional</span>,</div><div class="block-param">targetHash,</div><div class="block-param">remove<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
-    </h4>
-  </span>
-
-  
-
-
-
-  <div class="description">
-    <p>Add a content insertion entry</p>
-  </div>
-
-
-
-  
-
-
-  <div class="return-description-block">
-    Returns: <span class="return-description">Insertions, as well as any errors from bad insertions</span>
-  </div>
-
-
-
-
-
-
-
-
-
-  <h5>Parameters:</h5>
-  
-
-<table class="params">
-  <thead>
-    <tr>
-      
-        <th>Name</th>
-      
-
-      <th>Type</th>
-
-      
-        <th>Attributes</th>
-      
-
-      
-
-      <th class="last">Description</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    
-      <tr>
-        
-          <td class="name"><code>name</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Object ID or name of the live stream object</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>insertionTime</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      number
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Time in seconds (float)</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>sinceStart</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      boolean
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>If specified, time specified will be elapsed seconds
-since stream start, otherwise, time will be elapsed since epoch</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>duration</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      number
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Time in seconds (float). Default: 20.0</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>targetHash</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>The target content object hash (playable)</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>remove</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      boolean
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>If specified, will remove the inseration at the exact 'time' (instead of adding)</p>
-          
-        </td>
-      </tr>
-
-    
-  </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source">
-      <ul class="dummy">
-        <li>
-          <a href="client_LiveStream.js.html">client/LiveStream.js</a>, <a href="client_LiveStream.js.html#line1150">line 1150</a>
-        </li>
-      </ul>
-    </dd>
-  
-
-  
-
-  
-</dl>
-
-
-      
-        
-
-
-  
-
-  <span class='name-container'>
-    <a class="link-icon" href="#.StreamListUrls">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-    </a>
-    <h4 class="name" id=".StreamListUrls">
-      <span class="type-signature">static </span>StreamListUrls<span class="signature">({<span class="inline-param">siteId<span class="signature-attributes">optional</span></span>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
-    </h4>
-  </span>
-
-  
-
-
-
-  <div class="description">
-    <p>List the pre-allocated URLs for a site</p>
-  </div>
-
-
-
-  
-
-
-  <div class="return-description-block">
-    Returns: <span class="return-description">The list of stream URLs</span>
-  </div>
-
-
-
-
-
-
-
-
-
-  <h5>Parameters:</h5>
-  
-
-<table class="params">
-  <thead>
-    <tr>
-      
-        <th>Name</th>
-      
-
-      <th>Type</th>
-
-      
-        <th>Attributes</th>
-      
-
-      
-
-      <th class="last">Description</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    
-      <tr>
-        
-          <td class="name"><code>siteId</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>ID of the live stream site object</p>
-          
-        </td>
-      </tr>
-
-    
-  </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source">
-      <ul class="dummy">
-        <li>
-          <a href="client_LiveStream.js.html">client/LiveStream.js</a>, <a href="client_LiveStream.js.html#line1501">line 1501</a>
-        </li>
-      </ul>
-    </dd>
-  
-
-  
-
-  
-</dl>
-
-
-      
-        
-
-
-  
-
-  <span class='name-container'>
-    <a class="link-icon" href="#.StreamRemoveWatermark">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-    </a>
-    <h4 class="name" id=".StreamRemoveWatermark">
-      <span class="type-signature">static </span>StreamRemoveWatermark<span class="signature">({<div class="block-param">libraryId<span class="signature-attributes">optional</span>,</div><div class="block-param">objectId,</div><div class="block-param">writeToken<span class="signature-attributes">optional</span>,</div><div class="block-param">types,</div><div class="block-param">finalize<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
-    </h4>
-  </span>
-
-  
-
-
-
-  <div class="description">
-    <p>Remove a watermark for a live stream</p>
-  </div>
-
-
-
-  
-
-
-  <div class="return-description-block">
-    Returns: <span class="return-description">The finalize response</span>
-  </div>
-
-
-
-
-
-
-
-
-
-  <h5>Parameters:</h5>
-  
-
-<table class="params">
-  <thead>
-    <tr>
-      
-        <th>Name</th>
-      
-
-      <th>Type</th>
-
-      
-        <th>Attributes</th>
-      
-
-      
-
-      <th class="last">Description</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    
-      <tr>
-        
-          <td class="name"><code>libraryId</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Library ID of the live stream</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>objectId</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Object ID of the live stream</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>writeToken</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Write token of the draft</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>types</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      Array.&lt;string>
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Specify which type of watermark to remove. Possible values:</p>
-<ul>
-<li>&quot;image&quot;</li>
-<li>&quot;text&quot;</li>
-<li>&quot;forensic&quot;</li>
-</ul>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>finalize</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      boolean
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>If enabled, target object will be finalized after removing watermark</p>
-          
-        </td>
-      </tr>
-
-    
-  </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source">
-      <ul class="dummy">
-        <li>
-          <a href="client_LiveStream.js.html">client/LiveStream.js</a>, <a href="client_LiveStream.js.html#line1823">line 1823</a>
-        </li>
-      </ul>
-    </dd>
-  
-
-  
-
-  
-</dl>
-
-
-      
-        
-
-
-  
-
-  <span class='name-container'>
-    <a class="link-icon" href="#.StreamSetOfferingAndDRM">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-    </a>
-    <h4 class="name" id=".StreamSetOfferingAndDRM">
-      <span class="type-signature">static </span>StreamSetOfferingAndDRM<span class="signature">({<div class="block-param">name,</div><div class="block-param">typeAbrMaster<span class="signature-attributes">optional</span>,</div><div class="block-param">typeLiveStream<span class="signature-attributes">optional</span>,</div><div class="block-param">drm<span class="signature-attributes">optional</span>,</div><div class="block-param">format<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
-    </h4>
-  </span>
-
-  
-
-
-
-  <div class="description">
-    <p>Create a dummy VoD offering and initialize DRM keys.</p>
-  </div>
-
-
-
-  
-
-
-  <div class="return-description-block">
-    Returns: <span class="return-description">The name, object ID, and state of the stream</span>
-  </div>
-
-
-
-
-
-
-
-
-
-  <h5>Parameters:</h5>
-  
-
-<table class="params">
-  <thead>
-    <tr>
-      
-        <th>Name</th>
-      
-
-      <th>Type</th>
-
-      
-        <th>Attributes</th>
-      
-
-      
-
-      <th class="last">Description</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    
-      <tr>
-        
-          <td class="name"><code>name</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Object ID or name of the live stream object</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>typeAbrMaster</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Content type hash</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>typeLiveStream</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Content type hash</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>drm</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      boolean
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>If specified, DRM will be applied to the stream</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>format</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>A list of playout formats and DRM to support, comma-separated
-(hls-clear, hls-aes128, hls-sample-aes, hls-fairplay). If specified,
-this will take precedence over the drm value</p>
-          
-        </td>
-      </tr>
-
-    
-  </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source">
-      <ul class="dummy">
-        <li>
-          <a href="client_LiveStream.js.html">client/LiveStream.js</a>, <a href="client_LiveStream.js.html#line997">line 997</a>
-        </li>
-      </ul>
-    </dd>
-  
-
-  
-
-  
-</dl>
-
-
-      
-        
-
-
-  
-
-  <span class='name-container'>
-    <a class="link-icon" href="#.StreamStartOrStopOrReset">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-    </a>
-    <h4 class="name" id=".StreamStartOrStopOrReset">
-      <span class="type-signature">static </span>StreamStartOrStopOrReset<span class="signature">({<div class="block-param">name,</div><div class="block-param">op</div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
-    </h4>
-  </span>
-
-  
-
-
-
-  <div class="description">
-    <p>Start, stop or reset a stream within the current session (current edge write token)</p>
-  </div>
-
-
-
-  
-
-
-  <div class="return-description-block">
-    Returns: <span class="return-description">The status response for the stream</span>
-  </div>
-
-
-
-
-
-
-
-
-
-  <h5>Parameters:</h5>
-  
-
-<table class="params">
-  <thead>
-    <tr>
-      
-        <th>Name</th>
-      
-
-      <th>Type</th>
-
-      
-
-      
-
-      <th class="last">Description</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    
-      <tr>
-        
-          <td class="name"><code>name</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-
-        
-
-        <td class="description last">
-          <p>Object ID or name of the live stream object</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>op</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-
-        
-
-        <td class="description last">
-          <p>The operation to perform. Possible values:
-'start'
-'reset' - Stops current LRO recording and starts a new one.  Does
-not create a new edge write token (just creates a new recording
-period in the existing edge write token)</p>
-<ul>
-<li>'stop'</li>
-</ul>
-          
-        </td>
-      </tr>
-
-    
-  </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source">
-      <ul class="dummy">
-        <li>
-          <a href="client_LiveStream.js.html">client/LiveStream.js</a>, <a href="client_LiveStream.js.html#line749">line 749</a>
-        </li>
-      </ul>
-    </dd>
-  
-
-  
-
-  
-</dl>
-
-
-      
-        
-
-
-  
-
-  <span class='name-container'>
-    <a class="link-icon" href="#.StreamStatus">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-    </a>
-    <h4 class="name" id=".StreamStatus">
-      <span class="type-signature">static </span>StreamStatus<span class="signature">({<div class="block-param">name,</div><div class="block-param">stopLro<span class="signature-attributes">optional</span>,</div><div class="block-param">showParams<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
-    </h4>
-  </span>
-
-  
-
-
-
-  <div class="description">
-    <p>Retrieve the status of the current live stream session</p>
-  </div>
-
-
-
-  
-
-
-  <div class="return-description-block">
-    Returns: <span class="return-description">The status response for the object, as well as logs, warnings and errors from the master initialization</span>
-  </div>
-
-
-
-
-
-
-
-
-
-  <h5>Parameters:</h5>
-  
-
-<table class="params">
-  <thead>
-    <tr>
-      
-        <th>Name</th>
-      
-
-      <th>Type</th>
-
-      
-        <th>Attributes</th>
-      
-
-      
-
-      <th class="last">Description</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    
-      <tr>
-        
-          <td class="name"><code>name</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Object ID or name of the live stream object</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>stopLro</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      boolean
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>If specified, will stop LRO</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>showParams</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      boolean
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>If specified, will return recording_params with status
-States:
-unconfigured    - no live_recording_config
-uninitialized   - no live_recording config generated
-inactive        - live_recording config initialized but no 'edge write token'
-stopped         - edge-write-token but not started
-starting        - LRO running but no source data yet
-running         - stream is running and producing output
-stalled         - LRO running but no source data (so not producing output)</p>
-          
-        </td>
-      </tr>
-
-    
-  </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source">
-      <ul class="dummy">
-        <li>
-          <a href="client_LiveStream.js.html">client/LiveStream.js</a>, <a href="client_LiveStream.js.html#line363">line 363</a>
-        </li>
-      </ul>
-    </dd>
-  
-
-  
-
-  
-</dl>
-
-
-      
-        
-
-
-  
-
-  <span class='name-container'>
-    <a class="link-icon" href="#.StreamStopSession">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-    </a>
-    <h4 class="name" id=".StreamStopSession">
-      <span class="type-signature">static </span>StreamStopSession<span class="signature">({<span class="inline-param">name</span>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
-    </h4>
-  </span>
-
-  
-
-
-
-  <div class="description">
-    <p>Close the edge write token and make the stream object inactive.</p>
-  </div>
-
-
-
-  
-
-
-  <div class="return-description-block">
-    Returns: <span class="return-description">The finalize response for the stream object</span>
-  </div>
-
-
-
-
-
-
-
-
-
-  <h5>Parameters:</h5>
-  
-
-<table class="params">
-  <thead>
-    <tr>
-      
-        <th>Name</th>
-      
-
-      <th>Type</th>
-
-      
-
-      
-
-      <th class="last">Description</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    
-      <tr>
-        
-          <td class="name"><code>name</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-
-        
-
-        <td class="description last">
-          <p>Object ID or name of the live stream object</p>
-          
-        </td>
-      </tr>
-
-    
-  </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source">
-      <ul class="dummy">
-        <li>
-          <a href="client_LiveStream.js.html">client/LiveStream.js</a>, <a href="client_LiveStream.js.html#line836">line 836</a>
-        </li>
-      </ul>
-    </dd>
-  
-
-  
-
-  
-</dl>
-
-
-      
-        
-
-
-  
-
-  <span class='name-container'>
-    <a class="link-icon" href="#~StreamGenerateOffering">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-    </a>
-    <h4 class="name" id="~StreamGenerateOffering">
-      <span class="type-signature">async, inner </span>StreamGenerateOffering<span class="signature">({<div class="block-param">client,</div><div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">typeAbrMaster<span class="signature-attributes">optional</span>,</div><div class="block-param">typeLiveStream<span class="signature-attributes">optional</span>,</div><div class="block-param">streamUrl,</div><div class="block-param">abrProfile,</div><div class="block-param">aBitRate,</div><div class="block-param">aChannels,</div><div class="block-param">aSampleRate,</div><div class="block-param">aStreamIndex,</div><div class="block-param">aTimeBase,</div><div class="block-param">aChannelLayout,</div><div class="block-param">vBitRate,</div><div class="block-param">vHeight,</div><div class="block-param">vStreamIndex,</div><div class="block-param">vWidth,</div><div class="block-param">vDisplayAspectRatio,</div><div class="block-param">vFrameRate,</div><div class="block-param">vTimeBase</div>})</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
-    </h4>
-  </span>
-
-  
-
-
-
-  <div class="description">
-    <p>Set the offering for the live stream</p>
-  </div>
-
-
-
-  
-
-
-  <div class="return-description-block">
-    Returns: <span class="return-description">Final hash of the live stream object</span>
-  </div>
-
-
-
-
-
-
-
-
-
-  <h5>Parameters:</h5>
-  
-
-<table class="params">
-  <thead>
-    <tr>
-      
-        <th>Name</th>
-      
-
-      <th>Type</th>
-
-      
-        <th>Attributes</th>
-      
-
-      
-
-      <th class="last">Description</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    
-      <tr>
-        
-          <td class="name"><code>client</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      Object
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>The client object</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>libraryId</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>ID of the library for the new live stream object</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>objectId</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>ID of the new live stream object</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>typeAbrMaster</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Content type hash</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>typeLiveStream</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Content type hash</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>streamUrl</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Live source URL</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>abrProfile</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      object
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>ABR Profile for the offering</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>aBitRate</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      number
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Audio bitrate</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>aChannels</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      number
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Audio channels</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>aSampleRate</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      number
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Audio sample rate</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>aStreamIndex</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      number
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Audio stream index</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>aTimeBase</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Audio time base as a fraction, e.g. &quot;1/48000&quot; (usually equal to 1/aSampleRate)</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>aChannelLayout</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Channel layout, e.g. &quot;stereo&quot;</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>vBitRate</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      number
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Video bitrate</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>vHeight</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      number
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Video height</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>vStreamIndex</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      number
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Video stream index</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>vWidth</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      number
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Video width</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>vDisplayAspectRatio</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Display aspect ratio as a fraction, e.g. &quot;16/9&quot;</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>vFrameRate</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Frame rate as an integer, e.g. &quot;30&quot;</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>vTimeBase</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      string
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-
-        <td class="description last">
-          <p>Time base as a fraction, e.g. &quot;1/30000&quot;</p>
-          
-        </td>
-      </tr>
-
-    
-  </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source">
-      <ul class="dummy">
-        <li>
-          <a href="client_LiveStream.js.html">client/LiveStream.js</a>, <a href="client_LiveStream.js.html#line92">line 92</a>
+          <a href="client_Shares.js.html">client/Shares.js</a>, <a href="client_Shares.js.html#line85">line 85</a>
         </li>
       </ul>
     </dd>
