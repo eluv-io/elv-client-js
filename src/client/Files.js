@@ -20,7 +20,7 @@ const {
   ValidatePresence,
   ValidateWriteToken,
   ValidatePartHash,
-  ValidateParameters
+  ValidateParameters, ValidateLibrary
 } = require("../Validation");
 
 
@@ -494,6 +494,35 @@ exports.CreateFileUploadJob = async function({libraryId, objectId, writeToken, o
     body,
     allowFailover: false
   });
+};
+
+/**
+ * Resume a file upload job
+ *
+ * @memberof module:ElvClient/Files+Parts
+ * @methodGroup Files
+ * @namedParams
+ * @param libraryId - ID of the library
+ * @param writeToken - Write token of the draft
+ * @param uploadId - ID of the file upload job
+ *
+ * @returns {Promise<Object>}
+ */
+exports.ResumeUpload = async function({libraryId, writeToken, uploadId}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+  ValidatePresence(uploadId, "uploadId");
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "file_jobs", uploadId, "resume");
+
+  return this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, writeToken, update: true}),
+      method: "PUT",
+      path: path,
+      allowFailover: false
+    })
+  );
 };
 
 exports.UploadStatus = async function({libraryId, objectId, writeToken, uploadId}) {
