@@ -1634,6 +1634,65 @@ exports.CreateContentTags = async function({libraryId, writeToken, tags}) {
 };
 
 /**
+ * Update content tags, replacing any existing tags
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Array<string> | null} tags - List of tags. If empty or null, all tags will be removed
+ *
+ * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
+ */
+exports.UpdateContentTags = async function({libraryId, writeToken, tags}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "tags");
+  const objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+
+  this.Log(`Updating tags: ${Array.isArray(tags) ? tags.join(", ") : tags}`);
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "PUT",
+    path: path,
+    body: tags,
+    allowFailover: false
+  });
+};
+
+/**
+ * Remove the given tags from a content object
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Array<string>} tags - List of tags
+ *
+ * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
+ */
+exports.RemoveContentTags = async function({libraryId, writeToken, tags=[]}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+  ValidatePresence(tags);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "tags");
+  const objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+
+  this.Log(`Removing tags: ${tags.join(", ")}`);
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "DELETE",
+    path: path,
+    body: tags,
+    allowFailover: false
+  });
+};
+
+/**
  * Create content query fields
  *
  * @methodGroup Content Groups
