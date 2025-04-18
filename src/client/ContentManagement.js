@@ -1699,9 +1699,7 @@ exports.RemoveContentTags = async function({libraryId, writeToken, tags=[]}) {
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {string} writeToken - Write token of the draft
- * @param {Object} queryFields - List of query fields where each object contains:
- *  - 'name' (string): The key of the field
- *  - 'description' (string): The value of the field
+ * @param {Object} queryFields - Query fields defined by key/value pairs for each field
  *
  * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
  */
@@ -1716,6 +1714,60 @@ exports.CreateContentQueryFields = async function({libraryId, writeToken, queryF
   return this.HttpClient.RequestJsonBody({
     headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
     method: "POST",
+    path: path,
+    body: queryFields,
+    allowFailover: false
+  });
+};
+
+/**
+ * Replace existing content query fields
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Object | null} queryFields - Query fields defined by key/value pairs for each field. An empty or null value removes all fields.
+ *
+ * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
+ */
+exports.UpdateContentQueryFields = async function({libraryId, writeToken, queryFields}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "query_fields");
+  const objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "PUT",
+    path: path,
+    body: queryFields,
+    allowFailover: false
+  });
+};
+
+/**
+ * Remove the given query fields from a content object
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Object} queryFields - Query fields defined by key/value pairs for each field
+ *
+ * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
+ */
+exports.RemoveContentQueryFields = async function({libraryId, writeToken, queryFields}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "query_fields");
+  const objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "DELETE",
     path: path,
     body: queryFields,
     allowFailover: false
