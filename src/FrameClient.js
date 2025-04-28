@@ -363,6 +363,7 @@ class FrameClient {
       "CreateABRMezzanine",
       "CreateAccessGroup",
       "CreateAndFinalizeContentObject",
+      "CreateAuthorizationToken",
       "CreateContentLibrary",
       "CreateContentObject",
       "CreateContentType",
