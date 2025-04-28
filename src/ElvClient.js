@@ -1016,6 +1016,9 @@ class ElvClient {
     ]))}`;
   }
 
+  async CreateAuthorizationToken(args) {
+    return await this.authClient.AuthorizationToken(args);
+  }
 
   /**
    * Build a signed message (JSON) using the current signer.
@@ -1403,6 +1406,8 @@ class ElvClient {
         true
       );
 
+      // eslint-disable-next-line no-console
+      console.error(message);
       // eslint-disable-next-line no-console
       console.error(error);
 
