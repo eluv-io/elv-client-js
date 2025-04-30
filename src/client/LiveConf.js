@@ -141,14 +141,16 @@ class LiveConf {
   // Used by generateAudioStreamsConfig()
   getAudioStreamsFromProbe() {
     let audioStreams = {};
-    for(let index = 0; index < this.probeData.streams.length; index++) {
-      if(this.probeData.streams[index].codec_type == "audio") {
-        audioStreams[index] = {
-          recordingBitrate: Math.max(this.probeData.streams[index].bit_rate, 128000),
-          recordingChannels: this.probeData.streams[index].channels,
-          playoutLabel: `Audio ${index}`
-        };
-      }
+    const audioStreamData = Object.fromEntries(
+      // eslint-disable-next-line no-unused-vars
+      Object.entries(this.probeData.streams).filter(([_key, value]) => value.codec_type === "audio")
+    );
+    for(let index = 0; index < audioStreamData; index++) {
+      audioStreams[index] = {
+        recordingBitrate: Math.max(audioStreamData[index].bit_rate, 128000),
+        recordingChannels: audioStreamData[index].channels,
+        playoutLabel: `Audio ${index + 1}`
+      };
     }
     return audioStreams;
   }
@@ -386,7 +388,7 @@ class LiveConf {
           recordingChannels: audio.recording_channels || 2,
         };
         if(audio.playout) {
-          audioStreams[audioIdx].playoutLabel = audio.playout_label || `Audio ${audioIdx}`;
+          audioStreams[audioIdx].playoutLabel = audio.playout_label || `Audio ${i + 1}`;
         }
       }
     }
