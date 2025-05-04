@@ -934,8 +934,8 @@ exports.ContentObjectMetadata = async function({
     // For a 404 error, check if error was due to write token not found
     const errQwtoken = objectPath.get(error.body, "errors.0.cause.cause.cause.qwtoken");
     if(errQwtoken) {
-      // if so, re-throw rather than suppress error
-      throw error;
+      // if so, throw 'write token not found' error
+      throw Error(`Write token ${writeToken} not found  - draft already finalized or node unavailable?`);
     } else {
       // For all other 404 errors (not just 'subtree not found'), suppress error and
       // return an empty value. (there are function call chains that depend on this behavior,
@@ -1146,6 +1146,52 @@ exports.LatestVersionHashV2 = async function({objectId, versionHash}) {
   }
   return latestHash;
 };
+
+
+/**
+ * Check to see if version hash is available.
+ * Used after finalizing a draft to determine if publishing has finished.
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string=} versionHash - Version hash of the object
+ *
+ * @returns {Promise<boolean>} - Whether or not the version hash is visible
+ */
+exports.VersionAvailable = async function({versionHash}) {
+  this.Log(`Checking if version is available: ${versionHash}`);
+
+  ValidateParameters({versionHash});
+
+  const status = await VersionStatus({versionHash});
+  return status.available;
+};
+
+/**
+ * Get status of version hash
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string=} versionHash - Version hash of the object
+ *
+ * @returns {Promise<object>} - Information about the version hash
+ */
+exports.VersionStatus = async function({versionHash}) {
+  this.Log(`Querying status of version: ${versionHash}`);
+
+  ValidateParameters({versionHash});
+
+  return await this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      path: UrlJoin("q", versionHash, "status"),
+      method: "GET",
+      headers: await this.authClient.AuthorizationHeader({versionHash})
+    })
+  );
+};
+
+
+
 
 /* URL Methods */
 
