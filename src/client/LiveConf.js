@@ -143,7 +143,7 @@ class LiveConf {
     let audioStreams = {};
     const audioStreamData = this.probeData.streams.filter((value) => value.codec_type === "audio");
 
-    for(let index = 0; index < (audioStreamData).length; index++) {
+    for(let index = 0; index < audioStreamData.length; index++) {
       const currentStreamIndex = audioStreamData[index].stream_index;
       const currentStreamData = audioStreamData[index];
 
