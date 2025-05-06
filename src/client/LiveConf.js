@@ -141,17 +141,19 @@ class LiveConf {
   // Used by generateAudioStreamsConfig()
   getAudioStreamsFromProbe() {
     let audioStreams = {};
-    const audioStreamData = Object.fromEntries(
-      // eslint-disable-next-line no-unused-vars
-      Object.entries(this.probeData.streams).filter(([_key, value]) => value.codec_type === "audio")
-    );
-    for(let index = 0; index < audioStreamData; index++) {
-      audioStreams[index] = {
-        recordingBitrate: Math.max(audioStreamData[index].bit_rate, 128000),
-        recordingChannels: audioStreamData[index].channels,
+    const audioStreamData = this.probeData.streams.filter((value) => value.codec_type === "audio");
+
+    for(let index = 0; index < (audioStreamData).length; index++) {
+      const currentStreamIndex = audioStreamData[index].stream_index;
+      const currentStreamData = audioStreamData[index];
+
+      audioStreams[currentStreamIndex] = {
+        recordingBitrate: Math.max(currentStreamData.bit_rate, 128000),
+        recordingChannels: currentStreamData.channels,
         playoutLabel: `Audio ${index + 1}`
       };
     }
+
     return audioStreams;
   }
 
