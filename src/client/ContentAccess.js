@@ -3313,3 +3313,166 @@ exports.QParts = async function({libraryId, objectId, partHash, format="blob"}) 
     })
   );
 };
+
+/* Content groups */
+
+/**
+ * Get content tags
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Hash of the object version
+ * @param {string=} writeToken - Write token of the draft
+ *
+ * @returns {Promise<Array<string>>} - Response containing the list of tags
+ */
+exports.ContentTags = async function({libraryId, objectId, versionHash, writeToken}) {
+  ValidateLibrary(libraryId);
+  ValidateParameters({libraryId, objectId, versionHash, writeToken});
+
+  const id = objectId || versionHash || writeToken;
+  let path = UrlJoin("qlibs", libraryId, "q", id, "tags");
+
+  const token = await this.GenerateStateChannelToken({
+    libraryId,
+    objectId
+  });
+
+  return this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      headers: { "Authorization": `Bearer ${token}` },
+      method: "GET",
+      path: path
+    })
+  );
+};
+
+/**
+ * Get content query fields
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Hash of the object version
+ * @param {string=} writeToken - Write token of the draft
+ *
+ * @returns {Promise<Object>} - Response containing the query fields
+ */
+exports.ContentQueryFields = async function({libraryId, objectId, versionHash, writeToken}) {
+  ValidateLibrary(libraryId);
+  ValidateParameters({libraryId, objectId, versionHash, writeToken});
+
+  const id = objectId || versionHash || writeToken;
+  let path = UrlJoin("qlibs", libraryId, "q", id, "query_fields");
+
+  const token = await this.GenerateStateChannelToken({
+    libraryId,
+    objectId
+  });
+
+  return this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      headers: { "Authorization": `Bearer ${token}` },
+      method: "GET",
+      path: path
+    })
+  );
+};
+
+/**
+ * Get content object groups (folders)
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Hash of the object version
+ * @param {string=} writeToken - Write token of the draft
+ *
+ * @returns {Promise<Array<string>>} - Response containing the list of groups a content object belongs to
+ */
+exports.ContentObjectFolders = async function({libraryId, objectId, versionHash, writeToken}) {
+  ValidateLibrary(libraryId);
+  ValidateParameters({libraryId, objectId, versionHash, writeToken});
+
+  const id = objectId || versionHash || writeToken;
+  let path = UrlJoin("qlibs", libraryId, "q", id, "groups");
+
+  const token = await this.GenerateStateChannelToken({
+    libraryId,
+    objectId
+  });
+
+  return this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      headers: { "Authorization": `Bearer ${token}` },
+      method: "GET",
+      path: path
+    })
+  );
+};
+
+/**
+ * Get tenant content
+ *
+ * @methodGroup Tenants
+ * @param {Object<field: string, desc: boolean>=} sortOptions - Options to sort by where
+ *  - 'field' (string): The field to sort by
+ *  - 'desc' (boolean): Determines whether the order is descending
+ * @param {Array<string>=} filter - Filter options
+ * @param {Array<string>=} select - List of metadata subtree paths to return
+ * @param {number=} start - Index of the first content object to retrieve. Defaults to the first content
+ * @param {number=} limit - Integer specifying the number of contents to return. Defaults to 100
+ *
+ * @returns {Promise<Object>} - Response containing the tenant content
+ */
+exports.TenantContent = async function({
+  sortOptions,
+  filter=[],
+  select=[],
+  start,
+  limit
+}) {
+  const tenantId = await this.userProfileClient.TenantContractId();
+
+  const path = UrlJoin("tenants", tenantId, "q", "query");
+
+  let token = await this.MetadataAuth({
+    libraryId: tenantId.replace("iten", "ilib"),
+    objectId: tenantId.replace("iten", "iq__")
+  });
+
+  const queryParams = {
+    filter,
+    select,
+    start,
+    limit
+  };
+
+  // Filter comparators
+  //   ::, :co: contains
+  //   :nc: not contains
+  //   :eq: equals
+  //   :ne: not equals
+  //   :lt: less than
+  //   :le: less than or equal
+  //   :gt: greater than
+  //   :ge: greater than or equal
+
+  if(sortOptions && sortOptions.field) {
+    queryParams["sort_by"] = sortOptions.field;
+    queryParams["sort_descending"] = sortOptions.desc;
+  }
+
+  return this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      headers: { "Authorization": `Bearer ${token}` },
+      method: "GET",
+      path: path,
+      queryParams
+    })
+  );
+};

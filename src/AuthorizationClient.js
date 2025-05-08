@@ -3,6 +3,7 @@ const Ethers = require("ethers");
 const Utils = require("./Utils");
 const UrlJoin = require("url-join");
 const {LogMessage} = require("./LogMessage");
+const {ValidateObject, ValidateParameters} = require("./Validation");
 
 /*
 // -- Contract javascript files built using build/BuildContracts.js
@@ -118,6 +119,10 @@ class AuthorizationClient {
     noAuth=false
   }) {
     if(versionHash) { objectId = this.client.utils.DecodeVersionHash(versionHash).objectId; }
+
+    if(update && !objectId) {
+      throw Error("An objectId or versionHash is required when 'update' is true");
+    }
 
     const isWalletRequest =
       objectId &&
