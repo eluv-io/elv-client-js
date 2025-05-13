@@ -70,6 +70,11 @@ const blueprint = {
       descTemplate: "If specified, files will be added as links to S3 bucket items rather than uploaded from the local filesystem",
       group: "Cloud",
       type: "boolean"
+    }),
+    NewOpt("resume", {
+      descTemplate: "If specified, resume jobs for the given write token",
+      group: "Cloud",
+      type: "string"
     })
   ],
   checksMap: {chkCredsButNoS3}
@@ -90,6 +95,29 @@ const New = context => {
         };
       }
     );
+  };
+
+  const listFilesJob = async({libraryId, objectId, writeToken, encrypt}) => {
+    const client = await context.concerns.Client.get();
+
+    return await client.ListFilesJob({
+      libraryId,
+      objectId,
+      writeToken,
+      encryption: encrypt ? "cgck" : "none"
+    });
+  };
+
+  const resumeFilesJob = async({libraryId, objectId, writeToken, jobId, encrypt}) => {
+    const client = await context.concerns.Client.get();
+
+    return await client.ResumeFileUploadJob({
+      libraryId,
+      objectId,
+      writeToken,
+      jobId,
+      encryption: encrypt ? "cgck" : "none"
+    });
   };
 
   const add = async ({libraryId, objectId, writeToken, files, access, encrypt, copy}) => {
@@ -131,7 +159,7 @@ const New = context => {
     : context.args.s3Copy;
 
 
-  return {add, callback, credentialSet, fileInfo, isCopy};
+  return {add, callback, credentialSet, fileInfo, isCopy, listFilesJob, resumeFilesJob};
 };
 
 module.exports = {blueprint, New};

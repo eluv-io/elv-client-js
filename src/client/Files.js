@@ -496,6 +496,54 @@ exports.CreateFileUploadJob = async function({libraryId, objectId, writeToken, o
   });
 };
 
+exports.ListFilesJob = async function({libraryId, objectId, writeToken, encryption="none"}) {
+  ValidateParameters({libraryId, objectId});
+  ValidateWriteToken(writeToken);
+
+  this.Log(`List file jobs: ${libraryId} ${objectId} ${writeToken}`);
+
+  const path = UrlJoin("q", writeToken, "file_jobs");
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
+    method: "GET",
+    path: path,
+    allowFailover: false
+  });
+};
+
+// TODO add body
+exports.ResumeFileUploadJob = async function({libraryId, objectId, writeToken, ops, defaults={}, jobId, encryption="none"}) {
+  ValidateParameters({libraryId, objectId});
+  ValidateWriteToken(writeToken);
+
+  this.Log(`Resuming file upload job: ${libraryId} ${objectId} ${writeToken}`);
+  //this.Log(ops);
+
+  // if(encryption === "cgck") {
+  //   defaults.encryption = { scheme: "cgck" };
+  // }
+
+  // const body = {
+  //   seq: 0,
+  //   seq_complete: true,
+  //   defaults,
+  //   ops
+  // };
+
+  // TODO add check for job id
+
+  const path = UrlJoin("q", writeToken, "file_jobs" , jobId, "resume");
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
+    method: "PUT",
+    path: path,
+    body,
+    allowFailover: false
+  });
+};
+
 exports.UploadStatus = async function({libraryId, objectId, writeToken, uploadId}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);

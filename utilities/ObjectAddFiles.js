@@ -35,7 +35,44 @@ class ObjectAddFiles extends Utility {
 
     const {libraryId, objectId} = await this.concerns.ExistObj.argsProc();
 
-    const writeToken = await this.concerns.Edit.getWriteToken({
+    let writeToken;
+    if(this.args.resume){
+      writeToken = this.args.resume;
+      try {
+        let res = await this.concerns.CloudFile.listFilesJob({
+          libraryId,
+          objectId,
+          writeToken
+        });
+
+        const inprogessIds = res
+          .filter(item => item.status === "IN_PROGRESS")
+          .map(item => item.id);
+        if (inprogessIds.length === 0) {
+          logger.logList("No in-progress jobs found");
+        } else {
+          logger.logList(`In-progress job IDs: ${inprogessIds}`);
+        }
+        // resume job
+
+        for(const jobId in inprogessIds) {
+          res = await this.concerns.CloudFile.resumeFilesJob({
+            libraryId,
+            objectId,
+            writeToken,
+            jobId,
+            encrypt
+          });
+          console.log("RES", res);
+        }
+
+        return inprogessIds;
+      } catch(e){
+        throw e;
+      }
+    }
+
+    writeToken = await this.concerns.Edit.getWriteToken({
       libraryId,
       objectId
     });
