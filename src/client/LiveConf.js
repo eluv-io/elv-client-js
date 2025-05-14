@@ -451,6 +451,10 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.reconnect_timeout = customSettings.reconnect_timeout;
     }
 
+    if(Object.hasOwn(customSettings, "copy_mpegts")) {
+      conf.live_recording.recording_config.recording_params.xc_params.copy_mpegts = customSettings.copy_mpegts;
+    }
+
     // Fill in specifics for protocol
     switch(this.probeKind()) {
       case "udp":
