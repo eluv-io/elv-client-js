@@ -97,29 +97,6 @@ const New = context => {
     );
   };
 
-  const listFilesJob = async({libraryId, objectId, writeToken, encrypt}) => {
-    const client = await context.concerns.Client.get();
-
-    return await client.ListFilesJob({
-      libraryId,
-      objectId,
-      writeToken,
-      encryption: encrypt ? "cgck" : "none"
-    });
-  };
-
-  const resumeFilesJob = async({libraryId, objectId, writeToken, jobId, encrypt}) => {
-    const client = await context.concerns.Client.get();
-
-    return await client.ResumeFileUploadJob({
-      libraryId,
-      objectId,
-      writeToken,
-      jobId,
-      encryption: encrypt ? "cgck" : "none"
-    });
-  };
-
   const add = async ({libraryId, objectId, writeToken, files, access, encrypt, copy}) => {
     if(kindOf(copy) === "undefined") copy = isCopy();
     files = files || context.args.files;
@@ -152,6 +129,38 @@ const New = context => {
     }
   };
 
+  const resume = async ({libraryId, objectId, writeToken, files, access, encrypt, copy}) => {
+    if(kindOf(copy) === "undefined") copy = isCopy();
+    files = files || context.args.files;
+    const groupedFiles = groupByPathMatch(access, files);
+    validatePathMatchGroups(groupedFiles);
+
+    const client = await context.concerns.Client.get();
+
+    // iterate over file groups, add to fabric object using credential set for group
+    for(const [index, fileList] of R.toPairs(groupedFiles)) {
+      const credentialSet = access[index];
+      const region = credentialSet.remote_access.storage_endpoint.region;
+      const bucket = removeTrailingSlash(credentialSet.remote_access.path);
+      const accessKey = credentialSet.remote_access.cloud_credentials.access_key_id;
+      const secret = credentialSet.remote_access.cloud_credentials.secret_access_key;
+
+      await client.ResumeFilesFromS3({
+        libraryId,
+        objectId,
+        writeToken,
+        fileInfo: fileInfo(fileList),
+        region,
+        bucket,
+        accessKey,
+        secret,
+        copy,
+        callback,
+        encryption: encrypt ? "cgck" : "none"
+      });
+    }
+  };
+
   const isCopy = () => kindOf(context.args.s3Copy) === "undefined"
     ? kindOf(context.args.s3Reference) === "undefined"
       ? throwError("Neither --s3Copy nor --s3Reference were specified")
@@ -159,7 +168,7 @@ const New = context => {
     : context.args.s3Copy;
 
 
-  return {add, callback, credentialSet, fileInfo, isCopy, listFilesJob, resumeFilesJob};
+  return {add, callback, credentialSet, fileInfo, isCopy, resume};
 };
 
 module.exports = {blueprint, New};

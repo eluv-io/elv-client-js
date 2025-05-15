@@ -242,6 +242,207 @@ exports.UploadFilesFromS3 = async function({
   }
 };
 
+
+/**
+ * Copy/reference files from S3 to a content object.
+ *
+ * S3 authentication is done by either providing an access key and secret or a presigned URL. The credentials will not be stored (neither in the client nor in the Fabric)
+ *
+ * NOTE: When providing a presigned URL instead of an access key + secret, the accessKey, secret, region and bucket parameters are not required.
+ *
+ * Expected format of fileInfo:
+ *
+ [
+ {
+ path: string,
+ source: string // either a full path e.g. "s3://BUCKET_NAME/path..." or just the path part without "s3://BUCKET_NAME/"
+ }
+ ]
+ *
+ * @memberof module:ElvClient/Files+Parts
+ * @methodGroup Files
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string} writeToken - Write token of the draft
+ * @param {string} region - AWS region to use
+ * @param {string} bucket - AWS bucket to use
+ * @param {Array<Object>} fileInfo - List of files to reference/copy
+ * @param {string} accessKey - AWS access key
+ * @param {string} secret - AWS secret
+ * @param {string=} signedUrl
+ * @param {string} encryption="none" - Encryption for uploaded files (copy only) - cgck | none
+ * @param {boolean} copy=false - If true, will copy the data from S3 into the fabric. Otherwise, a reference to the content will be made.
+ * @param {function=} callback - If specified, will be periodically called with current upload status
+ * - Arguments (copy): { done: boolean, uploaded: number, total: number, uploadedFiles: number, totalFiles: number, fileStatus: Object }
+ * - Arguments (reference): { done: boolean, uploadedFiles: number, totalFiles: number }
+ */
+exports.ResumeFilesFromS3 = async function({
+  libraryId,
+  objectId,
+  writeToken,
+  region,
+  bucket,
+  fileInfo,
+  accessKey,
+  secret,
+  signedUrl,
+  encryption="none",
+  copy=false,
+  callback
+}) {
+  ValidateParameters({libraryId, objectId});
+  ValidateWriteToken(writeToken);
+
+  const s3prefixRegex = /^s3:\/\/([^/]+)\//i; // for matching and extracting bucket name when full s3:// path is specified
+  // if fileInfo source paths start with s3://bucketName/, check against bucket arg passed in, and strip
+  for(let i = 0; i < fileInfo.length; i++) {
+    const fileSourcePath = fileInfo[i].source;
+    const s3prefixMatch = (s3prefixRegex.exec(fileSourcePath));
+    if(s3prefixMatch) {
+      const bucketName = s3prefixMatch[1];
+      if(bucketName !== bucket) {
+        throw Error("Full S3 file path \"" + fileSourcePath + "\" specified, but does not match provided bucket name '" + bucket + "'");
+      } else {
+        // strip prefix
+        fileInfo[i].source = fileSourcePath.replace(s3prefixRegex,"");
+      }
+    }
+  }
+
+  if(copy) {
+    this.Log(`Copying files from S3: ${libraryId} ${objectId} ${writeToken}`);
+  } else {
+    this.Log(`Adding links to files in S3: ${libraryId} ${objectId} ${writeToken}`);
+  }
+
+  let encryption_key;
+  if(encryption === "cgck") {
+    let conk = await this.EncryptionConk({
+      libraryId,
+      objectId,
+      writeToken
+    });
+
+    conk = {
+      ...conk,
+      secret_key: ""
+    };
+
+    encryption_key = `kp__${this.utils.B58(Buffer.from(JSON.stringify(conk)))}`;
+  }
+
+  let cloudCredentials = {
+    access_key_id: accessKey,
+    secret_access_key: secret
+  };
+
+  if(signedUrl) {
+    cloudCredentials = {
+      signed_url: signedUrl
+    };
+  }
+
+  const defaults = {
+    encryption_key,
+    access: {
+      protocol: "s3",
+      platform: "aws",
+      path: bucket,
+      storage_endpoint: {
+        region
+      },
+      cloud_credentials: cloudCredentials
+    }
+  };
+
+  const ops = fileInfo.map(info => {
+    if(copy) {
+      return {
+        op: "ingest-copy",
+        path: info.path,
+        encryption: {
+          scheme: encryption === "cgck" ? "cgck" : "none",
+        },
+        ingest: {
+          type: "key",
+          path: info.source,
+        }
+      };
+    } else {
+      return {
+        op: "add-reference",
+        path: info.path,
+        reference: {
+          type: "key",
+          path: info.source,
+        }
+      };
+    }
+  });
+
+  let disableTracking;
+  // eslint-disable-next-line no-unused-vars
+  const responses = await this.ResumeFileUploadJob({libraryId, objectId, writeToken, ops, defaults});
+  for(const res of responses) {
+    this.Log(`response: ${res}`);
+    if(res.message === "No in-progress jobs found") {
+      disableTracking = true;
+    }
+  }
+
+  if(!disableTracking){
+    // eslint-disable-next-line no-constant-condition
+    while(true) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const status = await this.UploadStatus({libraryId, objectId, writeToken, uploadId: id});
+
+      if(status.errors && status.errors.length > 1) {
+        throw status.errors.join("\n");
+      } else if(status.error) {
+        this.Log(`S3 file resume failed:\n${JSON.stringify(status, null, 2)}`);
+        throw status.error;
+      } else if(status.status.toLowerCase() === "failed") {
+        throw "File resume failed";
+      }
+
+      let done = false;
+      if(copy) {
+        done = status.ingest_copy.done;
+
+        if(callback) {
+          const progress = status.ingest_copy.progress;
+
+          callback({
+            done,
+            uploaded: progress.bytes.completed,
+            total: progress.bytes.total,
+            uploadedFiles: progress.files.completed,
+            totalFiles: progress.files.total,
+            fileStatus: progress.files.details
+          });
+        }
+      } else {
+        done = status.add_reference.done;
+
+        if(callback) {
+          const progress = status.add_reference.progress;
+
+          callback({
+            done,
+            uploadedFiles: progress.completed,
+            totalFiles: progress.total,
+          });
+        }
+      }
+
+      if(done) { break; }
+    }
+  }
+
+};
+
 /**
  * Upload files to a content object.
  *
@@ -512,36 +713,58 @@ exports.ListFilesJob = async function({libraryId, objectId, writeToken, encrypti
   });
 };
 
-// TODO add body
-exports.ResumeFileUploadJob = async function({libraryId, objectId, writeToken, ops, defaults={}, jobId, encryption="none"}) {
+exports.ResumeFileUploadJob = async function({libraryId, objectId, writeToken, ops, defaults={}, encryption="none"}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
   this.Log(`Resuming file upload job: ${libraryId} ${objectId} ${writeToken}`);
-  //this.Log(ops);
+  this.Log(ops);
 
-  // if(encryption === "cgck") {
-  //   defaults.encryption = { scheme: "cgck" };
-  // }
+  if(encryption === "cgck") {
+    defaults.encryption = { scheme: "cgck" };
+  }
 
-  // const body = {
-  //   seq: 0,
-  //   seq_complete: true,
-  //   defaults,
-  //   ops
-  // };
+  const body = {
+    seq: 0,
+    seq_complete: true,
+    defaults,
+    ops
+  };
 
-  // TODO add check for job id
-
-  const path = UrlJoin("q", writeToken, "file_jobs" , jobId, "resume");
-
-  return this.HttpClient.RequestJsonBody({
-    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
-    method: "PUT",
-    path: path,
-    body,
-    allowFailover: false
+  const jobIds = await this.ListFilesJob({
+    libraryId,
+    objectId,
+    writeToken,
+    encryption
   });
+
+  let inProgressIds = [];
+  const responses = [];
+  for(const jobId of jobIds) {
+    if(jobId.status === "IN_PROGRESS") {
+      inProgressIds.push(jobId.id);
+    }
+  }
+  if(inProgressIds.length === 0) {
+    this.Log("No in-progress jobs found");
+    responses.push({message:"No in-progress jobs found"});
+    return responses;
+  }
+
+  this.log(`In-progress job IDs: ${inProgressIds}`);
+  for(const jobId of inProgressIds) {
+    const path = UrlJoin("q", writeToken, "file_jobs" , jobId, "resume");
+
+    let res = this.HttpClient.RequestJsonBody({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
+      method: "PUT",
+      path: path,
+      body,
+      allowFailover: false
+    });
+    responses.push({message: res});
+  }
+  return responses;
 };
 
 exports.UploadStatus = async function({libraryId, objectId, writeToken, uploadId}) {

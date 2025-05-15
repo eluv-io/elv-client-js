@@ -37,65 +37,51 @@ class ObjectAddFiles extends Utility {
 
     let writeToken;
     if(this.args.resume){
+      // resume with existing write token
       writeToken = this.args.resume;
-      try {
-        let res = await this.concerns.CloudFile.listFilesJob({
+
+      if(access) {
+        await this.concerns.CloudFile.resume({
           libraryId,
           objectId,
-          writeToken
+          writeToken,
+          access,
+          fileInfo,
+          encrypt
         });
-
-        const inprogessIds = res
-          .filter(item => item.status === "IN_PROGRESS")
-          .map(item => item.id);
-        if (inprogessIds.length === 0) {
-          logger.logList("No in-progress jobs found");
-        } else {
-          logger.logList(`In-progress job IDs: ${inprogessIds}`);
-        }
-        // resume job
-
-        for(const jobId in inprogessIds) {
-          res = await this.concerns.CloudFile.resumeFilesJob({
-            libraryId,
-            objectId,
-            writeToken,
-            jobId,
-            encrypt
-          });
-          console.log("RES", res);
-        }
-
-        return inprogessIds;
-      } catch(e){
-        throw e;
+      } else {
+        // TODO
       }
-    }
 
-    writeToken = await this.concerns.Edit.getWriteToken({
-      libraryId,
-      objectId
-    });
-
-    if(access) {
-      await this.concerns.CloudFile.add({
-        libraryId,
-        objectId,
-        writeToken,
-        access,
-        fileInfo,
-        encrypt
-      });
     } else {
-      await this.concerns.LocalFile.add({
+
+      // create new write token
+      writeToken = await this.concerns.Edit.getWriteToken({
         libraryId,
-        objectId,
-        writeToken,
-        fileInfo,
-        encrypt
+        objectId
       });
-      // Close file handles
-      this.concerns.LocalFile.closeFileHandles(fileHandles);
+
+      if(access) {
+        await this.concerns.CloudFile.add({
+          libraryId,
+          objectId,
+          writeToken,
+          access,
+          fileInfo,
+          encrypt
+        });
+      } else {
+        await this.concerns.LocalFile.add({
+          libraryId,
+          objectId,
+          writeToken,
+          fileInfo,
+          encrypt
+        });
+        // Close file handles
+        this.concerns.LocalFile.closeFileHandles(fileHandles);
+      }
+
     }
 
     const hash = await this.concerns.Edit.finalize({
