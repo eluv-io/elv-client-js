@@ -750,9 +750,6 @@ class ElvClient {
     signer.provider.pollingInterval = 500;
     this.signer = signer;
 
-    this.CreateFabricToken({})
-      .then(token => this.signedToken = token);
-
     if(reset) {
       this.InitializeClients();
     }
