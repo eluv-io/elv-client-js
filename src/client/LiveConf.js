@@ -443,6 +443,10 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.part_ttl = customSettings.part_ttl;
     }
 
+    if(Object.hasOwn(customSettings, "persistent")) {
+      conf.live_recording.recording_config.recording_params.persistent = customSettings.persistent;
+    }
+
     if(customSettings.connection_timeout) {
       conf.live_recording.recording_config.recording_params.xc_params.connection_timeout = customSettings.connection_timeout;
     }
