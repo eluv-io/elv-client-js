@@ -383,64 +383,65 @@ exports.ResumeFilesFromS3 = async function({
 
   let disableTracking;
   // eslint-disable-next-line no-unused-vars
+  this.Log("ENTERED HERE XXX");
   const responses = await this.ResumeFileUploadJob({libraryId, objectId, writeToken, ops, defaults});
   for(const res of responses) {
-    this.Log(`response: ${res}`);
+    this.Log(`response: ${JSON.stringify(res)}`);
     if(res.message === "No in-progress jobs found") {
       disableTracking = true;
     }
-  }
 
-  if(!disableTracking){
-    // eslint-disable-next-line no-constant-condition
-    while(true) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    if(!disableTracking){
+      // eslint-disable-next-line no-constant-condition
+      while(true) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const status = await this.UploadStatus({libraryId, objectId, writeToken, uploadId: id});
-
-      if(status.errors && status.errors.length > 1) {
-        throw status.errors.join("\n");
-      } else if(status.error) {
-        this.Log(`S3 file resume failed:\n${JSON.stringify(status, null, 2)}`);
-        throw status.error;
-      } else if(status.status.toLowerCase() === "failed") {
-        throw "File resume failed";
-      }
-
-      let done = false;
-      if(copy) {
-        done = status.ingest_copy.done;
-
-        if(callback) {
-          const progress = status.ingest_copy.progress;
-
-          callback({
-            done,
-            uploaded: progress.bytes.completed,
-            total: progress.bytes.total,
-            uploadedFiles: progress.files.completed,
-            totalFiles: progress.files.total,
-            fileStatus: progress.files.details
-          });
+        const status = await this.UploadStatus({libraryId, objectId, writeToken, uploadId: res.id});
+        if(status.errors && status.errors.length > 1) {
+          throw new Error(status.errors.join("\n"));
+        } else if(status.error) {
+          this.Log(`S3 file resume failed:\n${JSON.stringify(status, null, 2)}`);
+          throw new Error(status.error);
+        } else if(status.status.toLowerCase() === "failed") {
+          throw new Error("File resume failed");
         }
-      } else {
-        done = status.add_reference.done;
 
-        if(callback) {
-          const progress = status.add_reference.progress;
+        this.Log(JSON.stringify(status));
 
-          callback({
-            done,
-            uploadedFiles: progress.completed,
-            totalFiles: progress.total,
-          });
+        let done = false;
+        if(copy) {
+          done = status.ingest_copy.done;
+          this.Log("ENTERED HERE");
+          if(callback) {
+            const progress = status.ingest_copy.progress;
+
+            callback({
+              done,
+              uploaded: progress.bytes.completed,
+              total: progress.bytes.total,
+              uploadedFiles: progress.files.completed,
+              totalFiles: progress.files.total,
+              fileStatus: progress.files.details
+            });
+          }
+        } else {
+          done = status.add_reference.done;
+
+          if(callback) {
+            const progress = status.add_reference.progress;
+
+            callback({
+              done,
+              uploadedFiles: progress.completed,
+              totalFiles: progress.total,
+            });
+          }
         }
-      }
 
-      if(done) { break; }
+        if(done) { break; }
+      }
     }
   }
-
 };
 
 /**
@@ -738,31 +739,31 @@ exports.ResumeFileUploadJob = async function({libraryId, objectId, writeToken, o
     encryption
   });
 
-  let inProgressIds = [];
+  let inProgressIds = new Map();
   const responses = [];
   for(const jobId of jobIds) {
     if(jobId.status === "IN_PROGRESS") {
-      inProgressIds.push(jobId.id);
+      inProgressIds.set(jobId.id,true);
     }
   }
-  if(inProgressIds.length === 0) {
+  if(inProgressIds.size === 0) {
     this.Log("No in-progress jobs found");
     responses.push({message:"No in-progress jobs found"});
     return responses;
   }
 
-  this.log(`In-progress job IDs: ${inProgressIds}`);
-  for(const jobId of inProgressIds) {
+  this.Log(`In-progress job IDs: ${[...inProgressIds.keys()].join(", ")}`);
+  for(const [jobId] of inProgressIds) {
     const path = UrlJoin("q", writeToken, "file_jobs" , jobId, "resume");
 
-    let res = this.HttpClient.RequestJsonBody({
+    let res = await this.HttpClient.RequestJsonBody({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
       method: "PUT",
       path: path,
       body,
       allowFailover: false
     });
-    responses.push({message: res});
+    responses.push({message: res, id: jobId});
   }
   return responses;
 };
