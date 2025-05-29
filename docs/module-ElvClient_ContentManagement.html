@@ -63,18 +63,49 @@
 <section>
   <header>
     
+      
+        
   </header>
 
   <article>
     <div class="container-overview">
       
         
-            <div class="description">
-              <p>Methods for managing content types, libraries and objects</p>
-            </div>
+          <div class="description">
+            <p>Methods for managing content types, libraries and objects</p>
+          </div>
         
 
         
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <dl class="details">
 
@@ -478,7 +509,7 @@ this content type for this library</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line461">line 461</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line460">line 460</a>
         </li>
       </ul>
     </dd>
@@ -723,7 +754,7 @@ this content type for this library</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line647">line 647</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line667">line 667</a>
         </li>
       </ul>
     </dd>
@@ -1117,7 +1148,7 @@ Irrelevant if not publishing.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line831">line 831</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line851">line 851</a>
         </li>
       </ul>
     </dd>
@@ -1140,7 +1171,7 @@ Irrelevant if not publishing.</p>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id=".CreateContentLibrary">
-      <span class="type-signature">static </span>CreateContentLibrary<span class="signature">({<div class="block-param">name,</div><div class="block-param">description<span class="signature-attributes">optional</span>,</div><div class="block-param">image<span class="signature-attributes">optional</span>,</div><div class="block-param">metadata<span class="signature-attributes">optional</span>,</div><div class="block-param">kmsId<span class="signature-attributes">optional</span>,</div><div class="block-param">tenantId<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
+      <span class="type-signature">static </span>CreateContentLibrary<span class="signature">({<div class="block-param">name,</div><div class="block-param">description<span class="signature-attributes">optional</span>,</div><div class="block-param">image<span class="signature-attributes">optional</span>,</div><div class="block-param">imageName<span class="signature-attributes">optional</span>,</div><div class="block-param">metadata<span class="signature-attributes">optional</span>,</div><div class="block-param">kmsId<span class="signature-attributes">optional</span>,</div><div class="block-param">tenantContractId<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
     </h4>
   </span>
 
@@ -1313,7 +1344,7 @@ create in the fabric.</p>
     
       <tr>
         
-          <td class="name"><code></code></td>
+          <td class="name"><code>imageName</code></td>
         
 
         <td class="type">
@@ -1344,7 +1375,7 @@ create in the fabric.</p>
         
 
         <td class="description last">
-          <p>imageName - Name of the image associated with the library (required if image specified)</p>
+          <p>Name of the image associated with the library (required if image specified)</p>
           
         </td>
       </tr>
@@ -1431,7 +1462,7 @@ the default KMS will be used.</p>
     
       <tr>
         
-          <td class="name"><code>tenantId</code></td>
+          <td class="name"><code>tenantContractId</code></td>
         
 
         <td class="type">
@@ -1739,7 +1770,7 @@ create in the fabric.</p>
 
 
   <div class="return-description-block">
-    Returns: <span class="return-description">Response containing the object ID and write token of the draft</span>
+    Returns: <span class="return-description">Response containing the object ID and write token of the draft, as well as the url of the node that created the write token.</span>
   </div>
 
 
@@ -1885,6 +1916,8 @@ create in the fabric.</p>
         <td class="description last">
           <p>type: Version hash of the content type to associate with the object</p>
 <p>meta: Metadata to use for the new object</p>
+<p>noEncryptionConk: Set to true to prevent creation of an encryption conk for the object</p>
+<p>createKMSConk: Set to true to create a KMS conk for object (usually for sharing a playable object) (incompatible with noEncryptionConk: true)</p>
           
         </td>
       </tr>
@@ -2196,7 +2229,7 @@ create in the fabric.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line547">line 547</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line550">line 550</a>
         </li>
       </ul>
     </dd>
@@ -2853,7 +2886,7 @@ authContainer: string (optional, object id of container object if creating a sig
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1439">line 1439</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1459">line 1459</a>
         </li>
       </ul>
     </dd>
@@ -3086,7 +3119,7 @@ authContainer: string (optional, object id of container object if creating a sig
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line707">line 707</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line727">line 727</a>
         </li>
       </ul>
     </dd>
@@ -3447,7 +3480,7 @@ authContainer: string (optional, object id of container object if creating a sig
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1131">line 1131</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1151">line 1151</a>
         </li>
       </ul>
     </dd>
@@ -3630,7 +3663,7 @@ authContainer: string (optional, object id of container object if creating a sig
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1109">line 1109</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1129">line 1129</a>
         </li>
       </ul>
     </dd>
@@ -3938,7 +3971,7 @@ authContainer: string (optional, object id of container object if creating a sig
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1220">line 1220</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1240">line 1240</a>
         </li>
       </ul>
     </dd>
@@ -4113,7 +4146,7 @@ authContainer: string (optional, object id of container object if creating a sig
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1586">line 1586</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1606">line 1606</a>
         </li>
       </ul>
     </dd>
@@ -4580,7 +4613,7 @@ Irrelevant if not publishing.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line877">line 877</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line897">line 897</a>
         </li>
       </ul>
     </dd>
@@ -5488,7 +5521,7 @@ Irrelevant if not publishing.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line758">line 758</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line778">line 778</a>
         </li>
       </ul>
     </dd>
@@ -6579,7 +6612,7 @@ Irrelevant if not publishing.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line946">line 946</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line966">line 966</a>
         </li>
       </ul>
     </dd>
@@ -6861,7 +6894,7 @@ Irrelevant if not publishing.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1367">line 1367</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1387">line 1387</a>
         </li>
       </ul>
     </dd>
@@ -7318,7 +7351,7 @@ Irrelevant if not publishing.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1522">line 1522</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1542">line 1542</a>
         </li>
       </ul>
     </dd>
@@ -7705,7 +7738,7 @@ Irrelevant if not publishing.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1156">line 1156</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1176">line 1176</a>
         </li>
       </ul>
     </dd>
@@ -8415,7 +8448,7 @@ Irrelevant if not publishing.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1009">line 1009</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1029">line 1029</a>
         </li>
       </ul>
     </dd>
@@ -8727,7 +8760,7 @@ Irrelevant if not publishing.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line500">line 500</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line499">line 499</a>
         </li>
       </ul>
     </dd>
@@ -10298,7 +10331,7 @@ Irrelevant if not publishing.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1188">line 1188</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1208">line 1208</a>
         </li>
       </ul>
     </dd>
@@ -10503,7 +10536,7 @@ Irrelevant if not publishing.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1248">line 1248</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1268">line 1268</a>
         </li>
       </ul>
     </dd>
@@ -10678,7 +10711,7 @@ Irrelevant if not publishing.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1569">line 1569</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1589">line 1589</a>
         </li>
       </ul>
     </dd>
@@ -11905,7 +11938,7 @@ current progress as well as information about the last update (action)</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1273">line 1273</a>
+          <a href="client_ContentManagement.js.html">client/ContentManagement.js</a>, <a href="client_ContentManagement.js.html#line1293">line 1293</a>
         </li>
       </ul>
     </dd>
@@ -11931,7 +11964,7 @@ current progress as well as information about the last update (action)</p>
 
 
         <footer class="footer">
-          Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.0</a>
+          Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.3</a>
         </footer>
       </div>
     </div>
