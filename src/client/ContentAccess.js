@@ -934,8 +934,8 @@ exports.ContentObjectMetadata = async function({
     // For a 404 error, check if error was due to write token not found
     const errQwtoken = objectPath.get(error.body, "errors.0.cause.cause.cause.qwtoken");
     if(errQwtoken) {
-      // if so, re-throw rather than suppress error
-      throw error;
+      // if so, throw more specific/informative error rather than the generic 'Not found' error
+      throw new Error(`Write token ${errQwtoken} not found`);
     } else {
       // For all other 404 errors (not just 'subtree not found'), suppress error and
       // return an empty value. (there are function call chains that depend on this behavior,
