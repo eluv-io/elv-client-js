@@ -9,9 +9,6 @@ const Test = async () => {
     const client = await ElvClient.FromNetworkName({
       networkName: "demo"
     });
-    // const client = await ElvClient.FromConfigurationUrl({
-    //   configUrl: "http://localhost:8008/config?qspace=demov3&self"
-    // });
 
     const wallet = client.GenerateWallet();
     const signer = wallet.AddAccount({
