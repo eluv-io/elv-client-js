@@ -114,10 +114,10 @@ class HttpClient {
     } catch(error) {
       response = {
         ok: false,
-        status: 500,
+        status: (error && error.status) || 500,
         statusText: "ElvClient Error: " + error.message,
         url: uri.toString(),
-        stack: error.stack
+        error
       };
     }
 
@@ -167,7 +167,8 @@ class HttpClient {
         message: response.statusText,
         url: uri.toString(),
         body: errorBody,
-        requestParams: fetchParameters
+        requestParams: fetchParameters,
+        response
       };
 
       if(this.debug) this.Log(
