@@ -750,9 +750,6 @@ class ElvClient {
     signer.provider.pollingInterval = 500;
     this.signer = signer;
 
-    this.CreateFabricToken({})
-      .then(token => this.signedToken = token);
-
     if(reset) {
       this.InitializeClients();
     }
@@ -956,6 +953,8 @@ class ElvClient {
    * @param {boolean} allowDecryption=false - If specified, the re-encryption key will be included in the token,
    * enabling the user of this token to download encrypted content from the specified object
    * @param {Object=} context - Additional JSON context
+   * @param {number=} issueTime - Issue Time in milliseconds
+   * @param {number=} expirationTime - Expiration Time in milliseconds
    */
   async CreateSignedToken({
     libraryId,
@@ -966,7 +965,9 @@ class ElvClient {
     grantType="read",
     allowDecryption=false,
     duration,
-    context={}
+    context={},
+    issueTime,
+    expirationTime
   }) {
     if(!subject) {
       subject = `iusr${this.utils.AddressToHash(await this.CurrentAccountAddress())}`;
@@ -976,12 +977,14 @@ class ElvClient {
       context["elv:delegation-id"] = policyId;
     }
 
+    const issueDateTime = issueTime || Date.now();
+
     let token = {
       adr: Buffer.from(await this.CurrentAccountAddress().replace(/^0x/, ""), "hex").toString("base64"),
       sub: subject,
       spc: await this.ContentSpaceId(),
-      iat: Date.now(),
-      exp: Date.now() + duration,
+      iat: issueDateTime,
+      exp: expirationTime || (issueDateTime + duration),
       gra: grantType,
       ctx: context
     };
