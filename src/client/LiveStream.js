@@ -1367,6 +1367,7 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
 exports.StreamConfig = async function({
   name,
   customSettings={},
+  customMetaValues={},
   probeMetadata,
   writeToken,
   finalize=true
@@ -1449,7 +1450,8 @@ exports.StreamConfig = async function({
   let lc = new LiveConf(probe, node.id, endpoint, false, false, true);
 
   const liveRecordingConfig = lc.generateLiveConf({
-    customSettings
+    customSettings,
+    customMetaValues
   });
 
   // Store live recording config into the stream object
