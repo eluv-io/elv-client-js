@@ -478,6 +478,7 @@ class ElvWalletClient {
    * @param {string=} email - Email address of the user. If not specified, this method will attempt to extract the email from the ID token.
    * @param {Array<string>=} signerURIs - (Only if using custom OAuth) - URIs corresponding to the key server(s) to use
    * @param {boolean=} shareEmail=false - Whether or not the user consents to sharing their email
+   * @param {number=} tokenDuration=24 - Token expiration duration, in hours
    *
    * @returns {Promise<Object>} - Returns an authorization tokens that can be used to initialize the client using <a href="#Authenticate">Authenticate</a>.
    * Save this token to avoid having to reauthenticate with OAuth. This token expires after 24 hours.
@@ -487,9 +488,18 @@ class ElvWalletClient {
    * - signingToken - Identical to `authToken`, but also includes the ability to perform arbitrary signatures with the custodial wallet. This token should be protected and should not be
    * shared with third parties.
    */
-  async AuthenticateOAuth({idToken, tenantId, email, signerURIs, shareEmail=false, extraData={}, nonce, createRemoteToken=true, force=false}) {
-    let tokenDuration = 24;
-
+  async AuthenticateOAuth({
+    idToken,
+    tenantId,
+    email,
+    signerURIs,
+    shareEmail=false,
+    extraData={},
+    nonce,
+    createRemoteToken=true,
+    force=false,
+    tokenDuration=24
+  }) {
     if(!tenantId && this.selectedMarketplaceInfo) {
       // Load tenant ID automatically from selected marketplace
       await this.AvailableMarketplaces();
@@ -501,7 +511,7 @@ class ElvWalletClient {
     let fabricToken, expiresAt;
     if(createRemoteToken && this.client.signer.remoteSigner) {
       expiresAt = Date.now() + 24 * 60 * 60 * 1000;
-      const tokenResponse = await this.client.signer.RetrieveCSAT({email, nonce, tenantId, force});
+      const tokenResponse = await this.client.signer.RetrieveCSAT({email, nonce, tenantId, force, duration: tokenDuration});
       fabricToken = tokenResponse.token;
       nonce = tokenResponse.nonce;
     } else {
