@@ -251,11 +251,11 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
  * @param {string} name - Library name
  * @param {string=} description - Library description
  * @param {blob=} image - Image associated with the library
- * @param {string=} - imageName - Name of the image associated with the library (required if image specified)
+ * @param {string=} imageName - Name of the image associated with the library (required if image specified)
  * @param {Object=} metadata - Metadata of library object
  * @param {string=} kmsId - ID of the KMS to use for content in this library. If not specified,
  * the default KMS will be used.
- * @param {string=} tenantId - ID of the tenant to use for this library
+ * @param {string=} tenantContractId - ID of the tenant to use for this library
  *
  * @returns {Promise<string>} - Library ID of created library
  */
@@ -420,26 +420,25 @@ exports.SetContentObjectImage = async function({libraryId, objectId, writeToken,
  * @param {string} libraryId - ID of the library to delete
  */
 exports.DeleteContentLibrary = async function({libraryId}) {
-  throw Error("Not supported");
+  throw Error(`Delete library not supported. (${libraryId})`);
 
-  // eslint-disable-next-line no-unreachable
-  ValidateLibrary(libraryId);
-
-  let path = UrlJoin("qlibs", libraryId);
-
-  const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, update: true});
-
-  await this.CallContractMethodAndWait({
-    contractAddress: this.utils.HashToAddress(libraryId),
-    methodName: "kill",
-    methodArgs: []
-  });
-
-  await this.HttpClient.Request({
-    headers: authorizationHeader,
-    method: "DELETE",
-    path: path
-  });
+  // ValidateLibrary(libraryId);
+  //
+  // let path = UrlJoin("qlibs", libraryId);
+  //
+  // const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, update: true});
+  //
+  // await this.CallContractMethodAndWait({
+  //   contractAddress: this.utils.HashToAddress(libraryId),
+  //   methodName: "kill",
+  //   methodArgs: []
+  // });
+  //
+  // await this.HttpClient.Request({
+  //   headers: authorizationHeader,
+  //   method: "DELETE",
+  //   path: path
+  // });
 };
 
 /* Library Content Type Management */
@@ -542,13 +541,19 @@ exports.RemoveLibraryContentType = async function({libraryId, typeId, typeName, 
  *
  * meta: Metadata to use for the new object
  *
- * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
+ * noEncryptionConk: Set to true to prevent creation of an encryption conk for the object
+ *
+ * createKMSConk: Set to true to create a KMS conk for object (usually for sharing a playable object) (incompatible with noEncryptionConk: true)
+ *
+ * @returns {Promise<Object>} - Response containing the object ID and write token of the draft, as well as the url of the node that created the write token.
  */
 exports.CreateContentObject = async function({libraryId, objectId, options={}}) {
   ValidateLibrary(libraryId);
   if(objectId) { ValidateObject(objectId); }
 
   this.Log(`Creating content object: ${libraryId} ${objectId || ""}`);
+
+  if(options.noEncryptionConk && options.createKMSConk) throw new Error("Incompatible options: noEncryptionConk and createKMSConk both set to true");
 
   // Look up content type, if specified
   let typeId;
@@ -605,15 +610,30 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
     headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
     method: "POST",
     path: path,
-    body: options
+    body: {      // filter out options not recognized by server (noEncryptionConk, createKMSConk)
+      type: options.type,
+      meta: options.meta
+    }
   });
+
   // extract the url for the node that handled the request
-  // TODO: remove/simplify after we start using /nodes API call to get node URLs for write tokens
+  // (not strictly needed now that we can quickly look up node URL for a write token,
+  // but still convenient)
   const nodeUrl = (new URL(rawCreateResponse.url)).origin;
   const createResponse = await this.utils.ResponseToJson(
     rawCreateResponse,
     this.HttpClient.debug,
     this.HttpClient.Log.bind(this.HttpClient)
+  );
+
+  // create EncryptionConk and possibly KMSConk depending on options
+  if(!options.noEncryptionConk) await this.CreateEncryptionConk(
+    {
+      libraryId,
+      objectId,
+      writeToken: createResponse.write_token,
+      createKMSConk: options.createKMSConk
+    }
   );
 
   // Record the node used in creating this write token
@@ -1449,14 +1469,14 @@ exports.CreateLinks = async function({
     10,
     links,
     async info => {
-      const path = info.path.replace(/^(\/|\.)+/, "");
+      const path = info.path.replace(/^([/.])+/, "");
 
       let type = (info.type || "file") === "file" ? "files" : info.type;
       if(type === "metadata") { type = "meta"; }
 
       let target;
       let authTarget;
-      target = authTarget = info.target.replace(/^(\/|\.)+/, "");
+      target = authTarget = info.target.replace(/^([/.])+/, "");
       if(info.targetHash) {
         target = `/qfab/${info.targetHash}/${type}/${target}`;
       } else {
