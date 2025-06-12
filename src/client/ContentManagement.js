@@ -632,7 +632,7 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
       libraryId,
       objectId,
       writeToken: createResponse.write_token,
-      createKMSConk: options.createKMSConk
+      createKMSConk: !!options.createKMSConk // make sure `undefined` gets converted to `false`
     }
   );
 
