@@ -50,7 +50,7 @@ class ObjectAddFiles extends Utility {
           encrypt
         });
       } else {
-        // TODO
+        // TODO for local file
       }
 
     } else {
@@ -84,6 +84,7 @@ class ObjectAddFiles extends Utility {
 
     }
 
+    // finalize the write token
     const hash = await this.concerns.Edit.finalize({
       libraryId,
       noWait,
