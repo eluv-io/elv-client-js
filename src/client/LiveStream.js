@@ -1450,8 +1450,7 @@ exports.StreamConfig = async function({
   let lc = new LiveConf(probe, node.id, endpoint, false, false, true);
 
   const liveRecordingConfig = lc.generateLiveConf({
-    customSettings,
-    customMetaValues
+    customSettings
   });
 
   // Store live recording config into the stream object

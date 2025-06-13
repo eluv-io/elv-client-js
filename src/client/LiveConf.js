@@ -402,7 +402,7 @@ class LiveConf {
   /*
   * Generate the live recording config as required by QFAB, based on defaults and optional custom settings.
   */
-  generateLiveConf({customSettings, customMetaValues}) {
+  generateLiveConf({customSettings}) {
     // gather required data
     const conf = JSON.parse(JSON.stringify(LiveconfTemplate));
     const fileName = this.overwriteOriginUrl || this.probeData.format.filename;
@@ -554,7 +554,9 @@ class LiveConf {
       temp[keys[keys.length - 1]] = value;
     }
 
-    for(let [path, value] of Object.entries(customMetaValues)) {
+    const {metaPathValues} = customSettings;
+
+    for(let [path, value] of Object.entries(metaPathValues || {})) {
       SetByPath({obj: conf, path, value});
     }
 
