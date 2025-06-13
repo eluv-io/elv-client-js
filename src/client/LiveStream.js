@@ -1367,6 +1367,7 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
 exports.StreamConfig = async function({
   name,
   customSettings={},
+  customMetaValues={},
   probeMetadata,
   writeToken,
   finalize=true
