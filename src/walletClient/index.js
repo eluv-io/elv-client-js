@@ -517,7 +517,7 @@ class ElvWalletClient {
     } else {
       expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
       fabricToken = await this.client.CreateFabricToken({
-        duration: tokenDuration * 60 * 60 * 1000,
+        duration: parseInt(tokenDuration * 60 * 60 * 1000),
         context: email ? {usr: {email}} : {}
       });
     }

@@ -84,7 +84,7 @@ class RemoteSigner extends Ethers.Signer {
           nonce,
           force,
           tid: tenantId,
-          exp: duration * 60 * 60
+          exp: parseInt(duration * 60 * 60)
         },
         path: UrlJoin("as", "wlt", "sign", "csat"),
         headers: {
