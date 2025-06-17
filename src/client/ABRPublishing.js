@@ -601,7 +601,7 @@ exports.StartABRMezzanineJobs = async function({
 
   let processingDraft;
   if(writeToken) {
-    const nodeUrl = await this.WriteTokenNodeUrl({writeToken, networkCall: true});
+    const nodeUrl = await this.WriteTokenNodeUrlNetwork({writeToken});
 
     processingDraft = {
       write_token: writeToken,
@@ -771,7 +771,7 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeF
     ValidateWriteToken(writeToken);
   }
 
-  const nodeUrl = await this.WriteTokenNodeUrl({writeToken, networkCall: true});
+  const nodeUrl = await this.WriteTokenNodeUrlNetwork({writeToken});
 
   // tell http client what node to contact for this write token
   this.RecordWriteToken({writeToken: writeToken, fabricNodeUrl: nodeUrl});

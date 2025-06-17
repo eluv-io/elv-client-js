@@ -16,7 +16,8 @@ const {LogMessage} = require("./LogMessage");
 const Pako = require("pako");
 
 const {
-  ValidatePresence
+  ValidatePresence,
+  ValidateWriteToken
 } = require("./Validation");
 const UrlJoin = require("url-join");
 
@@ -715,38 +716,50 @@ class ElvClient {
   }
 
   /**
-   * Return node url for a given write token
+   * Return node url for a given write token via a network call
    *
    * @methodGroup Nodes
    * @namedParams
    * @param {string} writeToken - The write token to match to a node
-   * @param {boolean=} networkCall - If specified, will make a network call to /nodes?token=<writeToken>
    *
    * @returns {Promise<string>} - The node url for a write token
    */
-  async WriteTokenNodeUrl({writeToken, networkCall=false}) {
-    let nodeUrl;
+  async WriteTokenNodeUrlNetwork({writeToken}) {
+    ValidateWriteToken(writeToken);
 
-    if(networkCall) {
-      const nodes = await this.SpaceNodes({matchWriteToken: writeToken});
+    const nodes = await this.SpaceNodes({matchWriteToken: writeToken});
 
-      nodeUrl = (
-        nodes &&
-        nodes[0] &&
-        nodes[0].services &&
-        nodes[0].services.fabric_api &&
-        nodes[0].services.fabric_api.urls &&
-        nodes[0].services.fabric_api.urls[0]
-      );
+    const nodeUrl = (
+      nodes &&
+      nodes[0] &&
+      nodes[0].services &&
+      nodes[0].services.fabric_api &&
+      nodes[0].services.fabric_api.urls &&
+      nodes[0].services.fabric_api.urls[0]
+    );
 
-      if(!nodeUrl) {
-        console.error(`No node url found for write token: ${writeToken}`);
+    if(!nodeUrl) {
+      console.error(`No node url found for write token: ${writeToken}`);
 
-        return "";
-      }
-    } else {
-      nodeUrl = this.HttpClient.draftURIs[writeToken];
+      return "";
     }
+
+    return nodeUrl ? nodeUrl.toString() : undefined;
+  }
+
+  /**
+   * Return node url for a given write token via local lookup
+   *
+   * @methodGroup Nodes
+   * @namedParams
+   * @param {string} writeToken - The write token to match to a node
+   *
+   * @returns {<string>} - The node url for a write token
+   */
+  WriteTokenNodeUrlLocal({writeToken}) {
+    ValidateWriteToken(writeToken);
+
+    const nodeUrl = this.HttpClient.draftURIs[writeToken];
 
     return nodeUrl ? nodeUrl.toString() : undefined;
   }
