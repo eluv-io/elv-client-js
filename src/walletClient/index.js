@@ -510,7 +510,7 @@ class ElvWalletClient {
 
     let fabricToken, expiresAt;
     if(createRemoteToken && this.client.signer.remoteSigner) {
-      expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+      expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
       const tokenResponse = await this.client.signer.RetrieveCSAT({email, nonce, tenantId, force, duration: tokenDuration});
       fabricToken = tokenResponse.token;
       nonce = tokenResponse.nonce;
