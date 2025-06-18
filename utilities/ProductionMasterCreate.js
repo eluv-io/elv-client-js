@@ -33,6 +33,11 @@ class ProductionMasterCreate extends Utility {
         NewOpt("streams", {
           descTemplate: "JSON string (or file path if prefixed with '@') containing stream specifications for variant in new production master",
           type: "string"
+        }),
+        NewOpt("writeToken", {
+          demand: false,
+          descTemplate: "Write token of the draft",
+          type: "string",
         })
       ]
     };
@@ -77,7 +82,7 @@ class ProductionMasterCreate extends Utility {
     const client = await this.concerns.Client.get();
 
     const type = await await this.concerns.ArgType.typVersionHash();
-    const {libraryId, s3Copy, s3Reference} = this.args;
+    const {libraryId, s3Copy, s3Reference, writeToken} = this.args;
 
 
     const createResponse = await client.CreateProductionMaster({
@@ -90,7 +95,8 @@ class ProductionMasterCreate extends Utility {
       encrypt: !unencrypted,
       access,
       copy: s3Copy && !s3Reference,
-      callback: (access ? this.concerns.CloudFile : this.concerns.LocalFile).callback
+      callback: (access ? this.concerns.CloudFile : this.concerns.LocalFile).callback,
+      writeToken
     });
 
     const {errors, warnings, id} = createResponse;
@@ -149,6 +155,7 @@ class ProductionMasterCreate extends Utility {
         libraryId,
         objectId: id,
         versionHash: hash,
+        writeToken: write_token,
         metadataSubtree: "/production_master/variants/default/streams"
       }));
       if(!streamsFromServer.hasOwnProperty("audio")) {
