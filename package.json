@@ -1,6 +1,6 @@
 {
   "name": "@eluvio/elv-client-js",
-  "version": "4.0.50",
+  "version": "4.0.126",
   "description": "Javascript client for the Eluvio Content Fabric",
   "main": "src/index.js",
   "author": "Kevin Talmadge",
@@ -54,7 +54,7 @@
   "dependencies": {
     "@babel/runtime": "^7.8.4",
     "@eluvio/crypto": "^1.1.1",
-    "@eluvio/elv-abr-profile": "^1.0.0",
+    "@eluvio/elv-abr-profile": "^1.0.2",
     "@sindresorhus/slugify": "^1.1.0",
     "babel-loader": "^8.0.6",
     "bignumber.js": "^8.0.2",
