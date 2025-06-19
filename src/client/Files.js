@@ -198,7 +198,6 @@ exports.UploadFilesFromS3 = async function({
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     const status = await this.UploadStatus({libraryId, objectId, writeToken, uploadId: id});
-
     if(status.errors && status.errors.length > 1) {
       throw status.errors.join("\n");
     } else if(status.error) {
@@ -388,13 +387,67 @@ exports.ResumeFilesFromS3 = async function({
     writeToken,
     encryption
   });
-  this.log(`JOB_IDS: ${jobIds}`);
 
   const jobsByStatus = jobIds.reduce((acc, job) => {
     acc[job.status] = acc[job.status] || new Map();
     acc[job.status].set(job.id, true);
     return acc;
   }, {});
+
+  const trackUploadStatus = async function({ uploadId }) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
+    if(!uploadId){
+      throw Error("TrackUploadStatus - upload Id not provided");
+    }
+
+    // eslint-disable-next-line no-constant-condition
+    while(true) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const status = await this.UploadStatus({libraryId, objectId, writeToken, uploadId});
+
+      if(status.errors && status.errors.length > 1) {
+        throw new Error(status.errors.join("\n"));
+      } else if(status.error) {
+        log(`S3 file resume failed:\n${JSON.stringify(status, null, 2)}`);
+        throw new Error(status.error);
+      } else if(status.status.toLowerCase() === "failed") {
+        throw new Error("File resume failed");
+      }
+
+      let done = false;
+      if(copy) {
+        done = status.ingest_copy.done;
+        if(callback) {
+          const progress = status.ingest_copy.progress;
+
+          callback({
+            done,
+            uploaded: progress.bytes.completed,
+            total: progress.bytes.total,
+            uploadedFiles: progress.files.completed,
+            totalFiles: progress.files.total,
+            fileStatus: progress.files.details
+          });
+        }
+      } else {
+        done = status.add_reference.done;
+
+        if(callback) {
+          const progress = status.add_reference.progress;
+
+          callback({
+            done,
+            uploadedFiles: progress.completed,
+            totalFiles: progress.total,
+          });
+        }
+      }
+
+      if(done) { break; }
+    }
+  }.bind(this);
 
   // Resume stopped jobs if any
   if(jobsByStatus.STOPPED && jobsByStatus.STOPPED.size > 0) {
@@ -408,7 +461,7 @@ exports.ResumeFilesFromS3 = async function({
       stoppedJobIds: jobsByStatus.STOPPED });
     for(const res of responses) {
       this.Log(`Tracking stopped id: ${JSON.stringify(res)}`);
-      this.TrackUploadStatus({ libraryId, objectId, writeToken, uploadId: res.id, copy, callback });
+      await trackUploadStatus({ uploadId: res.id });
     }
   }
 
@@ -416,7 +469,7 @@ exports.ResumeFilesFromS3 = async function({
   if(jobsByStatus.IN_PROGRESS && jobsByStatus.IN_PROGRESS.size > 0) {
     for(const [jobId] of jobsByStatus.IN_PROGRESS){
       this.Log(`Tracking in-progress ids: ${jobId}`);
-      this.TrackUploadStatus({ libraryId, objectId, writeToken, uploadId: jobId, copy, callback });
+      await trackUploadStatus({ uploadId: jobId });
     }
   }
 
@@ -424,107 +477,8 @@ exports.ResumeFilesFromS3 = async function({
   if(jobsByStatus.COMPLETED && jobsByStatus.COMPLETED.size > 0) {
     for(const [jobId] of jobsByStatus.COMPLETED){
       this.Log(`Tracking completed ids: ${jobId}`);
-      this.TrackUploadStatus({ libraryId, objectId, writeToken, uploadId: jobId, copy, callback });
+      await trackUploadStatus({ uploadId: jobId });
     }
-  }
-
-  // let stoppedIds = new Map();
-  // let inProgressIds = new Map();
-  // let completedIds = new Map();
-  // for(const jobId of jobIds) {
-  //   if(jobId.status === "STOPPED") {
-  //     stoppedIds.set(jobId.id, true);
-  //   }
-  //   if(jobId.status === "IN_PROGRESS") {
-  //     inProgressIds.set(jobId.id, true);
-  //   }
-  //   if(jobId.status === "COMPLETED"){
-  //     completedIds.set(jobId.id, true);
-  //   }
-  // }
-  //
-  //
-  // if(stoppedIds.size !== 0){
-  //   // resume the jobs
-  //   // eslint-disable-next-line no-unused-vars
-  //   const responses = await this.ResumeFileUploadJob({libraryId, objectId, writeToken, ops, defaults, encryption});
-  //   // enable tracking
-  //   for(const res of responses) {
-  //     this.Log(`response: ${JSON.stringify(res)}`);
-  //     this.TrackUploadStatus({libraryId, objectId, writeToken, uploadId: res.id, callback});
-  //   }
-  // }
-  // if(inProgressIds.size !== 0){
-  //   // enable tracking
-  //   for(const [jobId] of inProgressIds) {
-  //     this.Log(`Tracking in-progress ids: ${jobId}`);
-  //     this.TrackUploadStatus({libraryId, objectId, writeToken, uploadId: jobId, callback});
-  //   }
-  // }
-  // if(completedIds.size !== 0){
-  //   // enable tracking
-  //   for(const [jobId] of completedIds) {
-  //     this.Log(`Tracking completed ids: ${jobId}`);
-  //     this.TrackUploadStatus({libraryId, objectId, writeToken, uploadId: jobId, callback});
-  //   }
-  // }
-};
-
-exports.TrackUploadStatus = async function({libraryId, objectId, writeToken, uploadId, copy,callback}){
-  ValidateParameters({libraryId, objectId});
-  ValidateWriteToken(writeToken);
-
-  if(uploadId===""){
-    throw Error("TrackUploadStatus- upload Id not provided");
-  }
-
-  console.log("Tracking started...")
-  // eslint-disable-next-line no-constant-condition
-  while(true) {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const status = await this.UploadStatus({libraryId, objectId, writeToken, uploadId});
-    if(status.errors && status.errors.length > 1) {
-      throw new Error(status.errors.join("\n"));
-    } else if(status.error) {
-      this.Log(`S3 file resume failed:\n${JSON.stringify(status, null, 2)}`);
-      throw new Error(status.error);
-    } else if(status.status.toLowerCase() === "failed") {
-      throw new Error("File resume failed");
-    }
-
-    this.Log(JSON.stringify(status));
-
-    let done = false;
-    if(copy) {
-      done = status.ingest_copy.done;
-      if(callback) {
-        const progress = status.ingest_copy.progress;
-
-        callback({
-          done,
-          uploaded: progress.bytes.completed,
-          total: progress.bytes.total,
-          uploadedFiles: progress.files.completed,
-          totalFiles: progress.files.total,
-          fileStatus: progress.files.details
-        });
-      }
-    } else {
-      done = status.add_reference.done;
-
-      if(callback) {
-        const progress = status.add_reference.progress;
-
-        callback({
-          done,
-          uploadedFiles: progress.completed,
-          totalFiles: progress.total,
-        });
-      }
-    }
-
-    if(done) { break; }
   }
 };
 
@@ -845,7 +799,6 @@ exports.UploadStatus = async function({libraryId, objectId, writeToken, uploadId
   ValidateWriteToken(writeToken);
 
   const path = UrlJoin("q", writeToken, "file_jobs", uploadId);
-
   return this.utils.ResponseToJson(
     this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),

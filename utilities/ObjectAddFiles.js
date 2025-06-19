@@ -39,7 +39,7 @@ class ObjectAddFiles extends Utility {
     if(this.args.resume){
       // resume with existing write token
       writeToken = this.args.resume;
-
+      logger.data("WRITE_TOKEN", writeToken);
       if(access) {
         await this.concerns.CloudFile.resume({
           libraryId,
@@ -60,6 +60,7 @@ class ObjectAddFiles extends Utility {
         libraryId,
         objectId
       });
+      logger.data("WRITE_TOKEN", writeToken);
 
       if(access) {
         await this.concerns.CloudFile.add({
