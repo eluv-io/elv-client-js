@@ -2026,7 +2026,7 @@ exports.StreamAddWatermark = async function({
     await this.ReplaceMetadata({
       libraryId,
       objectId,
-      writeToken: edgeWriteToken,
+      writeToken: writeToken,
       metadataSubtree: metadataPath,
       metadata: objectMetadata
     });
