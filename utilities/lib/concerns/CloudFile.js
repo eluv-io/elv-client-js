@@ -97,7 +97,7 @@ const New = context => {
     );
   };
 
-  const add = async ({libraryId, objectId, writeToken, files, access, encrypt, copy}) => {
+  const add = async ({libraryId, objectId, writeToken, files, access, encrypt, copy, resume}) => {
     if(kindOf(copy) === "undefined") copy = isCopy();
     files = files || context.args.files;
     const groupedFiles = groupByPathMatch(access, files);
@@ -123,38 +123,7 @@ const New = context => {
         accessKey,
         secret,
         copy,
-        callback,
-        encryption: encrypt ? "cgck" : "none"
-      });
-    }
-  };
-
-  const resume = async ({libraryId, objectId, writeToken, files, access, encrypt, copy}) => {
-    if(kindOf(copy) === "undefined") copy = isCopy();
-    files = files || context.args.files;
-    const groupedFiles = groupByPathMatch(access, files);
-    validatePathMatchGroups(groupedFiles);
-
-    const client = await context.concerns.Client.get();
-
-    // iterate over file groups, add to fabric object using credential set for group
-    for(const [index, fileList] of R.toPairs(groupedFiles)) {
-      const credentialSet = access[index];
-      const region = credentialSet.remote_access.storage_endpoint.region;
-      const bucket = removeTrailingSlash(credentialSet.remote_access.path);
-      const accessKey = credentialSet.remote_access.cloud_credentials.access_key_id;
-      const secret = credentialSet.remote_access.cloud_credentials.secret_access_key;
-
-      await client.ResumeFilesFromS3({
-        libraryId,
-        objectId,
-        writeToken,
-        fileInfo: fileInfo(fileList),
-        region,
-        bucket,
-        accessKey,
-        secret,
-        copy,
+        resume,
         callback,
         encryption: encrypt ? "cgck" : "none"
       });
@@ -168,7 +137,7 @@ const New = context => {
     : context.args.s3Copy;
 
 
-  return {add, callback, credentialSet, fileInfo, isCopy, resume};
+  return {add, callback, credentialSet, fileInfo, isCopy};
 };
 
 module.exports = {blueprint, New};

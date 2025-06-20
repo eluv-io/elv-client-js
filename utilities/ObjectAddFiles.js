@@ -23,7 +23,7 @@ class ObjectAddFiles extends Utility {
 
   async body() {
     const logger = this.logger;
-    const {encrypt, noWait} = this.args;
+    const {encrypt, noWait, resume: resumeArg} = this.args;
 
     let access;
     if(this.args.s3Reference || this.args.s3Copy) access = this.concerns.CloudFile.credentialSet();
@@ -36,53 +36,41 @@ class ObjectAddFiles extends Utility {
     const {libraryId, objectId} = await this.concerns.ExistObj.argsProc();
 
     let writeToken;
-    if(this.args.resume){
-      // resume with existing write token
-      writeToken = this.args.resume;
-      logger.data("WRITE_TOKEN", writeToken);
-      if(access) {
-        await this.concerns.CloudFile.resume({
-          libraryId,
-          objectId,
-          writeToken,
-          access,
-          fileInfo,
-          encrypt
-        });
-      } else {
-        // TODO for local file
-      }
-
+    let resume=false;
+    if(resumeArg) {
+      writeToken = resumeArg;
+      resume=true;
     } else {
-
       // create new write token
       writeToken = await this.concerns.Edit.getWriteToken({
         libraryId,
         objectId
       });
-      logger.data("WRITE_TOKEN", writeToken);
+    }
+    logger.data("WRITE_TOKEN", writeToken);
+    // eslint-disable-next-line no-console
+    console.log("WRITE_TOKEN", writeToken);
 
-      if(access) {
-        await this.concerns.CloudFile.add({
-          libraryId,
-          objectId,
-          writeToken,
-          access,
-          fileInfo,
-          encrypt
-        });
-      } else {
-        await this.concerns.LocalFile.add({
-          libraryId,
-          objectId,
-          writeToken,
-          fileInfo,
-          encrypt
-        });
-        // Close file handles
-        this.concerns.LocalFile.closeFileHandles(fileHandles);
-      }
-
+    if(access) {
+      await this.concerns.CloudFile.add({
+        libraryId,
+        objectId,
+        writeToken,
+        access,
+        fileInfo,
+        encrypt,
+        resume,
+      });
+    } else {
+      await this.concerns.LocalFile.add({
+        libraryId,
+        objectId,
+        writeToken,
+        fileInfo,
+        encrypt
+      });
+      // Close file handles
+      this.concerns.LocalFile.closeFileHandles(fileHandles);
     }
 
     // finalize the write token
