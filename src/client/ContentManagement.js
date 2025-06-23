@@ -612,7 +612,8 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
     path: path,
     body: {      // filter out options not recognized by server (noEncryptionConk, createKMSConk)
       type: options.type,
-      meta: options.meta
+      meta: options.meta,
+      copy_from: options.copy_from
     }
   });
 
