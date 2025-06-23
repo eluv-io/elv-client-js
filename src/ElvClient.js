@@ -754,7 +754,7 @@ class ElvClient {
    * @namedParams
    * @param {string} writeToken - The write token to match to a node
    *
-   * @returns {<string>} - The node url for a write token
+   * @returns {string} - The node url for a write token
    */
   WriteTokenNodeUrlLocal({writeToken}) {
     ValidateWriteToken(writeToken);
