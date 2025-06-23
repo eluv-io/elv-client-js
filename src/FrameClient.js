@@ -509,7 +509,8 @@ class FrameClient {
       "UploadStatus",
       "UseRegion",
       "Visibility",
-      "WriteTokenNodeUrl"
+      "WriteTokenNodeUrlLocal",
+      "WriteTokenNodeUrlNetwork"
     ];
   }
 
