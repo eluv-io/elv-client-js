@@ -428,8 +428,14 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
         ]
       });
     } catch(error) {
-      console.error("Unable to read edge write token metadata. Has token been deleted?", error);
-      status.state = "inactive";
+      if(error.message && error.message.includes("ERR_TOO_MANY_REDIRECTS")) {
+        console.error("Redirect loop detected when trying to read metadata.");
+        status.state = "unavailable";
+      } else {
+        console.error("Unable to read edge write token metadata. Has token been deleted?", error);
+        status.state = "inactive";
+      }
+
       return status;
     }
 
@@ -879,7 +885,6 @@ exports.StreamStopSession = async function({name}) {
       }
 
       await this.DeleteWriteToken({
-        libraryId,
         writeToken: metaEdgeWriteToken
       });
     } catch(error) {
