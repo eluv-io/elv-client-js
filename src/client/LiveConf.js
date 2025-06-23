@@ -439,30 +439,6 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.xc_params.sync_audio_to_stream_id = this.syncAudioToStreamIdValue();
     }
 
-    if(customSettings.edge_write_token) {
-      conf.live_recording.fabric_config.edge_write_token = customSettings.edge_write_token;
-    }
-
-    if(customSettings.part_ttl) {
-      conf.live_recording.recording_config.recording_params.part_ttl = customSettings.part_ttl;
-    }
-
-    if(Object.hasOwn(customSettings, "persistent")) {
-      conf.live_recording.recording_config.recording_params.persistent = customSettings.persistent;
-    }
-
-    if(customSettings.connection_timeout) {
-      conf.live_recording.recording_config.recording_params.xc_params.connection_timeout = customSettings.connection_timeout;
-    }
-
-    if(customSettings.reconnect_timeout) {
-      conf.live_recording.recording_config.recording_params.reconnect_timeout = customSettings.reconnect_timeout;
-    }
-
-    if(Object.hasOwn(customSettings, "copy_mpegts")) {
-      conf.live_recording.recording_config.recording_params.xc_params.copy_mpegts = customSettings.copy_mpegts;
-    }
-
     // Fill in specifics for protocol
     switch(this.probeKind()) {
       case "udp":
@@ -567,6 +543,26 @@ class LiveConf {
     // Global recording bitrate for all audio streams
     conf.live_recording.recording_config.recording_params.xc_params.audio_bitrate = globalAudioBitrate;
     conf.live_recording.recording_config.recording_params.xc_params.n_audio = nAudio;
+
+    // Iterate through custom settings (which will override any existing setting)
+    function SetByPath({obj, path, value}) {
+      const keys = path.split(".");
+      let temp = obj;
+      for(let i = 0; i < keys.length - 1; i++) {
+        if(!temp[keys[i]]) {
+          temp[keys[i]] = {};
+        }
+        temp = temp[keys[i]];
+      }
+
+      temp[keys[keys.length - 1]] = value;
+    }
+
+    const {metaPathValues} = customSettings;
+
+    for(let [path, value] of Object.entries(metaPathValues || {})) {
+      SetByPath({obj: conf, path, value});
+    }
 
     return conf;
   }

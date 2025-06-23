@@ -35,12 +35,17 @@ const New = context => {
     let publishFinished = false;
     let latestObjectData = {};
     while(!publishFinished) {
-      latestObjectData = await client.ContentObject({libraryId, objectId});
-      if(latestObjectData.hash === latestHash) {
-        logger.log("New object version now available");
-        publishFinished = true;
-      } else {
-        logger.log("  new version not available yet, waiting 15 seconds...");
+      try {
+        latestObjectData = await client.ContentObject({libraryId, objectId});
+        if(latestObjectData.hash === latestHash) {
+          logger.log("New object version now available");
+          publishFinished = true;
+        } else {
+          logger.log("  new version not available yet, waiting 15 seconds...");
+          await seconds(15);
+        }
+      } catch(error) {
+        console.error(`Waiting for master object publishing hash: ${latestHash}. Retrying.`, error);
         await seconds(15);
       }
     }
