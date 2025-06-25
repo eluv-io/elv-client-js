@@ -928,4 +928,187 @@ exports.ResetTenantId = async function({contractAddress, objectId, versionHash})
   }
 };
 
+/**
+ * Enum for object types that can be cleaned up after object deletion.
+ * Used by the ObjectCleanup method to determine which associated objects to clean.
+ *
+ * @property {string=} LIBRARY - Cleanup libraries
+ * @property {string=} CONTENT_OBJECT - Cleanup content objects
+ * @property {string=} GROUP - Cleanup access groups
+ * @property {string=} CONTENT_TYPE - Cleanup content types
+ * @property {string=} ALL - Cleanup all of the above
+ */
+const ObjectTypesToClean = Object.freeze({
+  LIBRARY: "library",
+  CONTENT_OBJECT: "content_object",
+  GROUP: "group",
+  CONTENT_TYPE: "content_type",
+  ALL: "all"
+});
+
+/**
+ * Cleans up objects (libraries, content objects, groups or content types)
+ * associated with a given user or object
+ *
+ * @methodGroup Contracts
+ * @namedParams
+ * @param {string=} contractAddress - The address of the object
+ * @param {string=} objectId - The ID of the object
+ * @param {string=} versionHash - A version hash of the object
+ * @param {string=} objectTypeToClean - The type of object to clean: one of "library", "content_object", "group", "content_type", or "all"
+ * @returns {Promise<Object>} - Resolves with an object showing the count of items before and after cleanup.
+ *
+ * Example return value:
+ * {
+ *   beforeCleanup: {
+ *     librariesLength: 2,
+ *     contentObjectsLength: 4,
+ *     accessGroupsLength: 1,
+ *     contentTypesLength: 3
+ *   },
+ *   afterCleanup: {
+ *     librariesLength: 0,
+ *     contentObjectsLength: 0,
+ *     accessGroupsLength: 0,
+ *     contentTypesLength: 0
+ *   }
+ * }
+ */
+exports.ObjectCleanup = async function ({
+  contractAddress,
+  objectId,
+  versionHash,
+  objectTypeToClean = ObjectTypesToClean.ALL
+}) {
+  objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
+  contractAddress = objectInfo.contractAddress;
+
+  // Check if the contract is a user wallet address
+  try {
+    await this.client.CallContractMethod({
+      contractAddress,
+      methodName: "getLibrariesLength",
+      formatArguments: false,
+    });
+  } catch(e) {
+    try {
+      contractAddress = await this.client.userProfileClient.UserWalletAddress({address: contractAddress});
+    } catch(walletError) {
+      throw new Error(`Invalid object: ${walletError.message}`);
+    }
+  }
+
+  const allowedTypes = Object.values(ObjectTypesToClean);
+  if(!allowedTypes.includes(objectTypeToClean)) {
+    throw Error(`Invalid objectType '${objectTypeToClean}'. Allowed types: ${allowedTypes.join(", ")}`);
+  }
+
+  let res = {
+    beforeCleanup: {},
+    afterCleanup: {}
+  };
+
+  const cleanupTasks = {
+    [ObjectTypesToClean.LIBRARY]: async () => {
+      const before = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getLibrariesLength",
+        formatArguments: false,
+      });
+      res.beforeCleanup.librariesLength = before.toNumber();
+
+      await this.CallContractMethodAndWait({
+        contractAddress,
+        methodName: "cleanUpLibraries",
+        formatArguments: true,
+      });
+
+      const after = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getLibrariesLength",
+        formatArguments: false,
+      });
+      res.afterCleanup.librariesLength = after.toNumber();
+    },
+
+    [ObjectTypesToClean.CONTENT_OBJECT]: async () => {
+      const before = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getContentObjectsLength",
+        formatArguments: false,
+      });
+      res.beforeCleanup.contentObjectsLength = before.toNumber();
+
+      await this.CallContractMethodAndWait({
+        contractAddress,
+        methodName: "cleanUpContentObjects",
+        formatArguments: true,
+      });
+
+      const after = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getContentObjectsLength",
+        formatArguments: false,
+      });
+      res.afterCleanup.contentObjectsLength = after.toNumber();
+    },
+
+    [ObjectTypesToClean.GROUP]: async () => {
+      let before = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getAccessGroupsLength",
+        formatArguments: false,
+      });
+      res.beforeCleanup.accessGroupsLength = before.toNumber();
+
+      await this.CallContractMethodAndWait({
+        contractAddress,
+        methodName: "cleanUpAccessGroups",
+        formatArguments: true,
+      });
+
+      const after = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getAccessGroupsLength",
+        formatArguments: false,
+      });
+      res.afterCleanup.accessGroupsLength = after.toNumber();
+    },
+
+    [ObjectTypesToClean.CONTENT_TYPE]: async () => {
+      const before = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getContentTypesLength",
+        formatArguments: false,
+      });
+      res.beforeCleanup.contentTypesLength = before.toNumber();
+
+      await this.CallContractMethodAndWait({
+        contractAddress,
+        methodName: "cleanUpContentTypes",
+        formatArguments: true,
+      });
+
+      const after = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getContentTypesLength",
+        formatArguments: false,
+      });
+      res.afterCleanup.contentTypesLength = after.toNumber();
+    }
+  };
+
+  try {
+    if(objectTypeToClean === ObjectTypesToClean.ALL) {
+      for(const type of Object.keys(cleanupTasks)) {
+        await cleanupTasks[type]();
+      }
+    } else {
+      await cleanupTasks[objectTypeToClean]();
+    }
+  } catch(e) {
+    throw new Error(`Error during cleanup of '${objectTypeToClean}': ${e.message}`);
+  }
+  return res;
+};
 
