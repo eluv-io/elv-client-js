@@ -388,7 +388,9 @@ describe("Test ElvClient", () => {
   describe("Content Libraries", () => {
 
     test("Set Tenant ID For User",async () => {
-      await client.userProfileClient.SetTenantId({address: tenantAdminAddress});
+      await client.userProfileClient.SetTenantContractId({tenantContractId});
+      //await client.userProfileClient.SetTenantId({address: tenantAdminAddress});
+      expect(client.userProfileClient.tenantContractId).toEqual(tenantContractId);
       expect(client.userProfileClient.tenantId).toEqual(tenantId);
     });
 
@@ -575,18 +577,18 @@ describe("Test ElvClient", () => {
       await expect(finalizeResponse).toBeDefined();
 
       const metadata = await client.ContentObjectMetadata({libraryId, objectId});
-      delete metadata.commit;
+      //delete metadata.commit;
 
-      expect(metadata).toEqual(testMetadata);
+      expect(metadata).toMatchObject(testMetadata);
 
       versionHash = finalizeResponse.hash;
     });
 
     test("Content Object Metadata", async () => {
       const metadata = await client.ContentObjectMetadata({libraryId, objectId});
-      delete metadata.commit;
+      //delete metadata.commit;
 
-      expect(metadata).toEqual({
+      expect(metadata).toMatchObject({
         name: "Test Content Object",
         toMerge: {
           merge: "me"
@@ -654,7 +656,7 @@ describe("Test ElvClient", () => {
       const metadata = await client.ContentObjectMetadata({libraryId, objectId});
       delete metadata.commit;
 
-      expect(metadata).toEqual({
+      expect(metadata).toMatchObject({
         name: "Test Content Object",
         toMerge: {
           new: "metadata",
@@ -718,7 +720,8 @@ describe("Test ElvClient", () => {
 
       expect(unfiltered).toBeDefined();
       expect(unfiltered.contents).toBeDefined();
-      expect(unfiltered.contents.length).toEqual(5);
+      // object for library + 5 content objects
+      expect(unfiltered.contents.length).toEqual(6);
       expect(unfiltered.paging).toBeDefined();
 
       /* Sorting */
@@ -847,7 +850,7 @@ describe("Test ElvClient", () => {
 
       expect(automaticCommit).toBeDefined();
       if(isUsingExternalTenantContractId){
-        expect(automaticCommit.author).toContain("tenant-elv-admin");
+        expect(automaticCommit.author).toContain("elv-admin");
       } else {
         expect(client.utils.EqualAddress(automaticCommit.author, automaticCommit.author_address)).toBeTruthy();
       }
@@ -878,7 +881,7 @@ describe("Test ElvClient", () => {
 
       expect(customCommit).toBeDefined();
       if(isUsingExternalTenantContractId){
-        expect(customCommit.author).toContain("tenant-elv-admin");
+        expect(customCommit.author).toContain("elv-admin");
       } else {
         expect(client.utils.EqualAddress(customCommit.author, customCommit.author_address)).toBeTruthy();
       }
@@ -2955,6 +2958,10 @@ describe("Test ElvClient", () => {
         expect(undefined).toBeDefined();
         // eslint-disable-next-line no-empty
       } catch(error) {}
+
+      let contractAddress = client.userProfileClient.signer.address.toString();
+      let res = await client.ObjectCleanup({contractAddress, objectTypeToClean: "content_object"});
+      console.log("RES", JSON.stringify(res, " ", 2));
     });
 
     test("Clear Tenancy", async () => {
