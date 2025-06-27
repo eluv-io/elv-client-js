@@ -47,7 +47,7 @@ const testFileSize = 100000;
 let client, accessClient, client2;
 let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
 let mediaLibraryId, masterId, masterHash, mezzanineId, linkLibraryId, linkObjectId;
-let ingestWriteToken;
+let mediaLibraryIdForTestingWriteToken, mezzanineIdForTestingWriteToken, ingestWriteToken;
 let s3Access;
 let tenantId, tenantAdminAddress, contentAdminAddress;
 let isUsingExternalTenantContractId;
@@ -734,7 +734,8 @@ describe("Test ElvClient", () => {
       });
 
       const sortedNames = sorted.contents.map(object => object.versions[0].meta.public.name);
-
+      // library object
+      objectNames.push("Test Object Filtering");
       expect(sortedNames).toEqual(objectNames);
 
       const descSorted = await client.ContentObjects({
@@ -1813,7 +1814,7 @@ describe("Test ElvClient", () => {
     });
 
     test("Create Production Master With a Write Token", async () => {
-      mediaLibraryId = await client.CreateContentLibrary({
+      mediaLibraryIdForTestingWriteToken = await client.CreateContentLibrary({
         name: "Test Media Library",
         metadata: {
           "abr_profile": {
@@ -1947,12 +1948,12 @@ describe("Test ElvClient", () => {
       }];
 
       const {writeToken} = await client.CreateContentObject({
-        libraryId: mediaLibraryId,
+        libraryId: mediaLibraryIdForTestingWriteToken,
         options: {type: "Production Master"}
       });
 
       const {id, hash} = await client.CreateProductionMaster({
-        libraryId: mediaLibraryId,
+        libraryId: mediaLibraryIdForTestingWriteToken,
         writeToken,
         type: "Production Master",
         name: "Production Master Test",
@@ -1964,6 +1965,7 @@ describe("Test ElvClient", () => {
       expect(id).toBeDefined();
       expect(hash).toBeUndefined();
 
+      mezzanineIdForTestingWriteToken = id;
       ingestWriteToken = writeToken;
     });
 
@@ -2001,7 +2003,7 @@ describe("Test ElvClient", () => {
 
     test("Create Mezzanine With A Write Token", async () => {
       const {id, hash} = await client.CreateABRMezzanine({
-        libraryId: mediaLibraryId,
+        libraryId: mediaLibraryIdForTestingWriteToken,
         masterWriteToken: ingestWriteToken,
         writeToken: ingestWriteToken,
         type: "ABR Master",
@@ -2071,8 +2073,8 @@ describe("Test ElvClient", () => {
     test("Process Mezzanine With a Write Token", async () => {
       try {
         const startResponse = await client.StartABRMezzanineJobs({
-          libraryId: mediaLibraryId,
-          objectId: mezzanineId,
+          libraryId: mediaLibraryIdForTestingWriteToken,
+          objectId: mezzanineIdForTestingWriteToken,
           writeToken: ingestWriteToken,
           offeringKey: "default"
         });
@@ -2086,8 +2088,8 @@ describe("Test ElvClient", () => {
         // eslint-disable-next-line no-constant-condition
         while(true) {
           const status = await client.LROStatus({
-            libraryId: mediaLibraryId,
-            objectId: mezzanineId,
+            libraryId: mediaLibraryIdForTestingWriteToken,
+            objectId: mezzanineIdForTestingWriteToken,
             writeToken: ingestWriteToken
           });
 
@@ -2113,8 +2115,8 @@ describe("Test ElvClient", () => {
         }
 
         await client.FinalizeABRMezzanine({
-          libraryId: mediaLibraryId,
-          objectId: mezzanineId,
+          libraryId: mediaLibraryIdForTestingWriteToken,
+          objectId: mezzanineIdForTestingWriteToken,
           writeToken: ingestWriteToken,
           offeringKey: "default"
         });
@@ -2914,6 +2916,9 @@ describe("Test ElvClient", () => {
     });
 
     test("Delete Content Object", async () => {
+      let res1 = await client.ContentObject({libraryId, objectId});
+      console.log("OBJECT EXISTS", JSON.stringify(res1));
+
       // Delete test object
       await client.DeleteContentObject({libraryId, objectId});
 
@@ -2924,6 +2929,10 @@ describe("Test ElvClient", () => {
         expect(undefined).toBeDefined();
         // eslint-disable-next-line no-empty
       } catch(error) {}
+
+      let contractAddress = client.signer.address;
+      let res = await client.ObjectCleanup({contractAddress, objectTypeToClean: "content_object"});
+      console.log("RES", JSON.stringify(res, " ", 2));
 
       // Delete master
       await client.DeleteContentObject({libraryId: mediaLibraryId, objectId: masterId});
@@ -2959,8 +2968,8 @@ describe("Test ElvClient", () => {
         // eslint-disable-next-line no-empty
       } catch(error) {}
 
-      let contractAddress = client.userProfileClient.signer.address.toString();
-      let res = await client.ObjectCleanup({contractAddress, objectTypeToClean: "content_object"});
+      contractAddress = client.userProfileClient.signer.address.toString();
+      res = await client.ObjectCleanup({contractAddress, objectTypeToClean: "content_object"});
       console.log("RES", JSON.stringify(res, " ", 2));
     });
 
