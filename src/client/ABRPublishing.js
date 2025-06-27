@@ -780,7 +780,9 @@ exports.LROStatus = async function({libraryId, objectId, writeToken= ""}) {
 exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeFn, preFinalizeThrow, writeToken=""}) {
   ValidateParameters({libraryId, objectId});
 
-  if(writeToken) {
+  const writeTokenSupplied = !!writeToken;
+
+  if(writeTokenSupplied) {
     ValidateWriteToken(writeToken, objectId);
     objectId = objectId || this.utils.DecodeWriteToken(writeToken).objectId;
   } else {
@@ -847,7 +849,7 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeF
   }
 
   // only finalize if we did NOT have a writeToken passed in
-  const finalizeResponse = writeToken ? {} : await this.FinalizeContentObject({
+  const finalizeResponse = writeTokenSupplied ? {} : await this.FinalizeContentObject({
     libraryId,
     objectId,
     writeToken,
