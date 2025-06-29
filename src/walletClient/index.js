@@ -186,21 +186,24 @@ class ElvWalletClient {
     }
 
     try {
-      walletClient.topLevelInfo = await client.utils.ResponseToJson(
+      walletClient.topLevelInfoPromise = client.utils.ResponseToJson(
         client.MakeAuthServiceRequest({
           path: "/as/mw/toplevel",
           queryParams: {env: mode}
         })
-      );
+      )
+        .then(info => {
+          walletClient.topLevelInfo = info;
+
+          if(!skipMarketplaceLoad) {
+            walletClient.LoadAvailableMarketplaces();
+          }
+        });
     } catch(error) {
       // eslint-disable-next-line no-console
       console.error("Unable to load top level info:");
       // eslint-disable-next-line no-console
       console.error(error);
-    }
-
-    if(!skipMarketplaceLoad) {
-      await walletClient.LoadAvailableMarketplaces();
     }
 
     return walletClient;
@@ -823,6 +826,7 @@ class ElvWalletClient {
   }
 
   async LoadMarketplace(marketplaceParams) {
+    await this.topLevelInfoPromise;
     const marketplaceInfo = this.MarketplaceInfo({marketplaceParams});
 
     const marketplaceId = marketplaceInfo.marketplaceId;
