@@ -50,7 +50,7 @@ class EthClient {
 
   Provider() {
     if(!this.provider) {
-      this.provider = new Ethers.providers.JsonRpcProvider(this.ethereumURIs[this.ethereumURIIndex], this.networkId);
+      this.provider = new Ethers.providers.StaticJsonRpcProvider(this.ethereumURIs[this.ethereumURIIndex], this.networkId);
 
       // Ethers.js uses eth_getCode to ensure a contract is deployed and nothing else - this pulls a large chunk of pointless
       // data every time a contract is initialized in the client (often). Ethers.js just checks that the code isn't == "0x", so
