@@ -122,6 +122,7 @@ class AuthorizationClient {
     const isWalletRequest =
       objectId &&
       this.client.signer &&
+      !this.client.signer.anonymous &&
       this.client.utils.EqualAddress(
         await this.client.userProfileClient.WalletAddress(false),
         this.client.utils.HashToAddress(objectId)
@@ -958,7 +959,7 @@ class AuthorizationClient {
 
         const kmsUrl = KMSUrls[i];
         if(!this.providers[kmsUrl]) {
-          this.providers[kmsUrl] = new Ethers.providers.JsonRpcProvider(kmsUrl, this.client.networkId);
+          this.providers[kmsUrl] = new Ethers.providers.StaticJsonRpcProvider(kmsUrl, this.client.networkId);
         }
 
         return await this.providers[kmsUrl].send(methodName, params);

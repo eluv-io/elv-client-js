@@ -584,17 +584,21 @@ exports.ContentObjects = async function({libraryId, filterOptions={}}) {
  *
  * @returns {Promise<Object>} - Description of content object
  */
-exports.ContentObject = async function({libraryId, objectId, versionHash, writeToken}) {
-  ValidateParameters({libraryId, objectId, versionHash});
+exports.ContentObject = async function({objectId, versionHash, writeToken}) {
+  this.Log(`Retrieving content object: ${writeToken || versionHash || objectId}`);
 
-  this.Log(`Retrieving content object: ${libraryId || ""} ${writeToken || versionHash || objectId}`);
+  if(writeToken) {
+    objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+  } else if(versionHash) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  }
 
-  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+  ValidateObject(objectId);
 
   let path = UrlJoin("q", writeToken || versionHash || objectId);
 
   return await this.HttpClient.RequestJsonBody({
-    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
+    headers: await this.authClient.AuthorizationHeader({objectId, versionHash}),
     method: "GET",
     path: path
   });
@@ -664,6 +668,24 @@ exports.ContentObjectTenantId = async function({objectId, versionHash}) {
  * @returns {Promise<string>} - Library ID of the object
  */
 exports.ContentObjectLibraryId = async function({objectId, versionHash}) {
+  if(versionHash) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  }
+
+  // Cache results because they will never change
+  if(!this.objectLibraryIds[objectId]) {
+    try {
+      this.objectLibraryIds[objectId] = (await this.ContentObject({objectId, versionHash})).qlib_id;
+    } catch(error) {
+      error.message = `Unable to determine latest library for ${versionHash || objectId}`;
+      throw error;
+    }
+  }
+
+  return this.objectLibraryIds[objectId];
+};
+
+exports.ContentObjectLibraryId2 = async function({objectId, versionHash}) {
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
@@ -1066,7 +1088,7 @@ exports.ContentObjectVersions = async function({libraryId, objectId}) {
 };
 
 /**
- * Retrieve the version hash of the latest version of the specified object from chain
+ * Retrieve the version hash of the latest version of the specified object via fabric API.
  *
  * @methodGroup Content Objects
  * @namedParams
@@ -1076,75 +1098,12 @@ exports.ContentObjectVersions = async function({libraryId, objectId}) {
  * @returns {Promise<string>} - The latest version hash of the object
  */
 exports.LatestVersionHash = async function({objectId, versionHash}) {
-  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
-
-  ValidateObject(objectId);
-
-  let latestHash;
   try {
-    latestHash = await this.CallContractMethod({
-      contractAddress: this.utils.HashToAddress(objectId),
-      methodName: "objectHash"
-    });
-  // eslint-disable-next-line no-empty
-  } catch(error) {}
-
-  if(!latestHash) {
-    let versionCount;
-    try {
-      versionCount = await this.CallContractMethod({
-        contractAddress: this.utils.HashToAddress(objectId),
-        methodName: "countVersionHashes"
-      });
-    // eslint-disable-next-line no-empty
-    } catch(error) {}
-
-    if(!versionCount || !versionCount.toNumber()) {
-      throw Error(`Unable to determine latest version hash for ${versionHash || objectId} - Item deleted?`);
-    }
-
-    latestHash = await this.CallContractMethod({
-      contractAddress: this.utils.HashToAddress(objectId),
-      methodName: "versionHashes",
-      methodArgs: [versionCount - 1]
-    });
-  }
-
-  return latestHash;
-};
-
-/**
- * Retrieve the version hash of the latest version of the specified object via fabric API.
- * Requires authorization.
- *
- * @methodGroup Content Objects
- * @namedParams
- * @param {string=} objectId - ID of the object
- * @param {string=} versionHash - Version hash of the object
- *
- * @returns {Promise<string>} - The latest version hash of the object
- */
-exports.LatestVersionHashV2 = async function({objectId, versionHash}) {
-  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
-
-  ValidateObject(objectId);
-
-  let latestHash;
-  try {
-    let path = UrlJoin("q", objectId);
-
-    let q = await this.HttpClient.RequestJsonBody({
-      headers: await this.authClient.AuthorizationHeader({objectId}),
-      method: "GET",
-      path: path
-    });
-    latestHash = q.hash;
-
+    return (await this.ContentObject({objectId, versionHash})).hash;
   } catch(error) {
     error.message = `Unable to determine latest version hash for ${versionHash || objectId}`;
     throw error;
   }
-  return latestHash;
 };
 
 /* URL Methods */
@@ -1946,7 +1905,7 @@ exports.MakeFileServiceRequest = async function({
   ]
     .flat()
     .filter(token => token);
-  
+
   return this.utils.ResponseToFormat(
     format,
     await this.FileServiceHttpClient.Request({

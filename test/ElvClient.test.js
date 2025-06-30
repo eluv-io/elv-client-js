@@ -2570,7 +2570,7 @@ describe("Test ElvClient", () => {
       expect(gasCost).toBeDefined();
 
       // Ensure balance covers gas cost
-      if (balanceWei.lte(gasCost)) {
+      if(balanceWei.lte(gasCost)) {
         throw new Error("Insufficient funds to cover gas cost.");
       }
 
