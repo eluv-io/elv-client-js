@@ -185,28 +185,8 @@ class ElvWalletClient {
       }
     }
 
-    try {
-      walletClient.topLevelInfoPromise = new Promise(resolve =>
-        client.utils.ResponseToJson(
-          client.MakeAuthServiceRequest({
-            path: "/as/mw/toplevel",
-            queryParams: {env: mode}
-          })
-        )
-          .then(info => {
-            walletClient.topLevelInfo = info;
-            resolve();
-
-            if(!skipMarketplaceLoad) {
-              walletClient.LoadAvailableMarketplaces();
-            }
-          })
-      );
-    } catch(error) {
-      // eslint-disable-next-line no-console
-      console.error("Unable to load top level info:");
-      // eslint-disable-next-line no-console
-      console.error(error);
+    if(!skipMarketplaceLoad) {
+      walletClient.LoadAvailableMarketplaces();
     }
 
     return walletClient;
@@ -774,39 +754,57 @@ class ElvWalletClient {
 
   // Internal loading methods
 
-  async LoadAvailableMarketplaces(forceReload=false) {
-    if(!forceReload && Object.keys(this.availableMarketplaces) > 0) {
-      return;
+  async TopLevelInfo(forceReload=false) {
+    if(!this.topLevelInfoPromise || forceReload) {
+      this.topLevelInfoPromise = this.client.utils.ResponseToJson(
+        this.client.MakeAuthServiceRequest({
+          path: "/as/mw/toplevel",
+          queryParams: {env: this.mode}
+        })
+      );
     }
 
-    const marketplaces = this.topLevelInfo.marketplaces;
+    return await this.topLevelInfoPromise;
+  }
 
-    let availableMarketplaces = { ...(this.availableMarketplaces || {}) };
-    let availableMarketplacesById = { ...(this.availableMarketplacesById || {}) };
+  async LoadAvailableMarketplaces(forceReload=false) {
+    if(!this.availableMarketplacesPromise || forceReload) {
+      this.availableMarketplacesPromise = new Promise(async resolve => {
+        const topLevelInfo = await this.TopLevelInfo();
+        const marketplaces = topLevelInfo.marketplaces;
 
-    marketplaces.map(marketplaceInfo => {
-      const marketplaceId = Utils.DecodeVersionHash(marketplaceInfo.source_hash).objectId;
-      const marketplaceSlug = marketplaceInfo.slug || marketplaceInfo.name;
+        let availableMarketplaces = {...(this.availableMarketplaces || {})};
+        let availableMarketplacesById = {...(this.availableMarketplacesById || {})};
 
-      availableMarketplaces[marketplaceInfo.tenant_slug] = availableMarketplaces[marketplaceInfo.tenant_slug] || {};
+        marketplaces.map(marketplaceInfo => {
+          const marketplaceId = Utils.DecodeVersionHash(marketplaceInfo.source_hash).objectId;
+          const marketplaceSlug = marketplaceInfo.slug || marketplaceInfo.name;
 
-      availableMarketplaces[marketplaceInfo.tenant_slug][marketplaceSlug] = {
-        ...marketplaceInfo,
-        tenantName: marketplaceInfo.tenant_slug,
-        tenantSlug: marketplaceInfo.tenant_slug,
-        tenantId: marketplaceInfo.tenant_id,
-        marketplaceSlug: marketplaceSlug,
-        marketplaceId,
-        marketplaceHash: marketplaceInfo.source_hash
-      };
+          availableMarketplaces[marketplaceInfo.tenant_slug] = availableMarketplaces[marketplaceInfo.tenant_slug] || {};
 
-      availableMarketplacesById[marketplaceId] = availableMarketplaces[marketplaceInfo.tenant_slug][marketplaceSlug];
+          availableMarketplaces[marketplaceInfo.tenant_slug][marketplaceSlug] = {
+            ...marketplaceInfo,
+            tenantName: marketplaceInfo.tenant_slug,
+            tenantSlug: marketplaceInfo.tenant_slug,
+            tenantId: marketplaceInfo.tenant_id,
+            marketplaceSlug: marketplaceSlug,
+            marketplaceId,
+            marketplaceHash: marketplaceInfo.source_hash
+          };
 
-      this.marketplaceHashes[marketplaceId] = marketplaceInfo.source_hash;
-    });
+          availableMarketplacesById[marketplaceId] = availableMarketplaces[marketplaceInfo.tenant_slug][marketplaceSlug];
 
-    this.availableMarketplaces = availableMarketplaces;
-    this.availableMarketplacesById = availableMarketplacesById;
+          this.marketplaceHashes[marketplaceId] = marketplaceInfo.source_hash;
+        });
+
+        this.availableMarketplaces = availableMarketplaces;
+        this.availableMarketplacesById = availableMarketplacesById;
+
+        resolve();
+      });
+    }
+
+    await this.availableMarketplacesPromise;
   }
 
   // Get the hash of the currently linked marketplace
@@ -829,7 +827,8 @@ class ElvWalletClient {
   }
 
   async LoadMarketplace(marketplaceParams) {
-    await this.topLevelInfoPromise;
+    await this.LoadAvailableMarketplaces();
+
     const marketplaceInfo = this.MarketplaceInfo({marketplaceParams});
 
     const marketplaceId = marketplaceInfo.marketplaceId;
