@@ -832,7 +832,7 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeF
   }
 
   const finalizeResponse = {};
-  if (!writeToken) {
+  if(!writeToken) {
     finalizeResponse = await this.FinalizeContentObject({
       libraryId,
       objectId: objectId,

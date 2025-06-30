@@ -434,6 +434,7 @@ class ElvClient {
     if(!this.signer) {
       const wallet = this.GenerateWallet();
       const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
+      signer.anonymous = true;
 
       this.SetSigner({signer, reset: false});
       this.SetStaticToken({token: staticToken});
@@ -739,6 +740,7 @@ class ElvClient {
     );
 
     if(!nodeUrl) {
+      // eslint-disable-next-line no-console
       console.error(`No node url found for write token: ${writeToken}`);
 
       return "";
