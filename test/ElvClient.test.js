@@ -2960,13 +2960,20 @@ describe("Test ElvClient", () => {
         expect(undefined).toBeDefined();
         // eslint-disable-next-line no-empty
       } catch(error) {}
+    });
 
+    test("Object Cleanup", async () => {
       let contractAddress = client.signer.address;
-      let res = await client.ObjectCleanup({contractAddress, objectTypeToClean: "content_object"});
+      const res = await client.ObjectCleanup({contractAddress, objectTypeToClean: "content_object"});
       expect(res).toBeDefined();
-      expect(res.beforeCleanup.contentObjectsLength).toBeDefined();
-      expect(res.afterCleanup.contentObjectsLength).toBeDefined();
-      expect(res.afterCleanup.contentObjectsLength).toBeLessThan(res.beforeCleanup.contentObjectsLength);
+      expect(res[contractAddress]).toBeDefined();
+
+      const resForSigner = res[contractAddress];
+      expect(resForSigner.beforeCleanup.contentObjectsLength).toBeDefined();
+      expect(resForSigner.afterCleanup.contentObjectsLength).toBeDefined();
+      const beforeCleanup = resForSigner.beforeCleanup.contentObjectsLength;
+      const afterCleanup = resForSigner.afterCleanup.contentObjectsLength;
+      expect(afterCleanup).toBeLessThan(beforeCleanup);
     });
 
     test("Clear Tenancy", async () => {
