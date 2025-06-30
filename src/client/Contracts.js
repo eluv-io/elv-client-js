@@ -950,6 +950,8 @@ const ObjectTypesToClean = Object.freeze({
  * Cleans up objects (libraries, content objects, groups or content types)
  * associated with a given user or object
  *
+ * For user, the cleanup is performed on the user wallet and on all its access group
+ *
  * @methodGroup Contracts
  * @namedParams
  * @param {string=} contractAddress - The address of the object
@@ -960,17 +962,29 @@ const ObjectTypesToClean = Object.freeze({
  *
  * Example return value:
  * {
- *   beforeCleanup: {
- *     librariesLength: 2,
- *     contentObjectsLength: 4,
- *     accessGroupsLength: 1,
- *     contentTypesLength: 3
+ *   "0x123...": {
+ *     beforeCleanup: {
+ *       librariesLength: 2,
+ *       contentObjectsLength: 4,
+ *       accessGroupsLength: 1,
+ *       contentTypesLength: 3
+ *     },
+ *     afterCleanup: {
+ *       librariesLength: 0,
+ *       contentObjectsLength: 0,
+ *       accessGroupsLength: 0,
+ *       contentTypesLength: 0
+ *     }
  *   },
- *   afterCleanup: {
- *     librariesLength: 0,
- *     contentObjectsLength: 0,
- *     accessGroupsLength: 0,
- *     contentTypesLength: 0
+ *   "groups": {
+ *     "0x123...": {
+ *       beforeCleanup: {
+ *        contentObjectsLength: 1
+ *       },
+ *       afterCleanup: {
+ *        contentObjectsLength: 0
+ *       }
+ *     }
  *   }
  * }
  */
@@ -982,17 +996,21 @@ exports.ObjectCleanup = async function ({
 }) {
   objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
   contractAddress = objectInfo.contractAddress;
+  let isUserWallet = false;
+  let userAddress;
 
   // Check if the contract is a user wallet address
   try {
-    await this.client.CallContractMethod({
+    await this.CallContractMethod({
       contractAddress,
       methodName: "getLibrariesLength",
       formatArguments: false,
     });
   } catch(e) {
     try {
-      contractAddress = await this.client.userProfileClient.UserWalletAddress({address: contractAddress});
+      userAddress = contractAddress;
+      contractAddress = await this.userProfileClient.UserWalletAddress({address: contractAddress});
+      isUserWallet = true;
     } catch(walletError) {
       throw new Error(`Invalid object: ${walletError.message}`);
     }
@@ -1003,13 +1021,8 @@ exports.ObjectCleanup = async function ({
     throw Error(`Invalid objectType '${objectTypeToClean}'. Allowed types: ${allowedTypes.join(", ")}`);
   }
 
-  let res = {
-    beforeCleanup: {},
-    afterCleanup: {}
-  };
-
   const cleanupTasks = {
-    [ObjectTypesToClean.LIBRARY]: async () => {
+    [ObjectTypesToClean.LIBRARY]: async ({contractAddress, res}) => {
       const before = await this.CallContractMethod({
         contractAddress,
         methodName: "getLibrariesLength",
@@ -1031,7 +1044,7 @@ exports.ObjectCleanup = async function ({
       res.afterCleanup.librariesLength = after.toNumber();
     },
 
-    [ObjectTypesToClean.CONTENT_OBJECT]: async () => {
+    [ObjectTypesToClean.CONTENT_OBJECT]: async ({contractAddress, res}) => {
       const before = await this.CallContractMethod({
         contractAddress,
         methodName: "getContentObjectsLength",
@@ -1053,7 +1066,7 @@ exports.ObjectCleanup = async function ({
       res.afterCleanup.contentObjectsLength = after.toNumber();
     },
 
-    [ObjectTypesToClean.GROUP]: async () => {
+    [ObjectTypesToClean.GROUP]: async ({contractAddress, res}) => {
       let before = await this.CallContractMethod({
         contractAddress,
         methodName: "getAccessGroupsLength",
@@ -1075,7 +1088,7 @@ exports.ObjectCleanup = async function ({
       res.afterCleanup.accessGroupsLength = after.toNumber();
     },
 
-    [ObjectTypesToClean.CONTENT_TYPE]: async () => {
+    [ObjectTypesToClean.CONTENT_TYPE]: async ({contractAddress, res}) => {
       const before = await this.CallContractMethod({
         contractAddress,
         methodName: "getContentTypesLength",
@@ -1098,17 +1111,67 @@ exports.ObjectCleanup = async function ({
     }
   };
 
-  try {
-    if(objectTypeToClean === ObjectTypesToClean.ALL) {
-      for(const type of Object.keys(cleanupTasks)) {
-        await cleanupTasks[type]();
+  const runCleanupTasks = async ({contractAddress}) => {
+    try {
+      const res = {
+        beforeCleanup: {},
+        afterCleanup: {}
+      };
+      if(objectTypeToClean === ObjectTypesToClean.ALL) {
+        for(const type of Object.keys(cleanupTasks)) {
+          await cleanupTasks[type]({contractAddress, res});
+        }
+      } else {
+        await cleanupTasks[objectTypeToClean]({contractAddress, res});
       }
-    } else {
-      await cleanupTasks[objectTypeToClean]();
+      return res;
+    } catch(e) {
+      throw new Error(`Error during '${objectTypeToClean}' cleanup for ${contractAddress}: ${e.message}`);
     }
-  } catch(e) {
-    throw new Error(`Error during cleanup of '${objectTypeToClean}': ${e.message}`);
+  };
+
+  let results = {};
+  // run cleanup on main contract
+  const res = await runCleanupTasks({contractAddress});
+  if(isUserWallet){
+    results[userAddress] = res;
+  } else {
+    results[contractAddress] = res;
   }
-  return res;
+
+  // run cleanup on access group contracts if this is a user wallet
+  if(isUserWallet) {
+    const groupsLength = await this.CallContractMethod({
+      contractAddress,
+      methodName: "getAccessGroupsLength",
+      formatArguments: false,
+    });
+    if(groupsLength > 0) {
+      results["groups"] = {};
+    }
+
+    const groupAddressPromises = [];
+    for(let i=0; i<groupsLength; i++) {
+      groupAddressPromises.push(
+        this.CallContractMethod({
+          contractAddress,
+          methodName: "getAccessGroup",
+          methodArgs: [i],
+          formatArguments: false,
+        })
+      );
+    }
+
+    const groupAddresses = await Promise.all(groupAddressPromises);
+    const cleanupResults = await Promise.all(
+      groupAddresses.map(addr =>
+        runCleanupTasks({contractAddress: addr}).then(res => [addr, res]))
+    );
+
+    for(const [addr, res] of cleanupResults) {
+      results["groups"][addr] = res;
+    }
+  }
+  return results;
 };
 

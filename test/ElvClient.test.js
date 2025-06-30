@@ -2916,9 +2916,6 @@ describe("Test ElvClient", () => {
     });
 
     test("Delete Content Object", async () => {
-      let res1 = await client.ContentObject({libraryId, objectId});
-      console.log("OBJECT EXISTS", JSON.stringify(res1));
-
       // Delete test object
       await client.DeleteContentObject({libraryId, objectId});
 
@@ -2929,10 +2926,6 @@ describe("Test ElvClient", () => {
         expect(undefined).toBeDefined();
         // eslint-disable-next-line no-empty
       } catch(error) {}
-
-      let contractAddress = client.signer.address;
-      let res = await client.ObjectCleanup({contractAddress, objectTypeToClean: "content_object"});
-      console.log("RES", JSON.stringify(res, " ", 2));
 
       // Delete master
       await client.DeleteContentObject({libraryId: mediaLibraryId, objectId: masterId});
@@ -2968,9 +2961,12 @@ describe("Test ElvClient", () => {
         // eslint-disable-next-line no-empty
       } catch(error) {}
 
-      contractAddress = client.userProfileClient.signer.address.toString();
-      res = await client.ObjectCleanup({contractAddress, objectTypeToClean: "content_object"});
-      console.log("RES", JSON.stringify(res, " ", 2));
+      let contractAddress = client.signer.address;
+      let res = await client.ObjectCleanup({contractAddress, objectTypeToClean: "content_object"});
+      expect(res).toBeDefined();
+      expect(res.beforeCleanup.contentObjectsLength).toBeDefined();
+      expect(res.afterCleanup.contentObjectsLength).toBeDefined();
+      expect(res.afterCleanup.contentObjectsLength).toBeLessThan(res.beforeCleanup.contentObjectsLength);
     });
 
     test("Clear Tenancy", async () => {
