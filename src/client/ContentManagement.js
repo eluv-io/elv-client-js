@@ -1099,7 +1099,7 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
       let h;
 
       try {
-        h = await this.LatestVersionHashV2({objectId});
+        h = await this.LatestVersionHash({objectId});
 
         if(h === versionHash) {
           this.Log(`Commit confirmed on fabric node: ${versionHash}`);
