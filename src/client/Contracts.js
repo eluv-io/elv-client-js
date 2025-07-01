@@ -947,8 +947,20 @@ const ObjectTypesToClean = Object.freeze({
 });
 
 /**
- * Cleans up objects (libraries, content objects, groups or content types)
- * associated with a given user or object
+ * Cleans up deleted objects pointed to by the access index of a given "access group" or "user wallet"
+ * Contracts of type "access group" and "user wallet" contain an "access index" - a list of objects that they have access to.
+ *
+ * There are 4 specific indexes, one for each object type:
+ * - content
+ * - library
+ * - access groups
+ * - content types
+ *
+ * If an object gets deleted and the access index still points to it, it will cause errors in API calls for the access
+ * group or user wallet.
+ *
+ * This function checks each index for objects that are deleted, and removes them from the index (either all indexes or
+ * just the one specified by parameter 'objectTypeToClean')
  *
  * For user, the cleanup is performed on the user wallet and on all its access group
  *
