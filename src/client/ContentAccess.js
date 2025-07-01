@@ -1098,8 +1098,12 @@ exports.ContentObjectVersions = async function({libraryId, objectId}) {
  * @returns {Promise<string>} - The latest version hash of the object
  */
 exports.LatestVersionHash = async function({objectId, versionHash}) {
+  if(versionHash) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  }
+
   try {
-    return (await this.ContentObject({objectId, versionHash})).hash;
+    return (await this.ContentObject({objectId})).hash;
   } catch(error) {
     error.message = `Unable to determine latest version hash for ${versionHash || objectId}`;
     throw error;
