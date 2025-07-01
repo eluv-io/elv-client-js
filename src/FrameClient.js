@@ -575,6 +575,7 @@ class FrameClient {
       "Profile",
       "ProfileMetadata",
       "PurchaseStatus",
+      "PurgeUrl",
       "PushNotification",
       "RejectMarketplaceOffer",
       "RemoveListing",

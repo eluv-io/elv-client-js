@@ -1344,6 +1344,19 @@ class ElvWalletClient {
       }
     });
   }
+
+  async PurgeUrl({tenantId, url}) {
+    const body = { url };
+    const token = await this.client.CreateFabricToken({});
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "tnt", tenantId, "purge"),
+      method: "POST",
+      body,
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+  }
 }
 
 Object.assign(ElvWalletClient.prototype, require("./ClientMethods"));
