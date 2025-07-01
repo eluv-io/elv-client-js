@@ -928,4 +928,262 @@ exports.ResetTenantId = async function({contractAddress, objectId, versionHash})
   }
 };
 
+/**
+ * Enum for object types that can be cleaned up after object deletion.
+ * Used by the ObjectCleanup method to determine which associated objects to clean.
+ *
+ * @property {string=} LIBRARY - Cleanup libraries
+ * @property {string=} CONTENT_OBJECT - Cleanup content objects
+ * @property {string=} GROUP - Cleanup access groups
+ * @property {string=} CONTENT_TYPE - Cleanup content types
+ * @property {string=} ALL - Cleanup all of the above
+ */
+const ObjectTypesToClean = Object.freeze({
+  LIBRARY: "library",
+  CONTENT_OBJECT: "content_object",
+  GROUP: "group",
+  CONTENT_TYPE: "content_type",
+  ALL: "all"
+});
+
+/**
+ * Cleans up deleted objects pointed to by the access index of a given "access group" or "user wallet"
+ * Contracts of type "access group" and "user wallet" contain an "access index" - a list of objects that they have access to.
+ *
+ * There are 4 specific indexes, one for each object type:
+ * - content
+ * - library
+ * - access groups
+ * - content types
+ *
+ * If an object gets deleted and the access index still points to it, it will cause errors in API calls for the access
+ * group or user wallet.
+ *
+ * This function checks each index for objects that are deleted, and removes them from the index (either all indexes or
+ * just the one specified by parameter 'objectTypeToClean')
+ *
+ * For user, the cleanup is performed on the user wallet and on all its access group
+ *
+ * @methodGroup Contracts
+ * @namedParams
+ * @param {string=} contractAddress - The address of the object
+ * @param {string=} objectId - The ID of the object
+ * @param {string=} versionHash - A version hash of the object
+ * @param {string=} objectTypeToClean - The type of object to clean: one of "library", "content_object", "group", "content_type", or "all"
+ * @returns {Promise<Object>} - Resolves with an object showing the count of items before and after cleanup.
+ *
+ * Example return value:
+ * {
+ *   "0x123...": {
+ *     beforeCleanup: {
+ *       librariesLength: 2,
+ *       contentObjectsLength: 4,
+ *       accessGroupsLength: 1,
+ *       contentTypesLength: 3
+ *     },
+ *     afterCleanup: {
+ *       librariesLength: 0,
+ *       contentObjectsLength: 0,
+ *       accessGroupsLength: 0,
+ *       contentTypesLength: 0
+ *     }
+ *   },
+ *   "groups": {
+ *     "0x123...": {
+ *       beforeCleanup: {
+ *        contentObjectsLength: 1
+ *       },
+ *       afterCleanup: {
+ *        contentObjectsLength: 0
+ *       }
+ *     }
+ *   }
+ * }
+ */
+exports.ObjectCleanup = async function ({
+  contractAddress,
+  objectId,
+  versionHash,
+  objectTypeToClean = ObjectTypesToClean.ALL
+}) {
+  objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
+  contractAddress = objectInfo.contractAddress;
+  let isUserWallet = false;
+  let userAddress;
+
+  // Check if the contract is a user wallet address
+  try {
+    await this.CallContractMethod({
+      contractAddress,
+      methodName: "getLibrariesLength",
+      formatArguments: false,
+    });
+  } catch(e) {
+    try {
+      userAddress = contractAddress;
+      contractAddress = await this.userProfileClient.UserWalletAddress({address: contractAddress});
+      isUserWallet = true;
+    } catch(walletError) {
+      throw new Error(`Invalid object: ${walletError.message}`);
+    }
+  }
+
+  const allowedTypes = Object.values(ObjectTypesToClean);
+  if(!allowedTypes.includes(objectTypeToClean)) {
+    throw Error(`Invalid objectType '${objectTypeToClean}'. Allowed types: ${allowedTypes.join(", ")}`);
+  }
+
+  const cleanupTasks = {
+    [ObjectTypesToClean.LIBRARY]: async ({contractAddress, res}) => {
+      const before = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getLibrariesLength",
+        formatArguments: false,
+      });
+      res.beforeCleanup.librariesLength = before.toNumber();
+
+      await this.CallContractMethodAndWait({
+        contractAddress,
+        methodName: "cleanUpLibraries",
+        formatArguments: true,
+      });
+
+      const after = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getLibrariesLength",
+        formatArguments: false,
+      });
+      res.afterCleanup.librariesLength = after.toNumber();
+    },
+
+    [ObjectTypesToClean.CONTENT_OBJECT]: async ({contractAddress, res}) => {
+      const before = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getContentObjectsLength",
+        formatArguments: false,
+      });
+      res.beforeCleanup.contentObjectsLength = before.toNumber();
+
+      await this.CallContractMethodAndWait({
+        contractAddress,
+        methodName: "cleanUpContentObjects",
+        formatArguments: true,
+      });
+
+      const after = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getContentObjectsLength",
+        formatArguments: false,
+      });
+      res.afterCleanup.contentObjectsLength = after.toNumber();
+    },
+
+    [ObjectTypesToClean.GROUP]: async ({contractAddress, res}) => {
+      let before = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getAccessGroupsLength",
+        formatArguments: false,
+      });
+      res.beforeCleanup.accessGroupsLength = before.toNumber();
+
+      await this.CallContractMethodAndWait({
+        contractAddress,
+        methodName: "cleanUpAccessGroups",
+        formatArguments: true,
+      });
+
+      const after = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getAccessGroupsLength",
+        formatArguments: false,
+      });
+      res.afterCleanup.accessGroupsLength = after.toNumber();
+    },
+
+    [ObjectTypesToClean.CONTENT_TYPE]: async ({contractAddress, res}) => {
+      const before = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getContentTypesLength",
+        formatArguments: false,
+      });
+      res.beforeCleanup.contentTypesLength = before.toNumber();
+
+      await this.CallContractMethodAndWait({
+        contractAddress,
+        methodName: "cleanUpContentTypes",
+        formatArguments: true,
+      });
+
+      const after = await this.CallContractMethod({
+        contractAddress,
+        methodName: "getContentTypesLength",
+        formatArguments: false,
+      });
+      res.afterCleanup.contentTypesLength = after.toNumber();
+    }
+  };
+
+  const runCleanupTasks = async ({contractAddress}) => {
+    try {
+      const res = {
+        beforeCleanup: {},
+        afterCleanup: {}
+      };
+      if(objectTypeToClean === ObjectTypesToClean.ALL) {
+        for(const type of Object.keys(cleanupTasks)) {
+          await cleanupTasks[type]({contractAddress, res});
+        }
+      } else {
+        await cleanupTasks[objectTypeToClean]({contractAddress, res});
+      }
+      return res;
+    } catch(e) {
+      throw new Error(`Error during '${objectTypeToClean}' cleanup for ${contractAddress}: ${e.message}`);
+    }
+  };
+
+  let results = {};
+  // run cleanup on main contract
+  const res = await runCleanupTasks({contractAddress});
+  if(isUserWallet){
+    results[userAddress] = res;
+  } else {
+    results[contractAddress] = res;
+  }
+
+  // run cleanup on access group contracts if this is a user wallet
+  if(isUserWallet) {
+    const groupsLength = await this.CallContractMethod({
+      contractAddress,
+      methodName: "getAccessGroupsLength",
+      formatArguments: false,
+    });
+    if(groupsLength > 0) {
+      results["groups"] = {};
+    }
+
+    const groupAddressPromises = [];
+    for(let i=0; i<groupsLength; i++) {
+      groupAddressPromises.push(
+        this.CallContractMethod({
+          contractAddress,
+          methodName: "getAccessGroup",
+          methodArgs: [i],
+          formatArguments: false,
+        })
+      );
+    }
+
+    const groupAddresses = await Promise.all(groupAddressPromises);
+    const cleanupResults = await Promise.all(
+      groupAddresses.map(addr =>
+        runCleanupTasks({contractAddress: addr}).then(res => [addr, res]))
+    );
+
+    for(const [addr, res] of cleanupResults) {
+      results["groups"][addr] = res;
+    }
+  }
+  return results;
+};
 
