@@ -67,10 +67,11 @@ class ObjectAddFiles extends Utility {
         objectId,
         writeToken,
         fileInfo,
-        encrypt
+        encrypt,
+        resume,
       });
       // Close file handles
-      this.concerns.LocalFile.closeFileHandles(fileHandles);
+      this.concerns.LocalFile.(fileHandles);
     }
 
     // finalize the write token
