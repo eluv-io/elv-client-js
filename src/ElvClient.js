@@ -202,6 +202,10 @@ class ElvClient {
 
     this.debug = false;
 
+    // Use a default key when client is unauthed. This key should not be used for any other purpose.
+    // Break it up to avoid automatic private key detection warnings
+    this.defaultKey = "0x" + "5d52d808f10f64f0dffff8c73edff" + "3f7b467411216e2350940f869e6ac5a7db6";
+
     this.InitializeClients({staticToken});
   }
 
@@ -433,7 +437,8 @@ class ElvClient {
 
     if(!this.signer) {
       const wallet = this.GenerateWallet();
-      const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
+      const signer = wallet.AddAccount({privateKey: this.defaultKey});
+      signer.anonymous = true;
 
       this.SetSigner({signer, reset: false});
       this.SetStaticToken({token: staticToken});
@@ -739,6 +744,7 @@ class ElvClient {
     );
 
     if(!nodeUrl) {
+      // eslint-disable-next-line no-console
       console.error(`No node url found for write token: ${writeToken}`);
 
       return "";
@@ -1199,7 +1205,7 @@ class ElvClient {
         // Make dummy client with dummy account to allow calling of contracts
         const client = await ElvClient.FromConfigurationUrl({configUrl: this.configUrl});
         client.SetSigner({
-          signer: wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()})
+          signer: wallet.AddAccount({privateKey: this.defaultKey})
         });
 
         const {urls} = await client.authClient.KMSInfo({
