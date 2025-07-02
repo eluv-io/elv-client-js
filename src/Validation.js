@@ -30,11 +30,17 @@ exports.ValidateVersion = (versionHash) => {
   }
 };
 
-exports.ValidateWriteToken = (writeToken) => {
+// Validates that write token is in valid format and is properly encoded.
+// If objectId is also supplied, then write token's encoded object id is checked to make sure it matches
+// the supplied object id.
+exports.ValidateWriteToken = (writeToken, objectId = "") => {
   if(!writeToken) {
     throw Error("Write token not specified");
-  } else if(!writeToken.toString().startsWith("t")) {
-    throw Error(`Invalid write token: ${writeToken}`);
+  } else {
+    const decoded = Utils.DecodeWriteToken(writeToken);
+    if(objectId && objectId !== decoded.objectId) {
+      throw Error(`Object id (${objectId}) does not match the the id (${decoded.objectId}) decoded from write token (${writeToken})`);
+    }
   }
 };
 
