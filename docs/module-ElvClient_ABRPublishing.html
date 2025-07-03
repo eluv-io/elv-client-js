@@ -63,19 +63,50 @@
 <section>
   <header>
     
+      
+        
   </header>
 
   <article>
     <div class="container-overview">
       
         
-            <div class="description">
-              <p>Methods for ABR video creation and management</p>
+          <div class="description">
+            <p>Methods for ABR video creation and management</p>
 <p>For more information on how to publish ABR content see <a href="https://docs.eluv.io/docs/guides/media-ingest/">this detailed guide</a></p>
-            </div>
+          </div>
         
 
         
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <dl class="details">
 
@@ -498,7 +529,7 @@
         
 
         <td class="description last">
-          <p>The write token of the production master content object draft. If provided, the object will not be finalized</p>
+          <p>The write token of the production master content object draft.</p>
           
         </td>
       </tr>
@@ -541,7 +572,7 @@
         
 
         <td class="description last">
-          <p>The write token of the mezzanine object draft. If specified, the object will not be finalized</p>
+          <p>The write token of the mezzanine object draft. If specified, the object will not be finalized, and no extra version of the object will be created to hold &quot;bread crumb&quot; metadata entry /lro_draft</p>
           
         </td>
       </tr>
@@ -1073,7 +1104,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line282">line 282</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line284">line 284</a>
         </li>
       </ul>
     </dd>
@@ -2053,7 +2084,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id=".FinalizeABRMezzanine">
-      <span class="type-signature">static </span>FinalizeABRMezzanine<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">writeToken,</div><div class="block-param">preFinalizeFn<span class="signature-attributes">optional</span>,</div><div class="block-param">preFinalizeThrow<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
+      <span class="type-signature">static </span>FinalizeABRMezzanine<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">writeToken<span class="signature-attributes">optional</span>,</div><div class="block-param">preFinalizeFn<span class="signature-attributes">optional</span>,</div><div class="block-param">preFinalizeThrow<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
     </h4>
   </span>
 
@@ -2062,7 +2093,10 @@
 
 
   <div class="description">
-    <p>Finalize a mezzanine object after all jobs have finished</p>
+    <p>Process completed mezzanine transcoding LRO(s), creating the final offering(s) from the transcode(s)
+Unless a writeToken is passed in, finalize the mez object working draft as well.</p>
+<p>If a writeToken is not passed in, then it will be retrieved from /lro_draft of most recent version of object.
+This is a &quot;bread crumb&quot; entry that gets created by StartABRMezzanineJobs() - unless a writeToken was passed in to StartABRMezzanineJobs() also.</p>
   </div>
 
 
@@ -2200,6 +2234,8 @@
 
         
           <td class="attributes">
+            
+              &lt;optional><br>
             
 
             
@@ -2382,7 +2418,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line767">line 767</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line780">line 780</a>
         </li>
       </ul>
     </dd>
@@ -2416,6 +2452,9 @@
   <div class="description">
     <p>Retrieve node and write token for a mezzanine's current offering preparation job (if any).
 Also returns the offering key.</p>
+<p>This information is contained in metadata at /lro_draft, in an extra version of the object
+that gets created and finalized as part of creating a mezzanine. This serves as a &quot;bread crumb trail&quot; to
+allow users to find the active draft/write token that the ingest LROs are writing to.</p>
   </div>
 
 
@@ -2593,7 +2632,7 @@ Also returns the offering key.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line685">line 685</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line684">line 684</a>
         </li>
       </ul>
     </dd>
@@ -2616,7 +2655,7 @@ Also returns the offering key.</p>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id=".LROStatus">
-      <span class="type-signature">static </span>LROStatus<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId</div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
+      <span class="type-signature">static </span>LROStatus<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">writeToken<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
     </h4>
   </span>
 
@@ -2625,7 +2664,10 @@ Also returns the offering key.</p>
 
 
   <div class="description">
-    <p>Retrieve status information for mezzanine transcoding jobs, aka long running operations (LROs) on the given object.</p>
+    <p>Retrieve status information for mezzanine transcoding jobs, aka long running operations (LROs) on the given object.
+If a write token is passed in, its draft will be checked directly by lookiing at /lro_status.
+If a write token is not passed in, then the latest version of objectId will be checked for &quot;bread crumb&quot; entry
+at /lro_draft, to determine the write token that current ingest LRO(s) are writing to.</p>
   </div>
 
 
@@ -2658,6 +2700,8 @@ Also returns the offering key.</p>
       <th>Type</th>
 
       
+        <th>Attributes</th>
+      
 
       
 
@@ -2685,6 +2729,14 @@ Also returns the offering key.</p>
           
         </td>
 
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
         
 
         
@@ -2715,11 +2767,58 @@ Also returns the offering key.</p>
         </td>
 
         
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
 
         
 
         <td class="description last">
           <p>ID of the object</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>writeToken</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>Write token of the active draft (that the transcode LROs are writing to)</p>
           
         </td>
       </tr>
@@ -2892,7 +2991,7 @@ Also returns the offering key.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line739">line 739</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line741">line 741</a>
         </li>
       </ul>
     </dd>
@@ -3075,7 +3174,7 @@ Also returns the offering key.</p>
         
 
         <td class="description last">
-          <p>Write token of the mezzanine object draft. If provided, the object will not be finalized</p>
+          <p>Write token of the mezzanine object draft. If provided, no &quot;bread crumb&quot; metadata /lro_draft will be created, nor saved as an extra finalized version</p>
           
         </td>
       </tr>
@@ -3252,7 +3351,7 @@ Also returns the offering key.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line540">line 540</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line545">line 545</a>
         </li>
       </ul>
     </dd>
@@ -3278,7 +3377,7 @@ Also returns the offering key.</p>
 
 
         <footer class="footer">
-          Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.0</a>
+          Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.3</a>
         </footer>
       </div>
     </div>
