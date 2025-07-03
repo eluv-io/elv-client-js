@@ -13,7 +13,8 @@ const {
   ValidateLibrary,
   ValidateVersion,
   ValidateParameters,
-  ValidateWriteToken
+  ValidateWriteToken,
+  ValidateObject
 } = require("../Validation");
 
 // When `/abr_mezzanine/offerings` contains more than one entry, only 1 is the 'real' offering, the others are
