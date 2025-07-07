@@ -422,6 +422,7 @@ class ElvClient {
     this.contentTypes = {};
     this.encryptionConks = {};
     this.stateChannelAccess = {};
+    this.objectInfo = {};
     this.objectTenantIds = {};
     this.objectLibraryIds = {};
     this.objectImageUrls = {};
