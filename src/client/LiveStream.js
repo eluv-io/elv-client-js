@@ -69,6 +69,7 @@ const CueInfo = async ({eventId, status}) => {
  * @param {Object} client - The client object
  * @param {string} libraryId - ID of the library for the new live stream object
  * @param {string} objectId - ID of the new live stream object
+ * @param {string=} writeToken - Write token of the draft
  * @param {string=} typeAbrMaster - Content type hash
  * @param {string=} typeLiveStream - Content type hash
  * @param {string} streamUrl - Live source URL
@@ -93,6 +94,7 @@ const StreamGenerateOffering = async({
   client,
   libraryId,
   objectId,
+  writeToken,
   typeAbrMaster,
   typeLiveStream,
   streamUrl,
@@ -243,16 +245,15 @@ const StreamGenerateOffering = async({
   metadata.production_master = production_master;
 
   // write back to object
-  console.log("Getting write token...");
-  let editResponse = await client.EditContentObject({
-    libraryId,
-    objectId,
-    options: {
-      type: typeAbrMaster
-    }
-  });
-  let writeToken = editResponse.write_token;
-  console.log(`New write token: ${writeToken}`);
+  if(!writeToken) {
+    ({writeToken} = await client.EditContentObject({
+      libraryId,
+      objectId,
+      options: {
+        type: typeAbrMaster
+      }
+    }));
+  }
 
   console.log("Writing back metadata with /production_master added...");
   await client.ReplaceMetadata({
@@ -262,20 +263,13 @@ const StreamGenerateOffering = async({
     writeToken
   });
 
-  console.log("Finalizing...");
-  let finalizeResponse = await client.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken
-  });
-  let masterVersionHash = finalizeResponse.hash;
-  console.log(`Finalized, new version hash: ${masterVersionHash}`);
 
   // Generate offering
   const createResponse = await client.CreateABRMezzanine({
     libraryId,
     objectId,
-    masterVersionHash,
+    masterWriteToken: writeToken,
+    writeToken,
     variant: "default",
     offeringKey: "default",
     abrProfile
@@ -308,17 +302,6 @@ const StreamGenerateOffering = async({
   // add items to media_struct needed to use options.json handler
   metadata.offerings.default.media_struct.duration_rat = `${DUMMY_DURATION}`;
 
-  // write back to object
-  console.log("Getting write token...");
-  editResponse = await client.EditContentObject({
-    libraryId,
-    objectId,
-    options: {
-      type: typeLiveStream
-    }
-  });
-  writeToken = editResponse.write_token;
-  console.log(`New write token: ${writeToken}`);
 
   console.log("Writing back metadata with /offerings...");
   await client.ReplaceMetadata({
@@ -332,7 +315,8 @@ const StreamGenerateOffering = async({
   finalizeResponse = await client.FinalizeContentObject({
     libraryId,
     objectId,
-    writeToken
+    writeToken,
+    commitMessage: "Update offering"
   });
 
   const finalHash = finalizeResponse.hash;
@@ -947,10 +931,11 @@ exports.StreamStopSession = async function({name}) {
  * @param {string=} format - Specify the list of playout formats and DRM to support,
  comma-separated (hls-clear, hls-aes128, hls-sample-aes,
  hls-fairplay)
+ * @param {string=} writeToken - Write token of the draft
  *
  * @return {Promise<Object>} - The name, object ID, and state of the stream
  */
-exports.StreamInitialize = async function({name, drm=false, format}) {
+exports.StreamInitialize = async function({name, drm=false, format, writeToken}) {
   let typeAbrMaster;
   let typeLiveStream;
 
@@ -979,7 +964,14 @@ exports.StreamInitialize = async function({name, drm=false, format}) {
     return {};
   }
 
-  const res = await this.StreamSetOfferingAndDRM({name, typeAbrMaster, typeLiveStream, drm, format});
+  const res = await this.StreamSetOfferingAndDRM({
+    name,
+    typeAbrMaster,
+    typeLiveStream,
+    drm,
+    format,
+    writeToken
+  });
 
   return res;
 };
@@ -996,10 +988,18 @@ exports.StreamInitialize = async function({name, drm=false, format}) {
  * @param {string=} format - A list of playout formats and DRM to support, comma-separated
  * (hls-clear, hls-aes128, hls-sample-aes, hls-fairplay). If specified,
  * this will take precedence over the drm value
+ * @param {string=} writeToken - Write token of the draft
  *
  * @return {Promise<Object>} - The name, object ID, and state of the stream
  */
-exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveStream, drm=false, format}) {
+exports.StreamSetOfferingAndDRM = async function({
+  name,
+  typeAbrMaster,
+  typeLiveStream,
+  drm=false,
+  format,
+  writeToken
+}) {
   let status = await this.StreamStatus({name});
   if(status.state != "uninitialized" && status.state != "inactive" && status.state != "stopped") {
     return {
@@ -1122,7 +1122,8 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
       vWidth,
       vDisplayAspectRatio,
       vFrameRate,
-      vTimeBase
+      vTimeBase,
+      writeToken
     });
 
     console.log("Finished generating offering");
