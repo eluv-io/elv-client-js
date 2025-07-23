@@ -111,7 +111,8 @@ const StreamGenerateOffering = async({
   vWidth,
   vDisplayAspectRatio,
   vFrameRate,
-  vTimeBase
+  vTimeBase,
+  finalize=true
 }) => {
   // compute duration_ts
   const DUMMY_DURATION = 1001; // should result in integer duration_ts values for both audio and video
@@ -285,14 +286,16 @@ const StreamGenerateOffering = async({
     console.log(JSON.stringify(createResponse.errors, null, 2));
   }
 
-  let versionHash = createResponse.hash;
-  console.log(`New version hash: ${versionHash}`);
+  // let versionHash = createResponse.hash;
+  // console.log(`New version hash: ${versionHash}`);
 
   // get new metadata
   console.log("Retrieving revised metadata with offering...");
   metadata = await client.ContentObjectMetadata({
     libraryId,
-    versionHash
+    objectId,
+    writeToken
+    // versionHash
   });
 
   console.log("Moving /abr_mezzanine/offerings to /offerings and removing /abr_mezzanine...");
@@ -311,18 +314,19 @@ const StreamGenerateOffering = async({
     writeToken
   });
 
-  console.log("Finalizing...");
-  finalizeResponse = await client.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken,
-    commitMessage: "Update offering"
-  });
+  if(finalize) {
+    console.log("Finalizing...");
+    finalizeResponse = await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Update offering"
+    });
 
-  const finalHash = finalizeResponse.hash;
-  console.log(`Finalized, new version hash: ${finalHash}`);
-
-  return finalHash;
+    const finalHash = finalizeResponse.hash;
+    console.log(`Finalized, new version hash: ${finalHash}`);
+    return finalHash;
+  }
 };
 
 /**
@@ -932,10 +936,17 @@ exports.StreamStopSession = async function({name}) {
  comma-separated (hls-clear, hls-aes128, hls-sample-aes,
  hls-fairplay)
  * @param {string=} writeToken - Write token of the draft
+ * @param {boolean=} finalize - If enabled, target object will be finalized after configuration
  *
  * @return {Promise<Object>} - The name, object ID, and state of the stream
  */
-exports.StreamInitialize = async function({name, drm=false, format, writeToken}) {
+exports.StreamInitialize = async function({
+  name,
+  drm=false,
+  format,
+  writeToken,
+  finalize=true
+}) {
   let typeAbrMaster;
   let typeLiveStream;
 
@@ -970,7 +981,8 @@ exports.StreamInitialize = async function({name, drm=false, format, writeToken})
     typeLiveStream,
     drm,
     format,
-    writeToken
+    writeToken,
+    finalize
   });
 
   return res;
@@ -998,7 +1010,8 @@ exports.StreamSetOfferingAndDRM = async function({
   typeLiveStream,
   drm=false,
   format,
-  writeToken
+  writeToken,
+  finalize=true
 }) {
   let status = await this.StreamStatus({name});
   if(status.state != "uninitialized" && status.state != "inactive" && status.state != "stopped") {
@@ -1123,7 +1136,8 @@ exports.StreamSetOfferingAndDRM = async function({
       vDisplayAspectRatio,
       vFrameRate,
       vTimeBase,
-      writeToken
+      writeToken,
+      finalize
     });
 
     console.log("Finished generating offering");
