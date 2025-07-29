@@ -235,11 +235,14 @@ const StreamGenerateOffering = async({
   // construct /production_master
   const production_master = {sources, variants};
 
+  const existingWriteToken = !!writeToken;
+
   // get existing metadata
   console.log("Retrieving current metadata...");
   let metadata = await client.ContentObjectMetadata({
     libraryId,
-    objectId
+    objectId,
+    writeToken
   });
 
   // add /production_master to metadata
@@ -264,13 +267,23 @@ const StreamGenerateOffering = async({
     writeToken
   });
 
+  let finalizeResponse, masterVersionHash;
+  if(!existingWriteToken) {
+    finalizeResponse = await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken
+    });
+    masterVersionHash = finalizeResponse.hash;
+  }
 
   // Generate offering
   const createResponse = await client.CreateABRMezzanine({
     libraryId,
     objectId,
-    masterWriteToken: writeToken,
-    writeToken,
+    masterVersionHash: existingWriteToken ? undefined : masterVersionHash,
+    masterWriteToken: existingWriteToken ? writeToken : undefined,
+    writeToken: existingWriteToken ? writeToken : undefined,
     variant: "default",
     offeringKey: "default",
     abrProfile
@@ -286,16 +299,15 @@ const StreamGenerateOffering = async({
     console.log(JSON.stringify(createResponse.errors, null, 2));
   }
 
-  // let versionHash = createResponse.hash;
-  // console.log(`New version hash: ${versionHash}`);
+  let versionHash = createResponse.hash;
 
   // get new metadata
   console.log("Retrieving revised metadata with offering...");
   metadata = await client.ContentObjectMetadata({
     libraryId,
     objectId,
-    writeToken
-    // versionHash
+    writeToken: existingWriteToken ? writeToken : undefined,
+    versionHash: existingWriteToken ? undefined : versionHash
   });
 
   console.log("Moving /abr_mezzanine/offerings to /offerings and removing /abr_mezzanine...");
@@ -304,7 +316,6 @@ const StreamGenerateOffering = async({
 
   // add items to media_struct needed to use options.json handler
   metadata.offerings.default.media_struct.duration_rat = `${DUMMY_DURATION}`;
-
 
   console.log("Writing back metadata with /offerings...");
   await client.ReplaceMetadata({
@@ -1101,7 +1112,8 @@ exports.StreamSetOfferingAndDRM = async function({
   try {
     let mainMeta = await this.ContentObjectMetadata({
       libraryId,
-      objectId
+      objectId,
+      writeToken
     });
 
     let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
