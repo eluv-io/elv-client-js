@@ -640,18 +640,17 @@ exports.ContentObjects = async function({libraryId, filterOptions={}}) {
 };
 
 /**
- * Get a specific content object in the library
+ * Get info about a specific content object
  *
  * @methodGroup Content Objects
  * @namedParams
- * @param {string=} libraryId - ID of the library
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
  * @param {string=} writeToken - Write token for an object draft -- if supplied, versionHash will be ignored
  *
  * @returns {Promise&lt;Object>} - Description of content object
  */
-exports.ContentObject = async function({objectId, versionHash, writeToken}) {
+exports.ContentObject = async function({objectId, versionHash, writeToken, noCache}) {
   this.Log(`Retrieving content object: ${writeToken || versionHash || objectId}`);
 
   if(writeToken) {
@@ -662,13 +661,26 @@ exports.ContentObject = async function({objectId, versionHash, writeToken}) {
 
   ValidateObject(objectId);
 
-  let path = UrlJoin("q", writeToken || versionHash || objectId);
+  const id = writeToken || versionHash || objectId;
+  if(noCache || !this.objectInfo[id] || Date.now() - this.objectInfo[id].retrievedAt > 30000) {
+    let path = UrlJoin("q", id);
+    this.objectInfo[id] = {
+      retrievedAt: Date.now(),
+      info: (
+        await this.HttpClient.RequestJsonBody({
+          headers: await this.authClient.AuthorizationHeader({objectId, versionHash}),
+          method: "GET",
+          path: path,
+          queryParams: {
+            details: true,
+            profile: true
+          }
+        })
+      )
+    };
+  }
 
-  return await this.HttpClient.RequestJsonBody({
-    headers: await this.authClient.AuthorizationHeader({objectId, versionHash}),
-    method: "GET",
-    path: path
-  });
+  return this.objectInfo[id].info;
 };
 
 /**
@@ -676,22 +688,21 @@ exports.ContentObject = async function({objectId, versionHash, writeToken}) {
  *
  * @methodGroup Content Objects
  * @namedParams
- * @param {string} libraryId
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object
  *
  * @returns {Promise&lt;string>} - The account address of the owner
  */
-exports.ContentObjectOwner = async function({objectId}) {
-  ValidateObject(objectId);
+exports.ContentObjectOwner = async function({objectId, versionHash}) {
+  versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
+  if(versionHash) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  }
 
   this.Log(`Retrieving content object owner: ${objectId}`);
 
-  return this.utils.FormatAddress(
-    await this.ethClient.CallContractMethod({
-      contractAddress: this.utils.HashToAddress(objectId),
-      methodName: "owner",
-      methodArgs: []
-    })
-  );
+  return (await this.ContentObject({objectId, versionHash})).content_profile.owner;
 };
 
 /**
@@ -708,16 +719,18 @@ exports.ContentObjectOwner = async function({objectId}) {
 exports.ContentObjectTenantId = async function({objectId, versionHash}) {
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
-  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+  if(versionHash) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  }
 
+  // Cache results because they will never change
   if(!this.objectTenantIds[objectId]) {
-    this.objectTenantIds[objectId] = await this.authClient.MakeElvMasterCall({
-      methodName: "elv_getTenantById",
-      params: [
-        this.contentSpaceId,
-        objectId
-      ]
-    });
+    try {
+      this.objectTenantIds[objectId] = (await this.ContentObject({objectId, versionHash})).content_profile.tenant_id;
+    } catch(error) {
+      error.message = `Unable to determine tenant ID for ${versionHash || objectId}`;
+      throw error;
+    }
   }
 
   return this.objectTenantIds[objectId];
@@ -735,6 +748,8 @@ exports.ContentObjectTenantId = async function({objectId, versionHash}) {
  * @returns {Promise&lt;string>} - Library ID of the object
  */
 exports.ContentObjectLibraryId = async function({objectId, versionHash}) {
+  versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
   if(versionHash) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   }
@@ -744,54 +759,12 @@ exports.ContentObjectLibraryId = async function({objectId, versionHash}) {
     try {
       this.objectLibraryIds[objectId] = (await this.ContentObject({objectId, versionHash})).qlib_id;
     } catch(error) {
-      error.message = `Unable to determine latest library for ${versionHash || objectId}`;
+      error.message = `Unable to determine library ID for ${versionHash || objectId}`;
       throw error;
     }
   }
 
   return this.objectLibraryIds[objectId];
-};
-
-exports.ContentObjectLibraryId2 = async function({objectId, versionHash}) {
-  versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
-
-  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
-
-  switch(await this.authClient.AccessType(objectId)) {
-    case this.authClient.ACCESS_TYPES.LIBRARY:
-      return this.utils.AddressToLibraryId(this.utils.HashToAddress(objectId));
-    case this.authClient.ACCESS_TYPES.OBJECT:
-      if(!this.objectLibraryIds[objectId]) {
-        this.Log(`Retrieving content object library ID: ${objectId || versionHash}`);
-
-        this.objectLibraryIds[objectId] = new Promise(async (resolve, reject) => {
-          try {
-            resolve(
-              this.utils.AddressToLibraryId(
-                await this.CallContractMethod({
-                  contractAddress: this.utils.HashToAddress(objectId),
-                  methodName: "libraryAddress"
-                })
-              )
-            );
-          } catch(error) {
-            reject(error);
-          }
-        });
-      }
-
-      try {
-        return await this.objectLibraryIds[objectId];
-      } catch(error) {
-        delete this.objectLibraryIds[objectId];
-
-        throw error;
-      }
-    case this.authClient.ACCESS_TYPES.OTHER:
-      throw Error(`Unable to retrieve library ID for ${versionHash || objectId}: Unknown type. (wrong network or deleted object?)`);
-    default:
-      return this.contentSpaceLibraryId;
-  }
 };
 
 exports.ProduceMetadataLinks = async function({
@@ -1170,7 +1143,7 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
   }
 
   try {
-    return (await this.ContentObject({objectId})).hash;
+    return (await this.ContentObject({objectId, noCache: true})).hash;
   } catch(error) {
     error.message = `Unable to determine latest version hash for ${versionHash || objectId}`;
     throw error;
@@ -3351,7 +3324,7 @@ exports.QParts = async function({libraryId, objectId, partHash, format="blob"}) 
 
 
         <footer class="footer">
-          Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.3</a>
+          Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.4</a>
         </footer>
       </div>
     </div>
