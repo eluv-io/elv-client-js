@@ -7,7 +7,7 @@ let fs = require("jsdoc/fs");
 let helper = require("jsdoc/util/templateHelper");
 let logger = require("jsdoc/util/logger");
 let path = require("jsdoc/path");
-let taffy = require("taffydb").taffy;
+let taffy = require("@jsdoc/salty").taffy;
 let template = require("jsdoc/template");
 let util = require("util");
 

@@ -10,17 +10,23 @@ const UrlJoin = require("url-join");
  * Create a share
  *
  * @namedParams
- * @param {string} objectId - The object to create a share for
+ * @param {string} objectId - The ID of the object to share
+ * @param {Array<string>} objectIds - Additional object IDs to authorize
  * @param {Date} expiresAt - The expiration time of the share
  * @param {Object=} params - Additional parameters
  *
  * @returns {Promise<Object>} - Info about the created share
  */
-exports.CreateShare = async function({objectId, expiresAt, params={}}) {
+exports.CreateShare = async function({objectId, objectIds=[], expiresAt, params={}}) {
   const tenantId = await this.userProfileClient.TenantContractId();
   const token = await this.CreateFabricToken({});
+  
+  if(objectId) {
+    objectIds = [objectId, ...objectIds]
+      .filter((x, i, a) => x && a.indexOf(x) == i);
+  }
 
-  params.object_id = objectId;
+  params.object_ids = objectIds;
 
   if(expiresAt) {
     params.end_time = Math.floor(new Date(expiresAt).getTime() / 1000);
