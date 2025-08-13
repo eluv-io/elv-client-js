@@ -276,20 +276,19 @@ exports.UploadFilesFromS3 = async function({
   }
 };
 
-
 /**
  * Upload files to a content object.
  *
  * Expected format of fileInfo:
  *
-     [
-         {
-            path: string,
-            mime_type: string,
-            size: number,
-            data: File | ArrayBuffer | Buffer | File Descriptor (Node)
-          }
-     ]
+ [
+ {
+ path: string,
+ mime_type: string,
+ size: number,
+ data: File | ArrayBuffer | Buffer | File Descriptor (Node)
+ }
+ ]
  *
  *
  * @memberof module:ElvClient/Files+Parts
@@ -299,11 +298,12 @@ exports.UploadFilesFromS3 = async function({
  * @param {string} objectId - ID of the object
  * @param {string} writeToken - Write token of the draft
  * @param {Array<object>} fileInfo - List of files to upload, including their size, type, and contents
+ * @param {string} resume - Resume the upload jobs
  * @param {string} encryption="none" - Encryption for uploaded files - cgck | none
  * @param {function=} callback - If specified, will be called after each job segment is finished with the current upload progress
  * - Format: {"filename1": {uploaded: number, total: number}, ...}
  */
-exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo, encryption="none", callback}) {
+exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo, resume=false,encryption="none", callback}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
   ValidatePresence("fileInfo", fileInfo);
@@ -350,156 +350,206 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
     callback(progress);
   }
 
-  const {id, jobs} = await this.CreateFileUploadJob({
-    libraryId,
-    objectId,
-    writeToken,
-    ops: fileInfo,
-    encryption
-  });
+  let idJobMap = new Map();
+  if(resume) {
+    const ids = await this.ListFilesJob({ libraryId, objectId, writeToken, encryption });
 
-  this.Log(`Upload ID: ${id}`);
-  this.Log(jobs);
+    const jobsByStatus = ids.reduce((acc, job) => {
+      acc[job.status] = acc[job.status] || [];
+      acc[job.status].push(job.id);
+      return acc;
+    }, {});
 
-  // How far encryption can get ahead of upload
-  const bufferSize = 500 * 1024 * 1024;
+    const stoppedJobIds = jobsByStatus.STOPPED || [];
+    const inProgressJobIds = jobsByStatus.IN_PROGRESS || [];
 
-  let jobSpecs = [];
-  let prepared = 0;
-  let uploaded = 0;
+    const resumeJobIds = [...stoppedJobIds, ...inProgressJobIds];
+    if(resumeJobIds.length === 0) {
+      this.Log("No job Ids to resume");
+      return;
+    }
 
-  // Insert the data to upload into the job spec, encrypting if necessary
-  const PrepareJobs = async () => {
-    for(let j = 0; j < jobs.length; j++) {
-      while(prepared - uploaded > bufferSize) {
-        // Wait for more data to be uploaded
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-
-      // Retrieve job info
-      const jobId = jobs[j];
-      let job = await this.UploadJobStatus({
+    // Resume all stopped uploadIds
+    if(stoppedJobIds.length > 0) {
+      await this.ResumeFileUploadJob({
         libraryId,
         objectId,
         writeToken,
-        uploadId: id,
-        jobId
+        ops: fileInfo,
+        encryption,
+        stoppedJobIds
       });
-
-      for(let f = 0; f < job.files.length; f++) {
-        const fileInfo = job.files[f];
-
-        let data;
-        if(typeof fileDataMap[fileInfo.path] === "number") {
-          // File descriptor - Read data from file
-          data = Buffer.alloc(fileInfo.len);
-          fs.readSync(fileDataMap[fileInfo.path], data, 0, fileInfo.len, fileInfo.off);
-        } else {
-          // Full data - Slice requested chunk
-          data = fileDataMap[fileInfo.path].slice(fileInfo.off, fileInfo.off + fileInfo.len);
-        }
-
-        if(encryption === "cgck") {
-          data = await this.Crypto.Encrypt(conk, data);
-        }
-
-        job.files[f].data = data;
-
-        prepared += fileInfo.len;
-      }
-
-      jobSpecs[j] = job;
-
-      // Wait for a bit to let upload start
-      await new Promise(resolve => setTimeout(resolve, 50));
-    }
-  };
-
-  const UploadJob = async (jobId, j)  => {
-    while(!jobSpecs[j]) {
-      // Wait for more jobs to be prepared
-      await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    const jobSpec = jobSpecs[j];
-    const files = jobSpec.files;
-
-    // Upload each item
-    for(let f = 0; f < files.length; f++) {
-      const fileInfo = files[f];
-
-      let retries = 0;
-      let succeeded = false;
-      do {
-        try {
-          await this.UploadFileData({
-            libraryId,
-            objectId,
-            writeToken,
-            uploadId: id,
-            jobId,
-            filePath: fileInfo.path,
-            fileData: fileInfo.data,
-            encryption
-          });
-
-          succeeded = true;
-        } catch(error) {
-          this.Log(error, true);
-
-          retries += 1;
-
-          if(retries >= 10) {
-            throw error;
-          }
-
-          await new Promise(resolve => setTimeout(resolve, 10 * retries * 1000));
-        }
-      } while(!succeeded && retries < 10);
-
-      delete jobSpecs[j].files[f].data;
-      uploaded += fileInfo.len;
-
-      if(callback) {
-        progress[fileInfo.path] = {
-          ...progress[fileInfo.path],
-          uploaded: progress[fileInfo.path].uploaded + fileInfo.len
-        };
-
-        callback(progress);
-      }
+    // for each uploadId, make a map containing jobIds
+    for(const uploadId of resumeJobIds) {
+      const result = await this.ListFilesUploadJobs({
+        libraryId,
+        objectId,
+        writeToken,
+        jobId: uploadId,
+        encryption
+      });
+      idJobMap.set(uploadId, result.jobs);
     }
-  };
-
-  // Preparing jobs is done asynchronously
-  PrepareJobs().catch(e => {
-    throw e;
-  });
-
-  // Upload the first several chunks in sequence, to determine average upload rate
-  const rateTestJobs = Math.min(3, jobs.length);
-  let rates = [];
-  for(let j = 0; j < rateTestJobs; j++) {
-    const start = new Date().getTime();
-    await UploadJob(jobs[j], j);
-    const elapsed = (new Date().getTime() - start) / 1000;
-    const size = jobSpecs[j].files.map(file => file.len).reduce((length, total) => length + total, 0);
-    rates.push(size / elapsed / (1024 * 1024));
+  } else {
+    const jobResponse = await this.CreateFileUploadJob({
+      libraryId,
+      objectId,
+      writeToken,
+      ops: fileInfo,
+      encryption
+    });
+    idJobMap.set(jobResponse.id, jobResponse.jobs);
   }
 
-  const averageRate = rates.reduce((mbps, total) => mbps + total, 0) / rateTestJobs;
+  // How far encryption can get ahead of upload (500 MB)
+  const bufferSize = 500 * 1024 * 1024;
 
-  // Upload remaining jobs in parallel
-  const concurrentUploads = Math.min(5, Math.ceil(averageRate / 2));
-  await this.utils.LimitedMap(
-    concurrentUploads,
-    jobs,
-    async (jobId, j)  => {
-      if(j < rateTestJobs) { return; }
+  // Process each uploadId and its jobs
+  for(const [uploadId, jobs] of idJobMap.entries()) {
+    this.Log(`Upload ID: ${uploadId}`);
+    this.Log(jobs.length);
 
-      await UploadJob(jobId, j);
+    // Each upload ID gets its own counters
+    let prepared = 0;
+    let uploaded = 0;
+    let jobSpecs = [];
+
+    // Insert the data to upload into the job spec, encrypting if necessary
+    const PrepareJobs = async () => {
+      for(let j = 0; j < jobs.length; j++) {
+        while(prepared - uploaded > bufferSize) {
+          // Wait for more data to be uploaded
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        // Retrieve job info
+        const jobId = jobs[j];
+        let job = await this.UploadJobStatus({
+          libraryId,
+          objectId,
+          writeToken,
+          uploadId,
+          jobId
+        });
+
+        for(let f = 0; f < job.files.length; f++) {
+          const fileInfo = job.files[f];
+
+          let data;
+          if(typeof fileDataMap[fileInfo.path] === "number") {
+            // File descriptor - Read data from file
+            data = Buffer.alloc(fileInfo.len);
+            fs.readSync(fileDataMap[fileInfo.path], data, 0, fileInfo.len, fileInfo.off);
+          } else {
+            // Full data - Slice requested chunk
+            data = fileDataMap[fileInfo.path].slice(fileInfo.off, fileInfo.off + fileInfo.len);
+          }
+
+          if(encryption === "cgck") {
+            data = await this.Crypto.Encrypt(conk, data);
+          }
+
+          job.files[f].data = data;
+
+          prepared += fileInfo.len;
+        }
+
+        jobSpecs[j] = job;
+
+        // Wait for a bit to let upload start
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+
+    };
+
+    const UploadJob = async (jobId, j) => {
+      while(!jobSpecs[j]) {
+        // Wait for more jobs to be prepared
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      const jobSpec = jobSpecs[j];
+      const files = jobSpec.files;
+
+      // Upload each item
+      for(let f = 0; f < files.length; f++) {
+        const fileInfo = files[f];
+
+        let retries = 0;
+        let succeeded = false;
+        do {
+          try {
+            await this.UploadFileData({
+              libraryId,
+              objectId,
+              writeToken,
+              uploadId,
+              jobId,
+              filePath: fileInfo.path,
+              fileData: fileInfo.data,
+              encryption
+            });
+
+            succeeded = true;
+          } catch(error) {
+            this.Log(error, true);
+
+            retries += 1;
+
+            if(retries >= 10) {
+              throw error;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 10 * retries * 1000));
+          }
+        } while(!succeeded && retries < 10);
+
+        delete jobSpecs[j].files[f].data;
+        uploaded += fileInfo.len;
+
+        if(callback) {
+          progress[fileInfo.path] = {
+            ...progress[fileInfo.path],
+            uploaded: progress[fileInfo.path].uploaded + fileInfo.len
+          };
+
+          callback(progress);
+        }
+      }
+    };
+
+    // Preparing jobs is done asynchronously
+    PrepareJobs().catch(e => {
+      throw e;
+    });
+
+    // Upload the first several chunks in sequence, to determine average upload rate
+    const rateTestJobs = Math.min(3, jobs.length);
+    let rates = [];
+    for(let j = 0; j < rateTestJobs; j++) {
+      const start = new Date().getTime();
+      await UploadJob(jobs[j], j);
+      const elapsed = (new Date().getTime() - start) / 1000;
+      const size = jobSpecs[j].files.map(file => file.len).reduce((length, total) => length + total, 0);
+      rates.push(size / elapsed / (1024 * 1024));
     }
-  );
+
+    const averageRate = rates.reduce((mbps, total) => mbps + total, 0) / rateTestJobs;
+
+    // Upload remaining jobs in parallel
+    const concurrentUploads = Math.min(5, Math.ceil(averageRate / 2));
+    await this.utils.LimitedMap(
+      concurrentUploads,
+      jobs,
+      async (jobId, j) => {
+        if(j < rateTestJobs) { return; }
+
+        await UploadJob(jobId, j);
+      }
+    );
+  }
 };
 
 exports.CreateFileUploadJob = async function({libraryId, objectId, writeToken, ops, defaults={}, encryption="none"}) {
@@ -537,7 +587,23 @@ exports.ListFilesJob = async function({libraryId, objectId, writeToken, encrypti
 
   this.Log(`List file jobs: ${libraryId} ${objectId} ${writeToken}`);
 
-  const path = UrlJoin("q", writeToken, "file_jobs");
+  const path = UrlJoin( "q", writeToken, "file_jobs");
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
+    method: "GET",
+    path: path,
+    allowFailover: false
+  });
+};
+
+exports.ListFilesUploadJobs = async function({libraryId, objectId, writeToken, jobId, encryption="none"}) {
+  ValidateParameters({libraryId, objectId});
+  ValidateWriteToken(writeToken);
+
+  this.Log(`List file upload jobs: ${libraryId} ${objectId} ${writeToken}`);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "file_jobs", jobId, "uploads");
 
   return this.HttpClient.RequestJsonBody({
     headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
@@ -557,7 +623,6 @@ exports.ResumeFileUploadJob = async function({libraryId, objectId, writeToken, o
   }
 
   this.Log(`Resuming file upload job: ${libraryId} ${objectId} ${writeToken}`);
-  this.Log(ops);
 
   if(encryption === "cgck") {
     defaults.encryption = { scheme: "cgck" };
