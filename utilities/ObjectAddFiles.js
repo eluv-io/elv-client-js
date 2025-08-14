@@ -49,7 +49,8 @@ class ObjectAddFiles extends Utility {
     }
     logger.data("WRITE_TOKEN", writeToken);
     // eslint-disable-next-line no-console
-    console.log("WRITE_TOKEN", writeToken);
+    console.log("Using write token:", writeToken);
+
 
     if(access) {
       await this.concerns.CloudFile.add({
