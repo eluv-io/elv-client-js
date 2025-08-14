@@ -1,6 +1,6 @@
 // Create new production master from specified file(s)
 
-const {ModOpt, StdOpt} = require("./lib/options");
+const {ModOpt, StdOpt, NewOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
 const ArgNoWait = require("./lib/concerns/ArgNoWait");
@@ -16,7 +16,12 @@ class ObjectAddFiles extends Utility {
       concerns: [Logger, ExistObj, Edit, ArgNoWait, LocalFile, CloudFile],
       options: [
         ModOpt("files", {X: "to add"}),
-        StdOpt("encrypt", {X: "uploaded files"})
+        StdOpt("encrypt", {X: "uploaded files"}),
+        NewOpt("resume", {
+          descTemplate: "If specified, resume jobs for the given write token (--resume 'write_token')",
+          group: "Main",
+          type: "string"
+        })
       ]
     };
   }

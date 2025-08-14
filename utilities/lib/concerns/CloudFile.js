@@ -70,11 +70,6 @@ const blueprint = {
       descTemplate: "If specified, files will be added as links to S3 bucket items rather than uploaded from the local filesystem",
       group: "Cloud",
       type: "boolean"
-    }),
-    NewOpt("resume", {
-      descTemplate: "If specified, resume jobs for the given write token",
-      group: "Cloud",
-      type: "string"
     })
   ],
   checksMap: {chkCredsButNoS3}
