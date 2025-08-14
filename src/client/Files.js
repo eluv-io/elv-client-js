@@ -84,12 +84,12 @@ exports.ListFiles = async function({libraryId, objectId, path = "", versionHash,
  *
  * Expected format of fileInfo:
  *
-      [
-        {
-          path: string,
-          source: string // either a full path e.g. "s3://BUCKET_NAME/path..." or just the path part without "s3://BUCKET_NAME/"
-        }
-      ]
+    [
+      {
+        path: string,
+        source: string // either a full path e.g. "s3://BUCKET_NAME/path..." or just the path part without "s3://BUCKET_NAME/"
+      }
+    ]
  *
  * @memberof module:ElvClient/Files+Parts
  * @methodGroup Files
@@ -128,7 +128,8 @@ exports.UploadFilesFromS3 = async function({
   ValidateParameters({ libraryId, objectId });
   ValidateWriteToken(writeToken);
 
-  const s3prefixRegex = /^s3:\/\/([^/]+)\//i;
+  const s3prefixRegex = /^s3:\/\/([^/]+)\//i; // for matching and extracting bucket name when full s3:// path is specified
+  // if fileInfo source paths start with s3://bucketName/, check against bucket arg passed in, and strip
   for(let i = 0; i < fileInfo.length; i++) {
     const fileSourcePath = fileInfo[i].source;
     const s3prefixMatch = s3prefixRegex.exec(fileSourcePath);
@@ -191,7 +192,7 @@ exports.UploadFilesFromS3 = async function({
     }
   });
 
-  const trackUploadStatus = async function({ uploadId }) {
+  const trackUploadStatus = async ({ uploadId }) => {
     // eslint-disable-next-line no-constant-condition
     while(true) {
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -236,7 +237,7 @@ exports.UploadFilesFromS3 = async function({
 
       if(done) break;
     }
-  }.bind(this);
+  };
 
   if(resume) {
     const jobIds = await this.ListFilesJob({ libraryId, objectId, writeToken, encryption });
@@ -281,14 +282,14 @@ exports.UploadFilesFromS3 = async function({
  *
  * Expected format of fileInfo:
  *
- [
- {
- path: string,
- mime_type: string,
- size: number,
- data: File | ArrayBuffer | Buffer | File Descriptor (Node)
- }
- ]
+   [
+     {
+       path: string,
+       mime_type: string,
+       size: number,
+       data: File | ArrayBuffer | Buffer | File Descriptor (Node)
+     }
+   ]
  *
  *
  * @memberof module:ElvClient/Files+Parts
