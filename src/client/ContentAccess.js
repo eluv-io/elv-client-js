@@ -635,7 +635,7 @@ exports.ContentObjectOwner = async function({objectId, versionHash}) {
 
   this.Log(`Retrieving content object owner: ${objectId}`);
 
-  return (await this.ContentObject({objectId, versionHash})).content_profile.owner;
+  return this.utils.HashToAddress((await this.ContentObject({objectId, versionHash})).content_profile.owner);
 };
 
 /**

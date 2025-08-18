@@ -20,7 +20,7 @@ const UrlJoin = require("url-join");
 exports.CreateShare = async function({objectId, objectIds=[], expiresAt, params={}}) {
   const tenantId = await this.userProfileClient.TenantContractId();
   const token = await this.CreateFabricToken({});
-  
+
   if(objectId) {
     objectIds = [objectId, ...objectIds]
       .filter((x, i, a) => x && a.indexOf(x) == i);
