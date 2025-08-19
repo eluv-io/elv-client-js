@@ -317,10 +317,12 @@ exports.DeleteAccessGroup = async function({contractAddress}) {
 
   this.Log(`Deleting access group ${contractAddress}`);
 
-  // check if the signer is access group owner
-  const owner = await this.AccessGroupOwner({ contractAddress });
-  if(this.utils.FormatAddress(owner) !== this.utils.FormatAddress(this.signer.address)) {
-    throw new Error(`Current user does not have permission to delete access group ${contractAddress}`);
+  const canEdit = await this.CallContractMethod({
+    contractAddress,
+    methodName: "canEdit"
+  });
+  if(!canEdit) {
+    throw Error(`Current user does not have permission to delete access group ${contractAddress}`);
   }
 
   await this.CallContractMethodAndWait({
