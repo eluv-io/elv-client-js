@@ -2,7 +2,6 @@ const URI = require("urijs");
 const Fetch = typeof fetch !== "undefined" ? fetch : require("node-fetch").default;
 const {LogMessage} = require("./LogMessage");
 const Utils = require("./Utils");
-const UrlJoin = require("url-join");
 
 class HttpClient {
   Log(message, error=false) {
@@ -84,7 +83,7 @@ class HttpClient {
     }
 
     let uri = baseURI
-      .path(UrlJoin(baseURI.path(), path).replace("/as/as", "/as"))
+      .path(path)
       .query(queryParams)
       .hash("");
 
@@ -238,7 +237,7 @@ class HttpClient {
 
     return (
       baseURI
-        .path(UrlJoin(baseURI.path(), path).replace("/as/as", "/as"))
+        .path(path)
         .query(queryParams)
         .hash("")
         .toString()
