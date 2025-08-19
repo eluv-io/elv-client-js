@@ -439,28 +439,6 @@ exports.DeleteContentLibrary = async function({libraryId}) {
     throw Error(`library ${libraryId} has content objects, Please delete them before deleting library`);
   }
 
-  // Getting '501' status code from content-fabric
-  //  "errors": [
-  //       {
-  //         "op": "delete content library",
-  //         "kind": "not implemented",
-  //         "qlib_id": "ilibAkAgE8m1rboeWn383zh199rYHnJ",
-  //         "cause": {
-  //           "op": "bcdao.space.DeleteLib",
-  //           "kind": "not implemented"
-  //         },
-  //   ...
-  //  ]
-  // let path = UrlJoin("qlibs", libraryId);
-  //
-  // const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, update: true});
-  //
-  // await this.HttpClient.Request({
-  //   headers: authorizationHeader,
-  //   method: "DELETE",
-  //   path: path
-  // });
-
   await this.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(libraryId),
     methodName: "kill",
