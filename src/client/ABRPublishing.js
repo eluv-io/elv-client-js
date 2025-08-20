@@ -323,7 +323,7 @@ exports.CreateABRMezzanine = async function({
     // determine master object id if a master write token was passed in
     ValidateWriteToken(masterWriteToken);
     masterObjectId = this.utils.DecodeWriteToken(masterWriteToken).objectId;
-    masterLibId = await client.ContentObjectLibraryId({masterObjectId});
+    masterLibId = await client.ContentObjectLibraryId({objectId: masterObjectId});
   }
 
   // if pre-existing mez object id passed in, validate
