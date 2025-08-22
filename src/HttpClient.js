@@ -71,6 +71,7 @@ class HttpClient {
     // If URL contains a write token, it must go to the correct server and can not fail over
     const writeTokenMatch = path.replace(/^\//, "").match(/(qlibs\/ilib[a-zA-Z0-9]+|q|qid)\/(tqw__[a-zA-Z0-9]+)/);
     const writeToken = writeTokenMatch ? writeTokenMatch[2] : undefined;
+    let writeTokenCached = false;
 
     if(writeToken) {
       allowFailover = false;
@@ -78,13 +79,14 @@ class HttpClient {
       if(this.draftURIs[writeToken]) {
         // Use saved write token URI
         baseURI = this.draftURIs[writeToken];
+        writeTokenCached = true;
       } else {
         // Save current URI for all future requests involving this write token
         this.draftURIs[writeToken] = baseURI;
       }
     }
 
-    const normalizedPath = (this.normalizePath && !writeTokenMatch) ? UrlJoin(baseURI.path(), path).replace("/as/as", "/as") : path;
+    const normalizedPath = (this.normalizePath && !writeTokenCached) ? UrlJoin(baseURI.path(), path).replace("/as/as", "/as") : path;
 
     let uri = baseURI
       .path(normalizedPath)
@@ -239,7 +241,7 @@ class HttpClient {
       baseURI = this.draftURIs[writeToken];
     }
 
-    const normalizedPath = (this.normalizePath && !writeTokenMatch) ? UrlJoin(baseURI.path(), path).replace("/as/as", "/as") : path;
+    const normalizedPath = (this.normalizePath && !this.draftURIs[writeToken]) ? UrlJoin(baseURI.path(), path).replace("/as/as", "/as") : path;
 
     return (
       baseURI
