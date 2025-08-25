@@ -23,6 +23,13 @@ const {
   ValidateParameters
 } = require("../Validation");
 
+const JobStatus = Object.Freeze({
+  STOPPED: "STOPPED",
+  FAILED: "FAILED",
+  IN_PROGRESS:"IN_PROGRESS",
+  COMPLETED: "COMPLETED"
+});
+
 
 /* Files */
 
@@ -247,7 +254,7 @@ exports.UploadFilesFromS3 = async function({
       return acc;
     }, {});
 
-    if(jobsByStatus.STOPPED) {
+    const resumeAndTrack = async (status) => {
       const responses = await this.ResumeFileUploadJob({
         libraryId,
         objectId,
@@ -255,16 +262,22 @@ exports.UploadFilesFromS3 = async function({
         ops,
         defaults,
         encryption,
-        stoppedJobIds: jobsByStatus.STOPPED
+        stoppedOrFailedJobIds: jobsByStatus[status]
       });
       for(const res of responses) {
         this.Log(`Tracking resumed job id: ${res.id}`);
         await trackUploadStatus({ uploadId: res.id });
       }
+    };
+
+    for(const status of [JobStatus.STOPPED, JobStatus.FAILED]) {
+      if(jobsByStatus[status]){
+        await resumeAndTrack(jobsByStatus[status]);
+      }
     }
 
     for(const [status, jobs] of Object.entries(jobsByStatus)) {
-      if(["IN_PROGRESS", "COMPLETED"].includes(status)) {
+      if([JobStatus.IN_PROGRESS, JobStatus.COMPLETED].includes(status)) {
         for(const [jobId] of jobs) {
           this.Log(`Tracking ${status.toLowerCase()} job id: ${jobId}`);
           await trackUploadStatus({ uploadId: jobId });
@@ -362,25 +375,36 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
     }, {});
 
     const stoppedJobIds = jobsByStatus.STOPPED || [];
+    const failedJobIds = jobsByStatus.FAILED || [];
     const inProgressJobIds = jobsByStatus.IN_PROGRESS || [];
 
-    const resumeJobIds = [...stoppedJobIds, ...inProgressJobIds];
+    const resumeJobIds = [...stoppedJobIds, ...failedJobIds, ...inProgressJobIds];
     if(resumeJobIds.length === 0) {
       this.Log("No job Ids to resume");
       return;
     }
 
-    // Resume all stopped uploadIds
-    if(stoppedJobIds.length > 0) {
+    const resumeJobs = async(jobs) => {
       await this.ResumeFileUploadJob({
         libraryId,
         objectId,
         writeToken,
         ops: fileInfo,
         encryption,
-        stoppedJobIds
+        stoppedOrFailedJobIds: jobs
       });
+    };
+
+    // Resume all stopped uploadIds
+    if(stoppedJobIds.length > 0) {
+      await resumeJobs(stoppedJobIds);
     }
+
+    // Resume all failed uploadIds
+    if(failedJobIds.length > 0) {
+      await resumeJobs(failedJobIds);
+    }
+
 
     // for each uploadId, make a map containing jobIds
     for(const uploadId of resumeJobIds) {
@@ -614,13 +638,13 @@ exports.ListFilesUploadJobs = async function({libraryId, objectId, writeToken, j
   });
 };
 
-exports.ResumeFileUploadJob = async function({libraryId, objectId, writeToken, ops, defaults={}, encryption="none", stoppedJobIds}) {
+exports.ResumeFileUploadJob = async function({libraryId, objectId, writeToken, ops, defaults={}, encryption="none", stoppedOrFailedJobIds}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
-  if(stoppedJobIds.size === 0) {
-    this.Log("No stopped jobs found");
-    throw new Error("No STOPPED jobs found");
+  if(stoppedOrFailedJobIds.size === 0) {
+    this.Log("No stopped/failed jobs found");
+    throw new Error("No STOPPED/FAILED jobs found");
   }
 
   this.Log(`Resuming file upload job: ${libraryId} ${objectId} ${writeToken}`);
@@ -639,8 +663,8 @@ exports.ResumeFileUploadJob = async function({libraryId, objectId, writeToken, o
 
   // resume and change jobId status from 'STOPPED' to 'IN_PROGRESS'
   const responses = [];
-  this.Log(`Stopped job IDs: ${[...stoppedJobIds.keys()].join(", ")}`);
-  for(const [jobId] of stoppedJobIds) {
+  this.Log(`Stopped or Failed job IDs: ${[...stoppedOrFailedJobIds.keys()].join(", ")}`);
+  for(const [jobId] of stoppedOrFailedJobIds) {
     const path = UrlJoin("q", writeToken, "file_jobs" , jobId, "resume");
 
     let res = await this.HttpClient.RequestJsonBody({
