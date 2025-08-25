@@ -23,7 +23,7 @@ const {
   ValidateParameters
 } = require("../Validation");
 
-const JobStatus = Object.Freeze({
+const JobStatus = Object.freeze({
   STOPPED: "STOPPED",
   FAILED: "FAILED",
   IN_PROGRESS:"IN_PROGRESS",
@@ -254,7 +254,7 @@ exports.UploadFilesFromS3 = async function({
       return acc;
     }, {});
 
-    const resumeAndTrack = async (status) => {
+    const resumeAndTrack = async (jobIds) => {
       const responses = await this.ResumeFileUploadJob({
         libraryId,
         objectId,
@@ -262,7 +262,7 @@ exports.UploadFilesFromS3 = async function({
         ops,
         defaults,
         encryption,
-        stoppedOrFailedJobIds: jobsByStatus[status]
+        stoppedOrFailedJobIds: jobIds
       });
       for(const res of responses) {
         this.Log(`Tracking resumed job id: ${res.id}`);
@@ -272,7 +272,7 @@ exports.UploadFilesFromS3 = async function({
 
     for(const status of [JobStatus.STOPPED, JobStatus.FAILED]) {
       if(jobsByStatus[status]){
-        await resumeAndTrack(jobsByStatus[status]);
+        await resumeAndTrack([...jobsByStatus[status].keys()]);
       }
     }
 
@@ -395,16 +395,12 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
       });
     };
 
-    // Resume all stopped uploadIds
-    if(stoppedJobIds.length > 0) {
-      await resumeJobs(stoppedJobIds);
+    // resume stopped and failed jobs
+    for(const jobsToResume of [stoppedJobIds, failedJobIds]){
+      if(jobsToResume.length > 0){
+        await resumeJobs(jobsToResume);
+      }
     }
-
-    // Resume all failed uploadIds
-    if(failedJobIds.length > 0) {
-      await resumeJobs(failedJobIds);
-    }
-
 
     // for each uploadId, make a map containing jobIds
     for(const uploadId of resumeJobIds) {
@@ -546,9 +542,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
     };
 
     // Preparing jobs is done asynchronously
-    PrepareJobs().catch(e => {
-      throw e;
-    });
+    PrepareJobs().catch(e => { throw e; });
 
     // Upload the first several chunks in sequence, to determine average upload rate
     const rateTestJobs = Math.min(3, jobs.length);
@@ -570,8 +564,11 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
       jobs,
       async (jobId, j) => {
         if(j < rateTestJobs) { return; }
-
-        await UploadJob(jobId, j);
+        try {
+          await UploadJob(jobId, j);
+        } catch(err) {
+          throw Error (`Failed upload for job ${jobId}: ${err}`);
+        }
       }
     );
   }
@@ -638,7 +635,7 @@ exports.ListFilesUploadJobs = async function({libraryId, objectId, writeToken, j
   });
 };
 
-exports.ResumeFileUploadJob = async function({libraryId, objectId, writeToken, ops, defaults={}, encryption="none", stoppedOrFailedJobIds}) {
+exports.ResumeFileUploadJob = async function({libraryId, objectId, writeToken, ops, defaults={}, encryption="none", stoppedOrFailedJobIds=[]}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -663,8 +660,8 @@ exports.ResumeFileUploadJob = async function({libraryId, objectId, writeToken, o
 
   // resume and change jobId status from 'STOPPED' to 'IN_PROGRESS'
   const responses = [];
-  this.Log(`Stopped or Failed job IDs: ${[...stoppedOrFailedJobIds.keys()].join(", ")}`);
-  for(const [jobId] of stoppedOrFailedJobIds) {
+  this.Log(`Stopped or Failed job IDs: ${stoppedOrFailedJobIds.join(",")}`);
+  for(const jobId of stoppedOrFailedJobIds) {
     const path = UrlJoin("q", writeToken, "file_jobs" , jobId, "resume");
 
     let res = await this.HttpClient.RequestJsonBody({
