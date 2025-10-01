@@ -1136,7 +1136,6 @@ class AuthorizationClient {
       writeToken,
     });
     const capsKeys = Object.keys(metadata).filter(key => key.includes("eluv.caps"));
-    console.log("CAPS Keys", capsKeys);
 
     if(capsKeys.length === 0) {
       // no CAPS found
