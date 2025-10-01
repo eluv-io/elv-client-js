@@ -4,7 +4,7 @@ const Utility = require("./lib/Utility");
 const Client = require("./lib/concerns/Client");
 const Edit = require("./lib/concerns/Edit");
 
-class MigrateEncryptionConkForNewUser extends Utility {
+class TransferOwnership extends Utility {
   blueprint() {
     return {
       concerns: [Client, Edit],
@@ -34,13 +34,15 @@ class MigrateEncryptionConkForNewUser extends Utility {
 
     const res =  await client.EditContentObject({libraryId, objectId});
 
-    await client.MigrateEncryptionConkForUserProvided({
+    await client.TransferOwnership({
       libraryId,
       objectId,
       writeToken: res.writeToken,
-      newUserPublicKey: publicKey
+      newOwnerPublicKey: publicKey
     });
-    logger.log("Migration of encryption conk is complete...");
+
+    const newOwnerAddr = client.utils.PublicKeyToAddress(client.utils.GetPublicKey(publicKey));
+    logger.log(`Transferred ownership of ${objectId} to ${newOwnerAddr}...`);
 
     const versionHash = await this.concerns.Edit.finalize({
       libraryId,
@@ -51,12 +53,12 @@ class MigrateEncryptionConkForNewUser extends Utility {
   }
 
   header() {
-    return `Migrate encryption conk to the user provided for object '${this.args.objectId}'`;
+    return `Transfer ownership for ${this.args.objectId}'`;
   }
 }
 
 if(require.main === module) {
-  Utility.cmdLineInvoke(MigrateEncryptionConkForNewUser);
+  Utility.cmdLineInvoke(TransferOwnership);
 } else {
-  module.exports = MigrateEncryptionConkForNewUser;
+  module.exports = TransferOwnership;
 }

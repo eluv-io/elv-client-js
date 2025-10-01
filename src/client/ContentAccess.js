@@ -640,6 +640,40 @@ exports.ContentObjectOwner = async function({objectId, versionHash}) {
 };
 
 /**
+ * Transfer ownership for the object
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} writeToken - The write token for the object
+ * @param {string=} newOwnerPublicKey - raw public key or base-58 encoded publicKey of the new user prefixed 'kupk'
+ * @returns {Promise<string>} - The account address of the owner
+ */
+exports.TransferOwnership = async function({libraryId, objectId, writeToken, newOwnerPublicKey}) {
+  ValidateParameters({libraryId, objectId});
+  ValidateWriteToken(writeToken);
+
+  const newOwnerPubKey = this.utils.GetPublicKey(newOwnerPublicKey);
+  const newOwnerAddress = this.utils.PublicKeyToAddress(newOwnerPubKey);
+
+  await this.authClient.MigrateEncryptionConkForUserProvided({
+    libraryId,
+    objectId,
+    writeToken,
+    newUserPublicKey: newOwnerPublicKey
+  });
+
+  await this.ethClient.CallContractMethodAndWait({
+    contractAddress: this.utils.HashToAddress(objectId),
+    methodName: "transferOwnership",
+    methodArgs: [newOwnerAddress]
+  });
+};
+
+
+
+/**
  * Retrieve the tenant ID associated with the specified content object
  *
  * @methodGroup Content Objects
@@ -2815,65 +2849,19 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash,
  * @param {string=} objectId - ID of an object
  * @param {string=} versionHash - Hash of an object version
  * @param {string=} writeToken - The write token for the object
- * @param {Object=} newEncodedUserPublicKey - raw public key or base-58 encoded publicKey of the new user prefixed 'kupk'
+ * @param {Object=} newUserPublicKey - raw public key or base-58 encoded publicKey of the new user prefixed 'kupk'
  */
-exports.MigrateEncryptionConkForUserProvided = async function({libraryId, objectId, versionHash, writeToken, newEncodedUserPublicKey}) {
-  if(this.signer.remoteSigner) {
-    return;
-  }
+exports.MigrateEncryptionConkForUserProvided = async function({libraryId, objectId, versionHash, writeToken, newUserPublicKey}) {
 
   ValidateParameters({libraryId, objectId, versionHash});
   ValidateWriteToken(writeToken);
 
-  if(!objectId) {
-    objectId = this.client.utils.DecodeVersionHash(versionHash).objectId;
-  }
-
-  if(!newEncodedUserPublicKey){
-    throw "require public key for new user to be provided";
-  }
-
-  let publicKey;
-  if(!newEncodedUserPublicKey.startsWith("kupk")){
-    publicKey = newEncodedUserPublicKey;
-  } else {
-    const publicKeyBytes = bs58.decode(newEncodedUserPublicKey.slice(4));
-    if(publicKeyBytes.length !== 65) {
-      publicKey = "0x" + Buffer.concat([Buffer.from([0x04]), publicKeyBytes]).toString("hex");
-    } else {
-      publicKey = "0x" + publicKeyBytes.toString("hex");
-    }
-  }
-
-  // Decrypt using existing user key
-  const existingCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
-  const existingUserCap =
-    await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      writeToken,
-      metadataSubtree: existingCapKey
-    });
-
-  if(!existingUserCap) {
-    throw (`No encryption conk present for ${objectId} for user ${this.signer.address}`);
-  }
-
-  this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
-
-  // Encrypt with the new key
-  const encryptedConk = await this.Crypto.EncryptConk(this.encryptionConks[objectId], publicKey);
-  const newUserCap = `eluv.caps.iusr${this.utils.AddressToHash(this.utils.PublicKeyToAddress(publicKey))}`;
-
-  await this.ReplaceMetadata({
+  await this.authClient.MigrateEncryptionConkForUserProvided({
     libraryId,
     objectId,
+    versionHash,
     writeToken,
-    metadataSubtree: newUserCap,
-    metadata: encryptedConk
-  });
-
-  return this.encryptionConks[objectId];
+    newUserPublicKey});
 };
 
 /**
