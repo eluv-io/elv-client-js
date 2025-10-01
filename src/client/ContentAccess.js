@@ -657,7 +657,7 @@ exports.TransferOwnership = async function({libraryId, objectId, writeToken, new
   const newOwnerPubKey = this.utils.GetPublicKey(newOwnerPublicKey);
   const newOwnerAddress = this.utils.PublicKeyToAddress(newOwnerPubKey);
 
-  await this.authClient.MigrateEncryptionConkForUserProvided({
+  this.encryptionConks[objectId] = await this.authClient.MigrateEncryptionConkForUserProvided({
     libraryId,
     objectId,
     writeToken,
@@ -2781,14 +2781,18 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash,
 
   const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
 
-  const existingUserCap =
-    await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      writeToken,
-      metadataSubtree: capKey
-    });
+  const metadata = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+  });
+  const capsKeys = Object.keys(metadata).filter(key => key.includes("eluv.caps"));
+  // CAPS found but not the owner
+  if(capsKeys.length > 0 && !capsKeys.includes(capKey)){
+    throw new Error(`current owner has no CAPS for ${objectId}, but other CAPS exist`);
+  }
 
+  const existingUserCap = metadata[capKey];
   if(existingUserCap) {
     this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
   } else {
@@ -2906,16 +2910,18 @@ exports.EncryptionConk = async function({libraryId, objectId, versionHash, write
   if(!this.encryptionConks[objectId]) {
     const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
 
-    const existingUserCap =
-      await this.ContentObjectMetadata({
-        libraryId,
-        objectId,
-        versionHash,
-        // Cap may only exist in draft
-        writeToken,
-        metadataSubtree: capKey
-      });
+    const metadata = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+    });
+    const capsKeys = Object.keys(metadata).filter(key => key.includes("eluv.caps"));
+    // CAPS found but not the owner
+    if(capsKeys.length > 0 && !capsKeys.includes(capKey)){
+      throw new Error(`current owner has no CAPS for ${objectId}, but other CAPS exist`);
+    }
 
+    const existingUserCap = metadata[capKey];
     if(existingUserCap) {
       this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
     } else if(writeToken) {

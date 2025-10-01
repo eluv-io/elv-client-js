@@ -1163,8 +1163,10 @@ class AuthorizationClient {
       metadata: encryptedConk
     });
 
-    return encryptedConk;
+    return encryptionConk;
   }
+
+
 
   /* Creation methods */
 
