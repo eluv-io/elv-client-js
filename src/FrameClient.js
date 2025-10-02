@@ -520,7 +520,8 @@ class FrameClient {
       "UseRegion",
       "Visibility",
       "WriteTokenNodeUrlLocal",
-      "WriteTokenNodeUrlNetwork"
+      "WriteTokenNodeUrlNetwork",
+      "TransferOwnership",
     ];
   }
 
