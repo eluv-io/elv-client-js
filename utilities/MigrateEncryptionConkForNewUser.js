@@ -32,22 +32,12 @@ class MigrateEncryptionConkForNewUser extends Utility {
     const client = await this.concerns.Client.get();
     const libraryId = await client.ContentObjectLibraryId({objectId});
 
-    const res =  await client.EditContentObject({libraryId, objectId});
-
-    await client.MigrateEncryptionConkForUserProvided({
+    await client.CreateNonOwnerCap({
       libraryId,
       objectId,
-      writeToken: res.writeToken,
-      newUserPublicKey: publicKey
+      publicKey
     });
     logger.log("Migration of encryption conk is complete...");
-
-    const versionHash = await this.concerns.Edit.finalize({
-      libraryId,
-      objectId,
-      writeToken:res.writeToken
-    });
-    logger.log("version hash", versionHash);
   }
 
   header() {

@@ -9,7 +9,6 @@ const objectPath = require("object-path");
 
 const HttpClient = require("../HttpClient");
 const ContentObjectAudit = require("../ContentObjectAudit");
-const bs58 = require("bs58");
 
 const {
   ValidateLibrary,
@@ -657,12 +656,16 @@ exports.TransferOwnership = async function({libraryId, objectId, writeToken, new
   const newOwnerPubKey = this.utils.GetPublicKey(newOwnerPublicKey);
   const newOwnerAddress = this.utils.PublicKeyToAddress(newOwnerPubKey);
 
-  this.encryptionConks[objectId] = await this.authClient.MigrateEncryptionConkForUserProvided({
+  const encryptionConk = await this.authClient.MigrateEncryptionConkForUserProvided({
     libraryId,
     objectId,
     writeToken,
     newUserPublicKey: newOwnerPublicKey
   });
+  // encryptionConk is null when remote signer or no caps found
+  if(encryptionConk){
+    this.encryptionConks[objectId] = encryptionConk;
+  }
 
   await this.ethClient.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(objectId),
@@ -2842,30 +2845,6 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash,
   }
 
   return this.encryptionConks[objectId];
-};
-
-/**
- * Encrypt the owner encryption key using the new user details provided
- *
- * @methodGroup Encryption
- * @namedParams
- * @param {string=} libraryId - ID of a library
- * @param {string=} objectId - ID of an object
- * @param {string=} versionHash - Hash of an object version
- * @param {string=} writeToken - The write token for the object
- * @param {Object=} newUserPublicKey - raw public key or base-58 encoded publicKey of the new user prefixed 'kupk'
- */
-exports.MigrateEncryptionConkForUserProvided = async function({libraryId, objectId, versionHash, writeToken, newUserPublicKey}) {
-
-  ValidateParameters({libraryId, objectId, versionHash});
-  ValidateWriteToken(writeToken);
-
-  await this.authClient.MigrateEncryptionConkForUserProvided({
-    libraryId,
-    objectId,
-    versionHash,
-    writeToken,
-    newUserPublicKey});
 };
 
 /**
