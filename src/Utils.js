@@ -777,10 +777,7 @@ const Utils = {
       /^((?!chrome|android).)*safari/i.test(window.navigator.userAgent);
 
     const defaultSettings = {
-      "maxBufferHole": 2.2,
-      "nudgeOffset": 0.2,
-      "nudgeMaxRetry": 12,
-      "highBufferWatchdogPeriod": 1
+      "backBufferLength": 90
     };
 
     if(!isSafari && ["ull", "ultraLowLatency"].includes(profile)) {
