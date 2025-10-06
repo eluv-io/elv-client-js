@@ -25,6 +25,7 @@ const {
   ValidatePresence,
 } = require("../Validation");
 
+
 exports.SetVisibility = async function({id, visibility}) {
   this.Log(`Setting visibility ${visibility} on ${id}`);
 
@@ -678,6 +679,11 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
 
   // User CAP
   const userCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
+  const capsKeys = Object.keys(metadata).filter(key => key.includes("eluv.caps"));
+  // CAPS found but not the owner
+  if(capsKeys.length > 0 && !capsKeys.includes(capKey)){
+    throw new Error(`current owner has no CAPS for ${originalObjectId}, but other CAPS exist`);
+  }
 
   if(metadata[userCapKey]) {
     const userConkKey = await this.Crypto.DecryptCap(metadata[userCapKey], this.signer._signingKey().privateKey);
@@ -714,46 +720,35 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
 };
 
 /**
- * Create a non-owner cap key using the specified public key and address
+ * Create a non-owner cap key using the specified public key
  *
  * @methodGroup Access Requests
  * @namedParams
- * @param {string} libraryId - ID of the library
- * @param {string} objectId - ID of the object
- * @param {string} publicKey - Public key for the target cap
- * @param {string} writeToken - Write token for the content object - If specified, info will be retrieved from the write draft instead of creating a new draft and finalizing
- *
- * @returns {Promise<Object>}
+ * @param {string=} libraryId - ID of a library
+ * @param {string=} objectId - ID of an object
+ * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - The write token for the object
+ * @param {Object=} publicKey - raw public key or base-58 encoded publicKey of the new user prefixed 'kupk'
  */
-exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, writeToken}) {
-  const userCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
-  const userCapValue = await this.ContentObjectMetadata({objectId, libraryId, metadataSubtree: userCapKey});
+exports.CreateNonOwnerCap = async function({libraryId,objectId, versionHash, writeToken, publicKey}) {
 
-  if(!userCapValue) {
-    throw Error("No user cap found for current user");
-  }
-
-  const userConk = await this.Crypto.DecryptCap(userCapValue, this.signer._signingKey().privateKey);
-
-  const publicAddress = this.utils.PublicKeyToAddress(publicKey);
-
-  const targetUserCapKey = `eluv.caps.iusr${this.utils.AddressToHash(publicAddress)}`;
-  const targetUserCapValue = await this.Crypto.EncryptConk(userConk, publicKey);
+  ValidateParameters({libraryId, objectId, versionHash});
 
   const finalize = !writeToken;
   if(!writeToken) {
-    writeToken = await this.EditContentObject({libraryId, objectId}).writeToken;
+    const res = await this.EditContentObject({libraryId, objectId});
+    writeToken = res.writeToken;
   }
 
-  this.ReplaceMetadata({
+  const encryptionConk = await this.authClient.MigrateEncryptionConkForUserProvided({
     libraryId,
     objectId,
+    versionHash,
     writeToken,
-    metadataSubtree: targetUserCapKey,
-    metadata: targetUserCapValue
-  });
+    newUserPublicKey: publicKey});
 
-  if(finalize) {
+  // encryptionConk is null when remote signer or no caps found
+  if(encryptionConk && finalize){
     await this.FinalizeContentObject({
       libraryId,
       objectId,

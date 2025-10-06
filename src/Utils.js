@@ -752,6 +752,27 @@ const Utils = {
     return Utils.FormatAddress(address);
   },
 
+  /**
+   * Decodes and returns a public key from its encoded or raw form.
+   *
+   * @param key - The public key, either in raw form or Base58-encoded with a prefix 'kupk'
+   *
+   * @returns {string} - the decoded public key
+   */
+  GetPublicKey: (key) => {
+
+    if(!key.startsWith("kupk")){
+      return key;
+    }
+
+    // retrieve public key from its encoded form
+    const publicKeyBytes = bs58.decode(key.slice(4));
+    if(publicKeyBytes.length !== 65) {
+      return "0x" + Buffer.concat([Buffer.from([0x04]), publicKeyBytes]).toString("hex");
+    }
+    return "0x" + publicKeyBytes.toString("hex");
+  },
+
   PLATFORM_NODE: "node",
   PLATFORM_WEB: "web",
   PLATFORM_REACT_NATIVE: "react-native",
