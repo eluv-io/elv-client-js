@@ -1,6 +1,6 @@
 // Create new production master from specified file(s)
 
-const {ModOpt, StdOpt} = require("./lib/options");
+const {ModOpt, StdOpt, NewOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
 const ArgNoWait = require("./lib/concerns/ArgNoWait");
@@ -16,14 +16,19 @@ class ObjectAddFiles extends Utility {
       concerns: [Logger, ExistObj, Edit, ArgNoWait, LocalFile, CloudFile],
       options: [
         ModOpt("files", {X: "to add"}),
-        StdOpt("encrypt", {X: "uploaded files"})
+        StdOpt("encrypt", {X: "uploaded files"}),
+        NewOpt("resume", {
+          descTemplate: "If specified, resume jobs for the given write token (--resume 'write_token')",
+          group: "Main",
+          type: "string"
+        })
       ]
     };
   }
 
   async body() {
     const logger = this.logger;
-    const {encrypt, noWait} = this.args;
+    const {encrypt, noWait, resume: resumeArg} = this.args;
 
     let access;
     if(this.args.s3Reference || this.args.s3Copy) access = this.concerns.CloudFile.credentialSet();
@@ -35,10 +40,22 @@ class ObjectAddFiles extends Utility {
 
     const {libraryId, objectId} = await this.concerns.ExistObj.argsProc();
 
-    const writeToken = await this.concerns.Edit.getWriteToken({
-      libraryId,
-      objectId
-    });
+    let writeToken;
+    let resume=false;
+    if(resumeArg) {
+      writeToken = resumeArg;
+      resume=true;
+    } else {
+      // create new write token
+      writeToken = await this.concerns.Edit.getWriteToken({
+        libraryId,
+        objectId
+      });
+    }
+    logger.data("WRITE_TOKEN", writeToken);
+    // eslint-disable-next-line no-console
+    console.log("Using write token:", writeToken);
+
 
     if(access) {
       await this.concerns.CloudFile.add({
@@ -47,7 +64,8 @@ class ObjectAddFiles extends Utility {
         writeToken,
         access,
         fileInfo,
-        encrypt
+        encrypt,
+        resume,
       });
     } else {
       await this.concerns.LocalFile.add({
@@ -55,12 +73,14 @@ class ObjectAddFiles extends Utility {
         objectId,
         writeToken,
         fileInfo,
-        encrypt
+        encrypt,
+        resume,
       });
       // Close file handles
       this.concerns.LocalFile.closeFileHandles(fileHandles);
     }
 
+    // finalize the write token
     const hash = await this.concerns.Edit.finalize({
       libraryId,
       noWait,
