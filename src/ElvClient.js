@@ -1260,7 +1260,7 @@ class ElvClient {
    * @return {string} - The created static token
    */
   CreateStaticToken({libraryId}) {
-    let token = { qspace_id: this.client.contentSpaceId };
+    let token = { qspace_id: this.contentSpaceId };
 
     if(libraryId) {
       token.qlib_id = libraryId;

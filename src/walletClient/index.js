@@ -494,12 +494,13 @@ class ElvWalletClient {
 
     await this.client.SetRemoteSigner({idToken, tenantId, signerURIs, extraData: { ...extraData, share_email: shareEmail }, unsignedPublicAuth: true});
 
-    let fabricToken, expiresAt;
+    let fabricToken, refreshToken, expiresAt;
     if(createRemoteToken && this.client.signer.remoteSigner) {
       expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
       const tokenResponse = await this.client.signer.RetrieveCSAT({email, nonce, tenantId, force, duration: tokenDuration});
       fabricToken = tokenResponse.token;
       nonce = tokenResponse.nonce;
+      refreshToken = tokenResponse.refresh_token;
     } else {
       expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
       fabricToken = await this.client.CreateFabricToken({
@@ -523,6 +524,7 @@ class ElvWalletClient {
     return {
       authToken: this.SetAuthorization({
         fabricToken,
+        refreshToken,
         tenantId,
         address,
         email,
@@ -536,6 +538,7 @@ class ElvWalletClient {
       signingToken: this.SetAuthorization({
         clusterToken: this.client.signer.authToken,
         fabricToken,
+        refreshToken,
         tenantId,
         address,
         email,
@@ -604,11 +607,12 @@ class ElvWalletClient {
     return this.__authorization.fabricToken;
   }
 
-  SetAuthorization({clusterToken, fabricToken, tenantId, address, email, expiresAt, signerURIs, walletType, walletName, nonce, register=false}) {
+  SetAuthorization({clusterToken, fabricToken, refreshToken, tenantId, address, email, expiresAt, signerURIs, walletType, walletName, nonce, register=false}) {
     address = this.client.utils.FormatAddress(address);
 
     this.__authorization = {
       fabricToken,
+      refreshToken,
       tenantId,
       address,
       email,
