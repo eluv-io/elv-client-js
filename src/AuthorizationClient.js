@@ -143,9 +143,15 @@ class AuthorizationClient {
         this.noCache = true;
       }
 
-      if(channelAuth && this.client.signer && this.client.signer.remoteSigner) {
-        // Channel auth not supported for remote signer, use a self-signed no-auth token instead
-        return this.client.CreateFabricToken({context});
+      if(channelAuth && this.client.signer) {
+        const balance = Utils.ToBigNumber(
+          await this.client.GetBalance({address: this.client.CurrentAccountAddress()})
+        ).toFixed(3);
+
+        if(balance < 0.02) {
+          // Channel auth not supported for remote signer, use a self-signed no-auth token instead
+          return this.client.CreateFabricToken({context});
+        }
       }
 
       let authorizationToken;
