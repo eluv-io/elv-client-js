@@ -533,6 +533,10 @@ class LiveConf {
       audioLadderSpec.stream_label = audio.playoutLabel ? audio.playoutLabel : null;
       audioLadderSpec.media_type = 2;
 
+      if(audioStream.length === 1) {
+        audioLadderSpec.default = true;
+      }
+
       conf.live_recording.recording_config.recording_params.ladder_specs.push(audioLadderSpec);
       if(audio.recordingBitrate > globalAudioBitrate) {
         globalAudioBitrate = audio.recordingBitrate;
