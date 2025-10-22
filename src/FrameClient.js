@@ -522,6 +522,8 @@ class FrameClient {
       "WriteTokenNodeUrlLocal",
       "WriteTokenNodeUrlNetwork",
       "TransferOwnership",
+      "HasCaps",
+      "HasCapsForUser"
     ];
   }
 
