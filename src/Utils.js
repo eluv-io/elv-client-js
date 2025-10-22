@@ -745,6 +745,7 @@ const Utils = {
    * @returns {string} - the public address
    */
   PublicKeyToAddress: (key) => {
+    key = Utils.GetPublicKey(key);
     const keyData = new Uint8Array(Buffer.from(key.replace("0x04", ""), "hex"));
     const keccakHash = keccak256(keyData);
     const address = "0x" + keccakHash.slice(26);

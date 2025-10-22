@@ -1113,61 +1113,6 @@ class AuthorizationClient {
     }
   }
 
-  async MigrateEncryptionConkForUserProvided({libraryId, objectId, versionHash, writeToken, newUserPublicKey}){
-    if(this.client.signer.remoteSigner){
-      return;
-    }
-
-    if(!objectId) {
-      objectId = this.client.utils.DecodeVersionHash(versionHash).objectId;
-    }
-
-    if(!newUserPublicKey){
-      throw Error("require public key for new user to be provided");
-    }
-
-    // check content encryption integrity
-    const currentOwner = this.client.signer.address;
-    const existingCapKey = `eluv.caps.iusr${this.client.utils.AddressToHash(currentOwner)}`;
-
-    const metadata = await this.client.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      writeToken,
-    });
-    const capsKeys = Object.keys(metadata).filter(key => key.includes("eluv.caps"));
-
-    if(capsKeys.length === 0) {
-      // no CAPS found
-      return;
-    }
-    // CAPS found but not the owner
-    if(!capsKeys.includes(existingCapKey)){
-      throw new Error(`current owner has no CAPS for ${objectId}, but other CAPS exist`);
-    }
-
-    const publicKey = this.client.utils.GetPublicKey(newUserPublicKey);
-
-    const existingUserCap = metadata[existingCapKey];
-    const encryptionConk = await this.client.Crypto.DecryptCap(existingUserCap, this.client.signer._signingKey().privateKey);
-
-    // Encrypt with the new key
-    const encryptedConk = await this.client.Crypto.EncryptConk(encryptionConk, publicKey);
-    const newUserCap = `eluv.caps.iusr${this.client.utils.AddressToHash(this.client.utils.PublicKeyToAddress(publicKey))}`;
-
-    await this.client.ReplaceMetadata({
-      libraryId,
-      objectId,
-      writeToken,
-      metadataSubtree: newUserCap,
-      metadata: encryptedConk
-    });
-
-    return encryptionConk;
-  }
-
-
-
   /* Creation methods */
 
   async CreateAccessGroup() {

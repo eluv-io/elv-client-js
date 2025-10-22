@@ -638,43 +638,6 @@ exports.ContentObjectOwner = async function({objectId, versionHash}) {
   return this.utils.HashToAddress((await this.ContentObject({objectId, versionHash})).content_profile.owner);
 };
 
-/**
- * Transfer ownership for the object
- *
- * @methodGroup Content Objects
- * @namedParams
- * @param {string=} libraryId - ID of the library
- * @param {string=} objectId - ID of the object
- * @param {string=} writeToken - The write token for the object
- * @param {string=} newOwnerPublicKey - raw public key or base-58 encoded publicKey of the new user prefixed 'kupk'
- * @returns {Promise<string>} - The account address of the owner
- */
-exports.TransferOwnership = async function({libraryId, objectId, writeToken, newOwnerPublicKey}) {
-  ValidateParameters({libraryId, objectId});
-  ValidateWriteToken(writeToken);
-
-  const newOwnerPubKey = this.utils.GetPublicKey(newOwnerPublicKey);
-  const newOwnerAddress = this.utils.PublicKeyToAddress(newOwnerPubKey);
-
-  const encryptionConk = await this.authClient.MigrateEncryptionConkForUserProvided({
-    libraryId,
-    objectId,
-    writeToken,
-    newUserPublicKey: newOwnerPublicKey
-  });
-  // encryptionConk is null when remote signer or no caps found
-  if(encryptionConk){
-    this.encryptionConks[objectId] = encryptionConk;
-  }
-
-  await this.ethClient.CallContractMethodAndWait({
-    contractAddress: this.utils.HashToAddress(objectId),
-    methodName: "transferOwnership",
-    methodArgs: [newOwnerAddress]
-  });
-};
-
-
 
 /**
  * Retrieve the tenant ID associated with the specified content object

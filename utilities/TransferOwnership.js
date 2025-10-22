@@ -38,7 +38,7 @@ class TransferOwnership extends Utility {
       libraryId,
       objectId,
       writeToken: res.writeToken,
-      newOwnerPublicKey: publicKey
+      publicKey
     });
 
     const newOwnerAddr = client.utils.PublicKeyToAddress(client.utils.GetPublicKey(publicKey));

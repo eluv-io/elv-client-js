@@ -22,7 +22,7 @@ const {
   ValidateVersion,
   ValidateWriteToken,
   ValidateParameters,
-  ValidatePresence,
+  ValidatePresence, ValidateAddress,
 } = require("../Validation");
 
 
@@ -720,7 +720,46 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
 };
 
 /**
- * Create a non-owner cap key using the specified public key
+ * HasCaps checks if the object contains caps metadata
+ *
+ * @param libraryId
+ * @param objectId
+ * @returns {Promise<boolean>}
+ */
+exports.HasCaps = async function({libraryId, objectId}){
+  ValidateParameters({libraryId, objectId});
+
+  const metadata = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+  });
+  return Object.keys(metadata).some(key => key.includes("eluv.caps"));
+};
+
+/**
+ * HasCapsForUser checks whether the metadata contains caps for the user provided
+ *
+ * @param libraryId
+ * @param objectId
+ * @param userAddress
+ * @returns {Promise<boolean>}
+ */
+exports.HasCapsForUser= async function({libraryId, objectId, userAddress}){
+  ValidateParameters({libraryId, objectId});
+  ValidateAddress(userAddress);
+
+  const metadata = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+  });
+  const capsKeys = Object.keys(metadata).filter(key => key.includes("eluv.caps"));
+  const callerCapKey = `eluv.caps.iusr${this.utils.AddressToHash(userAddress)}`;
+  return capsKeys.length > 0 && capsKeys.includes(callerCapKey);
+};
+
+/**
+ * Creates a non-owner cap key for the given public key,
+ * assuming that the caller already has caps in the metadata
  *
  * @methodGroup Access Requests
  * @namedParams
@@ -732,7 +771,19 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
  */
 exports.CreateNonOwnerCap = async function({libraryId,objectId, versionHash, writeToken, publicKey}) {
 
-  ValidateParameters({libraryId, objectId, versionHash});
+  if(this.signer.remoteSigner){
+    return;
+  }
+
+  ValidateParameters({libraryId, objectId, versionHash, writeToken});
+
+  if(!objectId) {
+    if(versionHash){
+      objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    } else {
+      objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+    }
+  }
 
   const finalize = !writeToken;
   if(!writeToken) {
@@ -740,15 +791,34 @@ exports.CreateNonOwnerCap = async function({libraryId,objectId, versionHash, wri
     writeToken = res.writeToken;
   }
 
-  const encryptionConk = await this.authClient.MigrateEncryptionConkForUserProvided({
+
+  if(!publicKey){
+    throw Error("require new user public key");
+  }
+
+  const callerCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
+  const metadata = await this.ContentObjectMetadata({
     libraryId,
     objectId,
-    versionHash,
     writeToken,
-    newUserPublicKey: publicKey});
+  });
 
-  // encryptionConk is null when remote signer or no caps found
-  if(encryptionConk && finalize){
+  const callerCap = metadata[callerCapKey];
+  const encryptionConk = await this.Crypto.DecryptCap(callerCap, this.signer._signingKey().privateKey);
+
+  // Encrypt with the new key
+  const encryptedConk = await this.Crypto.EncryptConk(encryptionConk, this.utils.GetPublicKey(publicKey));
+  const nonOwnerCap = `eluv.caps.iusr${this.utils.AddressToHash(this.utils.PublicKeyToAddress(publicKey))}`;
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: nonOwnerCap,
+    metadata: encryptedConk
+  });
+
+  if(finalize){
     await this.FinalizeContentObject({
       libraryId,
       objectId,
@@ -757,6 +827,48 @@ exports.CreateNonOwnerCap = async function({libraryId,objectId, versionHash, wri
     });
   }
 };
+
+/**
+ * Transfer ownership for the object
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} writeToken - The write token for the object
+ * @param {string=} publicKey - raw public key or base-58 encoded publicKey of the new user prefixed 'kupk'
+ */
+exports.TransferOwnership = async function({libraryId, objectId, writeToken, publicKey}) {
+  ValidateParameters({libraryId, objectId});
+  ValidateWriteToken(writeToken);
+
+  const newOwnerAddress = this.utils.PublicKeyToAddress(publicKey);
+
+  // check caps exists
+  if(await this.HasCaps({libraryId, objectId})) {
+    const callerHasCaps = await this.HasCapsForUser({libraryId, objectId, userAddress:this.signer.address});
+    if(!callerHasCaps) {
+      throw Error (`current caller has no CAPS for ${objectId}, but other CAPS exist`);
+    }
+    const newOwnerHasCaps =await this.HasCapsForUser({libraryId, objectId, userAddress:newOwnerAddress});
+    if(!newOwnerHasCaps){
+      this.encryptionConks[objectId] = await this.CreateNonOwnerCap({
+        libraryId,
+        objectId,
+        writeToken,
+        publicKey
+      });
+    }
+  }
+
+  await this.ethClient.CallContractMethodAndWait({
+    contractAddress: this.utils.HashToAddress(objectId),
+    methodName: "transferOwnership",
+    methodArgs: [newOwnerAddress]
+  });
+};
+
+
 
 /**
  * Create a new content object draft from an existing object.
