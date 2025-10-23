@@ -73,15 +73,18 @@ class RemoteSigner extends Ethers.Signer {
     this.signer = this.provider.getSigner(this.address);
   }
 
-  async RetrieveCSAT({email, nonce, tenantId, force=false, duration=24}) {
-    nonce = nonce || Utils.B58(UUID.parse(UUID.v4()));
+  async RetrieveCSAT({email, nonce, installId, tenantId, force=false, duration=24}) {
+    if(nonce && !installId) {
+      const buf = await crypto.subtle.digest("SHA-512", new TextEncoder("utf-8").encode(nonce));
+      installId = Array.prototype.map.call(new Uint8Array(buf), x=>(("00"+x.toString(16)).slice(-2))).join("");
+    }
 
     let response = await Utils.ResponseToJson(
       this.HttpClient.Request({
         method: "POST",
         body: {
           email,
-          nonce,
+          install_id: installId,
           force,
           tid: tenantId,
           exp: parseInt(duration * 60 * 60)
@@ -94,6 +97,7 @@ class RemoteSigner extends Ethers.Signer {
     );
 
     response.nonce = nonce;
+    response.installId = installId;
 
     return response;
   }
@@ -121,6 +125,23 @@ class RemoteSigner extends Ethers.Signer {
       this.HttpClient.Request({
         method: "POST",
         path: UrlJoin("as", "wlt", "login", "release"),
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        },
+      })
+    );
+  }
+
+  async RefreshCSAT({accessToken, refreshToken, nonce}) {
+    return await Utils.ResponseToJson(
+      this.HttpClient.Request({
+        method: "POST",
+        path: UrlJoin("as", "wlt", "refresh", "csat"),
+        body: {
+          last_csat: accessToken,
+          refresh_token: refreshToken,
+          nonce
+        },
         headers: {
           Authorization: `Bearer ${accessToken}`
         },
