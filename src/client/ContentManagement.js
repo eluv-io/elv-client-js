@@ -722,8 +722,8 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
 /**
  * HasCaps checks if the object contains caps metadata
  *
- * @param libraryId
- * @param objectId
+ * @param libraryId - ID of a library
+ * @param objectId - ID of an object
  * @returns {Promise<boolean>}
  */
 exports.HasCaps = async function({libraryId, objectId}){
@@ -739,9 +739,9 @@ exports.HasCaps = async function({libraryId, objectId}){
 /**
  * HasCapsForUser checks whether the metadata contains caps for the user provided
  *
- * @param libraryId
- * @param objectId
- * @param userAddress
+ * @param libraryId - ID of a library
+ * @param objectId - ID of an object
+ * @param userAddress - Address of the user to check caps for
  * @returns {Promise<boolean>}
  */
 exports.HasCapsForUser= async function({libraryId, objectId, userAddress}){
