@@ -73,7 +73,7 @@ class RemoteSigner extends Ethers.Signer {
     this.signer = this.provider.getSigner(this.address);
   }
 
-  async RetrieveCSAT({email, nonce, installId, tenantId, force=false, duration=24}) {
+  async RetrieveCSAT({email, nonce, installId, tenantId, force=false, duration=24, appName}) {
     if(nonce && !installId) {
       const buf = await crypto.subtle.digest("SHA-512", new TextEncoder("utf-8").encode(nonce));
       installId = Array.prototype.map.call(new Uint8Array(buf), x=>(("00"+x.toString(16)).slice(-2))).join("");
@@ -87,6 +87,7 @@ class RemoteSigner extends Ethers.Signer {
           install_id: installId,
           force,
           tid: tenantId,
+          app_name: appName,
           exp: parseInt(duration * 60 * 60)
         },
         path: UrlJoin("as", "wlt", "sign", "csat"),
