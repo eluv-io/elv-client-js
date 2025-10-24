@@ -444,7 +444,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     if(edgeMeta.live_recording === undefined ||
       edgeMeta.live_recording.recordings === undefined ||
       edgeMeta.live_recording.recordings.recording_sequence === undefined) {
-      status.state = "stopped";
+      status.state = "inactive";
       return status;
     }
 
@@ -482,7 +482,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       libraryId: libraryId,
       objectId: objectId,
       writeToken: edgeWriteToken,
-      call: "live/status/" + tlro
+      call: "live/status"
     });
 
     status.insertions = [];
@@ -522,15 +522,11 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       return status;
     }
 
-    const segDurationMeta = edgeMeta.live_recording.recording_config.recording_params.xc_params.seg_duration;
-
     // Convert LRO 'state' to desired 'state'
     if(state === "running" && videoLastFinalizationTimeEpochSec <= 0) {
-      state = "starting";
-    } else if(state === "running" && segDurationMeta !== undefined && sinceLastFinalize > (parseInt(segDurationMeta) + 5)) {
-      state = "stalled";
+      state = "starting"; // The LRO returns 'running' even if the source hasn't connected
     } else if(state == "terminated") {
-      state = "stopped";
+      state = "stopped"; // The LRO reports 'terminated' which for the recording means 'stopped'
     }
     status.state = state;
 
@@ -559,8 +555,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     if(state === "running") {
       let playout_urls = {};
       let playout_options = await this.PlayoutOptions({
-        objectId,
-        linkPath: "public/asset_metadata/sources/default"
+        objectId
       });
 
       let hls_clear_enabled = (
