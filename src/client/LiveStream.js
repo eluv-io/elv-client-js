@@ -418,13 +418,11 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     status.stream_id = edgeWriteToken; // By convention the stream ID is its write token
     let edgeMeta;
     try {
-      edgeMeta = await this.ContentObjectMetadata({
+      edgeMeta = await this.CallBitcodeMethod({
         libraryId: libraryId,
         objectId: objectId,
-        writeToken: edgeWriteToken,
-        select: [
-          "live_recording"
-        ]
+        method: "/live/meta",
+        constant: true
       });
     } catch(error) {
       if(error.message && error.message.includes("ERR_TOO_MANY_REDIRECTS")) {
