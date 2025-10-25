@@ -346,7 +346,6 @@ const StreamGenerateOffering = async({
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} name - Object ID or name of the live stream object
- * @param {boolean=} stopLro - If specified, will stop LRO
  * @param {boolean=} showParams - If specified, will return recording_params with status
  * States:
  * unconfigured    - no live_recording_config
@@ -359,7 +358,7 @@ const StreamGenerateOffering = async({
  *
  * @return {Promise<Object>} - The status response for the object, as well as logs, warnings and errors from the master initialization
  */
-exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
+exports.StreamStatus = async function({name, showParams=false}) {
   let objectId = name;
   let status = {name: name};
 
@@ -527,28 +526,6 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       state = "stopped"; // The LRO reports 'terminated' which for the recording means 'stopped'
     }
     status.state = state;
-
-    if((state === "running" || state === "stalled" || state === "starting") && stopLro) {
-      lroStopUrl = await this.FabricUrl({
-        libraryId,
-        objectId,
-        writeToken: edgeWriteToken,
-        call: "live/stop/" + tlro
-      });
-
-      try {
-        await this.utils.ResponseToJson(
-          await HttpClient.Fetch(lroStopUrl)
-        );
-
-        console.log("LRO Stop: ", lroStatus.body);
-      } catch(error) {
-        console.log("LRO Stop (failed): ", error.response.statusCode);
-      }
-
-      state = "stopped";
-      status.state = state;
-    }
 
     if(state === "running") {
       let playout_urls = {};
