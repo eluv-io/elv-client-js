@@ -508,7 +508,7 @@ class LiveConf {
     let globalAudioBitrate = 0;
     let nAudio = 0;
 
-    for(let i = 0; i < Object.keys(audioStreams).length; i ++ ) {
+    for(let i = 0; i < Object.keys(audioStreams).length; i++) {
       let audioLadderSpec = {};
       const audioIndex = Object.keys(audioStreams)[i];
       const audio = audioStreams[audioIndex];
@@ -532,6 +532,10 @@ class LiveConf {
       audioLadderSpec.stream_name = `audio_${audioIndex}`;
       audioLadderSpec.stream_label = audio.playoutLabel ? audio.playoutLabel : null;
       audioLadderSpec.media_type = 2;
+
+      if(Object.keys(audioStreams).length === 1) {
+        audioLadderSpec.default = true;
+      }
 
       conf.live_recording.recording_config.recording_params.ladder_specs.push(audioLadderSpec);
       if(audio.recordingBitrate > globalAudioBitrate) {
