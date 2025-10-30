@@ -441,7 +441,7 @@ exports.StreamStatus = async function({name, showParams=false}) {
     if(edgeMeta.live_recording === undefined ||
       edgeMeta.live_recording.recordings === undefined ||
       edgeMeta.live_recording.recordings.recording_sequence === undefined) {
-      status.state = "inactive";
+      status.state = "stopped";
       return status;
     }
 
