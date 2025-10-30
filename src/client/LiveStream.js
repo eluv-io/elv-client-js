@@ -441,6 +441,7 @@ exports.StreamStatus = async function({name, showParams=false}) {
     if(edgeMeta.live_recording === undefined ||
       edgeMeta.live_recording.recordings === undefined ||
       edgeMeta.live_recording.recordings.recording_sequence === undefined) {
+      // StreamStartOrStopOrReset relies on the state being 'stopped' before launching the LRO - and so this state cannot be changed to 'inactive'
       status.state = "stopped";
       return status;
     }
