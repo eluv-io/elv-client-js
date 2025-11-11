@@ -2457,7 +2457,7 @@ exports.EmbedUrl = async function({
     embedUrl.searchParams.set("data", this.utils.B64(JSON.stringify({meta_tags: data})));
   }
 
-  if(["owner", "editable", "viewable"].includes(permission)) {
+  if(["owner", "editable", "viewable", "listable"].includes(permission)) {
     const token = await this.CreateSignedToken({
       objectId,
       versionHash,
