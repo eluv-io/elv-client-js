@@ -13,6 +13,7 @@ const HttpClient = require("../HttpClient");
 const Fraction = require("fraction.js");
 const {ValidateObject, ValidatePresence} = require("../Validation");
 const ContentObjectAudit = require("../ContentObjectAudit");
+const {slugify} = require("../../utilities/lib/helpers");
 
 const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   const tok = await client.authClient.AuthorizationToken({libraryId, objectId,
@@ -59,6 +60,102 @@ const CueInfo = async ({eventId, status}) => {
   }
 
   return {eventStart, eventEnd, eventId};
+};
+
+/**
+ * Create a live stream
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} libraryId - ID of the library for the new live stream object
+ * @param {string=} contentType - ID or version hash of the content type for the live stream
+ * @param {Object=} options - Additional options for customizing a live stream
+   - name - Name of the live stream
+   - displayTitle - Display title for the live stream
+   - description - Description for the live stream
+   - accessGroup - Access group address to
+ receive 'manage' permissions
+ * @param {Object=} liveRecordingConfig - Additional configuration data to save in live_recording_config
+   - drm_type - DRM encryption type for playback
+   - audio - Audio encoding
+ ladder specs
+     - {bitrate: number, codec: string, playout: boolean, playout_label: string, record: boolean, recording_bitrate: number, recording_channels: number}[]
+   - part_ttl - Time-to-live
+ for stream parts before
+ removal from fabric
+   - persistent - If enabled, stream runs indefinitely
+   - url - Stream ingest URL
+   - reference_url - Stream URL for allocation tracking
+   - playout_ladder_profile - Name of the playout ladder profile
+   - reconnect_timeout - Duration to listen after
+ disconnect detection
+ *
+ * @return {Promise<>} -
+ */
+const StreamCreate = async({
+  libraryId,
+  contentType,
+  options={},
+  liveRecordingConfig={},
+  finalize=true
+}) => {
+  const defaultName = `LIVE STREAM - ${new Date().toISOString().slice(0, 10)}`
+
+  const createResponse = await this.CreateContentObject({
+    libraryId,
+    options: {
+      type: contentType
+    }
+  });
+
+  const {objectId, writeToken} = createResponse;
+
+  const {accessGroup, name, displayTitle, description, liveRecordingConfig, permission} = options;
+
+  if(accessGroup) {
+    this.AddContentObjectGroupPermission({
+      objectId,
+      groupAddress: accessGroup,
+      permission: "manage"
+    })
+  }
+
+  await this.MergeMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadata: {
+      public: {
+        name,
+        description,
+        asset_metadata: {
+          display_title: displayTitle || name,
+          title: name || displayTitle,
+          title_type: "live_stream",
+          video_type: "live",
+          slug: slugify(name)
+        }
+      },
+      "live_recording_config": liveRecordingConfig
+    }
+  });
+
+  if(permission) {
+    await this.SetPermission({
+      objectId,
+      permission,
+      writeToken
+    });
+  }
+
+  if(finalize) {
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Create live stream"
+    });
+  }
 };
 
 /**
