@@ -1,4 +1,5 @@
 /* eslint no-console: 0 */
+const R = require("ramda");
 
 const DefaultABRLadder = {
   "video" : [
@@ -113,13 +114,14 @@ const LiveconfTemplate = {
 };
 
 class LiveConf {
-  constructor(probeData, nodeId, nodeUrl, includeAVSegDurations, overwriteOriginUrl, syncAudioToVideo) {
+  constructor({probeData, nodeId, nodeUrl, includeAVSegDurations, overwriteOriginUrl, syncAudioToVideo, liveRecordingMeta}) {
     this.probeData = probeData;
     this.nodeId = nodeId;
     this.nodeUrl = nodeUrl;
     this.includeAVSegDurations = includeAVSegDurations;
     this.overwriteOriginUrl = overwriteOriginUrl;
     this.syncAudioToVideo = syncAudioToVideo;
+    this.currentLiveRecordingMeta = liveRecordingMeta;
   }
 
   probeKind() {
@@ -407,8 +409,13 @@ class LiveConf {
   * Generate the live recording config as required by QFAB, based on defaults and optional custom settings.
   */
   generateLiveConf({customSettings}) {
-    // gather required data
-    const conf = JSON.parse(JSON.stringify(LiveconfTemplate));
+    // Saved config overrides defaults and is preserved on reconfiguration
+    const conf =
+      R.mergeDeepRight(
+        LiveconfTemplate,
+        {live_recording: this.currentLiveRecordingMeta}
+      );
+
     const fileName = this.overwriteOriginUrl || this.probeData.format.filename;
     const audioStreams = this.generateAudioStreamsConfig({customSettings});
 
@@ -521,6 +528,7 @@ class LiveConf {
           break;
         }
       }
+
       if(Object.keys(audioLadderSpec).length === 0) {
         // If no channels layout match, just use the first element in the ladder
         audioLadderSpec = {...ladderProfile.audio[0]};
@@ -541,32 +549,12 @@ class LiveConf {
       if(audio.recordingBitrate > globalAudioBitrate) {
         globalAudioBitrate = audio.recordingBitrate;
       }
-      nAudio ++;
+      nAudio++;
     }
 
     // Global recording bitrate for all audio streams
     conf.live_recording.recording_config.recording_params.xc_params.audio_bitrate = globalAudioBitrate;
     conf.live_recording.recording_config.recording_params.xc_params.n_audio = nAudio;
-
-    // Iterate through custom settings (which will override any existing setting)
-    function SetByPath({obj, path, value}) {
-      const keys = path.split(".");
-      let temp = obj;
-      for(let i = 0; i < keys.length - 1; i++) {
-        if(!temp[keys[i]]) {
-          temp[keys[i]] = {};
-        }
-        temp = temp[keys[i]];
-      }
-
-      temp[keys[keys.length - 1]] = value;
-    }
-
-    const {metaPathValues} = customSettings;
-
-    for(let [path, value] of Object.entries(metaPathValues || {})) {
-      SetByPath({obj: conf, path, value});
-    }
 
     return conf;
   }

@@ -1467,6 +1467,9 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @namedParams
  * @param {string} name - Object ID or name of the live stream object
  * @param {Object=} customSettings - Additional options to customize configuration settings
+ * - audio
+ * - ladder_profile
+ * - edge_write_token
  * @param {Object=} probeMetadata - Metadata for the probe. If not specified, a new probe will be configured
  * @param {string=} writeToken - Write token of the draft
  * @param {boolean=} finalize - If enabled, target object will be finalized after configuring
@@ -1477,26 +1480,29 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
 exports.StreamConfig = async function({
   name,
   customSettings={},
-  customMetaValues={},
   probeMetadata,
   writeToken,
   finalize=true
 }) {
   let objectId = name;
   let status = {name};
+  let probe = probeMetadata;
 
   let libraryId = await this.ContentObjectLibraryId({objectId});
   status.library_id = libraryId;
   status.object_id = objectId;
 
-  let probe = probeMetadata;
-
-  let mainMeta = await this.ContentObjectMetadata({
+  const configMetadata = await this.ContentObjectMetadata({
     libraryId: libraryId,
-    objectId: objectId
+    objectId: objectId,
+    metadataSubtree: "/",
+    select: [
+      "/live_recording_config",
+      "/live_recording"
+    ]
   });
 
-  let userConfig = mainMeta.live_recording_config;
+  const userConfig = configMetadata.live_recording_config;
   status.user_config = userConfig;
 
   // Get node URI from user config
@@ -1508,25 +1514,30 @@ exports.StreamConfig = async function({
   const streamUrl = new URL(userConfig.url);
 
   this.Log(`Retrieving nodes - matching: ${hostName}`);
-  let nodes = await this.SpaceNodes({matchEndpoint: hostName});
+
+  const nodes = await this.SpaceNodes({matchEndpoint: hostName});
+
   if(nodes.length < 1) {
-    status.error = "No node matching stream URL " + streamUrl.href;
+    status.error = `No node found for stream URL: ${streamUrl.href}`;
     return status;
   }
+
   const node = {
     endpoints: nodes[0].services.fabric_api.urls,
     id: nodes[0].id
   };
-  status.node = node;
-  let endpoint = node.endpoints[0];
 
+  status.node = node;
+
+  const endpoint = node.endpoints[0];
+
+  // No stream data provided ; probe the stream for info
   if(!probe) {
     this.SetNodes({fabricURIs: [endpoint]});
 
-    // Probe the stream
     probe = {};
     try {
-      let probeUrl = await this.Rep({
+      const probeUrl = await this.Rep({
         libraryId,
         objectId,
         rep: "probe"
@@ -1547,7 +1558,7 @@ exports.StreamConfig = async function({
       }
     } catch(error) {
       if(error.code === "ETIMEDOUT") {
-        throw "Stream probe time out - make sure the stream source is available";
+        throw "Stream probe timed out - make sure the stream source is available";
       } else {
         throw error;
       }
@@ -1557,7 +1568,15 @@ exports.StreamConfig = async function({
   }
 
   // Create live recording config
-  let lc = new LiveConf(probe, node.id, endpoint, false, false, true);
+  let lc = new LiveConf({
+    probeData: probe,
+    liveRecordingMeta: configMetadata.live_recording,
+    nodeId: node.id,
+    nodeUrl: endpoint,
+    includeAVSegDurations: false,
+    overwriteOriginUrl: false,
+    syncAudioToVideo: true
+  });
 
   const liveRecordingConfig = lc.generateLiveConf({
     customSettings
