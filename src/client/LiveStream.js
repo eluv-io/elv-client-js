@@ -1467,9 +1467,21 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @namedParams
  * @param {string} name - Object ID or name of the live stream object
  * @param {Object=} customSettings - Additional options to customize configuration settings
- * - audio
- * - ladder_profile
- * - edge_write_token
+ * - audio - Audio ladder specs
+ *   {
+ *     bitrate: number,
+ *     codec: string,
+ *     playout: boolean,
+ *     playout_label: string,
+ *     record: boolean,
+ *     recording_bitrate: number,
+ *     recording_channels: number
+ *   }[]
+ * - ladder_profile - Ladders specs to configure audio and video
+ *   {
+ *     audio: {bit_rate: number, channels: number, codecs: string}[],
+ *     video: {bit_rate: number, codecs: string, height: number, width: number}[]
+ *   }
  * @param {Object=} probeMetadata - Metadata for the probe. If not specified, a new probe will be configured
  * @param {string=} writeToken - Write token of the draft
  * @param {boolean=} finalize - If enabled, target object will be finalized after configuring
@@ -1534,8 +1546,8 @@ exports.StreamConfig = async function({
   // No stream data provided ; probe the stream for info
   if(!probe) {
     this.SetNodes({fabricURIs: [endpoint]});
-
     probe = {};
+
     try {
       const probeUrl = await this.Rep({
         libraryId,
