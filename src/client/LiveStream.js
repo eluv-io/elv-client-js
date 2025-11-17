@@ -90,7 +90,7 @@ const CueInfo = async ({eventId, status}) => {
    - reconnect_timeout - Duration to listen after
  disconnect detection
  *
- * @return {Promise<>} -
+ * @return {Promise<Object>} - Object containing object ID and finalize data if enabled
  */
 const StreamCreate = async({
   libraryId,
@@ -148,14 +148,24 @@ const StreamCreate = async({
     });
   }
 
+  let returnResponse = {
+    objectId,
+    libraryId,
+    writeToken
+  };
+
   if(finalize) {
-    await this.FinalizeContentObject({
+    const finalizeResponse = await this.FinalizeContentObject({
       libraryId,
       objectId,
       writeToken,
       commitMessage: "Create live stream"
     });
+
+    returnResponse = {...returnResponse, ...finalizeResponse};
   }
+
+  return returnResponse;
 };
 
 /**
