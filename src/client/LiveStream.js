@@ -77,8 +77,7 @@ const CueInfo = async ({eventId, status}) => {
  receive 'manage' permissions
  * @param {Object=} liveRecordingConfig - Additional configuration data to save in live_recording_config
    - drm_type - DRM encryption type for playback
-   - audio - Audio encoding
- ladder specs
+   - audio - Audio encoding ladder specs
      - {bitrate: number, codec: string, playout: boolean, playout_label: string, record: boolean, recording_bitrate: number, recording_channels: number}[]
    - part_ttl - Time-to-live
  for stream parts before
@@ -1460,6 +1459,10 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  *        "3": {
  *          ...
  *        }
+ *      },
+ *      "ladder_profile": {
+ *        "audio": {bit_rate: number, channels: number, codecs: string}[],
+ *        video: {bit_rate: number, codecs: string, height: number, width: number}[]
  *      }
  *    }
  *
@@ -1467,22 +1470,8 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @namedParams
  * @param {string} name - Object ID or name of the live stream object
  * @param {Object=} customSettings - Additional options to customize configuration settings
- * - audio - Audio ladder specs
- *   {
- *     bitrate: number,
- *     codec: string,
- *     playout: boolean,
- *     playout_label: string,
- *     record: boolean,
- *     recording_bitrate: number,
- *     recording_channels: number
- *   }[]
- * - ladder_profile - Ladders specs to configure audio and video
- *   {
- *     audio: {bit_rate: number, channels: number, codecs: string}[],
- *     video: {bit_rate: number, codecs: string, height: number, width: number}[]
- *   }
  * @param {Object=} probeMetadata - Metadata for the probe. If not specified, a new probe will be configured
+ * @param {Object=} profile - Configure the stream with a preset profile stored in the site object
  * @param {string=} writeToken - Write token of the draft
  * @param {boolean=} finalize - If enabled, target object will be finalized after configuring
  *

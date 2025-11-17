@@ -1,0 +1,66 @@
+const {ElvClient} = require("../../src/ElvClient");
+
+let client;
+const networkName = "demov3"; // "main" or "demo"
+const libraryId = "";
+const contentType = "";
+const accessGroup = "";
+
+const Setup = async() => {
+  client = await ElvClient.FromNetworkName({networkName});
+
+  const wallet = client.GenerateWallet();
+  const signer = wallet.AddAccount({
+    privateKey: process.env.PRIVATE_KEY
+  });
+
+  client.SetSigner({signer});
+};
+
+const CreateStream = async() => {
+  await client.StreamCreate({
+    libraryId,
+    contentType,
+    options: {
+      name: "Live Stream - 11/01/25 Concert Tour",
+      displayTitle: "Farewell Tour - 11/01/25",
+      description: "The last night of the 11/01/25 Farewell Tour",
+      accessGroup
+    },
+    liveRecordingConfig: {
+      drm_type: "drm-all", // drm-public | drm-all | drm-fairplay | drm-widevine | drm-playready | clear
+      audio: {
+        1: {
+          bitrate: 197660,
+          codec: "aac",
+          playout: true,
+          playout_label: "Audio 1",
+          record: true,
+          recording_bitrate: 192000,
+          recording_channels: 2
+        }
+      },
+      2: {
+        bitrate: 186326,
+        codec: "aac",
+        playout: true,
+        playout_label: "Audio 2",
+        record: true,
+        recording_bitrate: 192000,
+        recording_channels: 2
+      },
+      part_ttl: 21600, // seconds
+      persistent: false,
+      url: "",
+      playout_ladder_profile: "Default",
+      reconnect_timeout: 600 // seconds
+    }
+  });
+};
+
+const Run = async() => {
+  await Setup();
+  await CreateStream();
+};
+
+Run();
