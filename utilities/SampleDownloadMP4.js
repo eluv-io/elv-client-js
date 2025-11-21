@@ -23,7 +23,12 @@ class ObjectDownloadFile extends Utility {
                 NewOpt("format", {
                     descTemplate: "Format to request (default mp4)",
                     type: "string"
-                })
+                }),
+                NewOpt("downloadDir", {
+  descTemplate: "Directory to save downloaded file",
+  type: "string"
+})
+
             ]
         };
     }
@@ -110,6 +115,39 @@ class ObjectDownloadFile extends Utility {
       }]);
 
       console.log("Download URL:\n", output.downloadUrl, "\n");
+// -----------------------
+// Download using curl into external folder
+// -----------------------
+if (downloadUrl) {
+  const { execSync } = require("child_process");
+  const path = require("path");
+  const fs = require("fs");
+
+  const targetDir = this.args.downloadDir
+    ? path.resolve(this.args.downloadDir)
+    : process.cwd(); // default to current dir
+
+  // Ensure the directory exists
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+
+  const outputFile = path.join(targetDir, output.filename || "download.mp4");
+
+  console.log(`Downloading with curl → ${outputFile}\n`);
+
+  try {
+    execSync(`curl -L -o "${outputFile}" "${downloadUrl}"`, {
+      stdio: "inherit"
+    });
+
+    console.log(`\nDownload complete: ${outputFile}`);
+  } catch (err) {
+    console.error("\nCurl download failed:", err.message);
+  }
+}
+
+
 
       // -----------------------
       // Outfile support
