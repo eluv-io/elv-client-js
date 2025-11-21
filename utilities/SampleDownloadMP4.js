@@ -212,18 +212,19 @@ class ObjectDownloadFile extends Utility {
 
             const outputFile = output.filename || "download.mp4";
 
-            console.log(`Downloading file with curl → ${outputFile}\n`);
+  console.log(`Downloading with curl → ${outputFile}\n`);
 
-            try {
-                execSync(`curl -L -o "${outputFile}" "${downloadUrl}"`, {
-                    stdio: "inherit"
-                });
+  try {
+    execSync(`curl -L -o "${outputFile}" "${downloadUrl}"`, {
+      stdio: "inherit"
+    });
 
-                console.log(`\nDownload complete: ${outputFile}`);
-            } catch (err) {
-                console.error("\nCurl download failed:", err.message);
-            }
-        }
+    console.log(`\nDownload complete: ${outputFile}`);
+  } catch (err) {
+    console.error("\nCurl download failed:", err.message);
+  }
+}
+
 
 
       // -----------------------
