@@ -1565,7 +1565,7 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} name - Object ID or name of the live stream object
- * @param {LiveRecordingConfig=} liveRecordingConfigProfile - Configuration profile for the live stream including recording, playout, and transcoding settings
+ * @param {LiveRecordingConfig=} liveRecordingConfig - Configuration profile for the live stream including recording, playout, and transcoding settings
  * @param {Object=} profile - Configure the stream with a preset profile stored in the site object
  * @param {Object=} streamInfo - Simplified probe metadata
  * @param {string=} writeToken - Write token of the draft
@@ -1576,14 +1576,14 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  */
 exports.StreamConfig = async function({
   name,
-  liveRecordingConfigProfile,
+  liveRecordingConfig,
   profile,
   streamInfo,
   writeToken,
   finalize=true
 }) {
   const objectId = name;
-  let probe = streamInfo || liveRecordingConfigProfile?.input_stream_info;
+  let probe = streamInfo || liveRecordingConfig?.input_stream_info;
 
   const currentStatus = await this.StreamStatus({name});
   if(currentStatus.state != "uninitialized" && currentStatus.state !== "inactive") {
@@ -1687,10 +1687,10 @@ exports.StreamConfig = async function({
     syncAudioToVideo: true
   });
 
-  const liveRecordingConfig = lc.generateLiveConf({
+  const liveRecordingConfigMeta = lc.generateLiveConf({
     customSettings: {
-      audio: liveRecordingConfigProfile?.recording_stream_config
-      ladder_profile: liveRecordingConfigProfile?.profile
+      audio: liveRecordingConfig?.recording_stream_config
+      ladder_profile: liveRecordingConfig?.profile
     }
   });
 
@@ -1708,7 +1708,7 @@ exports.StreamConfig = async function({
     objectId,
     writeToken,
     metadataSubtree: "live_recording",
-    metadata: liveRecordingConfig.live_recording
+    metadata: liveRecordingConfigMeta.live_recording
   });
 
   await this.ReplaceMetadata({
