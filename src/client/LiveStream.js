@@ -68,6 +68,9 @@ const CueInfo = async ({eventId, status}) => {
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} libraryId - ID of the library for the new live stream object
+ * @param {string} url - Source stream URL
+ * @param {boolean=} finalize - If enabled, object will be finalized after creation (default: true)
+ * @param {LiveRecordingConfig=} liveRecordingConfig - Configuration profile for the live stream including recording, playout, and transcoding settings
  *
  * @param {Object=} options - Additional options for customizing a live stream
  * @param {string=} options.name - Name of the live stream
@@ -75,35 +78,55 @@ const CueInfo = async ({eventId, status}) => {
  * @param {string=} options.description - Description for the live stream
  * @param {string[]=} options.accessGroups - Access group addresses to receive 'manage' permissions
  * @param {string=} options.permission - Permission level to set on the object
- *
- * @param {Object=} liveRecordingConfig - Additional configuration data to save in live_recording_config
- * @param {string=} liveRecordingConfig.drm_type - DRM encryption type for playback
- * @param {Array<Object>=} liveRecordingConfig.audio - Audio encoding ladder specs
- * @param {number=} liveRecordingConfig.audio[].bitrate - Audio bitrate
- * @param {string=} liveRecordingConfig.audio[].codec - Audio codec
- * @param {boolean=} liveRecordingConfig.audio[].playout - Whether to include in playout
- * @param {string=} liveRecordingConfig.audio[].playout_label - Label for playout
- * @param {boolean=} liveRecordingConfig.audio[].record - Whether to record this audio stream
- * @param {number=} liveRecordingConfig.audio[].recording_bitrate - Recording bitrate
- * @param {number=} liveRecordingConfig.audio[].recording_channels - Number of recording channels
- * @param {number=} liveRecordingConfig.part_ttl - Time-to-live for stream parts before removal from fabric
- * @param {boolean=} liveRecordingConfig.persistent - If enabled, stream runs indefinitely
- * @param {string=} liveRecordingConfig.url - Stream ingest URL
- * @param {string=} liveRecordingConfig.reference_url - Stream URL for allocation tracking
- * @param {string=} liveRecordingConfig.playout_ladder_profile - Name of the playout ladder profile
- * @param {number=} liveRecordingConfig.reconnect_timeout - Duration to listen after disconnect detection
- * @param {boolean=} finalize - If enabled, object will be finalized after creation (default: true)
+ * @param {boolean=} options.linkToSite - If enabled, will create a link in the live stream site
+ * @param {boolean=} options.initializeDrm - If enabled, will initialize DRM for the object
+ * @param {string=} options.ingress_node_api - API endpoint of the ingress node used for stream allocation (required for non-public nodes)
  *
  * @return {Promise<Object>} - Object containing objectId, libraryId, writeToken, and hash if finalized
  */
 const StreamCreateObject = async({
   libraryId,
-  contentType,
-  options={},
-  liveRecordingConfig={},
-  finalize=true
+  url,
+  finalize=true,
+  options={}
 }) => {
   const defaultName = `LIVE STREAM - ${new Date().toISOString().slice(0, 10)}`
+  let contentType;
+  let adminGroups = options.accessGroups ?? [];
+
+  // Retrieve live stream content type
+  try {
+    const wallet = await this.userProfileClient.UserWalletObjectInfo();
+    let tenantId = await this.userProfileClient.TenantContractId();
+
+    if(!tenantId) {
+      tenantId = await this.ContentObjectMetadata({
+        libraryId: await this.ContentObjectLibraryId({objectId: wallet.objectId}),
+        objectId: wallet.objectId,
+        metadataSubtree: "tenantContractId",
+      });
+    }
+
+    const tenantMeta = await this.ContentObjectMetadata({
+      libraryId: tenantId.replace("iten", "ilib"),
+      objectId: tenantId.replace("iten", "iq__"),
+      metadataSubtree: "public",
+      select: [
+        "content_types/live_stream",
+        "groups/content_admin"
+      ]
+    });
+
+    adminGroups = adminGroups.concat(tenantMeta.groups?.content_admin ?? []);
+
+    contentType = tenantMeta.content_types?.live_stream;
+
+    if(!contentType) {
+      throw new Error(`No content type configured for tenant ${tenantId}`);
+    }
+  } catch(error) {
+    console.error("Unable to load tenant data", error);
+  }
 
   const createResponse = await this.CreateContentObject({
     libraryId,
@@ -116,13 +139,14 @@ const StreamCreateObject = async({
 
   const {accessGroup, name, displayTitle, description, liveRecordingConfig, permission} = options;
 
-  if(accessGroup) {
+  // Add access group permissions
+  adminGroups.map(group => {
     this.AddContentObjectGroupPermission({
       objectId,
       groupAddress: accessGroup,
       permission: "manage"
-    })
-  }
+    });
+  });
 
   await this.MergeMetadata({
     libraryId,
@@ -144,13 +168,11 @@ const StreamCreateObject = async({
     }
   });
 
-  if(permission) {
-    await this.SetPermission({
-      objectId,
-      permission,
-      writeToken
-    });
-  }
+  await this.SetPermission({
+    objectId,
+    permission: permission ?? "editable",
+    writeToken
+  });
 
   let returnResponse = {
     objectId,
@@ -1689,7 +1711,7 @@ exports.StreamConfig = async function({
 
   const liveRecordingConfigMeta = lc.generateLiveConf({
     customSettings: {
-      audio: liveRecordingConfig?.recording_stream_config
+      audio: liveRecordingConfig?.recording_stream_config,
       ladder_profile: liveRecordingConfig?.profile
     }
   });
