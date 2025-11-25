@@ -410,11 +410,11 @@ class LiveConf {
   */
   generateLiveConf({customSettings}) {
     // Saved config overrides defaults and is preserved on reconfiguration
-    const conf =
+    const conf = this.currentLiveRecordingMeta ?
       R.mergeDeepRight(
         LiveconfTemplate,
         {live_recording: this.currentLiveRecordingMeta}
-      );
+      ) : LiveconfTemplate;
 
     const fileName = this.overwriteOriginUrl || this.probeData.format.filename;
     const audioStreams = this.generateAudioStreamsConfig({customSettings});

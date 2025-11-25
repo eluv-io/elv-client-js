@@ -80,7 +80,7 @@ const CueInfo = async ({eventId, status}) => {
  * @param {string=} options.permission - Permission level to set on the object
  * @param {boolean=} options.linkToSite - If enabled, will create a link in the live stream site
  * @param {boolean=} options.initializeDrm - If enabled, will initialize DRM for the object
- * @param {string=} options.ingress_node_api - API endpoint of the ingress node used for stream allocation (required for non-public nodes)
+ * @param {string=} options.ingressNodeApi - API endpoint of the ingress node used for stream allocation (required for non-public nodes)
  *
  * @return {Promise<Object>} - Object containing objectId, libraryId, writeToken, and hash if finalized
  */
@@ -138,14 +138,19 @@ exports.StreamCreateObject = async function({
 
   const {objectId, writeToken} = createResponse;
 
-  const {accessGroup, name, displayTitle, description, liveRecordingConfig, permission} = options;
+  const {accessGroup, name, displayTitle, description, permission, ingressNodeApi} = options;
   const streamName = name || defaultName;
+
+  liveRecordingConfig.url = url;
+  liveRecordingConfig.ingress_node_api = ingressNodeApi;
 
   // Add access group permissions
   adminGroups.map(group => {
+    if(!group) { return; }
+
     this.AddContentObjectGroupPermission({
       objectId,
-      groupAddress: accessGroup,
+      groupAddress: group,
       permission: "manage"
     });
   });
@@ -181,6 +186,17 @@ exports.StreamCreateObject = async function({
     libraryId,
     writeToken
   };
+
+  // If stream info is provided, continue to configure
+  if(liveRecordingConfig?.input_stream_info) {
+    await this.StreamConfig({
+      name: objectId,
+      liveRecordingConfig,
+      streamInfo: liveRecordingConfig.input_stream_info,
+      writeToken,
+      finalize: false
+    });
+  }
 
   if(finalize) {
     const finalizeResponse = await this.FinalizeContentObject({
@@ -493,7 +509,7 @@ const StreamGenerateOffering = async({
  *
  * @return {Promise<Object>} - The status response for the object, as well as logs, warnings and errors from the master initialization
  */
-exports.StreamStatus = async function({name, showParams=false}) {
+exports.StreamStatus = async function({name, showParams=false, writeToken}) {
   let objectId = name;
   let status = {name: name};
 
@@ -505,13 +521,14 @@ exports.StreamStatus = async function({name, showParams=false}) {
     let mainMeta = await this.ContentObjectMetadata({
       libraryId,
       objectId,
+      writeToken,
       select: [
         "live_recording_config",
         "live_recording"
       ]
     });
 
-    status.reference_url = mainMeta.live_recording_config.reference_url;
+    status.ingress_node_api = mainMeta.live_recording_config?.ingress_node_api;
 
     if(mainMeta.live_recording_config == undefined || mainMeta.live_recording_config.url == undefined) {
       status.state = "unconfigured";
@@ -1526,6 +1543,7 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @property {Object=} input_stream_info - Simplified probe information for the input stream
  * @property {Object=} input_stream_info.format - Format information
  * @property {string=} input_stream_info.format.format_name - Format name (e.g., "mpegts")
+ * @property {string=} input_stream_info.format.filename - Stream URL
  * @property {Array<Object>=} input_stream_info.streams - Array of stream information
  * @property {string=} input_stream_info.streams[].codec_name - Codec name (e.g., "h264", "aac")
  * @property {string=} input_stream_info.streams[].codec_type - Codec type ("video" or "audio")
@@ -1608,11 +1626,12 @@ exports.StreamConfig = async function({
 }) {
   const objectId = name;
   let probe = streamInfo || liveRecordingConfig?.input_stream_info;
+  let configMetadata = liveRecordingConfig;
 
-  const currentStatus = await this.StreamStatus({name});
-  if(currentStatus.state != "uninitialized" && currentStatus.state !== "inactive") {
+  const currentStatus = await this.StreamStatus({name, writeToken});
+  if(currentStatus.state != "uninitialized" && currentStatus.state !== "inactive" && currentStatus.state !== "unconfigured") {
     return {
-      state: status.state,
+      state: currentStatus.state,
       error: "Stream still active - must deactivate first"
     };
   }
@@ -1625,17 +1644,21 @@ exports.StreamConfig = async function({
     object_id: objectId,
   }
 
-  const configMetadata = await this.ContentObjectMetadata({
-    libraryId: libraryId,
-    objectId,
-    metadataSubtree: "/",
-    select: [
-      "/live_recording_config",
-      "/live_recording"
-    ]
-  });
+  if(!liveRecordingConfig) {
+    configMetadata = await this.ContentObjectMetadata({
+      libraryId: libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "/",
+      select: [
+        "/live_recording_config",
+        "/live_recording"
+      ]
+    });
+  }
+  console.log("config meta", configMetadata);
 
-  const userConfig = configMetadata.live_recording_config;
+  const userConfig = liveRecordingConfig || configMetadata.live_recording_config;
   status.user_config = userConfig;
 
   // Get node URI from user config
@@ -1703,7 +1726,7 @@ exports.StreamConfig = async function({
   // Create live recording config
   let lc = new LiveConf({
     probeData: probe,
-    liveRecordingMeta: configMetadata.live_recording,
+    liveRecordingMeta: configMetadata?.live_recording,
     nodeId: node.id,
     nodeUrl: endpoint,
     includeAVSegDurations: false,
@@ -1823,13 +1846,15 @@ exports.StreamListUrls = async function({siteId}={}) {
             objectId,
             libraryId,
             select: [
+              // live_recording_config/reference_url is an old path
               "live_recording_config/reference_url",
+              "live_recording_config/ingress_node_api",
               // live_recording_config/url is the old path
               "live_recording_config/url"
             ]
           });
 
-          const url = streamMeta.live_recording_config.reference_url || streamMeta.live_recording_config.url;
+          const url = streamMeta.live_recording_config.ingress_node_api || streamMeta.live_recording_config.reference_url || streamMeta.live_recording_config.url;
           const isActive = [STATUS_MAP.STARTING, STATUS_MAP.RUNNING, STATUS_MAP.STALLED, STATUS_MAP.STOPPED].includes(status.state);
 
           if(url && isActive) {
