@@ -1446,7 +1446,7 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
 };
 
 /**
- * @typedef {Object} StreamProfile
+ * @typedef {Object} LiveRecordingConfig
  * @property {string=} name - Name of the profile
  *
  * @property {Object=} recording_config - Recording configuration settings
@@ -1546,41 +1546,28 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @property {number=} recording_params.xc_params.xc_type - Transcoding type identifier
  *
  * @property {Object=} probe_info - Full probe information (stored for historical/debugging purposes, only in live_recording_config)
+ *
+ * @property {Object=} profile - Encoding ladder profile specifications
+ * @property {Array<Object>=} profile.audio - Audio encoding ladder rungs
+ * @property {number=} profile.audio[].bit_rate - Audio bitrate for this rung
+ * @property {number=} profile.audio[].channels - Number of audio channels for this rung
+ * @property {string=} profile.audio[].codecs - Audio codec identifier for this rung
+ * @property {Array<Object>=} profile.video - Video encoding ladder rungs
+ * @property {number=} profile.video[].bit_rate - Video bitrate for this rung
+ * @property {string=} profile.video[].codecs - Video codec identifier for this rung
+ * @property {number=} profile.video[].height - Video height in pixels for this rung
+ * @property {number=} profile.video[].width - Video width in pixels for this rung
  */
 
 /**
  * Configure the stream based on built-in logic and optional custom settings.
  *
- * Custom settings format:
- *    {
- *      "audio" {
- *        "1" : {  // This is the stream index
- *          "tags" : "language: english",
- *          "codec" : "aac",
- *          "bitrate": 204000,
- *          "record":  true,
- *          "recording_bitrate" : 192000,
- *          "recording_channels" : 2,
- *          "playout": bool
- *          "playout_label": "English (Stereo)"
- *        },
- *        "3": {
- *          ...
- *        }
- *      },
- *      "ladder_profile": {
- *        "audio": {bit_rate: number, channels: number, codecs: string}[],
- *        video: {bit_rate: number, codecs: string, height: number, width: number}[]
- *      }
- *    }
- *
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} name - Object ID or name of the live stream object
- * @param {StreamProfile=} profile - Configure the stream with a preset profile stored in the site object
+ * @param {LiveRecordingConfig=} liveRecordingConfigProfile - Configuration profile for the live stream including recording, playout, and transcoding settings
+ * @param {Object=} profile - Configure the stream with a preset profile stored in the site object
  * @param {Object=} streamInfo - Simplified probe metadata
- * @param {Object=} customSettings - Additional options to customize configuration settings
- * @param {Object=} probeMetadata - Metadata for the probe. If not specified, a new probe will be configured
  * @param {string=} writeToken - Write token of the draft
  * @param {boolean=} finalize - If enabled, target object will be finalized after configuring
  *
@@ -1589,15 +1576,14 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  */
 exports.StreamConfig = async function({
   name,
+  liveRecordingConfigProfile,
   profile,
   streamInfo,
-  customSettings={},
-  probeMetadata,
   writeToken,
   finalize=true
 }) {
   const objectId = name;
-  let probe = probeMetadata;
+  let probe = streamInfo || liveRecordingConfigProfile?.input_stream_info;
 
   const currentStatus = await this.StreamStatus({name});
   if(currentStatus.state != "uninitialized" && currentStatus.state !== "inactive") {
@@ -1702,7 +1688,10 @@ exports.StreamConfig = async function({
   });
 
   const liveRecordingConfig = lc.generateLiveConf({
-    customSettings
+    customSettings: {
+      audio: liveRecordingConfigProfile?.recording_stream_config
+      ladder_profile: liveRecordingConfigProfile?.profile
+    }
   });
 
   // Store live recording config into the stream object
