@@ -785,7 +785,6 @@ exports.SetTenantContractId = async function({contractAddress, objectId, version
   if(tenantContractId && (!tenantContractId.startsWith("iten") || !Utils.ValidHash(tenantContractId))) {
     throw Error(`Invalid tenant ID: ${tenantContractId}`);
   }
-  const tenantAddress = Utils.HashToAddress(tenantContractId);
 
   const version = await this.authClient.AccessType(tenantContractId);
   if(version !== this.authClient.ACCESS_TYPES.TENANT) {
@@ -793,12 +792,7 @@ exports.SetTenantContractId = async function({contractAddress, objectId, version
   }
 
   // get tenant admin group
-  const tenantAdminGroupAddress = await this.CallContractMethod({
-    contractAddress: tenantAddress,
-    methodName: "groupsMapping",
-    methodArgs: ["tenant_admin", 0],
-    formatArguments: true,
-  });
+  const tenantAdminGroupAddress = await this.TenantAdminGroup({tenantContractId});
 
   const hasPutMetaMethod = await this.authClient.ContractHasMethod({
     contractAddress: contractAddress,
@@ -928,7 +922,7 @@ exports.ResetTenantId = async function({contractAddress, objectId, versionHash})
   }
 };
 
-async function getTenantGroupAddress({ctx, tenantContractId, groupName}) {
+async function GetTenantGroupAddress({ctx, tenantContractId, groupName}) {
   if(!tenantContractId) {
     throw new Error("tenantContractId is required");
   }
@@ -939,7 +933,7 @@ async function getTenantGroupAddress({ctx, tenantContractId, groupName}) {
 
   const tenantAddress = Utils.HashToAddress(tenantContractId);
 
-  // Needs to be tenant version
+  // Needs to be tenant type
   const version = await ctx.authClient.AccessType(tenantContractId);
   if(version !== ctx.authClient.ACCESS_TYPES.TENANT) {
     throw new Error(
@@ -976,7 +970,7 @@ async function getTenantGroupAddress({ctx, tenantContractId, groupName}) {
  * @returns {Promise<*|undefined>}
  */
 exports.TenantAdminGroup = async function({ tenantContractId }) {
-  return getTenantGroupAddress({
+  return GetTenantGroupAddress({
     ctx : this,
     tenantContractId,
     groupName: "tenant_admin"
@@ -992,7 +986,7 @@ exports.TenantAdminGroup = async function({ tenantContractId }) {
  * @returns {Promise<*|undefined>}
  */
 exports.ContentAdminGroup = async function({tenantContractId}){
-  return getTenantGroupAddress({
+  return GetTenantGroupAddress({
     ctx : this,
     tenantContractId,
     groupName: "content_admin"
@@ -1008,7 +1002,7 @@ exports.ContentAdminGroup = async function({tenantContractId}){
  * @returns {Promise<*|undefined>}
  */
 exports.TenantUsersGroup = async function({tenantContractId}){
-  return getTenantGroupAddress({
+  return GetTenantGroupAddress({
     ctx : this,
     tenantContractId,
     groupName: "tenant_users"
