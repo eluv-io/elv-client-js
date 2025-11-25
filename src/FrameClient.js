@@ -499,6 +499,7 @@ class FrameClient {
       "StreamCreateObject",
       "StreamInitialize",
       "StreamInsertion",
+      "StreamLinkToSite",
       "StreamListUrls",
       "StreamRemoveWatermark",
       "StreamSetOfferingAndDRM",

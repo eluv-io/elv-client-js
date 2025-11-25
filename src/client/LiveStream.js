@@ -209,7 +209,100 @@ exports.StreamCreateObject = async function({
     returnResponse = {...returnResponse, ...finalizeResponse};
   }
 
+  if(options.linkToSite) {
+    await this.StreamLinkToSite({
+      objectId
+    });
+  }
+
   return returnResponse;
+};
+
+/**
+ * Link a live stream object to a site by adding it to the site's live_streams metadata.
+ * Creates a fabric link to the stream object with proper ordering.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} objectId - Object ID of the live stream to link to the site
+ * @param {string=} siteObjectId - Object ID of the site (defaults to rootStore.dataStore.siteId)
+ * @param {string=} siteLibraryId - Library ID of the site (defaults to rootStore.dataStore.siteLibraryId)
+ *
+ * @return {Promise<void>}
+ */
+exports.StreamLinkToSite = async function({
+  objectId
+}) {
+  try {
+    const wallet = await this.userProfileClient.UserWalletObjectInfo();
+    let tenantId = await this.userProfileClient.TenantContractId();
+
+    if(!tenantId) {
+      tenantId = await this.ContentObjectMetadata({
+        libraryId: await this.ContentObjectLibraryId({objectId: wallet.objectId}),
+        objectId: wallet.objectId,
+        metadataSubtree: "tenantContractId",
+      });
+    }
+
+    const siteObjectId = await this.ContentObjectMetadata({
+      libraryId: tenantId.replace("iten", "ilib"),
+      objectId: tenantId.replace("iten", "iq__"),
+      metadataSubtree: "public/sites/live_streams",
+    });
+
+    const siteLibraryId = await this.ContentObjectLibraryId({objectId: siteObjectId});
+
+    const streamMetadata = await this.ContentObjectMetadata({
+      libraryId: siteLibraryId,
+      objectId: siteObjectId,
+      metadataSubtree: "public/asset_metadata/live_streams",
+    });
+
+    const objectName = await this.ContentObjectMetadata({
+      libraryId: await this.ContentObjectLibraryId({objectId}),
+      objectId,
+      metadataSubtree: "public/name"
+    });
+
+    const streamData = {
+      ".": {
+        container: await this.LatestVersionHash({objectId: siteObjectId}),
+        auto_update: {
+          tag: "latest"
+        }
+      },
+      "/": `/qfab/${await this.LatestVersionHash({objectId})}/meta/public/asset_metadata`,
+      order: Object.keys(streamMetadata).length
+    };
+
+    const {writeToken} = await this.EditContentObject({
+      libraryId: siteLibraryId,
+      objectId: siteObjectId
+    });
+
+    await this.ReplaceMetadata({
+      libraryId: siteLibraryId,
+      objectId: siteObjectId,
+      writeToken,
+      metadataSubtree: "public/asset_metadata/live_streams",
+      metadata: {
+        ...streamMetadata,
+        [slugify(objectName)]: streamData
+      }
+    });
+
+    await this.FinalizeContentObject({
+      libraryId: siteLibraryId,
+      objectId: siteObjectId,
+      writeToken,
+      commitMessage: "Add live stream",
+      awaitCommitConfirmation: true
+    });
+  } catch(error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to link stream object to site", JSON.stringify(error, null, 2));
+  }
 };
 
 /**
