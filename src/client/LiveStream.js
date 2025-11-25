@@ -63,35 +63,40 @@ const CueInfo = async ({eventId, status}) => {
 };
 
 /**
- * Create a live stream
+ * Create a live stream object
  *
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} libraryId - ID of the library for the new live stream object
- * @param {string=} contentType - ID or version hash of the content type for the live stream
- * @param {Object=} options - Additional options for customizing a live stream
-   - name - Name of the live stream
-   - displayTitle - Display title for the live stream
-   - description - Description for the live stream
-   - accessGroup - Access group address to
- receive 'manage' permissions
- * @param {Object=} liveRecordingConfig - Additional configuration data to save in live_recording_config
-   - drm_type - DRM encryption type for playback
-   - audio - Audio encoding ladder specs
-     - {bitrate: number, codec: string, playout: boolean, playout_label: string, record: boolean, recording_bitrate: number, recording_channels: number}[]
-   - part_ttl - Time-to-live
- for stream parts before
- removal from fabric
-   - persistent - If enabled, stream runs indefinitely
-   - url - Stream ingest URL
-   - reference_url - Stream URL for allocation tracking
-   - playout_ladder_profile - Name of the playout ladder profile
-   - reconnect_timeout - Duration to listen after
- disconnect detection
  *
- * @return {Promise<Object>} - Object containing object ID and finalize data if enabled
+ * @param {Object=} options - Additional options for customizing a live stream
+ * @param {string=} options.name - Name of the live stream
+ * @param {string=} options.displayTitle - Display title for the live stream
+ * @param {string=} options.description - Description for the live stream
+ * @param {string[]=} options.accessGroups - Access group addresses to receive 'manage' permissions
+ * @param {string=} options.permission - Permission level to set on the object
+ *
+ * @param {Object=} liveRecordingConfig - Additional configuration data to save in live_recording_config
+ * @param {string=} liveRecordingConfig.drm_type - DRM encryption type for playback
+ * @param {Array<Object>=} liveRecordingConfig.audio - Audio encoding ladder specs
+ * @param {number=} liveRecordingConfig.audio[].bitrate - Audio bitrate
+ * @param {string=} liveRecordingConfig.audio[].codec - Audio codec
+ * @param {boolean=} liveRecordingConfig.audio[].playout - Whether to include in playout
+ * @param {string=} liveRecordingConfig.audio[].playout_label - Label for playout
+ * @param {boolean=} liveRecordingConfig.audio[].record - Whether to record this audio stream
+ * @param {number=} liveRecordingConfig.audio[].recording_bitrate - Recording bitrate
+ * @param {number=} liveRecordingConfig.audio[].recording_channels - Number of recording channels
+ * @param {number=} liveRecordingConfig.part_ttl - Time-to-live for stream parts before removal from fabric
+ * @param {boolean=} liveRecordingConfig.persistent - If enabled, stream runs indefinitely
+ * @param {string=} liveRecordingConfig.url - Stream ingest URL
+ * @param {string=} liveRecordingConfig.reference_url - Stream URL for allocation tracking
+ * @param {string=} liveRecordingConfig.playout_ladder_profile - Name of the playout ladder profile
+ * @param {number=} liveRecordingConfig.reconnect_timeout - Duration to listen after disconnect detection
+ * @param {boolean=} finalize - If enabled, object will be finalized after creation (default: true)
+ *
+ * @return {Promise<Object>} - Object containing objectId, libraryId, writeToken, and hash if finalized
  */
-const StreamCreate = async({
+const StreamCreateObject = async({
   libraryId,
   contentType,
   options={},
@@ -1441,6 +1446,109 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
 };
 
 /**
+ * @typedef {Object} StreamProfile
+ * @property {string=} name - Name of the profile
+ *
+ * @property {Object=} recording_config - Recording configuration settings
+ * @property {number=} recording_config.part_ttl - Time-to-live for stream parts in seconds
+ * @property {number=} recording_config.connection_timeout - Initial connection timeout when starting the stream, in seconds
+ * @property {number=} recording_config.reconnection_timeout - Duration to listen after disconnect detection, in seconds
+ * @property {boolean=} recording_config.copy_mpeg_ts - Whether to copy MPEG-TS data
+ * @property {Object=} recording_config.input_cfg - Input configuration settings
+ * @property {boolean=} recording_config.input_cfg.bypass_libav_reader - Whether to bypass libav reader
+ * @property {string=} recording_config.input_cfg.copy_mode - Copy mode setting: "" (empty), "none", "raw", or "remuxed"
+ * @property {string=} recording_config.input_cfg.copy_packaging - Copy packaging mode: "raw_ts" or "rtp_ts"
+ *
+ * @property {Object=} playout_config - Playout configuration settings
+ * @property {Object=} playout_config.image_watermark - Image watermark configuration
+ * @property {string=} playout_config.image_watermark.align_h - Horizontal alignment (e.g., "left", "center", "right")
+ * @property {string=} playout_config.image_watermark.align_v - Vertical alignment (e.g., "top", "middle", "bottom")
+ * @property {string=} playout_config.image_watermark.image - Path to watermark image file
+ * @property {boolean=} playout_config.image_watermark.wm_enabled - Whether the image watermark is enabled
+ * @property {Object=} playout_config.simple_watermark - Simple text watermark configuration
+ * @property {string=} playout_config.simple_watermark.font_color - Font color (e.g., "white@0.5")
+ * @property {number=} playout_config.simple_watermark.font_relative_height - Font size relative to video height
+ * @property {boolean=} playout_config.simple_watermark.shadow - Whether to add shadow to text
+ * @property {string=} playout_config.simple_watermark.shadow_color - Shadow color (e.g., "black@0.5")
+ * @property {string=} playout_config.simple_watermark.template - Watermark text template
+ * @property {string=} playout_config.simple_watermark.x - Horizontal position expression
+ * @property {string=} playout_config.simple_watermark.y - Vertical position expression
+ * @property {boolean=} playout_config.dvr - Whether to enable DVR functionality
+ * TODO: update possible drm types
+ * @property {string=} playout_config.drm - DRM configuration ("drm-all", "custom", or specific DRM type)
+ * TODO: update possible playout formats
+ * @property {string[]=} playout_config.playout_formats - List of playout format names (e.g., "dash-widevine", "hls-widevine")
+ * @property {Object=} playout_config.ladder_specs - Encoding ladder specifications
+ * @property {Array<Object>=} playout_config.ladder_specs.audio - Audio encoding ladder
+ * @property {number=} playout_config.ladder_specs.audio[].bit_rate - Audio bitrate
+ * @property {number=} playout_config.ladder_specs.audio[].channels - Number of audio channels
+ * @property {string=} playout_config.ladder_specs.audio[].codecs - Audio codec identifier
+ * @property {Array<Object>=} playout_config.ladder_specs.video - Video encoding ladder
+ * @property {number=} playout_config.ladder_specs.video[].bit_rate - Video bitrate
+ * @property {string=} playout_config.ladder_specs.video[].codecs - Video codec identifier
+ * @property {number=} playout_config.ladder_specs.video[].height - Video height in pixels
+ * @property {number=} playout_config.ladder_specs.video[].width - Video width in pixels
+ *
+ * @property {Object=} recording_stream_config - Stream recording configuration
+ * @property {Object=} recording_stream_config.audio - Audio stream recording configuration indexed by stream number
+ * @property {number=} recording_stream_config.audio[].bitrate - Stream bitrate
+ * @property {string=} recording_stream_config.audio[].codec - Audio codec (e.g., "aac")
+ * @property {boolean=} recording_stream_config.audio[].playout - Whether to include this stream in playout
+ * @property {string=} recording_stream_config.audio[].playout_label - Label for playout (e.g., "Audio 1")
+ * @property {boolean=} recording_stream_config.audio[].record - Whether to record this audio stream
+ * @property {number=} recording_stream_config.audio[].recording_bitrate - Recording bitrate
+ * @property {number=} recording_stream_config.audio[].recording_channels - Number of recording channels
+ *
+ * @property {Object=} input_stream_info - Simplified probe information for the input stream
+ * @property {Object=} input_stream_info.format - Format information
+ * @property {string=} input_stream_info.format.format_name - Format name (e.g., "mpegts")
+ * @property {Array<Object>=} input_stream_info.streams - Array of stream information
+ * @property {string=} input_stream_info.streams[].codec_name - Codec name (e.g., "h264", "aac")
+ * @property {string=} input_stream_info.streams[].codec_type - Codec type ("video" or "audio")
+ * @property {string=} input_stream_info.streams[].display_aspect_ratio - Display aspect ratio (e.g., "16/9")
+ * @property {string=} input_stream_info.streams[].field_order - Field order (e.g., "progressive")
+ * @property {string=} input_stream_info.streams[].frame_rate - Frame rate (e.g., "50")
+ * @property {number=} input_stream_info.streams[].height - Video height in pixels
+ * @property {number=} input_stream_info.streams[].width - Video width in pixels
+ * @property {number=} input_stream_info.streams[].level - Codec level
+ * @property {number=} input_stream_info.streams[].stream_id - Stream ID
+ * @property {number=} input_stream_info.streams[].stream_index - Stream index
+ * @property {number=} input_stream_info.streams[].channel_layout - Audio channel layout
+ * @property {number=} input_stream_info.streams[].channels - Number of audio channels
+ * @property {number=} input_stream_info.streams[].sample_rate - Audio sample rate
+ *
+ * @property {Object=} recording_params - Advanced recording parameters
+ * @property {Object=} recording_params.xc_params - Transcoding parameters
+ * @property {number=} recording_params.xc_params.audio_bitrate - Audio bitrate for encoding
+ * @property {Object=} recording_params.xc_params.audio_index - Audio stream index mapping (indexed by output stream number)
+ * @property {number=} recording_params.xc_params.audio_seg_duration_ts - Audio segment duration in time scale units
+ * @property {number=} recording_params.xc_params.connection_timeout - Connection timeout in seconds
+ * @property {boolean=} recording_params.xc_params.copy_mpegts - Whether to copy MPEG-TS data
+ * @property {string=} recording_params.xc_params.ecodec2 - Audio encoder codec (e.g., "aac")
+ * @property {number=} recording_params.xc_params.enc_height - Encoding height in pixels
+ * @property {number=} recording_params.xc_params.enc_width - Encoding width in pixels
+ * @property {string=} recording_params.xc_params.filter_descriptor - FFmpeg filter descriptor string
+ * @property {number=} recording_params.xc_params.force_keyint - Force keyframe interval
+ * @property {string=} recording_params.xc_params.format - Output format (e.g., "fmp4-segment")
+ * @property {boolean=} recording_params.xc_params.listen - Whether to listen for incoming stream
+ * @property {number=} recording_params.xc_params.n_audio - Number of audio streams
+ * @property {string=} recording_params.xc_params.preset - Encoding preset (e.g., "faster", "medium", "slow")
+ * @property {number=} recording_params.xc_params.sample_rate - Audio sample rate in Hz
+ * @property {string=} recording_params.xc_params.seg_duration - Segment duration in seconds (as string)
+ * @property {boolean=} recording_params.xc_params.skip_decoding - Whether to skip decoding
+ * @property {string=} recording_params.xc_params.start_segment_str - Starting segment number (as string)
+ * @property {number=} recording_params.xc_params.stream_id - Stream ID (-1 for auto)
+ * @property {number=} recording_params.xc_params.sync_audio_to_stream_id - Stream ID to sync audio to
+ * @property {number=} recording_params.xc_params.video_bitrate - Video bitrate for encoding
+ * @property {number=} recording_params.xc_params.video_frame_duration_ts - Video frame duration in time scale units (null for auto)
+ * @property {number=} recording_params.xc_params.video_seg_duration_ts - Video segment duration in time scale units
+ * @property {string=} recording_params.xc_params.video_time_base - Video time base (null for auto)
+ * @property {number=} recording_params.xc_params.xc_type - Transcoding type identifier
+ *
+ * @property {Object=} probe_info - Full probe information (stored for historical/debugging purposes, only in live_recording_config)
+ */
+
+/**
  * Configure the stream based on built-in logic and optional custom settings.
  *
  * Custom settings format:
@@ -1469,9 +1577,10 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} name - Object ID or name of the live stream object
+ * @param {StreamProfile=} profile - Configure the stream with a preset profile stored in the site object
+ * @param {Object=} streamInfo - Simplified probe metadata
  * @param {Object=} customSettings - Additional options to customize configuration settings
  * @param {Object=} probeMetadata - Metadata for the probe. If not specified, a new probe will be configured
- * @param {Object=} profile - Configure the stream with a preset profile stored in the site object
  * @param {string=} writeToken - Write token of the draft
  * @param {boolean=} finalize - If enabled, target object will be finalized after configuring
  *
@@ -1480,22 +1589,35 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  */
 exports.StreamConfig = async function({
   name,
+  profile,
+  streamInfo,
   customSettings={},
   probeMetadata,
   writeToken,
   finalize=true
 }) {
-  let objectId = name;
-  let status = {name};
+  const objectId = name;
   let probe = probeMetadata;
 
-  let libraryId = await this.ContentObjectLibraryId({objectId});
-  status.library_id = libraryId;
-  status.object_id = objectId;
+  const currentStatus = await this.StreamStatus({name});
+  if(currentStatus.state != "uninitialized" && currentStatus.state !== "inactive") {
+    return {
+      state: status.state,
+      error: "Stream still active - must deactivate first"
+    };
+  }
+
+  const libraryId = await this.ContentObjectLibraryId({objectId});
+
+  const status = {
+    name,
+    library_id: libraryId,
+    object_id: objectId,
+  }
 
   const configMetadata = await this.ContentObjectMetadata({
     libraryId: libraryId,
-    objectId: objectId,
+    objectId,
     metadataSubtree: "/",
     select: [
       "/live_recording_config",
