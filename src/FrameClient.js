@@ -496,6 +496,7 @@ class FrameClient {
       "StreamConfig",
       "StreamCopyToVod",
       "StreamCreate",
+      "StreamCreateObject",
       "StreamInitialize",
       "StreamInsertion",
       "StreamListUrls",

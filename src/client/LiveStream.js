@@ -84,12 +84,13 @@ const CueInfo = async ({eventId, status}) => {
  *
  * @return {Promise<Object>} - Object containing objectId, libraryId, writeToken, and hash if finalized
  */
-const StreamCreateObject = async({
+exports.StreamCreateObject = async function({
   libraryId,
   url,
   finalize=true,
+  liveRecordingConfig,
   options={}
-}) => {
+}) {
   const defaultName = `LIVE STREAM - ${new Date().toISOString().slice(0, 10)}`
   let contentType;
   let adminGroups = options.accessGroups ?? [];
