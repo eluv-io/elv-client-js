@@ -138,6 +138,7 @@ const StreamCreateObject = async({
   const {objectId, writeToken} = createResponse;
 
   const {accessGroup, name, displayTitle, description, liveRecordingConfig, permission} = options;
+  const streamName = name || defaultName;
 
   // Add access group permissions
   adminGroups.map(group => {
@@ -154,14 +155,14 @@ const StreamCreateObject = async({
     writeToken,
     metadata: {
       public: {
-        name,
+        name: streamName,
         description,
         asset_metadata: {
-          display_title: displayTitle || name,
-          title: name || displayTitle,
+          display_title: displayTitle || streamName,
+          title: name || displayTitle || defaultName,
           title_type: "live_stream",
           video_type: "live",
-          slug: slugify(name)
+          slug: slugify(streamName)
         }
       },
       "live_recording_config": liveRecordingConfig
