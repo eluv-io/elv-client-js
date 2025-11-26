@@ -117,7 +117,7 @@ exports.StreamCreateObject = async function({
       ]
     });
 
-    const tenantContentAdminGroup = await client.ContentAdminGroup({tenantContractId: tenantId})
+    const tenantContentAdminGroup = await this.ContentAdminGroup({tenantContractId: tenantId})
 
     adminGroups = adminGroups.concat(tenantContentAdminGroup ?? []);
 
@@ -1759,6 +1759,7 @@ exports.StreamConfig = async function({
   const parsedName = userConfig.url
     .replace("udp://", "https://")
     .replace("rtmp://", "https://")
+    .replace("rtp://", "https://")
     .replace("srt://", "https://");
   const hostName = new URL(parsedName).hostname;
   const streamUrl = new URL(userConfig.url);
