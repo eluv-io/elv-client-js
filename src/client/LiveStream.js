@@ -113,12 +113,13 @@ exports.StreamCreateObject = async function({
       objectId: tenantId.replace("iten", "iq__"),
       metadataSubtree: "public",
       select: [
-        "content_types/live_stream",
-        "groups/content_admin"
+        "content_types/live_stream"
       ]
     });
 
-    adminGroups = adminGroups.concat(tenantMeta.groups?.content_admin ?? []);
+    const tenantContentAdminGroup = await client.ContentAdminGroup({tenantContractId: tenantId})
+
+    adminGroups = adminGroups.concat(tenantContentAdminGroup ?? []);
 
     contentType = tenantMeta.content_types?.live_stream;
 
