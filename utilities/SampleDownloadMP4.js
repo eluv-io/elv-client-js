@@ -1,7 +1,10 @@
 // Utility that accepts an object ID and generates a download URL
 
-const {NewOpt} = require("./lib/options");
+const { NewOpt } = require("./lib/options");
 const Utility = require("./lib/Utility");
+const { execSync } = require("child_process");
+const path = require("path");
+const fs = require("fs");
 
 const ArgOutfile = require("./lib/concerns/ArgOutfile");
 const ExistObj = require("./lib/concerns/ExistObj");
@@ -118,9 +121,6 @@ class ObjectDownloadFile extends Utility {
       // Download using curl into external folder
       // -----------------------
       if (downloadUrl) {
-        const { execSync } = require("child_process");
-        const path = require("path");
-        const fs = require("fs");
 
         const targetDir = this.args.downloadDir
           ? path.resolve(this.args.downloadDir)
