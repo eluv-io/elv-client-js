@@ -93,6 +93,7 @@ exports.StreamCreateObject = async function({
 }) {
   const defaultName = `LIVE STREAM - ${new Date().toISOString().slice(0, 10)}`
   let contentType;
+  let adminGroups = options.accessGroups ?? [];
 
   // Retrieve live stream content type
   try {
@@ -108,8 +109,7 @@ exports.StreamCreateObject = async function({
     });
 
     const tenantContentAdminGroup = await this.ContentAdminGroup({tenantContractId: tenantId});
-    const adminGroups = (options.accessGroups ?? [])
-      .concat(tenantContentAdminGroup ?? []);
+    adminGroups = adminGroups.concat(tenantContentAdminGroup ?? []);
 
     contentType = tenantMeta.content_types?.live_stream;
 
