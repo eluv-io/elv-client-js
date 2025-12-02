@@ -476,6 +476,7 @@ class ElvWalletClient {
    */
   async AuthenticateOAuth({
     idToken,
+    userIdCode,
     tenantId,
     email,
     signerURIs,
@@ -494,7 +495,17 @@ class ElvWalletClient {
       tenantId = this.selectedMarketplaceInfo.tenantId;
     }
 
-    await this.client.SetRemoteSigner({idToken, tenantId, signerURIs, extraData: { ...extraData, share_email: shareEmail }, unsignedPublicAuth: true});
+    await this.client.SetRemoteSigner({
+      idToken,
+      userIdCode,
+      tenantId,
+      signerURIs,
+      extraData: {
+        ...extraData,
+        share_email: shareEmail
+      },
+      unsignedPublicAuth: true
+    });
 
     let fabricToken, refreshToken, expiresAt;
     if(createRemoteToken && this.client.signer.remoteSigner) {
@@ -511,9 +522,9 @@ class ElvWalletClient {
         context: email ? {usr: {email}} : {}
       });
     }
-    const address = this.client.utils.FormatAddress(this.client.CurrentAccountAddress());
 
-    if(!email) {
+    const address = this.client.utils.FormatAddress(this.client.CurrentAccountAddress());
+    if(!email && idToken) {
       try {
         const decodedToken = JSON.parse(this.utils.FromB64URL(idToken.split(".")[1]));
         email = decodedToken.email;

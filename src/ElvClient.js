@@ -838,10 +838,11 @@ class ElvClient {
    * @param {Array<string>=} signerURIs - (Only if using custom OAuth) - URIs corresponding to the key server(s) to use
    * @param {boolean=} unsignedPublicAuth=false - If specified, the client will use an unsigned static token for calls that don't require authorization (reduces remote signature calls)
    */
-  async SetRemoteSigner({idToken, authToken, tenantId, extraData, signerURIs, unsignedPublicAuth}) {
+  async SetRemoteSigner({idToken, userIdCode, authToken, tenantId, extraData, signerURIs, unsignedPublicAuth}) {
     const signer = new RemoteSigner({
       signerURIs: signerURIs || this.authServiceURIs,
       idToken,
+      userIdCode,
       authToken,
       tenantId,
       provider: await this.ethClient.Provider(),
