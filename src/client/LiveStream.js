@@ -93,7 +93,6 @@ exports.StreamCreateObject = async function({
 }) {
   const defaultName = `LIVE STREAM - ${new Date().toISOString().slice(0, 10)}`
   let contentType;
-  let adminGroups = options.accessGroups ?? [];
 
   // Retrieve live stream content type
   try {
@@ -108,9 +107,9 @@ exports.StreamCreateObject = async function({
       ]
     });
 
-    const tenantContentAdminGroup = await this.ContentAdminGroup({tenantContractId: tenantId})
-
-    adminGroups = adminGroups.concat(tenantContentAdminGroup ?? []);
+    const tenantContentAdminGroup = await this.ContentAdminGroup({tenantContractId: tenantId});
+    const adminGroups = (options.accessGroups ?? [])
+      .concat(tenantContentAdminGroup ?? []);
 
     contentType = tenantMeta.content_types?.live_stream;
 
@@ -137,7 +136,7 @@ exports.StreamCreateObject = async function({
   liveRecordingConfig.ingress_node_api = ingressNodeApi;
 
   // Add access group permissions
-  adminGroups.map(group => {
+  adminGroups.filter(el => !!el).map(group => {
     if(!group) { return; }
 
     this.AddContentObjectGroupPermission({
