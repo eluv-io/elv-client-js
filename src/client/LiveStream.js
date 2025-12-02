@@ -97,16 +97,7 @@ exports.StreamCreateObject = async function({
 
   // Retrieve live stream content type
   try {
-    const wallet = await this.userProfileClient.UserWalletObjectInfo();
-    let tenantId = await this.userProfileClient.TenantContractId();
-
-    if(!tenantId) {
-      tenantId = await this.ContentObjectMetadata({
-        libraryId: await this.ContentObjectLibraryId({objectId: wallet.objectId}),
-        objectId: wallet.objectId,
-        metadataSubtree: "tenantContractId",
-      });
-    }
+    const tenantId = await this.userProfileClient.TenantContractId();
 
     const tenantMeta = await this.ContentObjectMetadata({
       libraryId: tenantId.replace("iten", "ilib"),
@@ -235,16 +226,7 @@ exports.StreamLinkToSite = async function({
   objectId
 }) {
   try {
-    const wallet = await this.userProfileClient.UserWalletObjectInfo();
     let tenantId = await this.userProfileClient.TenantContractId();
-
-    if(!tenantId) {
-      tenantId = await this.ContentObjectMetadata({
-        libraryId: await this.ContentObjectLibraryId({objectId: wallet.objectId}),
-        objectId: wallet.objectId,
-        metadataSubtree: "tenantContractId",
-      });
-    }
 
     const siteObjectId = await this.ContentObjectMetadata({
       libraryId: tenantId.replace("iten", "ilib"),
