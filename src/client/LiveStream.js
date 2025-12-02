@@ -76,7 +76,7 @@ const CueInfo = async ({eventId, status}) => {
  * @param {string=} options.name - Name of the live stream
  * @param {string=} options.displayTitle - Display title for the live stream
  * @param {string=} options.description - Description for the live stream
- * @param {string[]=} options.accessGroups - Access group addresses to receive 'manage' permissions
+ * @param {Array<string>=} options.accessGroups - Access group addresses to receive 'manage' permissions
  * @param {string=} options.permission - Permission level to set on the object
  * @param {boolean=} options.linkToSite - If enabled, will create a link in the live stream site
  * @param {boolean=} options.initializeDrm - If enabled, will initialize DRM for the object
@@ -1612,7 +1612,7 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * TODO: update possible drm types
  * @property {string=} playout_config.drm - DRM configuration ("drm-all", "custom", or specific DRM type)
  * TODO: update possible playout formats
- * @property {string[]=} playout_config.playout_formats - List of playout format names (e.g., "dash-widevine", "hls-widevine")
+ * @property {Array<string>=} playout_config.playout_formats - List of playout format names (e.g., "dash-widevine", "hls-widevine")
  * @property {Object=} playout_config.ladder_specs - Encoding ladder specifications
  * @property {Array<Object>=} playout_config.ladder_specs.audio - Audio encoding ladder
  * @property {number=} playout_config.ladder_specs.audio[].bit_rate - Audio bitrate
