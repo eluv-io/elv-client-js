@@ -128,7 +128,6 @@ exports.StreamCreateObject = async function({
   });
 
   const {objectId, writeToken} = createResponse;
-
   const {accessGroup, name, displayTitle, description, permission, ingressNodeApi} = options;
   const streamName = name || defaultName;
 
@@ -183,7 +182,7 @@ exports.StreamCreateObject = async function({
     await this.StreamConfig({
       name: objectId,
       liveRecordingConfig,
-      streamInfo: liveRecordingConfig.input_stream_info,
+      inputStreamInfo: liveRecordingConfig.input_stream_info,
       writeToken,
       finalize: false
     });
@@ -1562,6 +1561,28 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
 };
 
 /**
+ * @typedef {Object} InputStreamInfo
+ * @property {Object=} input_stream_info - Simplified probe information for the input stream
+ * @property {Object=} input_stream_info.format - Format information
+ * @property {string=} input_stream_info.format.format_name - Format name (e.g., "mpegts")
+ * @property {string=} input_stream_info.format.filename - Stream URL
+ * @property {Array<Object>=} input_stream_info.streams - Array of stream information
+ * @property {string=} input_stream_info.streams[].codec_name - Codec name (e.g., "h264", "aac")
+ * @property {string=} input_stream_info.streams[].codec_type - Codec type ("video" or "audio")
+ * @property {string=} input_stream_info.streams[].display_aspect_ratio - Display aspect ratio (e.g., "16/9")
+ * @property {string=} input_stream_info.streams[].field_order - Field order (e.g., "progressive")
+ * @property {string=} input_stream_info.streams[].frame_rate - Frame rate (e.g., "50")
+ * @property {number=} input_stream_info.streams[].height - Video height in pixels
+ * @property {number=} input_stream_info.streams[].width - Video width in pixels
+ * @property {number=} input_stream_info.streams[].level - Codec level
+ * @property {number=} input_stream_info.streams[].stream_id - Stream ID
+ * @property {number=} input_stream_info.streams[].stream_index - Stream index
+ * @property {number=} input_stream_info.streams[].channel_layout - Audio channel layout
+ * @property {number=} input_stream_info.streams[].channels - Number of audio channels
+ * @property {number=} input_stream_info.streams[].sample_rate - Audio sample rate
+ */
+
+/**
  * @typedef {Object} LiveRecordingConfig
  * @property {string=} name - Name of the profile
  *
@@ -1615,24 +1636,7 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @property {number=} recording_stream_config.audio[].recording_bitrate - Recording bitrate
  * @property {number=} recording_stream_config.audio[].recording_channels - Number of recording channels
  *
- * @property {Object=} input_stream_info - Simplified probe information for the input stream
- * @property {Object=} input_stream_info.format - Format information
- * @property {string=} input_stream_info.format.format_name - Format name (e.g., "mpegts")
- * @property {string=} input_stream_info.format.filename - Stream URL
- * @property {Array<Object>=} input_stream_info.streams - Array of stream information
- * @property {string=} input_stream_info.streams[].codec_name - Codec name (e.g., "h264", "aac")
- * @property {string=} input_stream_info.streams[].codec_type - Codec type ("video" or "audio")
- * @property {string=} input_stream_info.streams[].display_aspect_ratio - Display aspect ratio (e.g., "16/9")
- * @property {string=} input_stream_info.streams[].field_order - Field order (e.g., "progressive")
- * @property {string=} input_stream_info.streams[].frame_rate - Frame rate (e.g., "50")
- * @property {number=} input_stream_info.streams[].height - Video height in pixels
- * @property {number=} input_stream_info.streams[].width - Video width in pixels
- * @property {number=} input_stream_info.streams[].level - Codec level
- * @property {number=} input_stream_info.streams[].stream_id - Stream ID
- * @property {number=} input_stream_info.streams[].stream_index - Stream index
- * @property {number=} input_stream_info.streams[].channel_layout - Audio channel layout
- * @property {number=} input_stream_info.streams[].channels - Number of audio channels
- * @property {number=} input_stream_info.streams[].sample_rate - Audio sample rate
+ * @property {InputStreamInfo=} input_stream_info - Simplified probe information for the input stream
  *
  * @property {Object=} recording_params - Advanced recording parameters
  * @property {Object=} recording_params.xc_params - Transcoding parameters
@@ -1684,7 +1688,7 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @param {string} name - Object ID or name of the live stream object
  * @param {LiveRecordingConfig=} liveRecordingConfig - Configuration profile for the live stream including recording, playout, and transcoding settings
  * @param {Object=} profile - Configure the stream with a preset profile stored in the site object
- * @param {Object=} streamInfo - Simplified probe metadata
+ * @param {InputStreamInfo=} inputStreamInfo - Simplified probe metadata
  * @param {string=} writeToken - Write token of the draft
  * @param {boolean=} finalize - If enabled, target object will be finalized after configuring
  *
@@ -1695,12 +1699,12 @@ exports.StreamConfig = async function({
   name,
   liveRecordingConfig,
   profile,
-  streamInfo,
+  inputStreamInfo,
   writeToken,
   finalize=true
 }) {
   const objectId = name;
-  let probe = streamInfo || liveRecordingConfig?.input_stream_info;
+  let probe = inputStreamInfo || liveRecordingConfig?.input_stream_info;
   let configMetadata = liveRecordingConfig;
 
   const currentStatus = await this.StreamStatus({name, writeToken});
