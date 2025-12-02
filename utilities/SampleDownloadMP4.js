@@ -8,31 +8,29 @@ const ExistObj = require("./lib/concerns/ExistObj");
 const FabricObject = require("./lib/concerns/FabricObject");
 
 class ObjectDownloadFile extends Utility {
-    blueprint() {
-        return {
-            concerns: [ArgOutfile, ExistObj, FabricObject],
-            options: [
-                NewOpt("versionHash", {
-                    descTemplate: "specific versionHash to download (optional)",
-                    type: "string"
-                }),
-                NewOpt("offering", {
-                    descTemplate: "Offering name to use, defaults to 'default'",
-                    type: "string"
-                }),
-                NewOpt("format", {
-                    descTemplate: "Format to request (default mp4)",
-                    type: "string"
-                }),
-                NewOpt("downloadDir", {
-  descTemplate: "Directory to save downloaded file",
-  type: "string"
-})
-
-            ]
-        };
-    }
-
+  blueprint() {
+    return {
+      concerns: [ArgOutfile, ExistObj, FabricObject],
+      options: [
+        NewOpt("versionHash", {
+          descTemplate: "specific versionHash to download (optional)",
+          type: "string"
+        }),
+        NewOpt("offering", {
+          descTemplate: "Offering name to use, defaults to 'default'",
+          type: "string"
+        }),
+        NewOpt("format", {
+          descTemplate: "Format to request (default mp4)",
+          type: "string"
+        }),
+        NewOpt("downloadDir", {
+          descTemplate: "Directory to save downloaded file",
+          type: "string"
+        })
+      ]
+    };
+  }
 
   header() {
     return `Download file for object ${this.args.objectId}`;
@@ -46,9 +44,9 @@ class ObjectDownloadFile extends Utility {
     // Determine versionHash
     // -----------------------
     const versionHash = await this.concerns.FabricObject.latestVersionHash({
-        libraryId,
-        objectId
-      });
+      libraryId,
+      objectId
+    });
 
     const offeringName = this.args.offering || "default";
     const format = this.args.format || "mp4";
@@ -107,47 +105,46 @@ class ObjectDownloadFile extends Utility {
       // -----------------------
       // Display cleanly
       // -----------------------
-      console.log("\n=== Download Info ===\n");
+      this.logger.log("\n=== Download Info ===\n");
 
-      console.table([{
+      this.logger.table([{
         "Version Hash": output.versionHash,
         "Filename": output.filename
       }]);
 
-      console.log("Download URL:\n", output.downloadUrl, "\n");
-// -----------------------
-// Download using curl into external folder
-// -----------------------
-if (downloadUrl) {
-  const { execSync } = require("child_process");
-  const path = require("path");
-  const fs = require("fs");
+      this.logger.log("Download URL:\n", output.downloadUrl, "\n");
 
-  const targetDir = this.args.downloadDir
-    ? path.resolve(this.args.downloadDir)
-    : process.cwd(); // default to current dir
+      // -----------------------
+      // Download using curl into external folder
+      // -----------------------
+      if (downloadUrl) {
+        const { execSync } = require("child_process");
+        const path = require("path");
+        const fs = require("fs");
 
-  // Ensure the directory exists
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
-  }
+        const targetDir = this.args.downloadDir
+          ? path.resolve(this.args.downloadDir)
+          : process.cwd(); // default to current dir
 
-  const outputFile = path.join(targetDir, output.filename || "download.mp4");
+        // Ensure the directory exists
+        if (!fs.existsSync(targetDir)) {
+          fs.mkdirSync(targetDir, { recursive: true });
+        }
 
-  console.log(`Downloading with curl → ${outputFile}\n`);
+        const outputFile = path.join(targetDir, output.filename || "download.mp4");
 
-  try {
-    execSync(`curl -L -o "${outputFile}" "${downloadUrl}"`, {
-      stdio: "inherit"
-    });
+        this.logger.log(`Downloading with curl → ${outputFile}\n`);
 
-    console.log(`\nDownload complete: ${outputFile}`);
-  } catch (err) {
-    console.error("\nCurl download failed:", err.message);
-  }
-}
+        try {
+          execSync(`curl -L -o "${outputFile}" "${downloadUrl}"`, {
+            stdio: "inherit"
+          });
 
-
+          this.logger.log(`\nDownload complete: ${outputFile}`);
+        } catch (err) {
+          this.logger.error("\nCurl download failed:", err.message);
+        }
+      }
 
       // -----------------------
       // Outfile support
