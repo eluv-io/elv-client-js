@@ -110,7 +110,7 @@ class ObjectDownloadFile extends Utility {
       // -----------------------
       this.logger.log("\n=== Download Info ===\n");
 
-      this.logger.table([{
+      this.logger.logTable([{
         "Version Hash": output.versionHash,
         "Filename": output.filename
       }]);
