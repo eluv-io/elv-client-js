@@ -210,7 +210,6 @@ exports.StreamCreate = async function({
     await this.StreamInitialize({
       name: objectId,
       drm: true,
-      // format: drmOption?.format.join(","),
       writeToken,
       finalize: false
     });
