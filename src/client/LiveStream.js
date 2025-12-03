@@ -109,8 +109,7 @@ exports.StreamCreateObject = async function({
     });
 
     const tenantContentAdminGroup = await this.ContentAdminGroup({tenantContractId: tenantId});
-    adminGroups = adminGroups
-      .concat(tenantContentAdminGroup ?? []);
+    adminGroups = adminGroups.concat(tenantContentAdminGroup ?? []);
 
     contentType = tenantMeta.content_types?.live_stream;
 
@@ -1596,7 +1595,6 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @property {boolean=} recording_config.input_cfg.bypass_libav_reader - Whether to bypass libav reader
  * @property {string=} recording_config.input_cfg.copy_mode - Copy mode setting: "" (empty), "none", "raw", or "remuxed"
  * @property {string=} recording_config.input_cfg.copy_packaging - Copy packaging mode: "raw_ts" or "rtp_ts"
- * @property {string=} recording_config.input_cfg.input_packaging - Input packaging
  *
  * @property {Object=} playout_config - Playout configuration settings
  * @property {Object=} playout_config.image_watermark - Image watermark configuration
@@ -1811,7 +1809,6 @@ exports.StreamConfig = async function({
     liveRecordingMeta: configMetadata?.live_recording,
     nodeId: node.id,
     nodeUrl: endpoint,
-    url: userConfig.url,
     includeAVSegDurations: false,
     overwriteOriginUrl: false,
     syncAudioToVideo: true
