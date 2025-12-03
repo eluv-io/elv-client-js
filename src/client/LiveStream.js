@@ -138,8 +138,16 @@ exports.StreamCreate = async function({
   }
 
   const {writeToken} = editResponse;
-  const {accessGroup, name, displayTitle, description, permission, ingressNodeApi} = options;
-  const streamName = name || defaultName;
+  const {
+    accessGroup,
+    name=defaultName,
+    displayTitle,
+    description,
+    permission="editable",
+    ingressNodeApi,
+    initializeDrm=true
+  } = options;
+  // const streamName = name || defaultName;
 
   liveRecordingConfig.url = url;
   liveRecordingConfig.ingress_node_api = ingressNodeApi;
@@ -161,14 +169,14 @@ exports.StreamCreate = async function({
     writeToken,
     metadata: {
       public: {
-        name: streamName,
+        name,
         description,
         asset_metadata: {
-          display_title: displayTitle || streamName,
+          display_title: displayTitle || name,
           title: name || displayTitle || defaultName,
           title_type: "live_stream",
           video_type: "live",
-          slug: slugify(streamName)
+          slug: slugify(name)
         }
       },
       "live_recording_config": liveRecordingConfig
@@ -177,7 +185,7 @@ exports.StreamCreate = async function({
 
   await this.SetPermission({
     objectId,
-    permission: permission ?? "editable",
+    permission: permission,
     writeToken
   });
 
@@ -193,6 +201,16 @@ exports.StreamCreate = async function({
       name: objectId,
       liveRecordingConfig,
       inputStreamInfo: liveRecordingConfig.input_stream_info,
+      writeToken,
+      finalize: false
+    });
+  }
+
+  if(initializeDrm) {
+    await this.StreamInitialize({
+      name: objectId,
+      drm: true,
+      // format: drmOption?.format.join(","),
       writeToken,
       finalize: false
     });
@@ -1255,6 +1273,8 @@ exports.StreamInitialize = async function({
   let typeAbrMaster;
   let typeLiveStream;
 
+  console.log("StreamInitialize")
+
   // Fetch Title and Live Stream content types from tenant meta
   const tenantContractId = await this.userProfileClient.TenantContractId();
   const {live_stream, title} = await this.ContentObjectMetadata({
@@ -1319,7 +1339,9 @@ exports.StreamSetOfferingAndDRM = async function({
   finalize=true
 }) {
   let status = await this.StreamStatus({name});
-  if(status.state != "uninitialized" && status.state != "inactive" && status.state != "stopped") {
+  console.log('StreamSetOfferingAndDrm', status)
+  const validStates = ["uninitialized", "inactive", "stopped", "unconfigured"];
+  if(!validStates.includes(status.state)) {
     return {
       state: status.state,
       error: "stream still active - must terminate first"

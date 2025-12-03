@@ -24,7 +24,7 @@ describe("StreamCreate", () => {
     }).to.throw("Missing required argument: url");
   });
 
-  it("should call StreamCreateObject() and include object_id in return value", () => {
+  it("should call StreamCreate() and include object_id in return value", () => {
     const utility = new StreamCreate(argList2Params("--libraryId", "ilib123", "--url", "http://example.com", "--json"));
     const stub = stubClient(utility.concerns.Client);
     stub.resetHistory();
@@ -32,7 +32,7 @@ describe("StreamCreate", () => {
       expect(retVal.object_id).to.equal("iq__dummy_new_id");
 
       expect(stub.callHistoryMismatches([
-        "StreamCreateObject"
+        "StreamCreate"
       ]).length).to.equal(0);
     });
   });

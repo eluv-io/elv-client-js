@@ -18,7 +18,7 @@ const Setup = async() => {
 };
 
 const CreateStream = async() => {
-  await client.StreamCreateObject({
+  await client.StreamCreate({
     libraryId,
     options: {
       name: "Live Stream - 11/01/25 Concert Tour",

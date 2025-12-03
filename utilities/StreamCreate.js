@@ -32,7 +32,7 @@ class StreamCreate extends Utility {
     const {libraryId, url} = this.args;
 
     const client = await this.concerns.Client.get();
-    const response = await client.StreamCreateObject({
+    const response = await client.StreamCreate({
       libraryId,
       url
     });
