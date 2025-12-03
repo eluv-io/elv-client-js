@@ -86,6 +86,7 @@ const CueInfo = async ({eventId, status}) => {
  */
 exports.StreamCreateObject = async function({
   libraryId,
+  objectId,
   url,
   finalize=true,
   liveRecordingConfig,
@@ -120,14 +121,23 @@ exports.StreamCreateObject = async function({
     console.error("Unable to load tenant data", error);
   }
 
-  const createResponse = await this.CreateContentObject({
-    libraryId,
-    options: {
-      type: contentType
-    }
-  });
+  let editResponse;
+  if (!objectId) {
+    editResponse = await this.CreateContentObject({
+      libraryId,
+      options: {
+        type: contentType
+      }
+    });
+    objectId = editResponse.objectId;
+  } else {
+     editResponse = await this.EditContentObject({
+      libraryId,
+      objectId
+    });
+  }
 
-  const {objectId, writeToken} = createResponse;
+  const {writeToken} = editResponse;
   const {accessGroup, name, displayTitle, description, permission, ingressNodeApi} = options;
   const streamName = name || defaultName;
 
@@ -838,7 +848,7 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
  * @return {Promise<Object>} - The status response for the object
  *
 */
-exports.StreamCreate = async function({name, start=false}) {
+exports.StreamStartRecording = async function({name, start=false}) {
   let status = await this.StreamStatus({name});
   if(status.state != "uninitialized" && status.state !== "inactive" && status.state !== "terminated" && status.state !== "stopped") {
     return {
@@ -1035,7 +1045,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
  *
  * @return {Promise<Object>} - The finalize response for the stream object
  */
-exports.StreamStopSession = async function({name}) {
+exports.StreamStopRecording = async function({name}) {
   try {
     this.Log(`Terminating stream session for: ${name}`);
     let objectId = name;
@@ -1074,10 +1084,13 @@ exports.StreamStopSession = async function({name}) {
       const status = await this.StreamStatus({name});
 
       if(status.state !== "stopped") {
-        return {
-          state: status.state,
-          error: "The stream must be stopped before terminating"
-        };
+        status = await this.StreamStartOrStopOrReset({name, op: start});
+        if(status.state !== "stopped") {
+          return {
+            status,
+            error: "The stream is not stopped"
+          }
+        }
       }
 
       await this.DeleteWriteToken({
@@ -1754,6 +1767,8 @@ exports.StreamConfig = async function({
   const nodes = await this.SpaceNodes({matchEndpoint: hostName});
 
   if(nodes.length < 1) {
+    // Use dedicated ingress endpoint
+
     status.error = `No node found for stream URL: ${streamUrl.href}`;
     return status;
   }
@@ -1805,6 +1820,7 @@ exports.StreamConfig = async function({
 
   // Create live recording config
   let lc = new LiveConf({
+    url: liveRecordingConfig.url,
     probeData: probe,
     liveRecordingMeta: configMetadata?.live_recording,
     nodeId: node.id,

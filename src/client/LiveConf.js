@@ -114,7 +114,8 @@ const LiveconfTemplate = {
 };
 
 class LiveConf {
-  constructor({probeData, nodeId, nodeUrl, includeAVSegDurations, overwriteOriginUrl, syncAudioToVideo, liveRecordingMeta}) {
+  constructor({url, probeData, nodeId, nodeUrl, includeAVSegDurations, overwriteOriginUrl, syncAudioToVideo, liveRecordingMeta}) {
+    this.url = url;
     this.probeData = probeData;
     this.nodeId = nodeId;
     this.nodeUrl = nodeUrl;
@@ -124,9 +125,29 @@ class LiveConf {
     this.currentLiveRecordingMeta = liveRecordingMeta;
   }
 
-  probeKind() {
-    let fileNameSplit = this.probeData.format.filename.split(":");
-    return fileNameSplit[0];
+  getFormat() {
+    if (this.probeData.format.format_name) {
+      return this.probeData.format.format_name;
+    }
+    const fileNameSplit = this.probeData.format?.filename?.split(":");
+    if (fileNameSplit.length > 1) {
+      const protoScheme = fileNameSplit[0];
+      switch(protoScheme) {
+        case "rtmp":
+          return "flv";
+        case "udp":
+        case "rtp":
+        case "srt":
+          return "mpegts";
+        default:
+          return "format_unknown";
+      }
+    }
+  }
+
+  getProtocol() {
+    const protoScheme = this.url.split(":")[0];
+    return protoScheme;
   }
 
   getStreamDataForCodecType(codecType) {
@@ -207,16 +228,15 @@ class LiveConf {
   calcSegDuration({sourceTimescale, sampleRate, audioCodec}) {
     let seg = {};
 
-    switch(this.probeKind()) {
-      case "rtmp":
+    switch(this.getFormat()) {
+      case "flv":
         seg = this.calcSegDurationRtmp({sourceTimescale, sampleRate, audioCodec});
         break;
-      case "udp":
-      case "srt":
+      case "mpegts":
         seg = this.calcSegDurationMpegts({sourceTimescale, sampleRate, audioCodec});
         break;
       default:
-        throw "protocol not supported - " + this.probeKind();
+        throw "protocol not supported - " + this.getFormat();
     }
 
     if(audioCodec == "aac") {
@@ -364,12 +384,11 @@ class LiveConf {
   syncAudioToStreamIdValue() {
     let sync_id = -1;
     let videoStream = this.getStreamDataForCodecType("video");
-    switch(this.probeKind()) {
-      case "udp":
-      case "srt":
+    switch(this.getFormat()) {
+      case "mpegts":
         sync_id = videoStream.stream_id;
         break;
-      case "rtmp":
+      case "flv":
         sync_id = videoStream.stream_index;
         break;
     }
@@ -416,7 +435,7 @@ class LiveConf {
         {live_recording: this.currentLiveRecordingMeta}
       ) : LiveconfTemplate;
 
-    const fileName = this.overwriteOriginUrl || this.probeData.format.filename;
+    const fileName = this.url;
     const audioStreams = this.generateAudioStreamsConfig({customSettings});
 
     // Retrieve one audio stream from the probe to read the sample rate and codec name
@@ -447,15 +466,10 @@ class LiveConf {
     }
 
     // Fill in specifics for protocol
-    switch(this.probeKind()) {
-      case "udp":
+    switch(this.getFormat()) {
+      case "mpegts":
         sourceTimescale = 90000;
         conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
-        break;
-      case "srt":
-        sourceTimescale = 90000;
-        conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
-        conf.live_recording.recording_config.recording_params.live_delay_nano = 4000000000;
         break;
       case "rtmp":
         sourceTimescale = 16000;
@@ -465,7 +479,13 @@ class LiveConf {
         console.log("HLS detected. Not yet implemented");
         break;
       default:
-        console.log("Unsupported media", this.probeKind());
+        console.log("Unsupported media", this.getFormat());
+        break;
+    }
+
+    switch(this.getProtocol()) {
+      case "srt":
+        conf.live_recording.recording_config.recording_params.live_delay_nano = 4000000000;
         break;
     }
 
