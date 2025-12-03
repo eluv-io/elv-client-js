@@ -114,10 +114,11 @@ const LiveconfTemplate = {
 };
 
 class LiveConf {
-  constructor({probeData, nodeId, nodeUrl, includeAVSegDurations, overwriteOriginUrl, syncAudioToVideo, liveRecordingMeta}) {
+  constructor({probeData, nodeId, nodeUrl, includeAVSegDurations, overwriteOriginUrl, syncAudioToVideo, liveRecordingMeta,url}) {
     this.probeData = probeData;
     this.nodeId = nodeId;
     this.nodeUrl = nodeUrl;
+    this.url = url;
     this.includeAVSegDurations = includeAVSegDurations;
     this.overwriteOriginUrl = overwriteOriginUrl;
     this.syncAudioToVideo = syncAudioToVideo;
@@ -125,7 +126,7 @@ class LiveConf {
   }
 
   probeKind() {
-    let fileNameSplit = this.probeData.format.filename.split(":");
+    let fileNameSplit = this.url.split(":");
     return fileNameSplit[0];
   }
 

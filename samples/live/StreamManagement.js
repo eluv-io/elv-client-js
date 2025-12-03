@@ -57,8 +57,7 @@ const CreateStream = async() => {
       },
       input_stream_info: {
         format: {
-          format_name: "mpegts",
-          filename: url
+          format_name: "mpegts"
         },
         streams: [
           {
