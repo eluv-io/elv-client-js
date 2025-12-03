@@ -84,7 +84,7 @@ const CueInfo = async ({eventId, status}) => {
  *
  * @return {Promise<Object>} - Object containing objectId, libraryId, writeToken, and hash if finalized
  */
-exports.StreamCreateObject = async function({
+exports.StreamCreate = async function({
   libraryId,
   objectId,
   url,
