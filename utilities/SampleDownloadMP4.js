@@ -40,7 +40,7 @@ class ObjectDownloadFile extends Utility {
   }
 
   async body() {
-    const {libraryId, objectId} = await this.concerns.ExistObj.argsProc();
+    const { libraryId, objectId } = await this.concerns.ExistObj.argsProc();
     const client = await this.concerns.Client.get();
 
     // -----------------------
@@ -80,11 +80,14 @@ class ObjectDownloadFile extends Utility {
         this.logger.log(`${(status?.progress || 0).toFixed(1)} / 100`);
       } while (status?.status !== "completed");
 
-      // Clean output filename
-      const filename = status.filename
-        ?.replace(/\s+/g, "_")
-        .replace(/\//g, "_")
-        .replace(/ - /g, "-");
+      // Clean filename
+      const filename = (status.filename
+        ? status.filename
+          .replace(/\s+/g, "_")
+          .replace(/\//g, "_")
+          .replace(/ - /g, "-")
+        : "file_download"); // fallback if filename is missing
+
 
       // Build final download URL
       const downloadUrl = await client.FabricUrl({
@@ -151,9 +154,9 @@ class ObjectDownloadFile extends Utility {
       // -----------------------
       if (this.args.outfile) {
         if (this.args.json) {
-          this.concerns.ArgOutfile.writeJson({obj: output});
+          this.concerns.ArgOutfile.writeJson({ obj: output });
         } else {
-          this.concerns.ArgOutfile.writeTable({list: [output]});
+          this.concerns.ArgOutfile.writeTable({ list: [output] });
         }
       }
 
