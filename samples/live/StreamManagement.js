@@ -24,7 +24,8 @@ const CreateStream = async() => {
       name: "Live Stream - 11/01/25 Concert Tour",
       displayTitle: "Farewell Tour - 11/01/25",
       description: "The last night of the 11/01/25 Farewell Tour",
-      accessGroups
+      accessGroups,
+      linkToSite: true
     },
     liveRecordingConfig: {
       drm_type: "drm-all", // drm-public | drm-all | drm-fairplay | drm-widevine | drm-playready | clear
