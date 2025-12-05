@@ -59,14 +59,10 @@ class LibraryListObjectsWithDownload extends Utility {
                     descTemplate: "Directory to save files",
                     type: "string",
                 }),
-                NewOpt("parallel", {
-                    descTemplate: "Number of parallel downloads (default: 1)",
-                    type: "number",
-                }),
                 NewOpt("failLog", {
                     descTemplate: "Write failures to a JSON file",
                     type: "string",
-                }),
+                })
             ],
         };
     }
@@ -75,16 +71,10 @@ class LibraryListObjectsWithDownload extends Utility {
         return `List and download objects for library ${this.args.libraryId}`;
     }
 
-    // --------------------------
-    // Helper: wait N ms
-    // --------------------------
-    async sleep(ms) {
+    sleep(ms) {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-    // --------------------------
-    // Helper: Retry wrapper
-    // --------------------------
     async retry(fn, retries = 3, delay = 1000) {
         let attempt = 0;
         while (attempt < retries) {
@@ -97,14 +87,11 @@ class LibraryListObjectsWithDownload extends Utility {
                 this.logger.warn(
                     `Retry ${attempt}/${retries} after error: ${err.message}`
                 );
-                await this.sleep(delay * Math.pow(2, attempt)); // exponential backoff
+                await this.sleep(delay * Math.pow(2, attempt));
             }
         }
     }
 
-    // --------------------------
-    // Helper: Download URL using curl
-    // --------------------------
     async downloadFile(url, filepath) {
         return this.retry(
             () =>
@@ -116,38 +103,37 @@ class LibraryListObjectsWithDownload extends Utility {
         );
     }
 
-    // --------------------------
-    // Object download worker
-    // --------------------------
+    sanitizeFilename(name, fallback) {
+        if (!name) return fallback;
+        return name
+            .replace(/[^a-zA-Z0-9._-]+/g, "_")
+            .replace(/_+/g, "_")
+            .substring(0, 180); // avoid OS filename length issues
+    }
+
     async processObject(e, client, libraryId, format, offering, targetDir, failedDownloads) {
         const objectId = e.objectId;
         const objectName = R.path(["metadata", "public", "name"], e) || objectId;
 
-        this.logger.log(`--- Processing ${objectName} (${objectId}) ---`);
+        this.logger.log(`\n--- Processing ${objectName} (${objectId}) ---`);
 
         const formattedObj = { object_id: objectId, name: objectName };
 
         // Skip existing files
-        const expectedPathPattern = `${objectId}.mp4`; // fallback
-        const matchingExisting = fs
-            .readdirSync(targetDir)
-            .find((f) => f.includes(objectId));
-
-        if (matchingExisting) {
-            this.logger.log(
-                `Skipping ${objectName}: file already exists (${matchingExisting})`
-            );
+        const existing = fs.readdirSync(targetDir).find((f) => f.includes(objectId));
+        if (existing) {
+            this.logger.log(`Skipping ${objectName}: already exists (${existing})`);
             formattedObj.download_url = "SKIPPED_ALREADY_EXISTS";
             return formattedObj;
         }
 
         try {
-            // 1. Get version hash
+            // 1. Version hash
             const versionHash = await this.retry(() =>
                 this.concerns.FabricObject.latestVersionHash({ libraryId, objectId })
             );
 
-            // 2. Start media file job
+            // 2. Start media job
             const response = await this.retry(() =>
                 client.MakeFileServiceRequest({
                     versionHash,
@@ -158,10 +144,12 @@ class LibraryListObjectsWithDownload extends Utility {
             );
 
             const jobId = response.job_id;
-            this.logger.log(`Started job ${jobId} for ${objectName}`);
+            this.logger.log(`Started job ${jobId}`);
 
-            // 3. Poll job progress
+            // 3. Poll progress
             let status;
+            let lastUpdate = -1;
+
             do {
                 await this.sleep(2000);
 
@@ -172,20 +160,20 @@ class LibraryListObjectsWithDownload extends Utility {
                     })
                 );
 
-                process.stdout.write(
-                    `Progress: ${(status?.progress || 0).toFixed(1)} / 100\r`
-                );
+                let progress = status?.progress || 0;
+                if (progress !== lastUpdate) {
+                    process.stdout.write(`Progress: ${progress.toFixed(1)}%\r`);
+                    lastUpdate = progress;
+                }
             } while (status?.status !== "completed");
 
             process.stdout.write("\n");
 
-            // 4. Clean filename
-            const filename =
-                status.filename
-                    ?.replace(/\s+/g, "_")
-                    .replace(/\//g, "_")
-                    .replace(/ - /g, "-") || `${objectId}.mp4`;
-
+            // 4. Final filename
+            const filename = this.sanitizeFilename(
+                status.filename,
+                `${objectId}.mp4`
+            );
             const outputFile = path.join(targetDir, filename);
 
             // 5. Build download URL
@@ -202,15 +190,15 @@ class LibraryListObjectsWithDownload extends Utility {
 
             formattedObj.download_url = downloadUrl;
 
-            // 6. DOWNLOAD immediately
+            // 6. Download file
             this.logger.log(`Downloading → ${outputFile}`);
-
             await this.downloadFile(downloadUrl, outputFile);
 
-            this.logger.log(`✔ Completed: ${outputFile}\n`);
+            this.logger.log(`✔ Completed: ${outputFile}`);
             return formattedObj;
+
         } catch (err) {
-            this.logger.error(`FAILED: ${objectId} - ${err.message}\n`);
+            this.logger.error(`FAILED: ${objectId} - ${err.message}`);
 
             failedDownloads.push({
                 object_id: objectId,
@@ -223,20 +211,17 @@ class LibraryListObjectsWithDownload extends Utility {
         }
     }
 
-    // --------------------------
-    // Main 
-    // --------------------------
     async body() {
         const libraryId = this.args.libraryId;
         const format = this.args.format || "mp4";
         const offering = this.args.offering || "default";
-        const parallel = this.args.parallel || 1;
 
         const filter =
             this.args.filter &&
             this.concerns.JSON.parseStringOrFile({ strOrPath: this.args.filter });
 
         if (!this.args.fields) this.args.fields = [];
+
         const select = ["/public/name", ...this.args.fields];
 
         let objectList = await this.concerns.ArgLibraryId.libObjectList({
@@ -246,22 +231,21 @@ class LibraryListObjectsWithDownload extends Utility {
         this.logger.log(`Found ${objectList.length} object(s)\n`);
 
         const client = await this.concerns.Client.get();
-
         const failedDownloads = [];
 
         const targetDir = this.args.downloadDir
             ? path.resolve(this.args.downloadDir)
             : process.cwd();
 
-        if (!fs.existsSync(targetDir)) {
+        if (!fs.existsSync(targetDir))
             fs.mkdirSync(targetDir, { recursive: true });
-        }
 
         // --------------------------
-        // Parallel download queue
+        // SEQUENTIAL DOWNLOADS
         // --------------------------
-        const worker = async (obj) =>
-            this.processObject(
+        const results = [];
+        for (const obj of objectList) {
+            const r = await this.processObject(
                 obj,
                 client,
                 libraryId,
@@ -270,30 +254,11 @@ class LibraryListObjectsWithDownload extends Utility {
                 targetDir,
                 failedDownloads
             );
-
-        const results = [];
-        const queue = [...objectList];
-
-        const runWorkers = async () => {
-            const tasks = [];
-            for (let i = 0; i < parallel; i++) {
-                tasks.push(
-                    (async () => {
-                        while (queue.length > 0) {
-                            const item = queue.shift();
-                            const r = await worker(item);
-                            results.push(r);
-                        }
-                    })()
-                );
-            }
-            await Promise.all(tasks);
-        };
-
-        await runWorkers();
+            results.push(r);
+        }
 
         // --------------------------
-        // Final summary
+        // Summary
         // --------------------------
         this.logger.log("\n=== SUMMARY ===");
         this.logger.log(`Processed: ${objectList.length}`);
