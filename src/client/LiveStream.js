@@ -1937,7 +1937,7 @@ exports.StreamConfig = async function({
 
   const liveRecordingConfigMeta = lc.generateLiveConf({
     customSettings: {
-      audio: liveRecordingConfig?.recording_stream_config,
+      audio: liveRecordingConfig?.recording_stream_config?.audio,
       ladder_profile: liveRecordingConfig?.profile
     }
   });

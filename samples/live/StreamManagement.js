@@ -30,32 +30,6 @@ const CreateStream = async() => {
     },
     liveRecordingConfig: {
       drm_type: "drm-all", // drm-public | drm-all | drm-fairplay | drm-widevine | drm-playready | clear
-      recording_stream_config: {
-        audio: {
-          1: {
-            bitrate: 197660,
-            codec: "aac",
-            playout: true,
-            playout_label: "Audio 1",
-            record: true,
-            recording_bitrate: 192000,
-            recording_channels: 2
-          },
-          2: {
-            bitrate: 186326,
-            codec: "aac",
-            playout: true,
-            playout_label: "Audio 2",
-            record: true,
-            recording_bitrate: 192000,
-            recording_channels: 2
-          },
-        },
-        part_ttl: 21600, // seconds
-        persistent: false,
-        playout_ladder_profile: "Default",
-        reconnect_timeout: 600 // seconds
-      },
       input_stream_info: {
         format: {
           format_name: "mpegts"
@@ -73,7 +47,8 @@ const CreateStream = async() => {
             width: 1920,
             level: 42,
             stream_id: 101,
-            stream_index: 0
+            stream_index: 0,
+            time_base: "1/90000"
           },
           {
             codec_name: "aac",
@@ -82,7 +57,8 @@ const CreateStream = async() => {
             channels: 2,
             sample_rate: 48000,
             stream_id: 111,
-            stream_index: 1
+            stream_index: 1,
+            time_base: "1/90000"
           },
           {
             codec_name: "aac",
@@ -91,7 +67,8 @@ const CreateStream = async() => {
             channels: 2,
             sample_rate: 48000,
             stream_id: 112,
-            stream_index: 2
+            stream_index: 2,
+            time_base: "1/90000"
           },
           {
             codec_name: "aac",
@@ -100,7 +77,8 @@ const CreateStream = async() => {
             channels: 2,
             sample_rate: 48000,
             stream_id: 113,
-            stream_index: 3
+            stream_index: 3,
+            time_base: "1/90000"
           },
           {
             codec_name: "aac",
@@ -109,7 +87,8 @@ const CreateStream = async() => {
             channels: 2,
             sample_rate: 48000,
             stream_id: 114,
-            stream_index: 4
+            stream_index: 4,
+            time_base: "1/90000"
           },
           {
             codec_name: "aac",
@@ -118,7 +97,8 @@ const CreateStream = async() => {
             channels: 2,
             sample_rate: 48000,
             stream_id: 115,
-            stream_index: 5
+            stream_index: 5,
+            time_base: "1/90000"
           }
         ]
       }
