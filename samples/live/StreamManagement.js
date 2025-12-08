@@ -20,6 +20,7 @@ const Setup = async() => {
 const CreateStream = async() => {
   await client.StreamCreate({
     libraryId,
+    url,
     options: {
       name: "Live Stream - 11/01/25 Concert Tour",
       displayTitle: "Farewell Tour - 11/01/25",
@@ -52,14 +53,12 @@ const CreateStream = async() => {
         },
         part_ttl: 21600, // seconds
         persistent: false,
-        url: "",
         playout_ladder_profile: "Default",
         reconnect_timeout: 600 // seconds
       },
       input_stream_info: {
         format: {
-          format_name: "mpegts",
-          filename: url
+          format_name: "mpegts"
         },
         streams: [
           {
