@@ -2,9 +2,9 @@
 
 const { NewOpt } = require("./lib/options");
 const Utility = require("./lib/Utility");
-const { execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
+const https = require("https");
 
 const ArgOutfile = require("./lib/concerns/ArgOutfile");
 const ExistObj = require("./lib/concerns/ExistObj");
@@ -83,13 +83,12 @@ class ObjectDownloadFile extends Utility {
       // Clean filename
       const filename = (status.filename
         ? status.filename
-          .replace(/\s+/g, "_")
-          .replace(/\//g, "_")
-          .replace(/ - /g, "-")
-        : "file_download"); // fallback if filename is missing
+            .replace(/\s+/g, "_")
+            .replace(/\//g, "_")
+            .replace(/ - /g, "-")
+        : "file_download");
 
-
-      // Build final download URL
+      // Build download URL
       const downloadUrl = await client.FabricUrl({
         versionHash,
         call: `/media/files/${jobId}/download`,
@@ -108,44 +107,100 @@ class ObjectDownloadFile extends Utility {
         downloadUrl
       };
 
-      // -----------------------
-      // Display cleanly
-      // -----------------------
+      // Display
       this.logger.log("\n=== Download Info ===\n");
-
       this.logger.logTable([{
         "Version Hash": output.versionHash,
         "Filename": output.filename
       }]);
-
       this.logger.log("Download URL:\n", output.downloadUrl, "\n");
 
       // -----------------------
-      // Download using curl into external folder
+      // HTTPS download with progress bar
       // -----------------------
       if (downloadUrl) {
 
         const targetDir = this.args.downloadDir
           ? path.resolve(this.args.downloadDir)
-          : process.cwd(); // default to current dir
+          : process.cwd();
 
-        // Ensure the directory exists
         if (!fs.existsSync(targetDir)) {
           fs.mkdirSync(targetDir, { recursive: true });
         }
 
         const outputFile = path.join(targetDir, output.filename || "download.mp4");
 
-        this.logger.log(`Downloading with curl → ${outputFile}\n`);
+        this.logger.log(`Downloading via https → ${outputFile}\n`);
+
+        const downloadFile = (url, dest, attempt = 1) => {
+          return new Promise((resolve, reject) => {
+            https.get(url, (res) => {
+
+              // Handle Redirects
+              if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                const newUrl = res.headers.location.startsWith("http")
+                  ? res.headers.location
+                  : new URL(res.headers.location, url).href;
+
+                this.logger.log(`Redirected → ${newUrl}`);
+                return resolve(downloadFile(newUrl, dest, attempt + 1));
+              }
+
+              if (res.statusCode !== 200) {
+                return reject(new Error(`Download failed (HTTP ${res.statusCode})`));
+              }
+
+              const totalSize = parseInt(res.headers["content-length"] || "0", 10);
+              let downloaded = 0;
+
+              const writeStream = fs.createWriteStream(dest);
+
+              // Progress bar
+              res.on("data", chunk => {
+                downloaded += chunk.length;
+
+                if (totalSize > 0) {
+                  const percent = (downloaded / totalSize) * 100;
+                  const mbDownloaded = (downloaded / (1024 * 1024)).toFixed(2);
+                  const mbTotal = (totalSize / (1024 * 1024)).toFixed(2);
+
+                  const barLength = 30;
+                  const filledBar = Math.round((percent / 100) * barLength);
+                  const bar = "█".repeat(filledBar) + "░".repeat(barLength - filledBar);
+
+                  process.stdout.write(
+                    `\r${bar} ${percent.toFixed(1)}%  (${mbDownloaded} MB / ${mbTotal} MB)`
+                  );
+                } else {
+                  process.stdout.write(`\rDownloaded ${(downloaded / (1024 * 1024)).toFixed(2)} MB`);
+                }
+              });
+
+              res.on("end", () => {
+                process.stdout.write("\n");
+              });
+
+              res.pipe(writeStream);
+
+              writeStream.on("finish", () => {
+                writeStream.close(() => resolve());
+              });
+
+              writeStream.on("error", (err) => {
+                fs.unlink(dest, () => reject(err));
+              });
+
+            }).on("error", (err) => {
+              reject(err);
+            });
+          });
+        };
 
         try {
-          execSync(`curl -L -o "${outputFile}" "${downloadUrl}"`, {
-            stdio: "inherit"
-          });
-
+          await downloadFile(downloadUrl, outputFile);
           this.logger.log(`\nDownload complete: ${outputFile}`);
         } catch (err) {
-          this.logger.error("\nCurl download failed:", err.message);
+          this.logger.error("\nHTTPS download failed:", err.message);
         }
       }
 
