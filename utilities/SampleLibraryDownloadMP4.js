@@ -11,7 +11,7 @@ const FabricObject = require("./lib/concerns/FabricObject");
 
 const path = require("path");
 const fs = require("fs");
-const { execSync } = require("child_process");
+const https = require("https");
 
 class LibraryListObjectsWithDownload extends Utility {
     blueprint() {
@@ -83,24 +83,81 @@ class LibraryListObjectsWithDownload extends Utility {
             } catch (err) {
                 attempt++;
                 if (attempt >= retries) throw err;
-
-                this.logger.warn(
-                    `Retry ${attempt}/${retries} after error: ${err.message}`
-                );
+                this.logger.warn(`Retry ${attempt}/${retries} after error: ${err.message}`);
                 await this.sleep(delay * Math.pow(2, attempt));
             }
         }
     }
 
+    // --------------------------------------------------------------------
+    // HTTPS Download (replaces curl)
+    // --------------------------------------------------------------------
     async downloadFile(url, filepath) {
-        return this.retry(
-            () =>
-                execSync(`curl -L --fail -o "${filepath}" "${url}"`, {
-                    stdio: "inherit",
-                }),
-            3,
-            1500
-        );
+        return this.retry(() => {
+            return new Promise((resolve, reject) => {
+                const startDownload = (currentUrl, redirCount = 0) => {
+                    if (redirCount > 5) {
+                        return reject(new Error("Too many redirects"));
+                    }
+
+                    https.get(currentUrl, (res) => {
+                        // Handle redirects
+                        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                            const nextUrl = res.headers.location.startsWith("http")
+                                ? res.headers.location
+                                : new URL(res.headers.location, currentUrl).href;
+
+                            this.logger.log(`Redirected → ${nextUrl}`);
+                            return startDownload(nextUrl, redirCount + 1);
+                        }
+
+                        if (res.statusCode !== 200) {
+                            return reject(new Error(`Download failed (HTTP ${res.statusCode})`));
+                        }
+
+                        const totalSize = parseInt(res.headers["content-length"] || "0", 10);
+                        let downloaded = 0;
+
+                        const writeStream = fs.createWriteStream(filepath);
+
+                        // Progress bar
+                        res.on("data", (chunk) => {
+                            downloaded += chunk.length;
+
+                            if (totalSize > 0) {
+                                const pct = (downloaded / totalSize) * 100;
+                                const barLength = 30;
+                                const filled = Math.round((pct / 100) * barLength);
+                                const bar = "█".repeat(filled) + "░".repeat(barLength - filled);
+
+                                process.stdout.write(
+                                    `\r${bar} ${pct.toFixed(1)}% (${(downloaded / 1e6).toFixed(2)}MB/${(totalSize / 1e6).toFixed(2)}MB)`
+                                );
+                            } else {
+                                process.stdout.write(
+                                    `\rDownloaded ${(downloaded / 1e6).toFixed(2)}MB`
+                                );
+                            }
+                        });
+
+                        res.on("end", () => process.stdout.write("\n"));
+
+                        res.pipe(writeStream);
+
+                        writeStream.on("finish", () => {
+                            writeStream.close(resolve);
+                        });
+
+                        writeStream.on("error", (err) => {
+                            fs.unlink(filepath, () => reject(err));
+                        });
+                    }).on("error", reject);
+                };
+
+                // begin
+                startDownload(url);
+            });
+        });
     }
 
     sanitizeFilename(name, fallback) {
@@ -108,7 +165,7 @@ class LibraryListObjectsWithDownload extends Utility {
         return name
             .replace(/[^a-zA-Z0-9._-]+/g, "_")
             .replace(/_+/g, "_")
-            .substring(0, 180); // avoid OS filename length issues
+            .substring(0, 180);
     }
 
     async processObject(e, client, libraryId, format, offering, targetDir, failedDownloads) {
@@ -119,7 +176,7 @@ class LibraryListObjectsWithDownload extends Utility {
 
         const formattedObj = { object_id: objectId, name: objectName };
 
-        // Skip existing files
+        // Skip existing
         const existing = fs.readdirSync(targetDir).find((f) => f.includes(objectId));
         if (existing) {
             this.logger.log(`Skipping ${objectName}: already exists (${existing})`);
@@ -128,12 +185,12 @@ class LibraryListObjectsWithDownload extends Utility {
         }
 
         try {
-            // 1. Version hash
+            // Version hash
             const versionHash = await this.retry(() =>
                 this.concerns.FabricObject.latestVersionHash({ libraryId, objectId })
             );
 
-            // 2. Start media job
+            // Start job
             const response = await this.retry(() =>
                 client.MakeFileServiceRequest({
                     versionHash,
@@ -146,9 +203,9 @@ class LibraryListObjectsWithDownload extends Utility {
             const jobId = response.job_id;
             this.logger.log(`Started job ${jobId}`);
 
-            // 3. Poll progress
+            // Poll job
             let status;
-            let lastUpdate = -1;
+            let lastProgress = -1;
 
             do {
                 await this.sleep(2000);
@@ -160,23 +217,22 @@ class LibraryListObjectsWithDownload extends Utility {
                     })
                 );
 
-                let progress = status?.progress || 0;
-                if (progress !== lastUpdate) {
+                const progress = status?.progress || 0;
+                if (progress !== lastProgress) {
                     process.stdout.write(`Progress: ${progress.toFixed(1)}%\r`);
-                    lastUpdate = progress;
+                    lastProgress = progress;
                 }
             } while (status?.status !== "completed");
 
             process.stdout.write("\n");
 
-            // 4. Final filename
             const filename = this.sanitizeFilename(
                 status.filename,
                 `${objectId}.mp4`
             );
+
             const outputFile = path.join(targetDir, filename);
 
-            // 5. Build download URL
             const downloadUrl = await this.retry(() =>
                 client.FabricUrl({
                     versionHash,
@@ -190,7 +246,7 @@ class LibraryListObjectsWithDownload extends Utility {
 
             formattedObj.download_url = downloadUrl;
 
-            // 6. Download file
+            // NOW using HTTPS downloader
             this.logger.log(`Downloading → ${outputFile}`);
             await this.downloadFile(downloadUrl, outputFile);
 
@@ -240,9 +296,7 @@ class LibraryListObjectsWithDownload extends Utility {
         if (!fs.existsSync(targetDir))
             fs.mkdirSync(targetDir, { recursive: true });
 
-        // --------------------------
-        // SEQUENTIAL DOWNLOADS
-        // --------------------------
+        // Sequential downloads
         const results = [];
         for (const obj of objectList) {
             const r = await this.processObject(
@@ -257,13 +311,11 @@ class LibraryListObjectsWithDownload extends Utility {
             results.push(r);
         }
 
-        // --------------------------
         // Summary
-        // --------------------------
         this.logger.log("\n=== SUMMARY ===");
-        this.logger.log(`Processed: ${objectList.length}`);
+        this.logger.log(`Processed:  ${objectList.length}`);
         this.logger.log(`Successful: ${results.length - failedDownloads.length}`);
-        this.logger.log(`Failed: ${failedDownloads.length}`);
+        this.logger.log(`Failed:     ${failedDownloads.length}`);
 
         if (failedDownloads.length > 0) {
             this.logger.warn("\n=== FAILED DOWNLOADS ===");
