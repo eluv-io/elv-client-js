@@ -30,6 +30,18 @@ const CreateStream = async() => {
     },
     liveRecordingConfig: {
       drm_type: "drm-all", // drm-public | drm-all | drm-fairplay | drm-widevine | drm-playready | clear
+      recording_config: {
+        part_ttl: 3600, // seconds
+        reconnect_timeout: 1800, // seconds
+        connection_timeout: 1800, // seconds
+        copy_mpeg_ts: true,
+        input_cfg: {
+          bypass_libav_reader: true,
+          copy_mode: "raw",
+          copy_packaging: "rtp_ts",
+          packaging_mode: "rtp_ts",
+        }
+      },
       recording_stream_config: {
         audio: {
           1: {
@@ -38,7 +50,7 @@ const CreateStream = async() => {
             "default": true,
             "lang": "en-us",
             "playout": true,
-            "playout_label": "English stream",
+            "playout_label": "Audio 1",
             "record": true,
             "recording_bitrate": 192000,
             "recording_channels": 2
@@ -47,9 +59,9 @@ const CreateStream = async() => {
             "bitrate": 265988,
             "codec": "aac",
             "default": false,
-            "lang": "en-uk",
+            "lang": "fr-fr",
             "playout": true,
-            "playout_label": "UK English stream",
+            "playout_label": "Audio 2",
             "record": true,
             "recording_bitrate": 192000,
             "recording_channels": 2
@@ -57,6 +69,7 @@ const CreateStream = async() => {
           3: {
             "bitrate": 265988,
             "codec": "aac",
+            "lang": "fr-ca",
             "default": false,
             "playout": true,
             "playout_label": "Audio 3",
@@ -67,6 +80,7 @@ const CreateStream = async() => {
           4: {
             "bitrate": 265988,
             "codec": "aac",
+            "lang": "es-es",
             "default": false,
             "playout": true,
             "playout_label": "Audio 4",
@@ -77,6 +91,7 @@ const CreateStream = async() => {
           5: {
             "bitrate": 265988,
             "codec": "aac",
+            "lang": "de-de",
             "default": false,
             "playout": true,
             "playout_label": "Audio 5",

@@ -404,6 +404,47 @@ class LiveConf {
     return sync_id;
   }
 
+  /**
+   * Map custom live recording profile to the expected config structure
+   * @param {Object} customProfile - User's custom recording profile
+   * @return {Object} - Mapped config in live_recording format
+   */
+  MapCustomProfileToLiveConfig({customProfile}) {
+      if(!customProfile) return {};
+
+      const {recording_config, playout_config, recording_params} = customProfile;
+
+      const CompactDeep = (obj) => {
+        if(obj === null || typeof obj !==
+          'object' || Array.isArray(obj)) {
+          return obj;
+        }
+
+        return R.pipe(
+          R.reject(R.isNil), // Remove undefined/null values
+          R.map(val => typeof val === 'object' ? CompactDeep(val) : val)
+        )(obj);
+      };
+
+    return CompactDeep({
+        live_recording: {
+          recording_config: {
+            recording_params: {
+              part_ttl: recording_config?.part_ttl,
+              reconnect_timeout: recording_config?.reconnect_timeout,
+              xc_params: {
+                connection_timeout: recording_config?.connection_timeout,
+                copy_mpeg_ts: recording_config?.copy_mpeg_ts,
+                input_cfg: recording_config?.input_cfg
+              },
+              ...recording_params
+            }
+          },
+          playout_config
+        }
+      });
+    }
+
   /*
   * Generate audio streams recording configuration based on the optional custom settings.
   * If no custom "audio" section is present, record all the acceptable audio streams found in the probe
@@ -435,15 +476,23 @@ class LiveConf {
   }
 
   /*
-  * Generate the live recording config as required by QFAB, based on defaults and optional custom settings.
+  * Generate the live recording config as required by QFAB, based on defaults, existing settings and optional custom settings.
   */
   generateLiveConf({customSettings}) {
     // Saved config overrides defaults and is preserved on reconfiguration
-    const conf = this.currentLiveRecordingMeta ?
-      R.mergeDeepRight(
-        LiveconfTemplate,
-        {live_recording: this.currentLiveRecordingMeta}
-      ) : LiveconfTemplate;
+    let conf = R.clone(LiveconfTemplate);
+
+    if(this.currentLiveRecordingMeta) {
+      conf = R.mergeDeepRight(conf,
+        {live_recording: this.currentLiveRecordingMeta});
+    }
+
+    if(customSettings.liveRecordingProfile) {
+      conf = R.mergeDeepRight(conf,
+        this.MapCustomProfileToLiveConfig({
+          customProfile: customSettings.liveRecordingProfile
+        }));
+    }
 
     const fileName = this.url;
     const audioStreams = this.generateAudioStreamsConfig({customSettings});

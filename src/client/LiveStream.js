@@ -1707,7 +1707,7 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @property {Object=} recording_config - Recording configuration settings
  * @property {number=} recording_config.part_ttl - Time-to-live for stream parts in seconds
  * @property {number=} recording_config.connection_timeout - Initial connection timeout when starting the stream, in seconds
- * @property {number=} recording_config.reconnection_timeout - Duration to listen after disconnect detection, in seconds
+ * @property {number=} recording_config.reconnect_timeout - Duration to listen after disconnect detection, in seconds
  * @property {boolean=} recording_config.copy_mpeg_ts - Whether to copy MPEG-TS data
  * @property {Object=} recording_config.input_cfg - Input configuration settings
  * @property {boolean=} recording_config.input_cfg.bypass_libav_reader - Whether to bypass libav reader
@@ -1937,7 +1937,8 @@ exports.StreamConfig = async function({
   const liveRecordingConfigMeta = lc.generateLiveConf({
     customSettings: {
       audio: userConfig?.recording_stream_config?.audio ?? liveRecordingConfig?.recording_stream_config?.audio,
-      ladder_profile: liveRecordingConfig?.profile
+      ladder_profile: liveRecordingConfig?.profile,
+      liveRecordingProfile: userConfig
     }
   });
 
