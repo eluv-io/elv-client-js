@@ -114,7 +114,16 @@ const LiveconfTemplate = {
 };
 
 class LiveConf {
-  constructor({url, probeData, nodeId, nodeUrl, includeAVSegDurations, overwriteOriginUrl, syncAudioToVideo, liveRecordingMeta}) {
+  constructor({
+    url,
+    probeData,
+    nodeId,
+    nodeUrl,
+    includeAVSegDurations,
+    overwriteOriginUrl,
+    syncAudioToVideo,
+    liveRecordingMeta
+  }) {
     this.url = url;
     this.probeData = probeData;
     this.nodeId = nodeId;
@@ -409,6 +418,7 @@ class LiveConf {
         audioStreams[audioIdx] = {
           recordingBitrate: audio.recording_bitrate || 192000,
           recordingChannels: audio.recording_channels || 2,
+          lang: audio.lang
         };
         if(audio.playout) {
           audioStreams[audioIdx].playoutLabel = audio.playout_label || `Audio ${i + 1}`;
@@ -560,6 +570,8 @@ class LiveConf {
       audioLadderSpec.stream_name = `audio_${audioIndex}`;
       audioLadderSpec.stream_label = audio.playoutLabel ? audio.playoutLabel : null;
       audioLadderSpec.media_type = 2;
+      audioLadderSpec.lang = audio.lang ?? "";
+
 
       if(Object.keys(audioStreams).length === 1) {
         audioLadderSpec.default = true;

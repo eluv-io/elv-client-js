@@ -30,6 +30,62 @@ const CreateStream = async() => {
     },
     liveRecordingConfig: {
       drm_type: "drm-all", // drm-public | drm-all | drm-fairplay | drm-widevine | drm-playready | clear
+      recording_stream_config: {
+        audio: {
+          1: {
+            "bitrate": 265988,
+            "codec": "aac",
+            "default": true,
+            "lang": "en-us",
+            "playout": true,
+            "playout_label": "English stream",
+            "record": true,
+            "recording_bitrate": 192000,
+            "recording_channels": 2
+          },
+          2: {
+            "bitrate": 265988,
+            "codec": "aac",
+            "default": false,
+            "lang": "en-uk",
+            "playout": true,
+            "playout_label": "UK English stream",
+            "record": true,
+            "recording_bitrate": 192000,
+            "recording_channels": 2
+          },
+          3: {
+            "bitrate": 265988,
+            "codec": "aac",
+            "default": false,
+            "playout": true,
+            "playout_label": "Audio 3",
+            "record": true,
+            "recording_bitrate": 192000,
+            "recording_channels": 2
+          },
+          4: {
+            "bitrate": 265988,
+            "codec": "aac",
+            "default": false,
+            "playout": true,
+            "playout_label": "Audio 4",
+            "record": true,
+            "recording_bitrate": 192000,
+            "recording_channels": 2
+          },
+          5: {
+            "bitrate": 265988,
+            "codec": "aac",
+            "default": false,
+            "playout": true,
+            "playout_label": "Audio 5",
+            "record": true,
+            "recording_bitrate": 192000,
+            "recording_channels": 2
+          }
+        }
+      },
       input_stream_info: {
         format: {
           format_name: "mpegts"

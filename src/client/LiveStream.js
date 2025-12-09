@@ -1823,7 +1823,7 @@ exports.StreamConfig = async function({
 }) {
   const objectId = name;
   let probe = inputStreamInfo || liveRecordingConfig?.input_stream_info;
-  let configMetadata = liveRecordingConfig;
+  let configMetadata = {live_recording_config: liveRecordingConfig};
 
   const currentStatus = await this.StreamStatus({name, writeToken});
   if(currentStatus.state != "uninitialized" && currentStatus.state !== "inactive" && currentStatus.state !== "unconfigured") {
@@ -1853,7 +1853,6 @@ exports.StreamConfig = async function({
       ]
     });
   }
-  console.log("config meta", configMetadata);
 
   const userConfig = liveRecordingConfig || configMetadata.live_recording_config;
   status.user_config = userConfig;
@@ -1937,7 +1936,7 @@ exports.StreamConfig = async function({
 
   const liveRecordingConfigMeta = lc.generateLiveConf({
     customSettings: {
-      audio: liveRecordingConfig?.recording_stream_config?.audio,
+      audio: userConfig?.recording_stream_config?.audio ?? liveRecordingConfig?.recording_stream_config?.audio,
       ladder_profile: liveRecordingConfig?.profile
     }
   });
