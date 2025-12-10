@@ -92,7 +92,7 @@ exports.StreamCreate = async function({
   liveRecordingConfig,
   options={}
 }) {
-  const defaultName = `LIVE STREAM - ${new Date().toISOString().slice(0, 10)}`
+  const defaultName = `LIVE STREAM - ${new Date().toISOString().slice(0, 10)}`;
   let contentType;
   let adminGroups = options.accessGroups ?? [];
 
@@ -147,21 +147,28 @@ exports.StreamCreate = async function({
     ingressNodeApi,
     initializeDrm=true
   } = options;
-  // const streamName = name || defaultName;
+
+  if(!liveRecordingConfig) {
+    liveRecordingConfig = {};
+  }
 
   liveRecordingConfig.url = url;
   liveRecordingConfig.ingress_node_api = ingressNodeApi;
 
   // Add access group permissions
-  adminGroups.filter(el => !!el).map(group => {
-    if(!group) { return; }
+  await Promise.all(
+    adminGroups.filter(el => !!el).map(async(group) => {
+      if(!group) { return; }
 
-    this.AddContentObjectGroupPermission({
-      objectId,
-      groupAddress: group,
-      permission: "manage"
-    });
-  });
+      await
+        this.AddContentObjectGroupPermission({
+          objectId,
+          groupAddress: group,
+          permission: "manage"
+        });
+    })
+  );
+
 
   await this.MergeMetadata({
     libraryId,
@@ -209,19 +216,25 @@ exports.StreamCreate = async function({
   if(initializeDrm) {
     await this.StreamInitialize({
       name: objectId,
-      format: liveRecordingConfig?.playout_config?.playout_formats,
+      format: (liveRecordingConfig?.playout_config?.playout_formats.join(",")) || "",
       writeToken,
       finalize: false
     });
   }
+  console.log("after initialize")
 
   if(finalize) {
-    const finalizeResponse = await this.FinalizeContentObject({
-      libraryId,
-      objectId,
-      writeToken,
-      commitMessage: "Create live stream"
-    });
+    let finalizeResponse;
+    try {
+      finalizeResponse = await this.FinalizeContentObject({
+        libraryId,
+        objectId,
+        writeToken,
+        commitMessage: "Create live stream"
+      });
+    } catch(error) {
+      console.log("FAIL FINALIZE", JSON.stringify(error, null, 2));
+    }
 
     returnResponse = {...returnResponse, ...finalizeResponse};
   }
@@ -1269,47 +1282,50 @@ exports.StreamInitialize = async function({
   writeToken,
   finalize=true
 }) {
-  let typeAbrMaster;
-  let typeLiveStream;
+  try {
+    let typeAbrMaster;
+    let typeLiveStream;
 
-  console.log("StreamInitialize")
 
-  // Fetch Title and Live Stream content types from tenant meta
-  const tenantContractId = await this.userProfileClient.TenantContractId();
-  const {live_stream, title} = await this.ContentObjectMetadata({
-    libraryId: tenantContractId.replace("iten", "ilib"),
-    objectId: tenantContractId.replace("iten", "iq__"),
-    metadataSubtree: "public/content_types",
-    select: [
-      "live_stream",
-      "title"
-    ]
-  });
+    // Fetch Title and Live Stream content types from tenant meta
+    const tenantContractId = await this.userProfileClient.TenantContractId();
+    const {live_stream, title} = await this.ContentObjectMetadata({
+      libraryId: tenantContractId.replace("iten", "ilib"),
+      objectId: tenantContractId.replace("iten", "iq__"),
+      metadataSubtree: "public/content_types",
+      select: [
+        "live_stream",
+        "title"
+      ]
+    });
 
-  if(live_stream) {
-    typeLiveStream = live_stream;
+    if(live_stream) {
+      typeLiveStream = live_stream;
+    }
+
+    if(title) {
+      typeAbrMaster = title;
+    }
+
+    if(typeAbrMaster === undefined || typeLiveStream === undefined) {
+      console.log("ERROR - unable to find content types", "ABR Master", typeAbrMaster, "Live Stream", typeLiveStream);
+      return {};
+    }
+
+    res = await this.StreamSetOfferingAndDRM({
+      name,
+      typeAbrMaster,
+      typeLiveStream,
+      drm,
+      format,
+      writeToken,
+      finalize
+    });
+
+    return res;
+  } catch(error) {
+    console.error("Unable to intitialize stream", error);
   }
-
-  if(title) {
-    typeAbrMaster = title;
-  }
-
-  if(typeAbrMaster === undefined || typeLiveStream === undefined) {
-    console.log("ERROR - unable to find content types", "ABR Master", typeAbrMaster, "Live Stream", typeLiveStream);
-    return {};
-  }
-
-  const res = await this.StreamSetOfferingAndDRM({
-    name,
-    typeAbrMaster,
-    typeLiveStream,
-    drm,
-    format,
-    writeToken,
-    finalize
-  });
-
-  return res;
 };
 
 /**
@@ -1431,7 +1447,37 @@ exports.StreamSetOfferingAndDRM = async function({
       writeToken
     });
 
-    let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
+    // TODO: Consolidate this duplicate code to get nodes
+    const url = mainMeta?.live_recording?.fabric_config?.ingress_node_api || mainMeta?.live_recording_config?.url
+    const parsedName = url
+      .replace("udp://", "https://")
+      .replace("rtmp://", "https://")
+      .replace("rtp://", "https://")
+      .replace("srt://", "https://");
+    const hostName = new URL(parsedName).hostname;
+    const streamUrlObject = new URL(url);
+
+    this.Log(`Retrieving nodes - matching: ${hostName}`);
+
+    const nodes = await this.SpaceNodes({matchEndpoint: hostName});
+
+    if(nodes.length < 1) {
+      // Use dedicated ingress endpoint
+
+      status.error = `No node found for stream URL: ${streamUrlObject.href}`;
+      return status;
+    }
+
+    const node = {
+      endpoints: nodes[0].services.fabric_api.urls,
+      id: nodes[0].id
+    };
+
+    status.node = node;
+
+    const endpoint = node.endpoints[0];
+
+    let fabURI = endpoint;
     // Support both hostname and URL ingress_node_api
     if(!fabURI.startsWith("http")) {
       // Assume https
@@ -1440,7 +1486,7 @@ exports.StreamSetOfferingAndDRM = async function({
 
     this.SetNodes({fabricURIs: [fabURI]});
 
-    let streamUrl = mainMeta.live_recording.recording_config.recording_params.origin_url;
+    let streamUrl = mainMeta?.live_recording?.recording_config?.recording_params?.origin_url || mainMeta?.live_recording_config?.url;
 
     await StreamGenerateOffering({
       client: this,
