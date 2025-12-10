@@ -29,6 +29,7 @@ const CreateStream = async() => {
       linkToSite: true
     },
     liveRecordingConfig: {
+      profile: "M6",
       drm_type: "drm-all", // drm-public | drm-all | drm-fairplay | drm-widevine | drm-playready | clear
       recording_config: {
         part_ttl: 3600, // seconds

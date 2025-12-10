@@ -1679,6 +1679,61 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
 };
 
 /**
+ * Get all available ladder profiles from the live stream site configuration.
+ * Ladder profiles define encoding settings for transcoding live streams including video bitrates, resolutions, and audio configurations.
+ *
+ * @methodGroup Live Stream
+ *
+ * @returns {Promise<Object>} - Object
+ containing all ladder profiles
+ */
+exports.StreamLadderProfiles = async function() {
+  const {siteObjectId, siteLibraryId} = await this.StreamGetSiteData();
+
+  return this.ContentObjectMetadata({
+    libraryId: siteLibraryId,
+    objectId: siteObjectId,
+    metadataSubtree: "public/asset_metadata/profiles"
+  });
+};
+
+/**
+ * Get a specific ladder profile's encoding specifications by name.
+ * If the requested profile is not found, falls back to the default profile.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} profileName - Name of the ladder profile to retrieve (default: "default")
+ * Can be "default" or the name of any custom profile
+ *
+ @returns {Promise<Object>} - The ladder
+  specifications for the requested profile
+ *
+ */
+
+exports.StreamLadderProfile = async function({profileName="default"}) {
+  const profiles = await this.StreamLadderProfiles();
+
+  if(!profiles) {
+    throw new Error("No profiles found.");
+  }
+
+  let profileData;
+  if(profileName.toLowerCase() === "default") {
+    profileData = profiles.default;
+  } else {
+    profileData = profiles.custom.find(item => item.name === profileName);
+  }
+
+  if(!profileData) {
+    console.warn(`Ladder profile ${liveRecordingConfig.playout_ladder_profile} not found. Defaulting to the built-in profile.`);
+    profileData = profiles.default ?? null;
+  }
+
+  return profileData.ladder_specs;
+};
+
+/**
  * @typedef {Object} InputStreamInfo
  * @property {Object=} input_stream_info - Simplified probe information for the input stream
  * @property {Object=} input_stream_info.format - Format information
@@ -1786,7 +1841,11 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  *
  * @property {Object=} probe_info - Full probe information (stored for historical/debugging purposes, only in live_recording_config)
  *
- * @property {Object=} profile - Encoding ladder profile specifications
+ * @property {(Object|string)=} profile - Encoding ladder profile specifications
+ *
+ * Pass an object with ladder_specs, or a string profile name
+ *
+ * When profile is an Object:
  * @property {Array<Object>=} profile.audio - Audio encoding ladder rungs
  * @property {number=} profile.audio[].bit_rate - Audio bitrate for this rung
  * @property {number=} profile.audio[].channels - Number of audio channels for this rung
@@ -1805,7 +1864,6 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @namedParams
  * @param {string} name - Object ID or name of the live stream object
  * @param {LiveRecordingConfig=} liveRecordingConfig - Configuration profile for the live stream including recording, playout, and transcoding settings
- * @param {Object=} profile - Configure the stream with a preset profile stored in the site object
  * @param {InputStreamInfo=} inputStreamInfo - Simplified probe metadata
  * @param {string=} writeToken - Write token of the draft
  * @param {boolean=} finalize - If enabled, target object will be finalized after configuring
@@ -1816,7 +1874,6 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
 exports.StreamConfig = async function({
   name,
   liveRecordingConfig,
-  profile,
   inputStreamInfo,
   writeToken,
   finalize=true
@@ -1934,10 +1991,15 @@ exports.StreamConfig = async function({
     syncAudioToVideo: true
   });
 
+  let profileData;
+  if(liveRecordingConfig?.profile && typeof liveRecordingConfig.profile === "string") {
+    profileData = await this.StreamLadderProfile({profileName: liveRecordingConfig.profile});
+  }
+
   const liveRecordingConfigMeta = lc.generateLiveConf({
     customSettings: {
       audio: userConfig?.recording_stream_config?.audio ?? liveRecordingConfig?.recording_stream_config?.audio,
-      ladder_profile: liveRecordingConfig?.profile,
+      ladder_profile: profileData,
       liveRecordingProfile: userConfig
     }
   });
