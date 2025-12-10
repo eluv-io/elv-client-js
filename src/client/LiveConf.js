@@ -433,11 +433,12 @@ class LiveConf {
               part_ttl: recording_config?.part_ttl,
               reconnect_timeout: recording_config?.reconnect_timeout,
               xc_params: {
+                ...(recording_params?.xc_params ||
+                {}),
                 connection_timeout: recording_config?.connection_timeout,
                 copy_mpeg_ts: recording_config?.copy_mpeg_ts,
                 input_cfg: recording_config?.input_cfg
-              },
-              ...recording_params
+              }
             }
           },
           playout_config
