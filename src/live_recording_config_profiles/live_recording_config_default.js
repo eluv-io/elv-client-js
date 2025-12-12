@@ -6,36 +6,49 @@ const LiveRecordingConfigDefault = {
     connection_timeout: 3600,
     copy_mpeg_ts: false,
   },
-  input_stream_info: {
-    format: {
-      format_name: "mpegts",
+  profile: {
+    ladder_specs: {
+      audio: [
+        {
+          bit_rate: 192000,
+          channels: 2,
+          codecs: "mp4a.40.2"
+        },
+        {
+          bit_rate: 384000,
+          channels: 6,
+          codecs: "mp4a.40.2"
+        }
+      ],
+      video: [
+        {
+          bit_rate: 9500000,
+          codecs: "avc1.640028,mp4a.40.2",
+          height: 1080,
+          width: 1920
+        },
+        {
+          bit_rate: 4500000,
+          codecs: "avc1.640028,mp4a.40.2",
+          height: 720,
+          width: 1280
+        },
+        {
+          bit_rate: 2000000,
+          codecs: "avc1.640028,mp4a.40.2",
+          height: 540,
+          width: 960
+        },
+        {
+          bit_rate: 900000,
+          codecs: "avc1.640028,mp4a.40.2",
+          height: 540,
+          width: 960
+        }
+      ]
     },
-    streams: [
-      {
-        codec_name: "h264",
-        codec_type: "video",
-        display_aspect_ratio: "16/9",
-        field_order: "progressive",
-        frame_rate: "50",
-        height: 1080,
-        width: 1920,
-        level: 42,
-        stream_id: 256,
-        stream_index: 0,
-        time_base: "1/90000",
-      },
-      {
-        codec_name: "aac",
-        codec_type: "audio",
-        channel_layout: 3,
-        channels: 2,
-        sample_rate: 48000,
-        stream_id: 257,
-        stream_index: 1,
-        time_base: "1/90000",
-      },
-    ],
-  },
+    name: "Default"
+  }
 }
 
 module.exports = LiveRecordingConfigDefault;

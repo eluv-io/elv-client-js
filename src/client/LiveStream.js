@@ -14,6 +14,7 @@ const Fraction = require("fraction.js");
 const {ValidateObject, ValidatePresence} = require("../Validation");
 const ContentObjectAudit = require("../ContentObjectAudit");
 const {slugify} = require("../../utilities/lib/helpers");
+const LRCProfile = require("../live_recording_config_profiles/live_recording_config_default");
 
 const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   const tok = await client.authClient.AuthorizationToken({libraryId, objectId,
@@ -25,6 +26,72 @@ const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
 
 const Sleep = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
+};
+
+const GetStreamProbe = async ({client, libraryId, objectId, streamUrl, endpoint}) => {
+  client.SetNodes({fabricURIs: [endpoint]});
+
+  let probe = {};
+
+  try {
+    const probeUrl = await client.Rep({
+      libraryId,
+      objectId,
+      rep: "probe"
+    });
+
+    probe = await client.utils.ResponseToJson(
+      await HttpClient.Fetch(probeUrl, {
+        body: JSON.stringify({
+          "filename": streamUrl.href,
+          "listen": true
+        }),
+        method: "POST"
+      })
+    );
+
+    if(probe.errors) {
+      throw probe.errors[0];
+    }
+  } catch(error) {
+    if(error.code === "ETIMEDOUT") {
+      throw "Stream probe timed out - make sure the stream source is available";
+    } else {
+      throw error;
+    }
+  }
+
+  probe.format.filename = streamUrl.href;
+
+  return probe;
+};
+
+const GetNodeFromStreamUrl = async ({client, url}) => {
+  const parsedName = url
+    .replace("udp://", "https://")
+    .replace("rtmp://", "https://")
+    .replace("rtp://", "https://")
+    .replace("srt://", "https://");
+
+  const hostName = new URL(parsedName).hostname;
+  const streamUrlObject = new URL(url);
+
+  client.Log(`Retrieving nodes - matching: ${hostName}`);
+
+  const nodes = await client.SpaceNodes({matchEndpoint: hostName});
+
+  if(nodes.length < 1) {
+    throw new Error(`No node found for stream URL: ${streamUrlObject.href}`);
+  }
+
+  const node = {
+    endpoints: nodes[0].services.fabric_api.urls,
+    id: nodes[0].id
+  };
+
+  const endpoint = node.endpoints[0];
+
+  return {node, endpoint, streamUrlObject};
 };
 
 const CueInfo = async ({eventId, status}) => {
@@ -246,43 +313,6 @@ exports.StreamCreate = async function({
   }
 
   return returnResponse;
-};
-
-/**
- * Helper method to retrieve node information from a stream URL
- *
- * @methodGroup Live Stream
- * @namedParams
- * @param {string} url - The stream URL
- *
- * @return {Promise<Object>} - Object containing node, endpoint, and streamUrlObject
- */
-exports.StreamGetNodeFromUrl = async function({url}) {
-  const parsedName = url
-    .replace("udp://", "https://")
-    .replace("rtmp://", "https://")
-    .replace("rtp://", "https://")
-    .replace("srt://", "https://");
-
-  const hostName = new URL(parsedName).hostname;
-  const streamUrlObject = new URL(url);
-
-  this.Log(`Retrieving nodes - matching: ${hostName}`);
-
-  const nodes = await this.SpaceNodes({matchEndpoint: hostName});
-
-  if(nodes.length < 1) {
-    throw new Error(`No node found for stream URL: ${streamUrlObject.href}`);
-  }
-
-  const node = {
-    endpoints: nodes[0].services.fabric_api.urls,
-    id: nodes[0].id
-  };
-
-  const endpoint = node.endpoints[0];
-
-  return {node, endpoint, streamUrlObject};
 };
 
 /**
@@ -1488,7 +1518,7 @@ exports.StreamSetOfferingAndDRM = async function({
 
     let node, endpoint, streamUrlObject;
     try {
-      ({node, endpoint, streamUrlObject} = await this.StreamGetNodeFromUrl({url}));
+      ({node, endpoint, streamUrlObject} = await GetNodeFromStreamUrl({client: this, url}));
       status.node = node;
     } catch(error) {
       status.error = error.message;
@@ -1963,26 +1993,34 @@ exports.StreamConfig = async function({
     object_id: objectId,
   }
 
-  if(!liveRecordingConfig) {
-    configMetadata = await this.ContentObjectMetadata({
+  const liveRecordingMeta = await this.ContentObjectMetadata({
+    libraryId: libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "/live_recording"
+  });
+
+  let liveRecordingConfigProfile;
+  if(liveRecordingConfig) {
+    liveRecordingConfigProfile = configMetadata?.live_recording_config;
+  } else {
+    const lrcMeta = await this.ContentObjectMetadata({
       libraryId: libraryId,
       objectId,
       writeToken,
-      metadataSubtree: "/",
-      select: [
-        "/live_recording_config",
-        "/live_recording"
-      ]
+      metadataSubtree: "/live_recording_config",
     });
+
+    // Save liveRecordingConfig as saved profile or default
+    liveRecordingConfigProfile = lrcMeta ?? LRCProfile;
   }
 
-  const userConfig = liveRecordingConfig || configMetadata.live_recording_config;
-  status.user_config = userConfig;
+  status.user_config = liveRecordingConfigProfile;
 
   // Get node URI from user config
-  let node, endpoint;
+  let node, endpoint, streamUrl;
   try {
-    ({node, endpoint} = await this.StreamGetNodeFromUrl({url: userConfig.url}));
+    ({node, endpoint, streamUrlObject: streamUrl} = await GetNodeFromStreamUrl({client: this, url: liveRecordingConfigProfile.url}));
     status.node = node;
   } catch(error) {
     status.error = error.message;
@@ -1991,45 +2029,20 @@ exports.StreamConfig = async function({
 
   // No stream data provided ; probe the stream for info
   if(!probe) {
-    this.SetNodes({fabricURIs: [endpoint]});
-    probe = {};
-
-    try {
-      const probeUrl = await this.Rep({
-        libraryId,
-        objectId,
-        rep: "probe"
-      });
-
-      probe = await this.utils.ResponseToJson(
-        await HttpClient.Fetch(probeUrl, {
-          body: JSON.stringify({
-            "filename": streamUrl.href,
-            "listen": true
-          }),
-          method: "POST"
-        })
-      );
-
-      if(probe.errors) {
-        throw probe.errors[0];
-      }
-    } catch(error) {
-      if(error.code === "ETIMEDOUT") {
-        throw "Stream probe timed out - make sure the stream source is available";
-      } else {
-        throw error;
-      }
-    }
-
-    probe.format.filename = streamUrl.href;
+    probe = await GetStreamProbe({
+      client: this,
+      libraryId,
+      objectId,
+      streamUrl,
+      endpoint
+    });
   }
 
   // Create live recording config
   let lc = new LiveConf({
     url: liveRecordingConfig.url,
     probeData: probe,
-    liveRecordingMeta: configMetadata?.live_recording,
+    liveRecordingMeta,
     nodeId: node.id,
     nodeUrl: endpoint,
     includeAVSegDurations: false,
@@ -2046,9 +2059,9 @@ exports.StreamConfig = async function({
 
   const liveRecordingConfigMeta = lc.generateLiveConf({
     customSettings: {
-      audio: userConfig?.recording_stream_config?.audio ?? liveRecordingConfig?.recording_stream_config?.audio,
+      audio: liveRecordingConfigProfile?.recording_stream_config?.audio,
       ladder_profile: profileData,
-      liveRecordingProfile: userConfig
+      liveRecordingProfile: liveRecordingConfigProfile
     }
   });
 
