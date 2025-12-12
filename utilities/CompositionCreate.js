@@ -53,12 +53,12 @@ const withoutEncryptionSchemes = poStream => {
 
 const sanitizeFilename = (name, fallback) => {
     if (!name) return fallback;
-        return name
-            .replace(/[^a-zA-Z0-9._-]+/g, "_")
-            .replace(/_+/g, "_")
-            .substring(0, 180);
-}
-
+    return name
+        .replace(/[^a-zA-Z0-9._-]+/g, "_") // replace invalid chars with "_"
+        .replace(/_+/g, "_")               // collapse multiple underscores
+        .substring(0, 180)                 // limit length
+        .toLowerCase();                     // convert all letters to lowercase
+};
 
 class ChannelCreate extends Utility {
   blueprint() {
@@ -109,8 +109,9 @@ class ChannelCreate extends Utility {
         objectId,
         versionHash
       });
+      item.objectId = objectId;
       itemPublicMeta.push(meta);
-      itemOfferings.push(meta.offerings[item.offering])
+      itemOfferings.push(meta.offerings[item.offering]);
     }
 
     // make sure streams, playout formats, and ladders are the same
@@ -162,17 +163,27 @@ class ChannelCreate extends Utility {
           items: [],
           key,
           offeringKey: itemList[0].offering,
-          live_end_tol: 60,
-          live_seg_count: 60,
           playout: {
               playout_formats: itemOfferings?.[0]?.playout?.playout_formats ?? [],
               streams: itemOfferings?.[0]?.playout?.streams ?? []
           },
-          playout_type: (val ? "ch_val" : "ch_vod")
+          playout_type: (val ? "ch_val" : "ch_vod"), 
+          source_info: {
+            frameRate: `${itemOfferings[0].media_struct.streams.video.rate}`,
+            libraryId,
+            name: itemPublicMeta[0].public.name,
+            objectId,
+            offeringKey: itemList[0].offering,
+            profileKey: "",
+            prompt: "",
+            type: "",
+          }, 
+          sources: []
       };
 
       // Local reference to avoid long paths
       const offeringRef = metadata.channel.offerings[key];
+      const sourcesRef = metadata.channel.offerings[key];
 
       // ---------- ADD ITEMS ----------
       for (let i = 0; i < itemList.length; i++) {
@@ -194,6 +205,9 @@ class ChannelCreate extends Utility {
               type: "mez_vod"
           };
           offeringRef.items.push(itemMeta);
+          if (i !== 0) {
+              sourcesRef.sources.push(item.objectId);
+          }
       }
 
     // Write back metadata
@@ -201,7 +215,8 @@ class ChannelCreate extends Utility {
     const versionHash = await this.concerns.Metadata.write({
       libraryId,
       metadata,
-      objectId
+      objectId, 
+      commitMessage: "CompositionCreate.js"
     });
 
     logger.log("");
