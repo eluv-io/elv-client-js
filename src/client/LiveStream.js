@@ -1820,8 +1820,8 @@ exports.StreamLadderProfile = async function({profileName="default"}) {
   }
 
   if(!profileData) {
-    console.warn(`Ladder profile ${liveRecordingConfig.playout_ladder_profile} not found. Defaulting to the built-in profile.`);
-    profileData = profiles.default ?? null;
+    console.warn(`Ladder profile ${profileName} not found. Defaulting to the built-in profile.`);
+    profileData = profiles.default ?? LRCProfile;
   }
 
   return profileData.ladder_specs;
@@ -2039,7 +2039,7 @@ exports.StreamConfig = async function({
   }
 
   // Create live recording config
-  let lc = new LiveConf({
+  const liveConf = new LiveConf({
     url: liveRecordingConfig.url,
     probeData: probe,
     liveRecordingMeta,
@@ -2051,13 +2051,13 @@ exports.StreamConfig = async function({
   });
 
   let profileData;
-  if(liveRecordingConfig?.profile && typeof liveRecordingConfig.profile === "string") {
-    profileData = await this.StreamLadderProfile({profileName: liveRecordingConfig.profile});
+  if(liveRecordingConfigProfile?.profile && typeof liveRecordingConfigProfile.profile === "string") {
+    profileData = await this.StreamLadderProfile({profileName: liveRecordingConfigProfile.profile});
   } else {
     profileData = await this.StreamLadderProfile({profileName: "default"});
   }
 
-  const liveRecordingConfigMeta = lc.generateLiveConf({
+  const liveRecordingConfigMeta = liveConf.generateLiveConf({
     customSettings: {
       audio: liveRecordingConfigProfile?.recording_stream_config?.audio,
       ladder_profile: profileData,
