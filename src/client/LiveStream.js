@@ -2040,6 +2040,8 @@ exports.StreamConfig = async function({
   let profileData;
   if(liveRecordingConfig?.profile && typeof liveRecordingConfig.profile === "string") {
     profileData = await this.StreamLadderProfile({profileName: liveRecordingConfig.profile});
+  } else {
+    profileData = await this.StreamLadderProfile({profileName: "default"});
   }
 
   const liveRecordingConfigMeta = lc.generateLiveConf({
