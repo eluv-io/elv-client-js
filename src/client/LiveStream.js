@@ -249,6 +249,43 @@ exports.StreamCreate = async function({
 };
 
 /**
+ * Helper method to retrieve node information from a stream URL
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} url - The stream URL
+ *
+ * @return {Promise<Object>} - Object containing node, endpoint, and streamUrlObject
+ */
+exports.StreamGetNodeFromUrl = async function({url}) {
+  const parsedName = url
+    .replace("udp://", "https://")
+    .replace("rtmp://", "https://")
+    .replace("rtp://", "https://")
+    .replace("srt://", "https://");
+
+  const hostName = new URL(parsedName).hostname;
+  const streamUrlObject = new URL(url);
+
+  this.Log(`Retrieving nodes - matching: ${hostName}`);
+
+  const nodes = await this.SpaceNodes({matchEndpoint: hostName});
+
+  if(nodes.length < 1) {
+    throw new Error(`No node found for stream URL: ${streamUrlObject.href}`);
+  }
+
+  const node = {
+    endpoints: nodes[0].services.fabric_api.urls,
+    id: nodes[0].id
+  };
+
+  const endpoint = node.endpoints[0];
+
+  return {node, endpoint, streamUrlObject};
+};
+
+/**
  * Load live stream data from site object
  *
  * @methodGroup Live Stream
@@ -1447,35 +1484,16 @@ exports.StreamSetOfferingAndDRM = async function({
       writeToken
     });
 
-    // TODO: Consolidate this duplicate code to get nodes
     const url = mainMeta?.live_recording?.fabric_config?.ingress_node_api || mainMeta?.live_recording_config?.url
-    const parsedName = url
-      .replace("udp://", "https://")
-      .replace("rtmp://", "https://")
-      .replace("rtp://", "https://")
-      .replace("srt://", "https://");
-    const hostName = new URL(parsedName).hostname;
-    const streamUrlObject = new URL(url);
 
-    this.Log(`Retrieving nodes - matching: ${hostName}`);
-
-    const nodes = await this.SpaceNodes({matchEndpoint: hostName});
-
-    if(nodes.length < 1) {
-      // Use dedicated ingress endpoint
-
-      status.error = `No node found for stream URL: ${streamUrlObject.href}`;
+    let node, endpoint, streamUrlObject;
+    try {
+      ({node, endpoint, streamUrlObject} = await this.StreamGetNodeFromUrl({url}));
+      status.node = node;
+    } catch(error) {
+      status.error = error.message;
       return status;
     }
-
-    const node = {
-      endpoints: nodes[0].services.fabric_api.urls,
-      id: nodes[0].id
-    };
-
-    status.node = node;
-
-    const endpoint = node.endpoints[0];
 
     let fabURI = endpoint;
     // Support both hostname and URL ingress_node_api
@@ -1929,7 +1947,8 @@ exports.StreamConfig = async function({
   let configMetadata = {live_recording_config: liveRecordingConfig};
 
   const currentStatus = await this.StreamStatus({name, writeToken});
-  if(currentStatus.state != "uninitialized" && currentStatus.state !== "inactive" && currentStatus.state !== "unconfigured") {
+
+  if(!["uninitialized", "inactive", "unconfigured"].includes(currentStatus.state)) {
     return {
       state: currentStatus.state,
       error: "Stream still active - must deactivate first"
@@ -1961,33 +1980,14 @@ exports.StreamConfig = async function({
   status.user_config = userConfig;
 
   // Get node URI from user config
-  const parsedName = userConfig.url
-    .replace("udp://", "https://")
-    .replace("rtmp://", "https://")
-    .replace("rtp://", "https://")
-    .replace("srt://", "https://");
-  const hostName = new URL(parsedName).hostname;
-  const streamUrl = new URL(userConfig.url);
-
-  this.Log(`Retrieving nodes - matching: ${hostName}`);
-
-  const nodes = await this.SpaceNodes({matchEndpoint: hostName});
-
-  if(nodes.length < 1) {
-    // Use dedicated ingress endpoint
-
-    status.error = `No node found for stream URL: ${streamUrl.href}`;
+  let node, endpoint;
+  try {
+    ({node, endpoint} = await this.StreamGetNodeFromUrl({url: userConfig.url}));
+    status.node = node;
+  } catch(error) {
+    status.error = error.message;
     return status;
   }
-
-  const node = {
-    endpoints: nodes[0].services.fabric_api.urls,
-    id: nodes[0].id
-  };
-
-  status.node = node;
-
-  const endpoint = node.endpoints[0];
 
   // No stream data provided ; probe the stream for info
   if(!probe) {
