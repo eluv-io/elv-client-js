@@ -171,7 +171,7 @@ class LiveConf {
 
   // Return all audio streams found in the probe
   // Used by generateAudioStreamsConfig()
-  getAudioStreamsFromProbe() {
+  getAudioStreamsFromProbe({ladderProfile}) {
     let audioStreams = {};
     const audioStreamData = this.probeData.streams.filter((value) => value.codec_type === "audio");
 
@@ -180,7 +180,7 @@ class LiveConf {
       const currentStreamData = audioStreamData[index];
 
       audioStreams[currentStreamIndex] = {
-        recordingBitrate: Math.max(currentStreamData.bit_rate, 128000),
+        recordingBitrate: Math.max(ladderProfile?.audio ? ladderProfile.audio[0]?.bit_rate : currentStreamData.bit_rate ?? 0, 128000),
         recordingChannels: currentStreamData.channels,
         playoutLabel: `Audio ${index + 1}`
       };
@@ -451,14 +451,15 @@ class LiveConf {
   * If no custom "audio" section is present, record all the acceptable audio streams found in the probe
   */
   generateAudioStreamsConfig({customSettings}) {
-
     let audioStreams = {};
+    const ladderProfile = customSettings?.ladder_profile;
+
     if(customSettings && customSettings.audio && Object.keys(customSettings.audio).length > 0) {
       for(let i = 0; i < Object.keys(customSettings.audio).length; i ++) {
         let audioIdx = Object.keys(customSettings.audio)[i];
         let audio = customSettings.audio[audioIdx];
         audioStreams[audioIdx] = {
-          recordingBitrate: audio.recording_bitrate || 192000,
+          recordingBitrate: ladderProfile?.audio[0].bit_rate ?? audio.recording_bitrate ?? 192000,
           recordingChannels: audio.recording_channels || 2,
           lang: audio.lang
         };
@@ -470,7 +471,7 @@ class LiveConf {
 
     // If no audio streams specified in custom config, set up all the suitable audio streams in the probe
     if(!customSettings.audio || Object.keys(customSettings.audio).length == 0) {
-      audioStreams = this.getAudioStreamsFromProbe();
+      audioStreams = this.getAudioStreamsFromProbe({ladderProfile: customSettings?.ladder_profile});
     }
 
     return audioStreams;
