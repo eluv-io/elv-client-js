@@ -179,8 +179,10 @@ class LiveConf {
       const currentStreamIndex = audioStreamData[index].stream_index;
       const currentStreamData = audioStreamData[index];
 
+      const profileAudioForType = ladderProfile?.audio.find(a => a.channels === currentStreamData.channels);
+
       audioStreams[currentStreamIndex] = {
-        recordingBitrate: Math.max(ladderProfile?.audio ? ladderProfile.audio[0]?.bit_rate : currentStreamData.bit_rate ?? 0, 128000),
+        recordingBitrate: ladderProfile?.audio ? profileAudioForType.bit_rate : Math.max(currentStreamData.bit_rate, 12800),
         recordingChannels: currentStreamData.channels,
         playoutLabel: `Audio ${index + 1}`
       };
@@ -456,10 +458,12 @@ class LiveConf {
 
     if(customSettings && customSettings.audio && Object.keys(customSettings.audio).length > 0) {
       for(let i = 0; i < Object.keys(customSettings.audio).length; i ++) {
-        let audioIdx = Object.keys(customSettings.audio)[i];
-        let audio = customSettings.audio[audioIdx];
+        const audioIdx = Object.keys(customSettings.audio)[i];
+        const audio = customSettings.audio[audioIdx];
+        const profileAudioForType = ladderProfile?.audio.find(a => a.channels === (audio.channels ?? 2));
+
         audioStreams[audioIdx] = {
-          recordingBitrate: ladderProfile?.audio[0].bit_rate ?? audio.recording_bitrate ?? 192000,
+          recordingBitrate: ladderProfile?.audio ? profileAudioForType.bit_rate : audio.recording_bitrate ?? 192000,
           recordingChannels: audio.recording_channels || 2,
           lang: audio.lang
         };
