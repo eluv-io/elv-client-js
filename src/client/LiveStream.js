@@ -2002,7 +2002,7 @@ exports.StreamConfig = async function({
 
   let liveRecordingConfigProfile;
   if(liveRecordingConfig && Object.keys(liveRecordingConfig || {}).length > 0) {
-    liveRecordingConfigProfile = liveRecodingConfig;
+    liveRecordingConfigProfile = liveRecordingConfig;
   } else {
     const lrcMeta = await this.ContentObjectMetadata({
       libraryId: libraryId,
