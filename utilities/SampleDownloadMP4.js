@@ -10,6 +10,15 @@ const ArgOutfile = require("./lib/concerns/ArgOutfile");
 const ExistObj = require("./lib/concerns/ExistObj");
 const FabricObject = require("./lib/concerns/FabricObject");
 
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const sanitizeFilename = (name, fallback) => {
+  if (!name) return fallback;
+  return name
+    .replace(/\s+/g, "_")
+    .replace(/\//g, "_")
+    .replace(/ - /g, "-")
+};
+
 class ObjectDownloadFile extends Utility {
   blueprint() {
     return {
@@ -71,7 +80,7 @@ class ObjectDownloadFile extends Utility {
       // Poll job progress
       let status;
       do {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await sleep(2000);
         status = await client.MakeFileServiceRequest({
           versionHash,
           path: `/call/media/files/${jobId}`
@@ -81,12 +90,7 @@ class ObjectDownloadFile extends Utility {
       } while (status?.status !== "completed");
 
       // Clean filename
-      const filename = (status.filename
-        ? status.filename
-            .replace(/\s+/g, "_")
-            .replace(/\//g, "_")
-            .replace(/ - /g, "-")
-        : "file_download");
+      const filename = sanitizeFilename(status.filename, "file_download");
 
       // Build download URL
       const downloadUrl = await client.FabricUrl({
@@ -132,7 +136,7 @@ class ObjectDownloadFile extends Utility {
 
         this.logger.log(`Downloading via https → ${outputFile}\n`);
 
-        const downloadFile = (url, dest, attempt = 1) => {
+        const downloadFile = (url, dest, attempt = 5) => {
           return new Promise((resolve, reject) => {
             https.get(url, (res) => {
 

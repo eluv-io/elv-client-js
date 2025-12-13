@@ -89,9 +89,6 @@ class LibraryListObjectsWithDownload extends Utility {
         }
     }
 
-    // --------------------------------------------------------------------
-    // HTTPS Download (replaces curl)
-    // --------------------------------------------------------------------
     async downloadFile(url, filepath) {
         return this.retry(() => {
             return new Promise((resolve, reject) => {
@@ -100,7 +97,7 @@ class LibraryListObjectsWithDownload extends Utility {
                         return reject(new Error("Too many redirects"));
                     }
 
-                    https.get(currentUrl, (res) => {
+                    const req = https.get(currentUrl, (res) => {
                         // Handle redirects
                         if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
                             const nextUrl = res.headers.location.startsWith("http")
@@ -134,9 +131,7 @@ class LibraryListObjectsWithDownload extends Utility {
                                     `\r${bar} ${pct.toFixed(1)}% (${(downloaded / 1e6).toFixed(2)}MB/${(totalSize / 1e6).toFixed(2)}MB)`
                                 );
                             } else {
-                                process.stdout.write(
-                                    `\rDownloaded ${(downloaded / 1e6).toFixed(2)}MB`
-                                );
+                                process.stdout.write(`\rDownloaded ${(downloaded / 1e6).toFixed(2)}MB`);
                             }
                         });
 
@@ -144,21 +139,48 @@ class LibraryListObjectsWithDownload extends Utility {
 
                         res.pipe(writeStream);
 
-                        writeStream.on("finish", () => {
-                            writeStream.close(resolve);
-                        });
+                        writeStream.on("finish", () => writeStream.close(resolve));
 
                         writeStream.on("error", (err) => {
                             fs.unlink(filepath, () => reject(err));
                         });
-                    }).on("error", reject);
+                    });
+
+                    // -----------------------------
+                    // Add timeout here
+                    // -----------------------------
+                    const timeoutMs = 5000; // 5 seconds
+                    req.setTimeout(timeoutMs, () => {
+                        req.abort();
+                        // Throw a special error for retry logic
+                        reject(new Error("DOWNLOAD_TIMEOUT"));
+                    });
+
+                    // Handle request errors
+                    req.on("error", (err) => {
+                        if (err.code === "ECONNRESET") {
+                            reject(new Error("DOWNLOAD_TIMEOUT"));
+                        } else {
+                            reject(err);
+                        }
+                    });
                 };
 
-                // begin
+                // begin download
                 startDownload(url);
             });
+        }, {
+            retries: 3, // retry up to 3 times
+            onRetry: (err, attempt) => {
+                if (err.message === "DOWNLOAD_TIMEOUT") {
+                    this.logger.warn(`Download timed out. Retrying attempt ${attempt}...`);
+                } else {
+                    this.logger.warn(`Download failed: ${err.message}. Retrying attempt ${attempt}...`);
+                }
+            }
         });
     }
+
 
     sanitizeFilename(name, fallback) {
         if (!name) return fallback;
