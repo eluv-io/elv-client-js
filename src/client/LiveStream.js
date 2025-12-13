@@ -221,6 +221,7 @@ exports.StreamCreate = async function({
 
   liveRecordingConfig.url = url;
   liveRecordingConfig.ingress_node_api = ingressNodeApi;
+  liveRecordingConfig.part_ttl = liveRecordingConfig?.recording_config?.part_ttl ?? 86400;
 
   // Add access group permissions
   await Promise.all(
@@ -1974,7 +1975,6 @@ exports.StreamConfig = async function({
 }) {
   const objectId = name;
   let probe = inputStreamInfo || liveRecordingConfig?.input_stream_info;
-  let configMetadata = {live_recording_config: liveRecordingConfig};
 
   const currentStatus = await this.StreamStatus({name, writeToken});
 
@@ -2001,8 +2001,8 @@ exports.StreamConfig = async function({
   });
 
   let liveRecordingConfigProfile;
-  if(liveRecordingConfig) {
-    liveRecordingConfigProfile = configMetadata?.live_recording_config;
+  if(liveRecordingConfig && Object.keys(liveRecordingConfig || {}).length > 0) {
+    liveRecordingConfigProfile = liveRecodingConfig;
   } else {
     const lrcMeta = await this.ContentObjectMetadata({
       libraryId: libraryId,
