@@ -597,19 +597,19 @@ exports.ContentObject = async function({objectId, versionHash, writeToken, noCac
   const id = writeToken || versionHash || objectId;
   if(noCache || !this.objectInfo[id] || Date.now() - this.objectInfo[id].retrievedAt > 30000) {
     let path = UrlJoin("q", id);
+    const info = await this.HttpClient.RequestJsonBody({
+      headers: await this.authClient.AuthorizationHeader({objectId, versionHash}),
+      method: "GET",
+      path: path,
+      queryParams: {
+        details: true,
+        profile: true
+      }
+    })
+
     this.objectInfo[id] = {
       retrievedAt: Date.now(),
-      info: (
-        await this.HttpClient.RequestJsonBody({
-          headers: await this.authClient.AuthorizationHeader({objectId, versionHash}),
-          method: "GET",
-          path: path,
-          queryParams: {
-            details: true,
-            profile: true
-          }
-        })
-      )
+      info
     };
   }
 
