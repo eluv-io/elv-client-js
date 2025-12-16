@@ -172,7 +172,7 @@ class LiveConf {
   // Return all audio streams found in the probe
   // Used by generateAudioStreamsConfig()
   getAudioStreamsFromProbe({ladderProfile}) {
-    let audioStreams = {};
+    const audioStreams = {};
     const audioStreamData = this.probeData.streams.filter((value) => value.codec_type === "audio");
 
     for(let index = 0; index < audioStreamData.length; index++) {
@@ -577,6 +577,9 @@ class LiveConf {
 
     conf.live_recording.recording_config.recording_params.xc_params.enc_height = videoStream.height;
     conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;
+
+    // Reset ladder specs (updating existing stream will carry over old specs
+    conf.live_recording.recording_config.recording_params.ladder_specs = [];
 
     // Determine video recording bitrate and ABR ladder
     let topLadderRate = 0;

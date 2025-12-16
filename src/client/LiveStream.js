@@ -160,6 +160,7 @@ exports.StreamCreate = async function({
   options={}
 }) {
   const defaultName = `LIVE STREAM - ${new Date().toISOString().slice(0, 10)}`;
+  const existingObject = !!objectId;
   let contentType;
   let adminGroups = options.accessGroups ?? [];
 
@@ -189,7 +190,14 @@ exports.StreamCreate = async function({
   }
 
   let editResponse;
-  if (!objectId) {
+  if(objectId) {
+     // Edit existing object
+     editResponse = await this.EditContentObject({
+      libraryId,
+      objectId
+    });
+  } else {
+    // Create new object
     editResponse = await this.CreateContentObject({
       libraryId,
       options: {
@@ -197,11 +205,6 @@ exports.StreamCreate = async function({
       }
     });
     objectId = editResponse.objectId;
-  } else {
-     editResponse = await this.EditContentObject({
-      libraryId,
-      objectId
-    });
   }
 
   const {writeToken} = editResponse;
@@ -289,7 +292,6 @@ exports.StreamCreate = async function({
       finalize: false
     });
   }
-  console.log("after initialize")
 
   if(finalize) {
     let finalizeResponse;
@@ -298,7 +300,7 @@ exports.StreamCreate = async function({
         libraryId,
         objectId,
         writeToken,
-        commitMessage: "Create live stream"
+        commitMessage: existingObject ? "Update live stream" : "Create live stream"
       });
     } catch(error) {
       console.log("FAIL FINALIZE", JSON.stringify(error, null, 2));
