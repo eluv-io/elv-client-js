@@ -1265,7 +1265,7 @@ exports.StreamStopRecording = async function({name}) {
         writeToken: metaEdgeWriteToken
       });
 
-      const status = await this.StreamStatus({name});
+      let status = await this.StreamStatus({name});
 
       if(status.state !== "stopped") {
         status = await this.StreamStartOrStopOrReset({name, op: start});
