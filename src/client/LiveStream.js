@@ -261,6 +261,17 @@ exports.StreamCreate = async function({
     }
   });
 
+  await this.CreateLinks({
+    libraryId,
+    objectId,
+    writeToken,
+    links: [{
+      type: "rep",
+      path: "public/asset_metadata/sources/default",
+      target: "playout/default/options.json"
+    }]
+  });
+
   await this.SetPermission({
     objectId,
     permission: permission,
