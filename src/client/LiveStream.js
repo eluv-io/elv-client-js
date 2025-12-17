@@ -298,7 +298,7 @@ exports.StreamCreate = async function({
   if(initializeDrm) {
     await this.StreamInitialize({
       name: objectId,
-      format: (liveRecordingConfig?.playout_config?.playout_formats.join(",")) || "",
+      format: liveRecordingConfig?.playout_config?.playout_formats ? liveRecordingConfig.playout_config.playout_formats.join(",") : "",
       writeToken,
       finalize: false
     });
