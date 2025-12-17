@@ -502,6 +502,7 @@ class FrameClient {
       "StreamGetSiteData",
       "StreamInitialize",
       "StreamInsertion",
+      "StreamLadderProfiles",
       "StreamLinkToSite",
       "StreamListUrls",
       "StreamRemoveLinkToSite",
