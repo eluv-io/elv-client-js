@@ -169,6 +169,7 @@ class ChannelCreate extends Utility {
           },
           playout_type: (val ? "ch_val" : "ch_vod"), 
           source_info: {
+            createdAt,
             frameRate: `${itemOfferings[0].media_struct.streams.video.rate}`,
             libraryId,
             name: itemPublicMeta[0].public.name,
@@ -177,6 +178,7 @@ class ChannelCreate extends Utility {
             profileKey: "",
             prompt: "",
             type: "",
+            updatedAt
           }, 
           sources: []
       };
@@ -185,11 +187,17 @@ class ChannelCreate extends Utility {
       const offeringRef = metadata.channel.offerings[key];
       const sourcesRef = metadata.channel.offerings[key];
 
+      
       // ---------- ADD ITEMS ----------
       for (let i = 0; i < itemList.length; i++) {
           const offering = itemOfferings[i];
           const item = itemList[i];
           const publicMeta = itemPublicMeta[i];
+
+          // ---- createdAt: first item added ----
+          if (i === 0 && !offeringRef.source_info.createdAt) {
+              offeringRef.source_info.createdAt = new Date().toISOString();
+          }
 
           const itemMeta = {
               display_name: publicMeta.public.name,
@@ -204,9 +212,17 @@ class ChannelCreate extends Utility {
               },
               type: "mez_vod"
           };
+
           offeringRef.items.push(itemMeta);
+
+          // Sources logic unchanged
           if (i !== 0) {
               sourcesRef.sources.push(item.objectId);
+          }
+
+          // ---- updatedAt: last item added ----
+          if (i === itemList.length - 1) {
+              offeringRef.source_info.updatedAt = new Date().toISOString();
           }
       }
 
