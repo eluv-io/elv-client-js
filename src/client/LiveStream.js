@@ -29,6 +29,15 @@ const Sleep = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
 
+const ENCRYPTION_OPTIONS = [
+  {value: "drm-public", format: DRM_MAP.PUBLIC, id: "drm-public"},
+  {value: "drm-all",  format: DRM_MAP.ALL, id: "drm-all"},
+  {value: "drm-fairplay", format: DRM_MAP.FAIRPLAY, id: "drm-fairplay"},
+  {value: "drm-widevine", format: DRM_MAP.HLS_WIDEVINE, id: "drm-widevine"},
+  {value: "drm-playready", format: DRM_MAP.PLAYREADY, id: "drm-playready"},
+  {value: "clear", format: DRM_MAP.CLEAR, id: "clear"}
+];
+
 const GetStreamProbe = async ({client, libraryId, objectId, streamUrl, endpoint}) => {
   client.SetNodes({fabricURIs: [endpoint]});
 
@@ -2094,6 +2103,18 @@ exports.StreamConfig = async function({
       objectId: objectId
     });
     writeToken = e.write_token;
+  }
+
+  if(["uninitialized", "unconfigured"].includes(currentStatus.state)) {
+    const drmOption = ENCRYPTION_OPTIONS.find(option => option.value === liveRecordingConfigMeta.drm_type ?? "clear");
+
+    await this.StreamInitialize({
+      name: objectId,
+      drm: liveRecordingMeta.drm_type === "clear" ? false : true,
+      format: drmOption?.format?.join(","),
+      writeToken,
+      finalize: false
+    });
   }
 
   await this.ReplaceMetadata({
