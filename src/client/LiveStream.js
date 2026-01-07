@@ -2016,6 +2016,17 @@ exports.StreamConfig = async function({
   let liveRecordingConfigProfile;
   if(liveRecordingConfig && Object.keys(liveRecordingConfig || {}).length > 0) {
     liveRecordingConfigProfile = liveRecordingConfig;
+
+    if(!liveRecordingConfigProfile.url) {
+      const configUrl = await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadataSubtree: "/live_recording_config/url"
+      });
+
+      liveRecordingConfigProfile.url = configUrl;
+    }
   } else {
     const lrcMeta = await this.ContentObjectMetadata({
       libraryId: libraryId,
