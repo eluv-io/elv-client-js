@@ -15,6 +15,7 @@ const {ValidateObject, ValidatePresence} = require("../Validation");
 const ContentObjectAudit = require("../ContentObjectAudit");
 const {slugify} = require("../../utilities/lib/helpers");
 const LRCProfile = require("../live_recording_config_profiles/live_recording_config_default");
+const R = require("ramda");
 
 const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   const tok = await client.authClient.AuthorizationToken({libraryId, objectId,
@@ -2015,18 +2016,15 @@ exports.StreamConfig = async function({
 
   let liveRecordingConfigProfile;
   if(liveRecordingConfig && Object.keys(liveRecordingConfig || {}).length > 0) {
-    liveRecordingConfigProfile = liveRecordingConfig;
+    // Extract values that may have been saved during Create but aren't being repeated in the Config step
+    const savedConfigData = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "/live_recording_config"
+    });
 
-    if(!liveRecordingConfigProfile.url) {
-      const configUrl = await this.ContentObjectMetadata({
-        libraryId,
-        objectId,
-        writeToken,
-        metadataSubtree: "/live_recording_config/url"
-      });
-
-      liveRecordingConfigProfile.url = configUrl;
-    }
+    liveRecordingConfigProfile = R.mergeDeepRight(savedConfigData ?? {}, liveRecordingConfig);
   } else {
     const lrcMeta = await this.ContentObjectMetadata({
       libraryId: libraryId,
