@@ -511,7 +511,7 @@ class FrameClient {
       "StreamStartRecording",
       "StreamStartOrStopOrReset",
       "StreamStatus",
-      "StreamStopSession",
+      "StreamStopRecording",
       "SuspendNTPInstance",
       "TenantContractId",
       "TenantId",
