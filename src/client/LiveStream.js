@@ -69,6 +69,7 @@ const CueInfo = async ({eventId, status}) => {
  * @param {Object} client - The client object
  * @param {string} libraryId - ID of the library for the new live stream object
  * @param {string} objectId - ID of the new live stream object
+ * @param {string=} writeToken - Write token of the draft
  * @param {string=} typeAbrMaster - Content type hash
  * @param {string=} typeLiveStream - Content type hash
  * @param {string} streamUrl - Live source URL
@@ -93,6 +94,7 @@ const StreamGenerateOffering = async({
   client,
   libraryId,
   objectId,
+  writeToken,
   typeAbrMaster,
   typeLiveStream,
   streamUrl,
@@ -109,7 +111,8 @@ const StreamGenerateOffering = async({
   vWidth,
   vDisplayAspectRatio,
   vFrameRate,
-  vTimeBase
+  vTimeBase,
+  finalize=true
 }) => {
   // compute duration_ts
   const DUMMY_DURATION = 1001; // should result in integer duration_ts values for both audio and video
@@ -232,27 +235,29 @@ const StreamGenerateOffering = async({
   // construct /production_master
   const production_master = {sources, variants};
 
+  const existingWriteToken = !!writeToken;
+
   // get existing metadata
   console.log("Retrieving current metadata...");
   let metadata = await client.ContentObjectMetadata({
     libraryId,
-    objectId
+    objectId,
+    writeToken
   });
 
   // add /production_master to metadata
   metadata.production_master = production_master;
 
   // write back to object
-  console.log("Getting write token...");
-  let editResponse = await client.EditContentObject({
-    libraryId,
-    objectId,
-    options: {
-      type: typeAbrMaster
-    }
-  });
-  let writeToken = editResponse.write_token;
-  console.log(`New write token: ${writeToken}`);
+  if(!writeToken) {
+    ({writeToken} = await client.EditContentObject({
+      libraryId,
+      objectId,
+      options: {
+        type: typeAbrMaster
+      }
+    }));
+  }
 
   console.log("Writing back metadata with /production_master added...");
   await client.ReplaceMetadata({
@@ -262,20 +267,23 @@ const StreamGenerateOffering = async({
     writeToken
   });
 
-  console.log("Finalizing...");
-  let finalizeResponse = await client.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken
-  });
-  let masterVersionHash = finalizeResponse.hash;
-  console.log(`Finalized, new version hash: ${masterVersionHash}`);
+  let finalizeResponse, masterVersionHash;
+  if(!existingWriteToken) {
+    finalizeResponse = await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken
+    });
+    masterVersionHash = finalizeResponse.hash;
+  }
 
   // Generate offering
   const createResponse = await client.CreateABRMezzanine({
     libraryId,
     objectId,
-    masterVersionHash,
+    masterVersionHash: existingWriteToken ? undefined : masterVersionHash,
+    masterWriteToken: existingWriteToken ? writeToken : undefined,
+    writeToken: existingWriteToken ? writeToken : undefined,
     variant: "default",
     offeringKey: "default",
     abrProfile
@@ -292,13 +300,14 @@ const StreamGenerateOffering = async({
   }
 
   let versionHash = createResponse.hash;
-  console.log(`New version hash: ${versionHash}`);
 
   // get new metadata
   console.log("Retrieving revised metadata with offering...");
   metadata = await client.ContentObjectMetadata({
     libraryId,
-    versionHash
+    objectId,
+    writeToken: existingWriteToken ? writeToken : undefined,
+    versionHash: existingWriteToken ? undefined : versionHash
   });
 
   console.log("Moving /abr_mezzanine/offerings to /offerings and removing /abr_mezzanine...");
@@ -308,18 +317,6 @@ const StreamGenerateOffering = async({
   // add items to media_struct needed to use options.json handler
   metadata.offerings.default.media_struct.duration_rat = `${DUMMY_DURATION}`;
 
-  // write back to object
-  console.log("Getting write token...");
-  editResponse = await client.EditContentObject({
-    libraryId,
-    objectId,
-    options: {
-      type: typeLiveStream
-    }
-  });
-  writeToken = editResponse.write_token;
-  console.log(`New write token: ${writeToken}`);
-
   console.log("Writing back metadata with /offerings...");
   await client.ReplaceMetadata({
     libraryId,
@@ -328,17 +325,19 @@ const StreamGenerateOffering = async({
     writeToken
   });
 
-  console.log("Finalizing...");
-  finalizeResponse = await client.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken
-  });
+  if(finalize) {
+    console.log("Finalizing...");
+    finalizeResponse = await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Update offering"
+    });
 
-  const finalHash = finalizeResponse.hash;
-  console.log(`Finalized, new version hash: ${finalHash}`);
-
-  return finalHash;
+    const finalHash = finalizeResponse.hash;
+    console.log(`Finalized, new version hash: ${finalHash}`);
+    return finalHash;
+  }
 };
 
 /**
@@ -347,7 +346,6 @@ const StreamGenerateOffering = async({
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} name - Object ID or name of the live stream object
- * @param {boolean=} stopLro - If specified, will stop LRO
  * @param {boolean=} showParams - If specified, will return recording_params with status
  * States:
  * unconfigured    - no live_recording_config
@@ -360,7 +358,7 @@ const StreamGenerateOffering = async({
  *
  * @return {Promise<Object>} - The status response for the object, as well as logs, warnings and errors from the master initialization
  */
-exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
+exports.StreamStatus = async function({name, showParams=false}) {
   let objectId = name;
   let status = {name: name};
 
@@ -419,13 +417,11 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     status.stream_id = edgeWriteToken; // By convention the stream ID is its write token
     let edgeMeta;
     try {
-      edgeMeta = await this.ContentObjectMetadata({
+      edgeMeta = await this.CallBitcodeMethod({
         libraryId: libraryId,
         objectId: objectId,
-        writeToken: edgeWriteToken,
-        select: [
-          "live_recording"
-        ]
+        method: "/live/meta",
+        constant: true
       });
     } catch(error) {
       if(error.message && error.message.includes("ERR_TOO_MANY_REDIRECTS")) {
@@ -445,6 +441,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
     if(edgeMeta.live_recording === undefined ||
       edgeMeta.live_recording.recordings === undefined ||
       edgeMeta.live_recording.recordings.recording_sequence === undefined) {
+      // StreamStartOrStopOrReset relies on the state being 'stopped' before launching the LRO - and so this state cannot be changed to 'inactive'
       status.state = "stopped";
       return status;
     }
@@ -483,7 +480,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       libraryId: libraryId,
       objectId: objectId,
       writeToken: edgeWriteToken,
-      call: "live/status/" + tlro
+      call: "live/status"
     });
 
     status.insertions = [];
@@ -523,45 +520,18 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       return status;
     }
 
-    const segDurationMeta = edgeMeta.live_recording.recording_config.recording_params.xc_params.seg_duration;
-
     // Convert LRO 'state' to desired 'state'
     if(state === "running" && videoLastFinalizationTimeEpochSec <= 0) {
-      state = "starting";
-    } else if(state === "running" && segDurationMeta !== undefined && sinceLastFinalize > (parseInt(segDurationMeta) + 5)) {
-      state = "stalled";
+      state = "starting"; // The LRO returns 'running' even if the source hasn't connected
     } else if(state == "terminated") {
-      state = "stopped";
+      state = "stopped"; // The LRO reports 'terminated' which for the recording means 'stopped'
     }
     status.state = state;
-
-    if((state === "running" || state === "stalled" || state === "starting") && stopLro) {
-      lroStopUrl = await this.FabricUrl({
-        libraryId,
-        objectId,
-        writeToken: edgeWriteToken,
-        call: "live/stop/" + tlro
-      });
-
-      try {
-        await this.utils.ResponseToJson(
-          await HttpClient.Fetch(lroStopUrl)
-        );
-
-        console.log("LRO Stop: ", lroStatus.body);
-      } catch(error) {
-        console.log("LRO Stop (failed): ", error.response.statusCode);
-      }
-
-      state = "stopped";
-      status.state = state;
-    }
 
     if(state === "running") {
       let playout_urls = {};
       let playout_options = await this.PlayoutOptions({
-        objectId,
-        linkPath: "public/asset_metadata/sources/default"
+        objectId
       });
 
       let hls_clear_enabled = (
@@ -947,10 +917,18 @@ exports.StreamStopSession = async function({name}) {
  * @param {string=} format - Specify the list of playout formats and DRM to support,
  comma-separated (hls-clear, hls-aes128, hls-sample-aes,
  hls-fairplay)
+ * @param {string=} writeToken - Write token of the draft
+ * @param {boolean=} finalize - If enabled, target object will be finalized after configuration
  *
  * @return {Promise<Object>} - The name, object ID, and state of the stream
  */
-exports.StreamInitialize = async function({name, drm=false, format}) {
+exports.StreamInitialize = async function({
+  name,
+  drm=false,
+  format,
+  writeToken,
+  finalize=true
+}) {
   let typeAbrMaster;
   let typeLiveStream;
 
@@ -979,7 +957,15 @@ exports.StreamInitialize = async function({name, drm=false, format}) {
     return {};
   }
 
-  const res = await this.StreamSetOfferingAndDRM({name, typeAbrMaster, typeLiveStream, drm, format});
+  const res = await this.StreamSetOfferingAndDRM({
+    name,
+    typeAbrMaster,
+    typeLiveStream,
+    drm,
+    format,
+    writeToken,
+    finalize
+  });
 
   return res;
 };
@@ -996,10 +982,19 @@ exports.StreamInitialize = async function({name, drm=false, format}) {
  * @param {string=} format - A list of playout formats and DRM to support, comma-separated
  * (hls-clear, hls-aes128, hls-sample-aes, hls-fairplay). If specified,
  * this will take precedence over the drm value
+ * @param {string=} writeToken - Write token of the draft
  *
  * @return {Promise<Object>} - The name, object ID, and state of the stream
  */
-exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveStream, drm=false, format}) {
+exports.StreamSetOfferingAndDRM = async function({
+  name,
+  typeAbrMaster,
+  typeLiveStream,
+  drm=false,
+  format,
+  writeToken,
+  finalize=true
+}) {
   let status = await this.StreamStatus({name});
   if(status.state != "uninitialized" && status.state != "inactive" && status.state != "stopped") {
     return {
@@ -1088,7 +1083,8 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
   try {
     let mainMeta = await this.ContentObjectMetadata({
       libraryId,
-      objectId
+      objectId,
+      writeToken
     });
 
     let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
@@ -1122,7 +1118,9 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
       vWidth,
       vDisplayAspectRatio,
       vFrameRate,
-      vTimeBase
+      vTimeBase,
+      writeToken,
+      finalize
     });
 
     console.log("Finished generating offering");

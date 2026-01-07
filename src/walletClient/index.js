@@ -396,7 +396,7 @@ class ElvWalletClient {
    * @methodGroup Login
    */
   async LogOut() {
-    if(this.__authorization && this.__authorization.nonce) {
+    if(this.__authorization && (this.__authorization.nonce || this.__authorization.installId)) {
       try {
         await this.client.signer.ReleaseCSAT({accessToken: this.AuthToken()});
       } catch(error) {
@@ -419,7 +419,7 @@ class ElvWalletClient {
   }
 
   async TokenStatus() {
-    if(!this.__authorization || !this.__authorization.nonce) {
+    if(!this.__authorization || !(this.__authorization.nonce || this.__authorization.installId)) {
       return true;
     }
 
@@ -476,12 +476,15 @@ class ElvWalletClient {
    */
   async AuthenticateOAuth({
     idToken,
+    userIdCode,
     tenantId,
     email,
     signerURIs,
     shareEmail=false,
     extraData={},
     nonce,
+    installId,
+    appName,
     createRemoteToken=true,
     force=false,
     tokenDuration=24
@@ -492,14 +495,26 @@ class ElvWalletClient {
       tenantId = this.selectedMarketplaceInfo.tenantId;
     }
 
-    await this.client.SetRemoteSigner({idToken, tenantId, signerURIs, extraData: { ...extraData, share_email: shareEmail }, unsignedPublicAuth: true});
+    await this.client.SetRemoteSigner({
+      idToken,
+      userIdCode,
+      tenantId,
+      signerURIs,
+      extraData: {
+        ...extraData,
+        share_email: shareEmail
+      },
+      unsignedPublicAuth: true
+    });
 
-    let fabricToken, expiresAt;
+    let fabricToken, refreshToken, expiresAt;
     if(createRemoteToken && this.client.signer.remoteSigner) {
       expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
-      const tokenResponse = await this.client.signer.RetrieveCSAT({email, nonce, tenantId, force, duration: tokenDuration});
+      const tokenResponse = await this.client.signer.RetrieveCSAT({email, nonce, installId, appName, tenantId, force, duration: tokenDuration});
       fabricToken = tokenResponse.token;
-      nonce = tokenResponse.nonce;
+      nonce = tokenResponse.nonce || nonce;
+      installId = tokenResponse.installId || installId;
+      refreshToken = tokenResponse.refresh_token;
     } else {
       expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
       fabricToken = await this.client.CreateFabricToken({
@@ -507,9 +522,9 @@ class ElvWalletClient {
         context: email ? {usr: {email}} : {}
       });
     }
-    const address = this.client.utils.FormatAddress(this.client.CurrentAccountAddress());
 
-    if(!email) {
+    const address = this.client.utils.FormatAddress(this.client.CurrentAccountAddress());
+    if(!email && idToken) {
       try {
         const decodedToken = JSON.parse(this.utils.FromB64URL(idToken.split(".")[1]));
         email = decodedToken.email;
@@ -523,6 +538,7 @@ class ElvWalletClient {
     return {
       authToken: this.SetAuthorization({
         fabricToken,
+        refreshToken,
         tenantId,
         address,
         email,
@@ -531,11 +547,13 @@ class ElvWalletClient {
         walletType: "Custodial",
         walletName: "Eluvio",
         register: true,
-        nonce
+        nonce,
+        installId
       }),
       signingToken: this.SetAuthorization({
         clusterToken: this.client.signer.authToken,
         fabricToken,
+        refreshToken,
         tenantId,
         address,
         email,
@@ -543,7 +561,8 @@ class ElvWalletClient {
         signerURIs,
         walletType: "Custodial",
         walletName: "Eluvio",
-        nonce
+        nonce,
+        installId
       })
     };
   }
@@ -604,18 +623,20 @@ class ElvWalletClient {
     return this.__authorization.fabricToken;
   }
 
-  SetAuthorization({clusterToken, fabricToken, tenantId, address, email, expiresAt, signerURIs, walletType, walletName, nonce, register=false}) {
+  SetAuthorization({clusterToken, fabricToken, refreshToken, tenantId, address, email, expiresAt, signerURIs, walletType, walletName, nonce, installId, register=false}) {
     address = this.client.utils.FormatAddress(address);
 
     this.__authorization = {
       fabricToken,
+      refreshToken,
       tenantId,
       address,
       email,
       expiresAt,
       walletType,
       walletName,
-      nonce
+      nonce,
+      installId
     };
 
     if(clusterToken) {
@@ -1243,7 +1264,7 @@ class ElvWalletClient {
       return response
         .map(status => {
           let [op, address, id] = status.op.split(":");
-          address = address.startsWith("0x") ? Utils.FormatAddress(address) : address;
+          address = address && address.startsWith("0x") ? Utils.FormatAddress(address) : address;
 
           let confirmationId, tokenId, offerId, giftId;
           if(op === "nft-buy") {

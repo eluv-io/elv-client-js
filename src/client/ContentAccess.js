@@ -598,19 +598,19 @@ exports.ContentObject = async function({objectId, versionHash, writeToken, noCac
   const id = writeToken || versionHash || objectId;
   if(noCache || !this.objectInfo[id] || Date.now() - this.objectInfo[id].retrievedAt > 30000) {
     let path = UrlJoin("q", id);
+    const info = await this.HttpClient.RequestJsonBody({
+      headers: await this.authClient.AuthorizationHeader({objectId, versionHash}),
+      method: "GET",
+      path: path,
+      queryParams: {
+        details: true,
+        profile: true
+      }
+    })
+
     this.objectInfo[id] = {
       retrievedAt: Date.now(),
-      info: (
-        await this.HttpClient.RequestJsonBody({
-          headers: await this.authClient.AuthorizationHeader({objectId, versionHash}),
-          method: "GET",
-          path: path,
-          queryParams: {
-            details: true,
-            profile: true
-          }
-        })
-      )
+      info
     };
   }
 
@@ -1910,6 +1910,7 @@ exports.MakeFileServiceRequest = async function({
  * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
  * @param {string=} writeToken - Write token of an object draft - if calling bitcode of a draft object
  * @param {string} method - Bitcode method to call
+ * @param {string} verb - HTTP verb (GET, POST, PUT, DELETE, ...)
  * @param {Object=} queryParams - Query parameters to include in the request
  * @param {Object=} body - Request body to include, if calling a non-constant method
  * @param {Object=} headers - Request headers to include
@@ -1925,6 +1926,7 @@ exports.CallBitcodeMethod = async function({
   versionHash,
   writeToken,
   method,
+  verb,
   queryParams={},
   body={},
   headers={},
@@ -1953,9 +1955,10 @@ exports.CallBitcodeMethod = async function({
     ).Authorization;
   }
 
+  verb = verb ? verb : (constant ? "GET" : "POST");
   this.Log(
     `Calling bitcode method: ${libraryId || ""} ${objectId || versionHash} ${writeToken || ""}
-      ${constant ? "GET" : "POST"} ${path}
+      ${verb} ${path}
       Query Params:
       ${JSON.stringify(queryParams || "")}
       Body:
@@ -1969,7 +1972,7 @@ exports.CallBitcodeMethod = async function({
     await this.HttpClient.Request({
       body,
       headers,
-      method: constant ? "GET" : "POST",
+      method: verb,
       path,
       queryParams,
       allowFailover: false
@@ -2458,7 +2461,7 @@ exports.EmbedUrl = async function({
     embedUrl.searchParams.set("data", this.utils.B64(JSON.stringify({meta_tags: data})));
   }
 
-  if(["owner", "editable", "viewable"].includes(permission)) {
+  if(["owner", "editable", "viewable", "listable"].includes(permission)) {
     const token = await this.CreateSignedToken({
       objectId,
       versionHash,
