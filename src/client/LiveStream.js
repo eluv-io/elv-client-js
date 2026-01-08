@@ -30,12 +30,12 @@ const Sleep = (ms) => {
 };
 
 const ENCRYPTION_OPTIONS = [
-  {value: "drm-public", format: DRM_MAP.PUBLIC, id: "drm-public"},
-  {value: "drm-all",  format: DRM_MAP.ALL, id: "drm-all"},
-  {value: "drm-fairplay", format: DRM_MAP.FAIRPLAY, id: "drm-fairplay"},
-  {value: "drm-widevine", format: DRM_MAP.HLS_WIDEVINE, id: "drm-widevine"},
-  {value: "drm-playready", format: DRM_MAP.PLAYREADY, id: "drm-playready"},
-  {value: "clear", format: DRM_MAP.CLEAR, id: "clear"}
+  {value: "drm-public", format: ["hls-sample-aes", "hls-aes128", "dash-widevine", "dash-playready-cenc"], id: "drm-public"},
+  {value: "drm-all",  format: ["hls-sample-aes", "hls-aes128", "hls-fairplay", "hls-widevine-cenc", "hls-playready-cenc", "dash-widevine", "dash-playready-cenc"], id: "drm-all"},
+  {value: "drm-fairplay", format: ["hls-fairplay"], id: "drm-fairplay"},
+  {value: "drm-widevine", format: ["hls-widevine-cenc"], id: "drm-widevine"},
+  {value: "drm-playready", format: ["hls-playready-cenc"], id: "drm-playready"},
+  {value: "clear", format: ["hls-clear", "dash-clear"], id: "clear"}
 ];
 
 const GetStreamProbe = async ({client, libraryId, objectId, streamUrl, endpoint}) => {
@@ -110,7 +110,6 @@ const CueInfo = async ({eventId, status}) => {
     const lroStatusResponse = await this.utils.ResponseToJson(
       await HttpClient.Fetch(status.lro_status_url)
     );
-    console.log("lroStatusResponse", lroStatusResponse);
     cues = lroStatusResponse.custom.cues;
   } catch(error) {
     console.log("LRO status failed", error);
@@ -308,6 +307,7 @@ exports.StreamCreate = async function({
   if(initializeDrm) {
     await this.StreamInitialize({
       name: objectId,
+      drm: liveRecordingConfig?.playout_config.drm === "clear" ? false : true,
       format: liveRecordingConfig?.playout_config?.playout_formats ? liveRecordingConfig.playout_config.playout_formats.join(",") : "",
       writeToken,
       finalize: false
@@ -1446,7 +1446,7 @@ exports.StreamSetOfferingAndDRM = async function({
 }) {
   let status = await this.StreamStatus({name});
   console.log('StreamSetOfferingAndDrm', status)
-  const validStates = ["uninitialized", "inactive", "stopped", "unconfigured"];
+  const validStates = ["uninitialized", "inactive", "stopped", "unconfigured", "initialized"];
   if(!validStates.includes(status.state)) {
     return {
       state: status.state,
@@ -2033,7 +2033,7 @@ exports.StreamConfig = async function({
       metadataSubtree: "/live_recording_config"
     });
 
-    liveRecordingConfigProfile = R.mergeDeepRight(savedConfigData ?? {}, liveRecordingConfig);
+    liveRecordingConfigProfile = R.mergeDeepRight(liveRecordingConfig, savedConfigData ?? {});
   } else {
     const lrcMeta = await this.ContentObjectMetadata({
       libraryId: libraryId,
@@ -2071,7 +2071,7 @@ exports.StreamConfig = async function({
 
   // Create live recording config
   const liveConf = new LiveConf({
-    url: liveRecordingConfig.url,
+    url: liveRecordingConfigProfile.url,
     probeData: probe,
     liveRecordingMeta,
     nodeId: node.id,
@@ -2106,11 +2106,11 @@ exports.StreamConfig = async function({
   }
 
   if(["uninitialized", "unconfigured"].includes(currentStatus.state)) {
-    const drmOption = ENCRYPTION_OPTIONS.find(option => option.value === liveRecordingConfigMeta.drm_type ?? "clear");
+    const drmOption = ENCRYPTION_OPTIONS.find(option => option.value === liveRecordingConfigMeta.live_recording.playout_config?.drm);
 
     await this.StreamInitialize({
       name: objectId,
-      drm: liveRecordingMeta.drm_type === "clear" ? false : true,
+      drm: liveRecordingConfigMeta.live_recording.playout_config?.drm === "clear" ? false : true,
       format: drmOption?.format?.join(","),
       writeToken,
       finalize: false
