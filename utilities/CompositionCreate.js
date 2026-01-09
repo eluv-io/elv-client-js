@@ -1,254 +1,379 @@
+/**
+ * -----------------------------------------------------------------------------
+ * CompositionCreate.js — Usage Example
+ * -----------------------------------------------------------------------------
+ *
+ * This script creates (or updates) a CHANNEL / COMPOSITION offering on a
+ * base object by stitching together multiple mezzanine objects that all share
+ * identical playout parameters.
+ *
+ * Each item is specified as:
+ *   OBJECT_ID:OFFERING_KEY
+ *
+ * Items are passed as a single comma-separated string.
+ *
+ * -----------------------------------------------------------------------------
+ * BASIC USAGE
+ * -----------------------------------------------------------------------------
+ *
+ * node CompositionCreate.js \
+ *   --library-id ilib_xxxxxxxxxxxxxxxxx \
+ *   --name "Full Game DASH" \
+ *   --base-object-id iq__xxxxxxxxxxxxxxxx \
+ *   --items iq__100:default_dash,iq__200:default_dash,iq__300:default_dash
+ *
+ * -----------------------------------------------------------------------------
+ * ARGUMENTS
+ * -----------------------------------------------------------------------------
+ *
+ * --library-id
+ *   The content library where all objects exist.
+ *
+ * --name
+ *   Display name for the channel offering.
+ *   This value is sanitized and used as the offering key.
+ *
+ * --base-object-id
+ *   The object ID where the channel metadata will be written.
+ *   This object will receive /metadata/channel/offerings/<key>.
+ *
+ * --items
+ *   Comma-separated list of OBJECT_ID:OFFERING_KEY pairs.
+ *
+ *   Example:
+ *     iq__100:default_dash
+ *     iq__200:default_dash
+ *     iq__300:default_dash
+ *
+ *   All items MUST:
+ *     - Have identical playout.streams.representations
+ *     - Have identical playout.playout_formats
+ *     - Have matching media_struct stream parameters
+ *
+ * -----------------------------------------------------------------------------
+ * WHAT THIS SCRIPT DOES
+ * -----------------------------------------------------------------------------
+ *
+ * 1. Fetches metadata for each OBJECT_ID.
+ * 2. Validates all items are playout-compatible.
+ * 3. Creates / merges metadata.channel.offerings on the base object.
+ * 4. Adds each item as a sequential channel source.
+ * 5. Sets createdAt on first item and updatedAt on last item.
+ * 6. Writes updated metadata back to Fabric.
+ *
+ * -----------------------------------------------------------------------------
+ * EXAMPLE RESULTING SOURCE PATH
+ * -----------------------------------------------------------------------------
+ *
+ * /qfab/<OBJECT_ID>/rep/playout/<OFFERING_KEY>
+ *
+ * Example:
+ *   /qfab/iq__100/rep/playout/default_dash
+ *
+ * -----------------------------------------------------------------------------
+ */
+
 const R = require("ramda");
 
-const {ModOpt, NewOpt, StdOpt} = require("./lib/options");
+const { ModOpt, NewOpt, StdOpt } = require("./lib/options");
 const Utility = require("./lib/Utility");
 
 const ArgLibraryId = require("./lib/concerns/ArgLibraryId");
-const ArgType = require("./lib/concerns/ArgType");
 const FabricObject = require("./lib/concerns/FabricObject");
-const Version = require("./lib/concerns/Version");
 
 const STREAM_FIELDS = [
-  "aspect_ratio",
-  "channel_layout",
-  "channels",
-  "codec_name",
-  "codec_type",
-  "height",
-  "rate",
-  "width"
+    "aspect_ratio",
+    "channel_layout",
+    "channels",
+    "codec_name",
+    "codec_type",
+    "height",
+    "rate",
+    "width"
 ];
 
+/**
+ * Parse OBJECT_ID:OFFERING_KEY
+ * Example: iq__100:default_dash
+ */
 const itemParser = itemStr => {
-  const parsed = itemStr.split("/");
-  if(parsed.length !== 2) throw Error(`Failed to parse item '${itemStr} - each item should be a version hash + slash + offering key, e.g. 'hq__1234/default'`);
-  return {hash: parsed[0], offering: parsed[1]};
+    const parsed = itemStr.split(":");
+    if (parsed.length !== 2) {
+        throw Error(
+            `Failed to parse item '${itemStr}'. Expected OBJECT_ID:OFFERING_KEY`
+        );
+    }
+    return {
+        objectId: parsed[0],
+        offering: parsed[1]
+    };
 };
 
 const mediaStructStreamFields = R.pick(STREAM_FIELDS);
-
 const msStreamsFieldSubset = R.map(mediaStructStreamFields);
 
-// return media_struct stream keys appearing in playout.streams.representations (usually only 1)
-const poStreamMsStreamKeys = poStream => R.uniq(R.map(R.prop("media_struct_stream_key"), poStream.representations));
+// return media_struct stream keys appearing in playout.streams.representations
+const poStreamMsStreamKeys = poStream =>
+    R.uniq(R.map(R.prop("media_struct_stream_key"), poStream.representations));
 
-// return fields that need to be checked from media_struct.streams, include only streams referred to by playout.streams
+// return fields that need to be checked from media_struct.streams
 const msStreamFields = (poStreams, msStreams) => {
-  const msStreamKeys = R.uniq(R.values(R.map(poStreamMsStreamKeys, poStreams)));
-  const usedMsStreams = R.pick(msStreamKeys, msStreams);
-  return R.map(msStreamsFieldSubset, usedMsStreams);
+    const msStreamKeys = R.uniq(R.values(R.map(poStreamMsStreamKeys, poStreams)));
+    const usedMsStreams = R.pick(msStreamKeys, msStreams);
+    return R.map(msStreamsFieldSubset, usedMsStreams);
 };
 
 const withoutDrmContentId = poFormat => {
-  const clone = R.clone(poFormat);
-  if(clone.drm) clone.drm.content_id = null;
-  return clone;
+    const clone = R.clone(poFormat);
+    if (clone.drm) clone.drm.content_id = null;
+    return clone;
 };
 
 const withoutEncryptionSchemes = poStream => {
-  const clone = R.clone(poStream);
-  clone.encryption_schemes = null;
-  return clone;
+    const clone = R.clone(poStream);
+    clone.encryption_schemes = null;
+    return clone;
 };
 
 const sanitizeFilename = (name, fallback) => {
     if (!name) return fallback;
     return name
-        .replace(/[^a-zA-Z0-9._-]+/g, "_") // replace invalid chars with "_"
-        .replace(/_+/g, "_")               // collapse multiple underscores
-        .substring(0, 180)                 // limit length
-        .toLowerCase();                     // convert all letters to lowercase
+        .replace(/[^a-zA-Z0-9._-]+/g, "_")
+        .replace(/_+/g, "_")
+        .substring(0, 180)
+        .toLowerCase();
 };
 
 class ChannelCreate extends Utility {
-  blueprint() {
-    return {
-      concerns: [ArgLibraryId, ArgType, FabricObject, Version],
-      options: [
-        ModOpt("libraryId", {demand: true}),
-        ModOpt("type", {demand: true}),
-        StdOpt("name",
-          {
-            demand: true,
-            forX: "channel object"
-          }),
-        NewOpt("items", {
-          demand: true,
-          descTemplate: "List of channel items, separated by spaces. Each item should be of form VERSION_HASH/OFFERING_KEY, e.g. hq__12345/default ",
-          string: true,
-          type: "array"
-        }),
-        NewOpt("val", {
-          descTemplate: "VoD-as-Live (make the channel a simulated live stream)",
-          type: "boolean"
-        })
-      ]
-    };
-  }
-
-  async body() {
-    const logger = this.logger;
-    const {name, items, libraryId, val} = this.args;
-    const type = await this.concerns.ArgType.typVersionHash();
-
-    const itemList = R.map(itemParser, items);
-    const firstItemHash = itemList[0].hash;
-
-    // check items
-    logger.log("\nChecking items for any parameter mismatches...");
-
-    // get item full meta
-    const itemPublicMeta = [];
-    const itemOfferings = [];
-    for(let i = 0; i < itemList.length; i++) {
-      const item = itemList[i];
-      const versionHash = item.hash;
-      const objectId = this.concerns.Version.objectId({versionHash});
-      const meta = await this.concerns.FabricObject.metadata({
-        libraryId,
-        objectId,
-        versionHash
-      });
-      item.objectId = objectId;
-      itemPublicMeta.push(meta);
-      itemOfferings.push(meta.offerings[item.offering]);
+    blueprint() {
+        return {
+            concerns: [ArgLibraryId, FabricObject],
+            options: [
+                ModOpt("libraryId", { demand: true }),
+                StdOpt("name", { demand: true, forX: "channel object" }),
+                NewOpt("baseObjectId", {
+                    demand: true,
+                    descTemplate: "Base object ID to write channel metadata to",
+                    string: true
+                }),
+                NewOpt("items", {
+                    demand: true,
+                    descTemplate:
+                        "Comma-separated list of OBJECT_ID:OFFERING_KEY (e.g. iq__100:default_dash,iq__200:default_dash)",
+                    string: true
+                })
+            ]
+        };
     }
 
-    // make sure streams, playout formats, and ladders are the same
-    const firstPoStreams = R.map(withoutEncryptionSchemes, itemOfferings[0].playout.streams);
-    const firstPoFormats = R.map(withoutDrmContentId, itemOfferings[0].playout.playout_formats);
-    const firstMsStreamFields = msStreamFields(firstPoStreams, itemOfferings[0].media_struct.streams);
+    async body() {
+        const logger = this.logger;
+        const { name, items, libraryId, baseObjectId } = this.args;
 
-    for(let i = 1; i < itemList.length; i++) {
-      const testPoStreams = R.map(withoutEncryptionSchemes, itemOfferings[i].playout.streams);
-
-      const stripTranscodeId = R.map(
-        R.evolve({
-          representations: R.map(
-            R.dissoc("transcode_id")
-          )
-        })
-      );
-
-      if (!R.equals(
-        stripTranscodeId(firstPoStreams),
-        stripTranscodeId(testPoStreams)
-      )) {
-        throw Error("ERROR: All items must have identical playout.streams.representations");
-      }
-
-      const testPoFormats = R.map(withoutDrmContentId, itemOfferings[i].playout.playout_formats);
-      if(!R.equals(firstPoFormats, testPoFormats)) throw Error("ERROR: All items must have identical playout.playout_formats (other than widevine content_id field)");
-
-      const testMsStreamFields = msStreamFields(testPoStreams, itemOfferings[i].media_struct.streams);
-      if(!R.equals(firstMsStreamFields, testMsStreamFields)) throw Error("ERROR: All items must have matching values for included streams in the following media_struct stream fields: " + STREAM_FIELDS.join(", "));
-    }
-    // passed checks, assemble channel items metadata
-    logger.log("Mezzanine item parameter checks passed.");
-
-    // retrieve object's metadata
-    const objectId = this.concerns.Version.objectId({
-        versionHash: firstItemHash
-    });
-    let metadata = await this.concerns.FabricObject.metadata({ libraryId, objectId });
-
-    logger.log("\nAdding channel metadata to new object...");
-
-    let key = sanitizeFilename(this.args.name, `${objectId}.mp4`);
-      // ---------- SAFE MERGE FOR EXISTING metadata.channel ----------
-      metadata.channel ??= {};
-      metadata.channel.offerings ??= {};
-      metadata.channel.offerings[key] ??= {
-          display_name: this.args.name,
-          items: [],
-          key,
-          offeringKey: itemList[0].offering,
-          playout: {
-              playout_formats: itemOfferings?.[0]?.playout?.playout_formats ?? [],
-              streams: itemOfferings?.[0]?.playout?.streams ?? []
-          },
-          playout_type: (val ? "ch_val" : "ch_vod"), 
-          source_info: {
-            createdAt,
-            frameRate: `${itemOfferings[0].media_struct.streams.video.rate}`,
+        // Fetch base object metadata first
+        const baseMetadata = await this.concerns.FabricObject.metadata({
             libraryId,
-            name: itemPublicMeta[0].public.name,
-            objectId,
-            offeringKey: itemList[0].offering,
-            profileKey: "",
-            prompt: "",
-            type: "",
-            updatedAt
-          }, 
-          sources: []
-      };
+            objectId: baseObjectId
+        });
 
-      // Local reference to avoid long paths
-      const offeringRef = metadata.channel.offerings[key];
-      const sourcesRef = metadata.channel.offerings[key];
+        // Determine base offering
+        const baseOfferingKey =
+            baseMetadata.offerings && Object.keys(baseMetadata.offerings).length > 0
+                ? Object.keys(baseMetadata.offerings)[0]
+                : "default";
 
-      
-      // ---------- ADD ITEMS ----------
-      for (let i = 0; i < itemList.length; i++) {
-          const offering = itemOfferings[i];
-          const item = itemList[i];
-          const publicMeta = itemPublicMeta[i];
+        // Parse items
+        let itemList = items.split(",").map(itemParser);
 
-          // ---- createdAt: first item added ----
-          if (i === 0 && !offeringRef.source_info.createdAt) {
-              offeringRef.source_info.createdAt = new Date().toISOString();
-          }
+        // Add baseObjectId to itemList if not already included
+        if (!itemList.some(item => item.objectId === baseObjectId)) {
+            itemList.unshift({ objectId: baseObjectId, offering: baseOfferingKey });
+        }
 
-          const itemMeta = {
-              display_name: publicMeta.public.name,
-              duration_rat: offering.media_struct.duration_rat,
-              source: {
-                  ".": {
-                      auto_update: {
-                          tag: "latest"
-                      }
-                  },
-                  "/": `/qfab/${item.hash}/rep/playout/${item.offering}`
-              },
-              type: "mez_vod"
-          };
+        logger.log("\nChecking items for any parameter mismatches...");
 
-          offeringRef.items.push(itemMeta);
+        const itemPublicMeta = [];
+        const itemOfferings = [];
 
-          // Sources logic unchanged
-          if (i !== 0) {
-              sourcesRef.sources.push(item.objectId);
-          }
+        // Fetch metadata for each item
+        for (const item of itemList) {
+            const meta = await this.concerns.FabricObject.metadata({
+                libraryId,
+                objectId: item.objectId
+            });
+            itemPublicMeta.push(meta);
+            const offering = meta.offerings?.[item.offering];
+            if (!offering) throw Error(`Offering '${item.offering}' not found for ${item.objectId}`);
+            itemOfferings.push(offering);
+        }
 
-          // ---- updatedAt: last item added ----
-          if (i === itemList.length - 1) {
-              offeringRef.source_info.updatedAt = new Date().toISOString();
-          }
-      }
+        // Use first item as reference for checks
+        const firstPoStreams = R.map(
+            withoutEncryptionSchemes,
+            itemOfferings[0].playout.streams
+        );
+        const firstPoFormats = R.map(
+            withoutDrmContentId,
+            itemOfferings[0].playout.playout_formats
+        );
+        const firstMsStreamFields = msStreamFields(
+            firstPoStreams,
+            itemOfferings[0].media_struct.streams
+        );
 
-    // Write back metadata
-    logger.log("Writing metadata...");
-    const versionHash = await this.concerns.Metadata.write({
-      libraryId,
-      metadata,
-      objectId, 
-      commitMessage: "CompositionCreate.js"
-    });
+        // Validate all other items match first item
+        for (let i = 1; i < itemList.length; i++) {
+            const testPoStreams = R.map(
+                withoutEncryptionSchemes,
+                itemOfferings[i].playout.streams
+            );
+            const stripTranscodeId = R.map(
+                R.evolve({ representations: R.map(R.dissoc("transcode_id")) })
+            );
+            if (!R.equals(stripTranscodeId(firstPoStreams), stripTranscodeId(testPoStreams))) {
+                throw Error(
+                    "ERROR: All items must have identical playout.streams.representations"
+                );
+            }
 
-    logger.log("");
-    logger.log(`Object ID: ${objectId}`);
-    logger.data("object_id", objectId);
-    logger.log("New version hash: " + versionHash);
-    logger.data("version_hash", versionHash);
-  }
+            const testPoFormats = R.map(
+                withoutDrmContentId,
+                itemOfferings[i].playout.playout_formats
+            );
+            if (!R.equals(firstPoFormats, testPoFormats)) {
+                throw Error(
+                    "ERROR: All items must have identical playout.playout_formats"
+                );
+            }
 
-  header() {
-    return `Create channel '${this.args.name}' in lib ${this.args.libraryId}`;
-  }
+            const testMsStreamFields = msStreamFields(
+                testPoStreams,
+                itemOfferings[i].media_struct.streams
+            );
+            if (!R.equals(firstMsStreamFields, testMsStreamFields)) {
+                throw Error(
+                    "ERROR: All items must have matching media_struct stream fields: " +
+                    STREAM_FIELDS.join(", ")
+                );
+            }
+        }
+
+        logger.log("Mezzanine item parameter checks passed.");
+
+        let metadata = await this.concerns.FabricObject.metadata({ libraryId, objectId: baseObjectId });
+
+        logger.log("\nAdding channel metadata to new object...");
+
+        // Prepare channel metadata
+        const key = sanitizeFilename(name, `${baseObjectId}.mp4`);
+
+        // Base offering for channel
+        const baseOffering = baseMetadata.offerings?.[baseOfferingKey] || {};
+
+        // Normalize playout_formats and streams to arrays
+        const basePlayoutFormats = Array.isArray(baseOffering.playout?.playout_formats)
+            ? baseOffering.playout.playout_formats
+            : baseOffering.playout?.playout_formats
+                ? [baseOffering.playout.playout_formats]
+                : [];
+
+        const baseStreams = Array.isArray(baseOffering.playout?.streams)
+            ? baseOffering.playout.streams
+            : baseOffering.playout?.streams
+                ? Object.values(baseOffering.playout.streams)
+                : [];
+
+        metadata.channel ??= {};
+        metadata.channel.offerings ??= {};
+        metadata.channel.offerings[key] ??= {
+            display_name: name,
+            items: [],
+            key,
+            offeringKey: baseOfferingKey,
+            playout: {
+                playout_formats: basePlayoutFormats,
+                streams: baseStreams
+            },
+            playout_type: "ch_vod",
+            source_info: {
+                createdAt: null,
+                updatedAt: null,
+                frameRate: baseStreams?.[0]?.rate ? `${baseStreams[0].rate}` : "0",
+                libraryId,
+                name: baseMetadata.public?.name || name,
+                objectId: baseObjectId,
+                offeringKey: baseOfferingKey,
+                profileKey: "",
+                prompt: "",
+                type: ""
+            },
+            sources: []
+        };
+
+        const offeringRef = metadata.channel.offerings[key];
+        // Overwrite previous metadata arrays
+        offeringRef.items = [];
+        offeringRef.sources = [];
+
+        // Add items and sources
+        for (let i = 0; i < itemList.length; i++) {
+            const item = itemList[i];
+            const offering = itemOfferings[i];
+            const publicMeta = itemPublicMeta[i];
+
+            const itemLatestVersion = await this.concerns.FabricObject.latestVersionHash({
+                libraryId,
+                objectId: item.objectId
+            });
+
+            // Set createdAt for first item
+            if (i === 0 && !offeringRef.source_info.createdAt) {
+                offeringRef.source_info.createdAt = new Date().toISOString();
+            }
+
+            // Add item to items array
+            offeringRef.items.push({
+                display_name: publicMeta.public.name,
+                duration_rat: offering.media_struct.duration_rat,
+                source: {
+                    ".": { auto_update: { tag: "latest" } },
+                    "/": `/qfab/${itemLatestVersion}/rep/playout/${item.offering}`
+                },
+                type: "mez_vod"
+            });
+
+            // Add item to sources array
+            offeringRef.sources.push(item.objectId);
+
+            // Set updatedAt on last item
+            if (i === itemList.length - 1) {
+                offeringRef.source_info.updatedAt = new Date().toISOString();
+            }
+        }
+
+        logger.log("Writing metadata...");
+
+        const versionHash = await this.concerns.Metadata.write({
+            libraryId,
+            metadata,
+            objectId: baseObjectId,
+            commitMessage: "CompositionCreate.js"
+        });
+
+        logger.log("");
+        logger.log(`Object ID: ${baseObjectId}`);
+        logger.data("object_id", baseObjectId);
+        logger.log("New version hash: " + versionHash);
+        logger.data("version_hash", versionHash);
+    }
+
+    header() {
+        return `Create channel '${this.args.name}' in lib ${this.args.libraryId}`;
+    }
 }
 
-if(require.main === module) {
-  Utility.cmdLineInvoke(ChannelCreate);
+if (require.main === module) {
+    Utility.cmdLineInvoke(ChannelCreate);
 } else {
-  module.exports = ChannelCreate;
+    module.exports = ChannelCreate;
 }
