@@ -30,7 +30,7 @@ const Sleep = (ms) => {
 };
 
 const ENCRYPTION_OPTIONS = [
-  {value: "drm-public", format: ["hls-sample-aes", "hls-aes128", "dash-widevine"], id: "drm-public"},
+  {value: "drm-public", format: ["hls-sample-aes", "hls-aes128", "dash-widevine", "hls-playready-cenc"], id: "drm-public"},
   {value: "drm-all",  format: ["hls-sample-aes", "hls-aes128", "hls-fairplay", "hls-widevine-cenc", "hls-playready-cenc", "dash-widevine"], id: "drm-all"},
   {value: "drm-fairplay", format: ["hls-fairplay"], id: "drm-fairplay"},
   {value: "drm-widevine", format: ["hls-widevine-cenc", "dash-widevine"], id: "drm-widevine"},
