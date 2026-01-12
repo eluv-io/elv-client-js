@@ -305,10 +305,12 @@ exports.StreamCreate = async function({
   }
 
   if(initializeDrm) {
+    const drmOption = ENCRYPTION_OPTIONS.find(option => option.value === liveRecordingConfig?.playout_config?.drm);
+
     await this.StreamInitialize({
       name: objectId,
-      drm: liveRecordingConfig?.playout_config?.drm === "clear" ? false : true,
-      format: liveRecordingConfig?.playout_config?.playout_formats ? liveRecordingConfig.playout_config.playout_formats.join(",") : "",
+      drm: liveRecordingConfig?.playout_config?.drm !== "clear" ? true : false,
+      format: drmOption ? drmOption?.format?.join(",") : "",
       writeToken,
       finalize: false
     });
@@ -1377,7 +1379,6 @@ exports.StreamInitialize = async function({
     let typeAbrMaster;
     let typeLiveStream;
 
-
     // Fetch Title and Live Stream content types from tenant meta
     const tenantContractId = await this.userProfileClient.TenantContractId();
     const {live_stream, title} = await this.ContentObjectMetadata({
@@ -2111,7 +2112,7 @@ exports.StreamConfig = async function({
     await this.StreamInitialize({
       name: objectId,
       drm: liveRecordingConfigMeta.live_recording.playout_config?.drm === "clear" ? false : true,
-      format: drmOption?.format?.join(","),
+      format: drmOption ? drmOption?.format?.join(",") : "",
       writeToken,
       finalize: false
     });
