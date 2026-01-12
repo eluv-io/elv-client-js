@@ -65,7 +65,7 @@ const LiveconfTemplate = {
         description: "",
         ladder_specs: [],
         listen: true,
-        live_delay_nano: 2000000000,
+        live_delay_nano: 6000000000,
         max_duration_sec: -1,
         name: "",
         origin_url: "",
@@ -550,7 +550,7 @@ class LiveConf {
 
     switch(this.getProtocol()) {
       case "srt":
-        conf.live_recording.recording_config.recording_params.live_delay_nano = 4000000000;
+        conf.live_recording.recording_config.recording_params.live_delay_nano = 6000000000;
         break;
     }
 
