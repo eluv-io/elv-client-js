@@ -309,7 +309,7 @@ exports.StreamCreate = async function({
 
     await this.StreamInitialize({
       name: objectId,
-      drm: liveRecordingConfig?.playout_config?.drm !== "clear" ? true : false,
+      drm: (!liveRecordingConfig?.playout_config?.drm || liveRecordingConfig?.playout_config?.drm === "clear") ? false : true,
       format: drmOption ? drmOption?.format?.join(",") : "",
       writeToken,
       finalize: false
@@ -2111,7 +2111,7 @@ exports.StreamConfig = async function({
 
     await this.StreamInitialize({
       name: objectId,
-      drm: liveRecordingConfigMeta.live_recording.playout_config?.drm === "clear" ? false : true,
+      drm: (!liveRecordingConfigMeta?.live_recording.playout_config?.drm || liveRecordingConfigMeta.live_recording.playout_config?.drm === "clear") ? false : true,
       format: drmOption ? drmOption?.format?.join(",") : "",
       writeToken,
       finalize: false
