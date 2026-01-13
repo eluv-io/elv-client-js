@@ -271,21 +271,24 @@ class ChannelCreate extends Utility {
         const baseOffering = baseMetadata.offerings?.[baseOfferingKey] || {};
 
         // Normalize playout_formats and streams to arrays
-        const basePlayoutFormats = Array.isArray(baseOffering.playout?.playout_formats)
-            ? baseOffering.playout.playout_formats
-            : baseOffering.playout?.playout_formats
-                ? [baseOffering.playout.playout_formats]
-                : [];
+        const basePlayoutFormats =
+            baseOffering.playout?.playout_formats &&
+                typeof baseOffering.playout.playout_formats === "object" &&
+                !Array.isArray(baseOffering.playout.playout_formats)
+                ? baseOffering.playout.playout_formats
+                : {};
 
-        const baseStreams = Array.isArray(baseOffering.playout?.streams)
-            ? baseOffering.playout.streams
-            : baseOffering.playout?.streams
-                ? Object.values(baseOffering.playout.streams)
-                : [];
+        const baseStreams =
+            baseOffering.playout?.streams &&
+                typeof baseOffering.playout.streams === "object" &&
+                !Array.isArray(baseOffering.playout.streams)
+                ? baseOffering.playout.streams
+                : {};
 
         metadata.channel ??= {};
         metadata.channel.offerings ??= {};
         metadata.channel.offerings[key] ??= {
+            created_at: "",
             display_name: name,
             items: [],
             key,
@@ -296,8 +299,6 @@ class ChannelCreate extends Utility {
             },
             playout_type: "ch_vod",
             source_info: {
-                createdAt: null,
-                updatedAt: null,
                 frameRate: baseStreams?.[0]?.rate ? `${baseStreams[0].rate}` : "0",
                 libraryId,
                 name: baseMetadata.public?.name || name,
@@ -305,9 +306,10 @@ class ChannelCreate extends Utility {
                 offeringKey: baseOfferingKey,
                 profileKey: "",
                 prompt: "",
-                type: ""
+                type: "elvmediatool"
             },
-            sources: []
+            sources: [],
+            updated_at: ""
         };
 
         const offeringRef = metadata.channel.offerings[key];
@@ -326,15 +328,14 @@ class ChannelCreate extends Utility {
                 objectId: item.objectId
             });
 
-            // Set createdAt for first item
-            if (i === 0 && !offeringRef.source_info.createdAt) {
-                offeringRef.source_info.createdAt = new Date().toISOString();
-            }
+
 
             // Add item to items array
             offeringRef.items.push({
                 display_name: publicMeta.public.name,
                 duration_rat: offering.media_struct.duration_rat,
+                slice_end_rat: offering.media_struct.slice_end_rat,
+                slice_start_rat: offering.media_struct.slice_start_rat,
                 source: {
                     ".": { auto_update: { tag: "latest" } },
                     "/": `/qfab/${itemLatestVersion}/rep/playout/${item.offering}`
@@ -345,10 +346,13 @@ class ChannelCreate extends Utility {
             // Add item to sources array
             offeringRef.sources.push(item.objectId);
 
-            // Set updatedAt on last item
-            if (i === itemList.length - 1) {
-                offeringRef.source_info.updatedAt = new Date().toISOString();
+            const now = new Date().toISOString();
+
+            if (!metadata.channel.offerings[key].created_at) {
+                metadata.channel.offerings[key].created_at = now;   // first write only
             }
+
+            metadata.channel.offerings[key].updated_at = now;     // always overwrite
         }
 
         logger.log("Writing metadata...");
