@@ -147,50 +147,45 @@ const msStreamFields = (poStreams, msStreams) => {
 
 const deriveSliceAndDurationFromVideoStream = offering => {
     const streams = offering?.media_struct?.streams;
-    if (!streams || typeof streams !== "object") return null;
 
-    // Find the video stream
     const videoStream = Object.values(streams).find(
         s => s.codec_type === "video"
     );
 
-    if (!videoStream?.duration?.rat || typeof videoStream.rate !== "number") {
-        return null;
-    }
-
-    const fps = videoStream.rate;                 // e.g. 60
+    const fps = videoStream.rate;
     const durationRat = videoStream.duration.rat;
+
+    console.log(fps);
+    console.log(durationRat);
 
     const entry = offering.entry_point_rat;
     const exit = offering.exit_point_rat;
 
+    console.log(entry);
+    console.log(exit);
+
     const hasEntry = typeof entry === "number";
     const hasExit = typeof exit === "number";
 
-    // CASE 1: Explicit entry / exit points
     if (hasEntry && hasExit) {
-        const entryFrames = Math.round(entry * fps);
-        const exitFrames = Math.round(exit * fps);
-
         return {
             duration_rat: durationRat,
-            slice_start_rat: entryFrames,
-            slice_end_rat: exitFrames
+            slice_start_rat: entry,
+            slice_end_rat: exit
         };
     }
 
-    // CASE 2: Full duration
     if (!hasEntry && !hasExit) {
         return {
-            duration_rat: `${Math.round(durationRat * fps)}/${fps}`,
+            duration_rat: durationRat,
             slice_start_rat: `0/${fps}`,
-            slice_end_rat: `${Math.round(durationRat * fps)}/${fps}`
+            slice_end_rat: durationRat
         };
     }
 
-    // Mixed state → leave untouched
-    return null;
-}
+    // mixed state → do nothing
+    return {};
+};
 
 const withoutDrmContentId = poFormat => {
     const clone = R.clone(poFormat);
@@ -415,7 +410,7 @@ class ChannelCreate extends Utility {
                 objectId: item.objectId
             });
 
-            let derivedSlice = deriveSliceAndDurationFromVideoStream(offering);
+            const derivedSlice = deriveSliceAndDurationFromVideoStream(offering);
 
             offeringRef.items.push({
                 display_name: publicMeta.public.name,
