@@ -326,22 +326,19 @@ class CompositionCreate extends Utility {
 
         logger.log("Mezzanine item parameter checks passed.");
 
-        let metadata = R.clone(baseMetadata);
-
         logger.log("\nAdding channel metadata to new object...");
 
         // Prepare channel metadata
         const key = sanitizeFilename(name, `${baseObjectId}.mp4`);
 
-        metadata.channel ??= {};
-        metadata.channel.offerings ??= {};
+        const existingChannelOffering = baseMetadata.channel?.offerings?.[key];
 
-        if (metadata.channel.offerings[key] && !this.args.force) {
+        if (existingChannelOffering && !this.args.force) {
             throw Error(
                 `ERROR: A composition named '${name}' already exists on object ${baseObjectId} ` +
                 `(key='${key}'). Use --force to overwrite it.`
             );
-        } else if (metadata.channel.offerings[key] && this.args.force) {
+        } else if (existingChannelOffering && this.args.force) {
             this.logger.warn(
                 `Warning: Overwriting existing composition '${name}' (key='${key}') due to --force`
             );
@@ -366,7 +363,7 @@ class CompositionCreate extends Utility {
                 ? baseOffering.playout.streams
                 : {};
 
-        metadata.channel.offerings[key] ??= {
+        const newChannelOffering = {
             created_at: "",
             display_name: name,
             items: [],
@@ -391,11 +388,6 @@ class CompositionCreate extends Utility {
             updated_at: ""
         };
 
-        const offeringRef = metadata.channel.offerings[key];
-        // Overwrite previous metadata arrays
-        offeringRef.items = [];
-        offeringRef.sources = [];
-
         // Add items and sources
         for (let i = 0; i < itemList.length; i++) {
             const item = itemList[i];
@@ -409,7 +401,7 @@ class CompositionCreate extends Utility {
 
             const derivedSlice = deriveSliceAndDurationFromVideoStream(offering);
 
-            offeringRef.items.push({
+            newChannelOffering.items.push({
                 display_name: publicMeta.public.name,
                 duration_rat: derivedSlice.duration_rat,
                 slice_start_rat: derivedSlice.slice_start_rat,
@@ -421,27 +413,30 @@ class CompositionCreate extends Utility {
                 type: "mez_vod"
             });
 
-
             // Add item to sources array
-            offeringRef.sources.push(item.objectId);
+            newChannelOffering.sources.push(item.objectId);
 
             const now = new Date().toISOString();
 
-            if (!metadata.channel.offerings[key].created_at) {
-                metadata.channel.offerings[key].created_at = now;   // first write only
+            if (!newChannelOffering.created_at) {
+                newChannelOffering.created_at = now;   // first write only
             }
 
-            metadata.channel.offerings[key].updated_at = now;     // always overwrite
+            newChannelOffering.updated_at = now;     // always overwrite
         }
 
-        logger.log("Writing metadata...");
+        logger.log("Merging metadata...");
 
-        const versionHash = await this.concerns.Metadata.write({
+        const versionHash = await this.concerns.Metadata.merge({
             libraryId,
-
-            metadata,
+            metadataSubtree: "/channel",
+            metadata: {
+                offerings: {
+                    [key] : newChannelOffering
+                }
+            },
             objectId: baseObjectId,
-            commitMessage: "CompositionCreate.js"
+            commitMessage: "Ran CompositionCreate.js"
         });
 
         logger.log("");
