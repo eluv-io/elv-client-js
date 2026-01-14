@@ -123,28 +123,6 @@ const msStreamFields = (poStreams, msStreams) => {
     return R.map(msStreamsFieldSubset, usedMsStreams);
 };
 
-// const ratToFloat = rat => {
-//     if (rat == null) return null;
-
-//     // Already a number
-//     if (typeof rat === "number") return rat;
-
-//     // Object form { numerator, denominator }
-//     if (typeof rat === "object" && rat.numerator != null && rat.denominator != null) {
-//         return Number(rat.numerator) / Number(rat.denominator);
-//     }
-
-//     // String form "num/den"
-//     if (typeof rat === "string" && rat.includes("/")) {
-//         const [num, den] = rat.split("/").map(Number);
-//         if (!Number.isNaN(num) && !Number.isNaN(den) && den !== 0) {
-//             return num / den;
-//         }
-//     }
-
-//     return null;
-// }
-
 const deriveSliceAndDurationFromVideoStream = offering => {
     const streams = offering?.media_struct?.streams;
 
@@ -208,7 +186,7 @@ const sanitizeFilename = (name, fallback) => {
         .toLowerCase();
 };
 
-class ChannelCreate extends Utility {
+class CompositionCreate extends Utility {
     blueprint() {
         return {
             concerns: [ArgLibraryId, FabricObject],
@@ -448,18 +426,16 @@ class ChannelCreate extends Utility {
 
         logger.log("");
         logger.log(`Object ID: ${baseObjectId}`);
-        logger.data("object_id", baseObjectId);
         logger.log("New version hash: " + versionHash);
-        logger.data("version_hash", versionHash);
     }
 
     header() {
-        return `Create channel '${this.args.name}' in lib ${this.args.libraryId}`;
+        return `Create composition '${this.args.name}' in lib ${this.args.libraryId}`;
     }
 }
 
 if (require.main === module) {
-    Utility.cmdLineInvoke(ChannelCreate);
+    Utility.cmdLineInvoke(CompositionCreate);
 } else {
-    module.exports = ChannelCreate;
+    module.exports = CompositionCreate;
 }
