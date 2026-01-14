@@ -123,6 +123,75 @@ const msStreamFields = (poStreams, msStreams) => {
     return R.map(msStreamsFieldSubset, usedMsStreams);
 };
 
+// const ratToFloat = rat => {
+//     if (rat == null) return null;
+
+//     // Already a number
+//     if (typeof rat === "number") return rat;
+
+//     // Object form { numerator, denominator }
+//     if (typeof rat === "object" && rat.numerator != null && rat.denominator != null) {
+//         return Number(rat.numerator) / Number(rat.denominator);
+//     }
+
+//     // String form "num/den"
+//     if (typeof rat === "string" && rat.includes("/")) {
+//         const [num, den] = rat.split("/").map(Number);
+//         if (!Number.isNaN(num) && !Number.isNaN(den) && den !== 0) {
+//             return num / den;
+//         }
+//     }
+
+//     return null;
+// }
+
+const deriveSliceAndDurationFromVideoStream = offering => {
+    const streams = offering?.media_struct?.streams;
+    if (!streams || typeof streams !== "object") return null;
+
+    // Find the video stream
+    const videoStream = Object.values(streams).find(
+        s => s.codec_type === "video"
+    );
+
+    if (!videoStream?.duration?.rat || typeof videoStream.rate !== "number") {
+        return null;
+    }
+
+    const fps = videoStream.rate;                 // e.g. 60
+    const durationRat = videoStream.duration.rat;
+
+    const entry = offering.entry_point_rat;
+    const exit = offering.exit_point_rat;
+
+    const hasEntry = typeof entry === "number";
+    const hasExit = typeof exit === "number";
+
+    // CASE 1: Explicit entry / exit points
+    if (hasEntry && hasExit) {
+        const entryFrames = Math.round(entry * fps);
+        const exitFrames = Math.round(exit * fps);
+
+        return {
+            duration_rat: durationRat,
+            slice_start_rat: entryFrames,
+            slice_end_rat: exitFrames
+        };
+    }
+
+    // CASE 2: Full duration
+    if (!hasEntry && !hasExit) {
+        return {
+            duration_rat: `${Math.round(durationRat * fps)}/${fps}`,
+            slice_start_rat: `0/${fps}`,
+            slice_end_rat: `${Math.round(durationRat * fps)}/${fps}`
+        };
+    }
+
+    // Mixed state → leave untouched
+    return null;
+}
+
 const withoutDrmContentId = poFormat => {
     const clone = R.clone(poFormat);
     if (clone.drm) clone.drm.content_id = null;
@@ -161,6 +230,11 @@ class ChannelCreate extends Utility {
                     descTemplate:
                         "Comma-separated list of OBJECT_ID:OFFERING_KEY (e.g. iq__100:default_dash,iq__200:default_dash)",
                     string: true
+                }),
+                NewOpt("force", {
+                    descTemplate: "Overwrite existing composition if it already exists",
+                    type: "boolean",
+                    default: false
                 })
             ]
         };
@@ -267,6 +341,21 @@ class ChannelCreate extends Utility {
         // Prepare channel metadata
         const key = sanitizeFilename(name, `${baseObjectId}.mp4`);
 
+        metadata.channel ??= {};
+        metadata.channel.offerings ??= {};
+
+        if (metadata.channel.offerings[key] && !this.args.force) {
+            throw Error(
+                `ERROR: A composition named '${name}' already exists on object ${baseObjectId} ` +
+                `(key='${key}'). Use --force to overwrite it.`
+            );
+        } else if (metadata.channel.offerings[key] && this.args.force) {
+            this.logger.warn(
+                `Warning: Overwriting existing composition '${name}' (key='${key}') due to --force`
+            );
+        }
+
+
         // Base offering for channel
         const baseOffering = baseMetadata.offerings?.[baseOfferingKey] || {};
 
@@ -285,8 +374,6 @@ class ChannelCreate extends Utility {
                 ? baseOffering.playout.streams
                 : {};
 
-        metadata.channel ??= {};
-        metadata.channel.offerings ??= {};
         metadata.channel.offerings[key] ??= {
             created_at: "",
             display_name: name,
@@ -299,7 +386,7 @@ class ChannelCreate extends Utility {
             },
             playout_type: "ch_vod",
             source_info: {
-                frameRate: baseStreams?.[0]?.rate ? `${baseStreams[0].rate}` : "0",
+                frameRate: baseOffering.media_struct.streams.video.rate,
                 libraryId,
                 name: baseMetadata.public?.name || name,
                 objectId: baseObjectId,
@@ -328,20 +415,20 @@ class ChannelCreate extends Utility {
                 objectId: item.objectId
             });
 
+            let derivedSlice = deriveSliceAndDurationFromVideoStream(offering);
 
-
-            // Add item to items array
             offeringRef.items.push({
                 display_name: publicMeta.public.name,
-                duration_rat: offering.media_struct.duration_rat,
-                slice_end_rat: offering.media_struct.slice_end_rat,
-                slice_start_rat: offering.media_struct.slice_start_rat,
+                duration_rat: derivedSlice.duration_rat,
+                slice_start_rat: derivedSlice.slice_start_rat,
+                slice_end_rat: derivedSlice.slice_end_rat,
                 source: {
                     ".": { auto_update: { tag: "latest" } },
                     "/": `/qfab/${itemLatestVersion}/rep/playout/${item.offering}`
                 },
                 type: "mez_vod"
             });
+
 
             // Add item to sources array
             offeringRef.sources.push(item.objectId);
