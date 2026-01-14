@@ -97,16 +97,12 @@ const STREAM_FIELDS = [
  * Parse OBJECT_ID:OFFERING_KEY
  * Example: iq__100:default_dash
  */
-const itemParser = itemStr => {
+const itemParser = (itemStr) => {
     const parsed = itemStr.split(":");
-    if (parsed.length !== 2) {
-        throw Error(
-            `Failed to parse item '${itemStr}'. Expected OBJECT_ID:OFFERING_KEY`
-        );
-    }
+
     return {
         objectId: parsed[0],
-        offering: parsed[1]
+        offering: parsed.length === 2? parsed[1] : "default"
     };
 };
 
@@ -126,10 +122,16 @@ const msStreamFields = (poStreams, msStreams) => {
 
 const deriveSliceAndDurationFromVideoStream = offering => {
     const streams = offering?.media_struct?.streams;
+    if(!streams) {
+        throw new Error("Missing media_struct.streams in offering");
+    }
 
     const videoStream = Object.values(streams).find(
         s => s.codec_type === "video"
     );
+    if(!videoStream) {
+        throw new Error("No video stream found in offering");
+    }
 
     const fracStreamDur = Fraction(videoStream.duration.rat);
     const fracFrameDur = Fraction(videoStream.rate).inverse();
@@ -162,8 +164,9 @@ const deriveSliceAndDurationFromVideoStream = offering => {
         };
     }
 
-    // mixed state → do nothing
-    return {};
+    throw new Error(
+      "Invalid offering: entry_point_rat and exit_point_rat must be both set or both unset"
+    );
 };
 
 const withoutDrmContentId = poFormat => {
@@ -232,6 +235,12 @@ class CompositionCreate extends Utility {
 
         // Parse items
         let itemList = items.split(",").map(itemParser);
+
+        // validate items are objects
+        const client = await this.concerns.Client.get();
+        for(const item of itemList) {
+            await client.ValidateObject(item.objectId);
+        }
 
         // Add baseObjectId to itemList if not already included
         if (!itemList.some(item => item.objectId === baseObjectId)) {
@@ -318,8 +327,6 @@ class CompositionCreate extends Utility {
         logger.log("Mezzanine item parameter checks passed.");
 
         let metadata = R.clone(baseMetadata);
-
-        // let metadata = await this.concerns.FabricObject.metadata({ libraryId, objectId: baseObjectId });
 
         logger.log("\nAdding channel metadata to new object...");
 
@@ -431,6 +438,7 @@ class CompositionCreate extends Utility {
 
         const versionHash = await this.concerns.Metadata.write({
             libraryId,
+
             metadata,
             objectId: baseObjectId,
             commitMessage: "CompositionCreate.js"

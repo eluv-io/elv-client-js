@@ -129,7 +129,18 @@ const New = context => {
     });
   };
 
-  return {checkTargetPath, commitInfo, get, write};
+  const merge = async ({libraryId, metadata, metadataSubtree, noWait, objectId, writeToken}) => {
+    return await context.concerns.Edit.mergeMetadata({
+      libraryId,
+      metadata,
+      metadataSubtree,
+      noWait,
+      objectId,
+      writeToken,
+    });
+  };
+
+  return {checkTargetPath, commitInfo, get, write, merge};
 };
 
 module.exports = {
