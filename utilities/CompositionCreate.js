@@ -74,6 +74,7 @@
  */
 
 const R = require("ramda");
+const Fraction = require("fraction.js");
 
 const { ModOpt, NewOpt, StdOpt } = require("./lib/options");
 const Utility = require("./lib/Utility");
@@ -130,24 +131,24 @@ const deriveSliceAndDurationFromVideoStream = offering => {
         s => s.codec_type === "video"
     );
 
-    const fps = videoStream.rate;
-    const durationRat = videoStream.duration.rat;
+    const fracStreamDur = Fraction(videoStream.duration.rat);
+    const fracFrameDur = Fraction(videoStream.rate).inverse();
+    const fracWholeFrames = fracStreamDur.div(fracFrameDur).floor(0);
+    const fracConformedDur = fracWholeFrames.mul(fracFrameDur);
 
-    console.log(fps);
-    console.log(durationRat);
+    const durationRatString = fracConformedDur.toFraction();
+    const sliceStartRatString = fracFrameDur.toFraction();
+    const sliceEndRatString = fracConformedDur.toFraction();
 
     const entry = offering.entry_point_rat;
     const exit = offering.exit_point_rat;
-
-    console.log(entry);
-    console.log(exit);
 
     const hasEntry = typeof entry === "number";
     const hasExit = typeof exit === "number";
 
     if (hasEntry && hasExit) {
         return {
-            duration_rat: durationRat,
+            duration_rat: durationRatString,
             slice_start_rat: entry,
             slice_end_rat: exit
         };
@@ -155,9 +156,9 @@ const deriveSliceAndDurationFromVideoStream = offering => {
 
     if (!hasEntry && !hasExit) {
         return {
-            duration_rat: durationRat,
-            slice_start_rat: `0/${fps}`,
-            slice_end_rat: durationRat
+            duration_rat: durationRatString,
+            slice_start_rat: sliceStartRatString,
+            slice_end_rat: sliceEndRatString
         };
     }
 
@@ -244,6 +245,15 @@ class CompositionCreate extends Utility {
 
         // Fetch metadata for each item
         for (const item of itemList) {
+            if (item.objectId === baseObjectId) {
+                itemPublicMeta.push(baseMetadata);
+                const offering = baseMetadata.offerings?.[item.offering];
+                if (!offering) {
+                    throw Error(`Offering '${item.offering}' not found for ${item.objectId}`);
+                }
+                itemOfferings.push(offering);
+                continue;
+            }
             const meta = await this.concerns.FabricObject.metadata({
                 libraryId,
                 objectId: item.objectId
@@ -307,7 +317,9 @@ class CompositionCreate extends Utility {
 
         logger.log("Mezzanine item parameter checks passed.");
 
-        let metadata = await this.concerns.FabricObject.metadata({ libraryId, objectId: baseObjectId });
+        let metadata = R.clone(baseMetadata);
+
+        // let metadata = await this.concerns.FabricObject.metadata({ libraryId, objectId: baseObjectId });
 
         logger.log("\nAdding channel metadata to new object...");
 
