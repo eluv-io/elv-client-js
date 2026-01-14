@@ -61,36 +61,7 @@ const New = context => {
 
   };
 
-  // if writeToken passed in, don't finalize
-  // if writeToken not passed in, get one and finalize after
-  const mergeMetadata =  async ({libraryId, metadata, metadataSubtree, noWait, objectId, writeToken}) => {
-    const writeTokenSupplied = kindOf(writeToken) === "string";
-    if(!writeTokenSupplied ) writeToken = await getWriteToken({libraryId, objectId});
-
-    logger.log("Writing metadata to object...");
-    const client = await context.concerns.Client.get();
-    await client.MergeMetadata({
-      libraryId,
-      metadata,
-      metadataSubtree,
-      objectId,
-      writeToken
-    });
-
-    if(!writeTokenSupplied) {
-      // return latest version hash
-      return await finalize({
-        libraryId,
-        noWait,
-        objectId,
-        writeToken
-      });
-    }
-
-  };
-
-
-  return {finalize, getWriteToken, writeMetadata, mergeMetadata};
+  return {finalize, getWriteToken, writeMetadata};
 };
 
 module.exports = {

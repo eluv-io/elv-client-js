@@ -22,6 +22,12 @@
  *   --base-object-id iq__xxxxxxxxxxxxxxxx \
  *   --items iq__100:default_dash,iq__200:default_dash,iq__300:default_dash
  *
+ * Without offering:
+ * node CompositionCreate.js \
+ *   --library-id ilib_xxxxxxxxxxxxxxxxx \
+ *   --name "Full Game DASH" \
+ *   --base-object-id iq__xxxxxxxxxxxxxxxx \
+ *   --items iq__100,iq__200,iq__300
  * -----------------------------------------------------------------------------
  * ARGUMENTS
  * -----------------------------------------------------------------------------
@@ -236,12 +242,6 @@ class CompositionCreate extends Utility {
         // Parse items
         let itemList = items.split(",").map(itemParser);
 
-        // validate items are objects
-        const client = await this.concerns.Client.get();
-        for(const item of itemList) {
-            await client.ValidateObject(item.objectId);
-        }
-
         // Add baseObjectId to itemList if not already included
         if (!itemList.some(item => item.objectId === baseObjectId)) {
             itemList.unshift({ objectId: baseObjectId, offering: baseOfferingKey });
@@ -339,9 +339,10 @@ class CompositionCreate extends Utility {
                 `(key='${key}'). Use --force to overwrite it.`
             );
         } else if (existingChannelOffering && this.args.force) {
-            this.logger.warn(
+            logger.log(
                 `Warning: Overwriting existing composition '${name}' (key='${key}') due to --force`
             );
+
         }
 
 
@@ -427,13 +428,11 @@ class CompositionCreate extends Utility {
 
         logger.log("Merging metadata...");
 
-        const versionHash = await this.concerns.Metadata.merge({
+        const versionHash = await this.concerns.Metadata.write({
             libraryId,
-            metadataSubtree: "/channel",
+            metadataSubtree: "/channel/offerings",
             metadata: {
-                offerings: {
-                    [key] : newChannelOffering
-                }
+                [key] : newChannelOffering
             },
             objectId: baseObjectId,
             commitMessage: "Ran CompositionCreate.js"
