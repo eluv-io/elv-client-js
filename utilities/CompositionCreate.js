@@ -81,6 +81,7 @@
 
 const R = require("ramda");
 const Fraction = require("fraction.js");
+const { FrameAccurateVideo } = require("./lib/FrameAccurateVideo");
 
 const { ModOpt, NewOpt, StdOpt } = require("./lib/options");
 const Utility = require("./lib/Utility");
@@ -108,7 +109,7 @@ const itemParser = (itemStr) => {
 
     return {
         objectId: parsed[0],
-        offering: parsed.length === 2? parsed[1] : "default"
+        offering: parsed.length === 2 ? parsed[1] : "default"
     };
 };
 
@@ -128,14 +129,14 @@ const msStreamFields = (poStreams, msStreams) => {
 
 const deriveSliceAndDurationFromVideoStream = offering => {
     const streams = offering?.media_struct?.streams;
-    if(!streams) {
+    if (!streams) {
         throw new Error("Missing media_struct.streams in offering");
     }
 
     const videoStream = Object.values(streams).find(
         s => s.codec_type === "video"
     );
-    if(!videoStream) {
+    if (!videoStream) {
         throw new Error("No video stream found in offering");
     }
 
@@ -162,16 +163,24 @@ const deriveSliceAndDurationFromVideoStream = offering => {
         };
     }
 
+    const videoHandler = new FrameAccurateVideo({ 
+        frameRateRat: videoStream.rate 
+    });
+
     if (!hasEntry && !hasExit) {
+        const clipInFrame = videoHandler.TimeToFrame(0 / 1000);
+        const clipOutFrame = videoHandler.TimeToFrame(videoStream.duration.rat / 1000);
+        console.log(videoStream.duration.rat)
+        console.log(clipOutFrame);
         return {
-            duration_rat: durationRatString,
-            slice_start_rat: sliceStartRatString,
-            slice_end_rat: sliceEndRatString
+            slice_start_rat: videoHandler.FrameToRat(clipInFrame),
+            slice_end_rat: videoHandler.FrameToRat(clipOutFrame),
+            duration_rat: videoHandler.FrameToRat(clipOutFrame - clipInFrame)
         };
     }
 
     throw new Error(
-      "Invalid offering: entry_point_rat and exit_point_rat must be both set or both unset"
+        "Invalid offering: entry_point_rat and exit_point_rat must be both set or both unset"
     );
 };
 
