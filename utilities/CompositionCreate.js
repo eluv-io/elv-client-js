@@ -430,9 +430,9 @@ class CompositionCreate extends Utility {
 
         const versionHash = await this.concerns.Metadata.write({
             libraryId,
-            metadataSubtree: "/channel/offerings",
+            metadataSubtree: `/channel/offerings/${key}`,
             metadata: {
-                [key] : newChannelOffering
+                ...newChannelOffering
             },
             objectId: baseObjectId,
             commitMessage: "Ran CompositionCreate.js"
