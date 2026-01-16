@@ -101,15 +101,35 @@ const STREAM_FIELDS = [
 ];
 
 /**
- * Parse OBJECT_ID:OFFERING_KEY
- * Example: iq__100:default_dash
+ * Parse item string
+ * Formats:
+ *  - OBJECT_ID
+ *  - OBJECT_ID:OFFERING_KEY
+ *  - OBJECT_ID:OFFERING_KEY:START_TC:END_TC
+ *  - OBJECT_ID::START_TC:END_TC   (default offering)
  */
 const itemParser = (itemStr) => {
-    const parsed = itemStr.split(":");
+    if (typeof itemStr !== "string" || !itemStr.trim()) {
+        throw new Error("Item must be a non-empty string");
+    }
+
+    const parts = itemStr.split(":");
+
+    const objectId = parts[0];
+    if(!objectId) {
+        throw new Error(`Invalid item format: '${itemStr}'`);
+    }
+
+    const offering = parts[1] || "default";
+
+    const startTC = parts.length >= 3 ? parts[2] : undefined;
+    const endTC = parts.length >= 4? parts[3] : undefined;
 
     return {
-        objectId: parsed[0],
-        offering: parsed.length === 2 ? parsed[1] : "default"
+        objectId,
+        offering,
+        startTC,
+        endTC
     };
 };
 
@@ -127,7 +147,33 @@ const msStreamFields = (poStreams, msStreams) => {
     return R.map(msStreamsFieldSubset, usedMsStreams);
 };
 
-const deriveSliceAndDurationFromVideoStream = offering => {
+// convert HH_MM_SS.MS format to seconds
+const convertTimecodeToSeconds = (timecode) => {
+    if (typeof timecode !== "string") {
+        throw new Error("Timecode must be a string");
+    }
+
+    const match = timecode.match(
+      /^(\d{2})_(\d{2})_(\d{2})(?:\.(\d{1,3}))?$/
+    );
+    if(!match) {
+        throw new Error(`Invalid timecode format: ${timecode}`);
+    }
+
+    const normalizeMs = (ms) =>
+      ms.padEnd(3, "0"); // "5" -> "500", "50" -> "500"
+
+    const [,hh,mm,ss,rawMs = "0"] = match;
+    const ms = normalizeMs(rawMs);
+
+    return Fraction(hh).mul(3600)
+      .add(Fraction(mm).mul(60))
+      .add(Fraction(ss))
+      .add(Fraction(ms).div(1000));
+};
+
+
+const deriveSliceAndDurationFromVideoStream = ({offering, startTC, endTC}) => {
     const streams = offering?.media_struct?.streams;
     if (!streams) {
         throw new Error("Missing media_struct.streams in offering");
@@ -140,82 +186,40 @@ const deriveSliceAndDurationFromVideoStream = offering => {
         throw new Error("No video stream found in offering");
     }
 
-    const fracStreamDur = Fraction(videoStream.duration.rat);
-    const fracFrameDur = Fraction(videoStream.rate).inverse();
-    const fracWholeFrames = fracStreamDur.div(fracFrameDur).floor(0);
-    const durationRat = fracWholeFrames.mul(fracFrameDur);
+    let clipStart = Fraction(0), clipEnd;
+    if(startTC) {
+         clipStart = convertTimecodeToSeconds(startTC);
+    }
+    if(endTC) {
+        clipEnd = convertTimecodeToSeconds(endTC);
+    }
 
+    const streamDuration = Fraction(videoStream.duration.rat);
+    if(!clipEnd) {
+        const frameDur = Fraction(videoStream.rate).inverse();
+        clipEnd = Fraction(streamDuration.div(frameDur).floor().mul(frameDur));
+    }
+
+    if (clipEnd.compare(clipStart) <= 0) {
+        throw new Error("Invalid clip range: end must be after start");
+    }
+
+    if (clipEnd.compare(streamDuration) > 0) {
+        throw new Error("Clip end exceeds video duration");
+    }
 
     const videoHandler = new FrameAccurateVideo({
         frameRateRat: videoStream.rate
     });
 
-    const clipInFrame = videoHandler.TimeToFrame(0);
-    const clipOutFrame = videoHandler.TimeToFrame(durationRat);
-    console.log("duration_rat", durationRat)
-    console.log("clip_out_frame", clipOutFrame);
+    const clipInFrame = videoHandler.TimeToFrame(clipStart);
+    const clipOutFrame = videoHandler.TimeToFrame(clipEnd, true);
+
     return {
         slice_start_rat: videoHandler.FrameToRat(clipInFrame),
         slice_end_rat: videoHandler.FrameToRat(clipOutFrame),
         duration_rat: videoHandler.FrameToRat(clipOutFrame - clipInFrame)
     };
-};
-
-const deriveSliceAndDurationFromVideoStream2 = offering => {
-    const streams = offering?.media_struct?.streams;
-    if (!streams) {
-        throw new Error("Missing media_struct.streams in offering");
-    }
-
-    const videoStream = Object.values(streams).find(
-        s => s.codec_type === "video"
-    );
-    if (!videoStream) {
-        throw new Error("No video stream found in offering");
-    }
-
-    const fracStreamDur = Fraction(videoStream.duration.rat);
-    const fracFrameDur = Fraction(videoStream.rate).inverse();
-    const fracWholeFrames = fracStreamDur.div(fracFrameDur).floor(0);
-    const fracConformedDur = fracWholeFrames.mul(fracFrameDur);
-
-    const durationRatString = fracConformedDur.toFraction();
-    const sliceStartRatString = fracFrameDur.toFraction();
-    const sliceEndRatString = fracConformedDur.toFraction();
-
-    const entry = offering.entry_point_rat;
-    const exit = offering.exit_point_rat;
-
-    const hasEntry = typeof entry === "number";
-    const hasExit = typeof exit === "number";
-
-    if (hasEntry && hasExit) {
-        return {
-            duration_rat: durationRatString,
-            slice_start_rat: entry,
-            slice_end_rat: exit
-        };
-    }
-
-    const videoHandler = new FrameAccurateVideo({ 
-        frameRateRat: videoStream.rate 
-    });
-
-    if (!hasEntry && !hasExit) {
-        const clipInFrame = videoHandler.TimeToFrame(0 / 1000);
-        const clipOutFrame = videoHandler.TimeToFrame(videoStream.duration.rat / 1000);
-        console.log(videoStream.duration.rat)
-        console.log(clipOutFrame);
-        return {
-            slice_start_rat: videoHandler.FrameToRat(clipInFrame),
-            slice_end_rat: videoHandler.FrameToRat(clipOutFrame),
-            duration_rat: videoHandler.FrameToRat(clipOutFrame - clipInFrame)
-        };
-    }
-
-    throw new Error(
-        "Invalid offering: entry_point_rat and exit_point_rat must be both set or both unset"
-    );
 };
 
 const withoutDrmContentId = poFormat => {
@@ -254,7 +258,7 @@ class CompositionCreate extends Utility {
                 NewOpt("items", {
                     demand: true,
                     descTemplate:
-                        "Comma-separated list of OBJECT_ID:OFFERING_KEY (e.g. iq__100:default_dash,iq__200:default_dash)",
+                        "Comma-separated list of OBJECT_ID:OFFERING_KEY:START_TIME:END_TIME, The start and end time are provide in form HH_MM_SS.MS (e.g. iq__100:default_dash:01_20_3.5:01_30_00.0,iq__200:default_dash)",
                     string: true
                 }),
                 NewOpt("force", {
@@ -287,7 +291,7 @@ class CompositionCreate extends Utility {
 
         // Add baseObjectId to itemList if not already included
         if (!itemList.some(item => item.objectId === baseObjectId)) {
-            itemList.unshift({ objectId: baseObjectId, offering: baseOfferingKey });
+            itemList.unshift({ objectId: baseObjectId, offering: baseOfferingKey, startTC: undefined, endTC: undefined});
         }
 
         logger.log("\nChecking items for any parameter mismatches...");
@@ -437,13 +441,15 @@ class CompositionCreate extends Utility {
             const item = itemList[i];
             const offering = itemOfferings[i];
             const publicMeta = itemPublicMeta[i];
+            const startTC = itemList[i].startTC;
+            const endTC = itemList[i].endTC;
 
             const itemLatestVersion = await this.concerns.FabricObject.latestVersionHash({
                 libraryId,
                 objectId: item.objectId
             });
 
-            const derivedSlice = deriveSliceAndDurationFromVideoStream(offering);
+            const derivedSlice = deriveSliceAndDurationFromVideoStream({offering, startTC, endTC});
 
             newChannelOffering.items.push({
                 display_name: publicMeta.public.name,
