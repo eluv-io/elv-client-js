@@ -134,6 +134,40 @@ const deriveSliceAndDurationFromVideoStream = offering => {
     }
 
     const videoStream = Object.values(streams).find(
+      s => s.codec_type === "video"
+    );
+    if (!videoStream) {
+        throw new Error("No video stream found in offering");
+    }
+
+    const fracStreamDur = Fraction(videoStream.duration.rat);
+    const fracFrameDur = Fraction(videoStream.rate).inverse();
+    const fracWholeFrames = fracStreamDur.div(fracFrameDur).floor(0);
+    const durationRat = fracWholeFrames.mul(fracFrameDur);
+
+
+    const videoHandler = new FrameAccurateVideo({
+        frameRateRat: videoStream.rate
+    });
+
+    const clipInFrame = videoHandler.TimeToFrame(0);
+    const clipOutFrame = videoHandler.TimeToFrame(durationRat);
+    console.log("duration_rat", durationRat)
+    console.log("clip_out_frame", clipOutFrame);
+    return {
+        slice_start_rat: videoHandler.FrameToRat(clipInFrame),
+        slice_end_rat: videoHandler.FrameToRat(clipOutFrame),
+        duration_rat: videoHandler.FrameToRat(clipOutFrame - clipInFrame)
+    };
+};
+
+const deriveSliceAndDurationFromVideoStream2 = offering => {
+    const streams = offering?.media_struct?.streams;
+    if (!streams) {
+        throw new Error("Missing media_struct.streams in offering");
+    }
+
+    const videoStream = Object.values(streams).find(
         s => s.codec_type === "video"
     );
     if (!videoStream) {
