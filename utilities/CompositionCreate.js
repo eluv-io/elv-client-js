@@ -5,10 +5,14 @@
  *
  * This script creates (or updates) a CHANNEL / COMPOSITION offering on a
  * base object by stitching together multiple mezzanine objects that all share
- * identical playout parameters.
+ * identical playout parameters and can be clipped at the start and end time
+ * provided in fromat HH_MM_SS_MS
  *
  * Each item is specified as:
- *   OBJECT_ID:OFFERING_KEY
+ *  - OBJECT_ID (default offering)
+ *  - OBJECT_ID:OFFERING_KEY
+ *  - OBJECT_ID:OFFERING_KEY:START_TC:END_TC
+ *  - OBJECT_ID::START_TC:END_TC   (default offering)
  *
  * Items are passed as a single comma-separated string.
  *
@@ -20,7 +24,8 @@
  *   --library-id ilib_xxxxxxxxxxxxxxxxx \
  *   --name "Full Game DASH" \
  *   --base-object-id iq__xxxxxxxxxxxxxxxx \
- *   --items iq__100:default_dash,iq__200:default_dash,iq__300:default_dash
+ *   --items iq__100:default_dash:1_2_3_4:2_3_4_5,iq__200:default_dash,iq__300:default_dash
+ *   --base-range 1_2_3_4:2_3_4_5 => (hh_mm_ss_ms)
  *
  * Without offering:
  * node CompositionCreate.js \
@@ -67,16 +72,6 @@
  * 5. Sets createdAt on first item and updatedAt on last item.
  * 6. Writes updated metadata back to Fabric.
  *
- * -----------------------------------------------------------------------------
- * EXAMPLE RESULTING SOURCE PATH
- * -----------------------------------------------------------------------------
- *
- * /qfab/<OBJECT_ID>/rep/playout/<OFFERING_KEY>
- *
- * Example:
- *   /qfab/iq__100/rep/playout/default_dash
- *
- * -----------------------------------------------------------------------------
  */
 
 const R = require("ramda");
@@ -147,28 +142,28 @@ const msStreamFields = (poStreams, msStreams) => {
     return R.map(msStreamsFieldSubset, usedMsStreams);
 };
 
-// convert HH_MM_SS.MS format to seconds
+// convert HH_MM_SS_MS format to seconds
 const convertTimecodeToSeconds = (timecode) => {
     if (typeof timecode !== "string") {
         throw new Error("Timecode must be a string");
     }
 
     const match = timecode.match(
-      /^(\d{2})_(\d{2})_(\d{2})(?:\.(\d{1,3}))?$/
+      /^(\d{1,2})_(\d{1,2})_(\d{1,2})(?:_(\d{1,3}))?$/
     );
     if(!match) {
         throw new Error(`Invalid timecode format: ${timecode}`);
     }
 
-    const normalizeMs = (ms) =>
-      ms.padEnd(3, "0"); // "5" -> "500", "50" -> "500"
+    const [,hh,mm,ss,msRaw = "0"] = match;
+    const hours = parseInt(hh, 10);
+    const minutes = parseInt(mm, 10);
+    const seconds = parseInt(ss, 10);
+    const ms = msRaw.padEnd(3, "0"); // normalize to 3 digits
 
-    const [,hh,mm,ss,rawMs = "0"] = match;
-    const ms = normalizeMs(rawMs);
-
-    return Fraction(hh).mul(3600)
-      .add(Fraction(mm).mul(60))
-      .add(Fraction(ss))
+    return Fraction(hours).mul(3600)
+      .add(Fraction(minutes).mul(60))
+      .add(Fraction(seconds))
       .add(Fraction(ms).div(1000));
 };
 
@@ -188,7 +183,7 @@ const deriveSliceAndDurationFromVideoStream = ({offering, startTC, endTC}) => {
 
     let clipStart = Fraction(0), clipEnd;
     if(startTC) {
-         clipStart = convertTimecodeToSeconds(startTC);
+        clipStart = convertTimecodeToSeconds(startTC);
     }
     if(endTC) {
         clipEnd = convertTimecodeToSeconds(endTC);
@@ -258,13 +253,17 @@ class CompositionCreate extends Utility {
                 NewOpt("items", {
                     demand: true,
                     descTemplate:
-                        "Comma-separated list of OBJECT_ID:OFFERING_KEY:START_TIME:END_TIME, The start and end time are provide in form HH_MM_SS.MS (e.g. iq__100:default_dash:01_20_3.5:01_30_00.0,iq__200:default_dash)",
+                        "Comma-separated list of OBJECT_ID:OFFERING_KEY:START_TIME:END_TIME, The start and end time are provide in form HH_MM_SS_MS (e.g. iq__100:default_dash:1_20_3_5:1_30_0_0,iq__200:default_dash)",
                     string: true
                 }),
                 NewOpt("force", {
                     descTemplate: "Overwrite existing composition if it already exists",
                     type: "boolean",
                     default: false
+                }),
+                NewOpt("baseRange", {
+                    descTemplate: "Provide start and end time for base object id (format START_TIME:END_TIME)",
+                    type: "string",
                 })
             ]
         };
@@ -272,13 +271,21 @@ class CompositionCreate extends Utility {
 
     async body() {
         const logger = this.logger;
-        const { name, items, libraryId, baseObjectId } = this.args;
+        const { name, items, libraryId, baseObjectId, baseRange } = this.args;
+
+        let baseObjectStartTC , baseObjectEndTC ;
+        if(baseRange) {
+            const parts = baseRange.split(":");
+            baseObjectStartTC = parts.length >= 1 ? parts[0] : undefined;
+            baseObjectEndTC = parts.length >= 2? parts[1]:undefined;
+        }
 
         // Fetch base object metadata first
         const baseMetadata = await this.concerns.FabricObject.metadata({
             libraryId,
             objectId: baseObjectId
         });
+
 
         // Determine base offering
         const baseOfferingKey =
@@ -291,7 +298,7 @@ class CompositionCreate extends Utility {
 
         // Add baseObjectId to itemList if not already included
         if (!itemList.some(item => item.objectId === baseObjectId)) {
-            itemList.unshift({ objectId: baseObjectId, offering: baseOfferingKey, startTC: undefined, endTC: undefined});
+            itemList.unshift({ objectId: baseObjectId, offering: baseOfferingKey, startTC: baseObjectStartTC, endTC: baseObjectEndTC});
         }
 
         logger.log("\nChecking items for any parameter mismatches...");
