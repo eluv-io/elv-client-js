@@ -56,6 +56,8 @@ const CONTRACTS = {
   }
 };
 
+const TOKEN_DURATION = 120000; //2 min
+
 class AuthorizationClient {
   Log(message, error=false) {
     LogMessage(this, message, error);
@@ -1024,6 +1026,85 @@ class AuthorizationClient {
       headers,
       queryParams
     });
+  }
+
+
+  // MakeTenantAuthServiceRequest makes an auth service request with timestamp and signature
+  // optional params kmsId, objectId, versionHash, bodyType
+  async MakeTenantAuthServiceRequest({ kmsId, objectId, versionHash, method="GET", path, queryParams={}, body={}, headers = {}, useFabricToken=false }) {
+    if (!body) {
+      body = {};
+    }
+    let ts = Date.now();
+    body.ts = ts;
+
+    let token = "";
+    if ( useFabricToken ) {
+      token = await this.client.CreateFabricToken({
+        duration: TOKEN_DURATION
+      });
+
+    } else {
+      const { multiSig } = await this.TenantSign({
+        message: JSON.stringify(body),
+      });
+      token = multiSig;
+    }
+
+    path = UrlJoin("as", path);
+    
+    let res;
+    res = await this.client.authClient.MakeAuthServiceRequest({
+      method,
+      path,
+      body,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...headers,
+      },
+      queryParams,
+    });
+    return res;
+  }
+
+  // MakeTenantPathAuthServiceRequest makes an auth service request with timestamp in params
+  async MakeTenantPathAuthServiceRequest({ path, method, queryParams={}, headers = {}}) {
+    let ts = Date.now();
+    let params = { ts, ...queryParams };
+    const paramString = new URLSearchParams(params).toString();
+
+    var newPath = path + "?" + paramString;
+
+    const { multiSig } = await this.TenantSign({
+      message: newPath,
+    });
+
+    if (this.debug) {
+      console.log(`Authorization: Bearer ${multiSig}`);
+    }
+
+    path = UrlJoin("as", path);
+
+    let res = {};
+    res = await this.client.authClient.MakeAuthServiceRequest({
+      method,
+      path,
+      headers: {
+        Authorization: `Bearer ${multiSig}`,
+        ...headers,
+      },
+      queryParams: { ts, ...queryParams },
+    });
+    return res;
+
+  }
+
+  async TenantSign({ message }) {
+    const signature = await this.client.authClient.Sign(
+      Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(message))
+    );
+    const multiSig = this.client.utils.FormatSignature(signature);
+    return { signature, multiSig };
   }
 
   async ContractHasMethod({contractAddress, abi, methodName}) {
