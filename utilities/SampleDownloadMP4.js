@@ -9,6 +9,7 @@ const https = require("https");
 const ArgOutfile = require("./lib/concerns/ArgOutfile");
 const ExistObj = require("./lib/concerns/ExistObj");
 const FabricObject = require("./lib/concerns/FabricObject");
+const DownloadFile = require("./lib/downloadFile");
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const sanitizeFilename = (name, fallback) => {
@@ -19,7 +20,7 @@ const sanitizeFilename = (name, fallback) => {
     .replace(/ - /g, "-")
 };
 
-class ObjectDownloadFile extends Utility {
+class SampleDownloadMP4 extends Utility {
   blueprint() {
     return {
       concerns: [ArgOutfile, ExistObj, FabricObject],
@@ -136,72 +137,14 @@ class ObjectDownloadFile extends Utility {
 
         this.logger.log(`Downloading via https → ${outputFile}\n`);
 
-        const downloadFile = (url, dest, attempt = 5) => {
-          return new Promise((resolve, reject) => {
-            https.get(url, (res) => {
-
-              // Handle Redirects
-              if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-                const newUrl = res.headers.location.startsWith("http")
-                  ? res.headers.location
-                  : new URL(res.headers.location, url).href;
-
-                this.logger.log(`Redirected → ${newUrl}`);
-                return resolve(downloadFile(newUrl, dest, attempt + 1));
-              }
-
-              if (res.statusCode !== 200) {
-                return reject(new Error(`Download failed (HTTP ${res.statusCode})`));
-              }
-
-              const totalSize = parseInt(res.headers["content-length"] || "0", 10);
-              let downloaded = 0;
-
-              const writeStream = fs.createWriteStream(dest);
-
-              // Progress bar
-              res.on("data", chunk => {
-                downloaded += chunk.length;
-
-                if (totalSize > 0) {
-                  const percent = (downloaded / totalSize) * 100;
-                  const mbDownloaded = (downloaded / (1024 * 1024)).toFixed(2);
-                  const mbTotal = (totalSize / (1024 * 1024)).toFixed(2);
-
-                  const barLength = 30;
-                  const filledBar = Math.round((percent / 100) * barLength);
-                  const bar = "█".repeat(filledBar) + "░".repeat(barLength - filledBar);
-
-                  process.stdout.write(
-                    `\r${bar} ${percent.toFixed(1)}%  (${mbDownloaded} MB / ${mbTotal} MB)`
-                  );
-                } else {
-                  process.stdout.write(`\rDownloaded ${(downloaded / (1024 * 1024)).toFixed(2)} MB`);
-                }
-              });
-
-              res.on("end", () => {
-                process.stdout.write("\n");
-              });
-
-              res.pipe(writeStream);
-
-              writeStream.on("finish", () => {
-                writeStream.close(() => resolve());
-              });
-
-              writeStream.on("error", (err) => {
-                fs.unlink(dest, () => reject(err));
-              });
-
-            }).on("error", (err) => {
-              reject(err);
-            });
-          });
-        };
-
         try {
-          await downloadFile(downloadUrl, outputFile);
+          await DownloadFile({
+            url: downloadUrl,
+            dest: outputFile,
+            logger: this.logger,
+            maxRedirects: 5,
+          });
+
           this.logger.log(`\nDownload complete: ${outputFile}`);
         } catch (err) {
           this.logger.error("\nHTTPS download failed:", err.message);
@@ -228,7 +171,7 @@ class ObjectDownloadFile extends Utility {
 }
 
 if (require.main === module) {
-  Utility.cmdLineInvoke(ObjectDownloadFile);
+  Utility.cmdLineInvoke(SampleDownloadMP4);
 } else {
-  module.exports = ObjectDownloadFile;
+  module.exports = SampleDownloadMP4;
 }
