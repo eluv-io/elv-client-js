@@ -38,6 +38,20 @@ const FrameRates = {
   High: Fraction(60)
 };
 
+/**
+ * FrameAccurateVideo constructor.
+ *
+ * Initializes a video wrapper that supports frame-accurate timing based on a
+ * specified frame rate. Handles drop-frame logic automatically for NTSC-based
+ * frame rates and optionally registers a time-update callback on the video.
+ *
+ * @param {Object} params
+ * @param {HTMLVideoElement} params.video - Video element to track.
+ * @param {number} params.frameRate - Nominal frame rate (e.g. 29.97, 30).
+ * @param {Object} params.frameRateRat - Rational frame rate representation.
+ * @param {boolean} [params.dropFrame=false] - Enable drop-frame timecode (only valid for NTSC rates).
+ * @param {Function} params.callback - Callback invoked on frame/time updates.
+ */
 class FrameAccurateVideo {
   constructor({video, frameRate, frameRateRat, dropFrame=false, callback}) {
     this.video = video;
