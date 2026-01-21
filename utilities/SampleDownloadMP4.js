@@ -209,27 +209,6 @@ class ObjectDownloadFile extends Utility {
       }
 
       // -----------------------
-      // Download using curl
-      // -----------------------
-      if (downloadUrl) {
-        const { execSync } = require("child_process");
-
-        const outputFile = output.filename || "download.mp4";
-
-        console.log(`Downloading with curl → ${outputFile}\n`);
-
-        try {
-          execSync(`curl -L -o "${outputFile}" "${downloadUrl}"`, {
-            stdio: "inherit"
-          });
-
-          console.log(`\nDownload complete: ${outputFile}`);
-        } catch (err) {
-          console.error("\nCurl download failed:", err.message);
-        }
-      }
-
-      // -----------------------
       // Outfile support
       // -----------------------
       if (this.args.outfile) {
