@@ -13,7 +13,7 @@ const path = require("path");
 const fs = require("fs");
 const https = require("https");
 
-class LibraryListObjectsWithDownload extends Utility {
+class LibraryDownloadMp4 extends Utility {
     blueprint() {
         return {
             concerns: [JSONConcern, ArgLibraryId, Metadata, FabricObject],
@@ -355,7 +355,7 @@ class LibraryListObjectsWithDownload extends Utility {
 }
 
 if (require.main === module) {
-    Utility.cmdLineInvoke(LibraryListObjectsWithDownload);
+    Utility.cmdLineInvoke(LibraryDownloadMp4);
 } else {
-    module.exports = LibraryListObjectsWithDownload;
+    module.exports = LibraryDownloadMp4;
 }

@@ -20,7 +20,7 @@ const sanitizeFilename = (name, fallback) => {
     .replace(/ - /g, "-")
 };
 
-class SampleDownloadMP4 extends Utility {
+class MezDownloadMp4 extends Utility {
   blueprint() {
     return {
       concerns: [ArgOutfile, ExistObj, FabricObject],
@@ -171,7 +171,7 @@ class SampleDownloadMP4 extends Utility {
 }
 
 if (require.main === module) {
-  Utility.cmdLineInvoke(SampleDownloadMP4);
+  Utility.cmdLineInvoke(MezDownloadMp4);
 } else {
-  module.exports = SampleDownloadMP4;
+  module.exports = MezDownloadMp4;
 }
