@@ -2821,6 +2821,63 @@ exports.StreamAssociateVod = async function({
   };
 };
 
-exports.StreamRestartRecording = async function({persistent=false, ttl}) {};
+/**
+ * Restart recording with overridden configurations
+ *
+ * @param {string} libraryId - Library ID of the live stream object
+ * @param {string} objectId - Object ID of the live stream
+ // TODO: Need a better desription for persistent
+ * @param {boolean=} persistent - If enabled, parts will be persistent
+ * @param {number=} partTtl - Time-to-live for stream parts in seconds
+ *
+ * @returns {Promise<Object>} - The finalize response
+ */
+exports.StreamRestartRecording = async function({objectId, persistent, partTtl}) {
+  // TODO: Is the idea to start, apply config values, and start with a new recording?
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  await this.StreamStartOrStopOrReset({
+    name: objectId,
+    op: "stop"
+  });
+
+  if(persistent || part_ttl) {
+    // Set new settings
+    const liveRecordingConfigMeta = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "/live_recording_config",
+    }) || {};
+
+    liveRecordingConfigMeta.recording_config.part_ttl = partTtl;
+    // TODO: persistent needs to be spec'd out in the Live Recording Config Profile
+    liveRecordingConfigMeta.persistent = persistent ?? false;
+
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "live_recording_config",
+      metadata: liveRecordingConfigMeta
+    });
+
+    const finalizeResponse = await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Restart live stream"
+    });
+  }
+
+  await this.StreamStartOrStopOrReset({
+    name: objectId,
+    op: "start"
+  });
+
+  return finalizeResponse;
+};
 
 exports.StreamUpdatePlayoutConfig = async function() {};
