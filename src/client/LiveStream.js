@@ -2735,3 +2735,92 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
     authorizationToken
   });
 };
+
+/**
+ * Associate a VOD object to a live stream
+ *
+ * @param {string} objectId - Object ID of the live stream
+ * @param {string} vodObjectId - Object ID of the VOD object
+ * @param {Object=} vodData - Additional VoD data
+ * @param {Object=} vodData.recordingStartTime - The start time of the recording
+ * @param {Object=} vodData.recordingEndTime - The end time of the recording
+ * @param {Object=} vodData.recordingVodTime - The time the last VoD was taken
+ *
+ * @returns {Promise<Object>} - The finalize response
+ */
+exports.StreamAssociateVod = async function({
+  objectId,
+  vodObjectId,
+  vodData
+}) {
+  ValidateObject(objectId);
+  ValidateObject(vodObjectId);
+
+  const streamLibraryId = await this.ContentObjectLibraryId({objectId});
+  const vodLibraryId = await this.ContentObjectLibraryId({objectId: vodObjectId});
+  const streamHash = await this.LatestVersionHash({objectId});
+
+  const {writeToken: streamWriteToken} = await this.EditContentObject({
+    libraryId: streamLibraryId,
+    objectId
+  });
+
+  const streamStatusMeta = await this.ContentObjectMetadata({
+    libraryId: streamLibraryId,
+    objectId,
+    metadata: "live_recording/status"
+  }) || {};
+
+  const vodMeta = await this.ContentObjectMetadata({
+    libraryId: vodLibraryId,
+    objectId: vodObjectId,
+    metadata: "live_recording_info"
+  });
+
+  streamStatusMeta.vod_object_id = vodObjectId;
+  streamStatusMeta.prev_recording_end_time = vodMeta.recording_end_time;
+  // TODO: Should prev_recording_id be saving the previous vod id or previous edge write token?
+  streamStatusMeta.prev_recording_id: streamStatusMeta.vod_object_id;
+
+  // Update live stream metadata
+  await this.ReplaceMetadata({
+    libraryId: streamLibraryId,
+    objectId,
+    metadataSubtree: "live_recording/status",
+    metadata: streamStatusMeta
+  });
+
+  const streamFinalize = await this.FinalizeContentObject({
+    libraryId: streamLibraryId,
+    objectId,
+    commitMessage: "Associate VoD object"
+  });
+
+  vodMeta.stream_versionHash = streamHash;
+  vodMeta.recording_start_time = vodData.recordingStartTime;
+  vodMeta.recording_end_time = vodData.recordingEndTime;
+  vodMeta.recording_vod_time = vodData.recordingVodTime;
+
+  // Update VoD object metadata
+  await this.ReplaceMetadata({
+    libraryId: vodLibraryId,
+    objectId: vodObjectId,
+    metadataSubtree: "live_recording_info",
+    metadata: vodMeta
+  });
+
+  const vodFinalize = await this.FinalizeContentObject({
+    libraryId: vodLibraryId,
+    objectId: vodObjectId,
+    commitMessage: "Associate stream version and recording info"
+  });
+
+  return {
+    streamFinalize,
+    vodFinalize
+  };
+};
+
+exports.StreamRestartRecording = async function({persistent=false, ttl}) {};
+
+exports.StreamUpdatePlayoutConfig = async function() {};
