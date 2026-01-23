@@ -2765,6 +2765,11 @@ exports.StreamAssociateVod = async function({
     objectId
   });
 
+  const {writeToken: vodWriteToken} = await this.EditContentObject({
+    libraryId: vodLibraryId,
+    objectId: vodObjectId
+  });
+
   const streamStatusMeta = await this.ContentObjectMetadata({
     libraryId: streamLibraryId,
     objectId,
@@ -2786,6 +2791,7 @@ exports.StreamAssociateVod = async function({
   await this.ReplaceMetadata({
     libraryId: streamLibraryId,
     objectId,
+    writeToken: streamWriteToken,
     metadataSubtree: "live_recording/status",
     metadata: streamStatusMeta
   });
@@ -2793,6 +2799,7 @@ exports.StreamAssociateVod = async function({
   const streamFinalize = await this.FinalizeContentObject({
     libraryId: streamLibraryId,
     objectId,
+    writeToken: vodWriteToken,
     commitMessage: "Associate VoD object"
   });
 
