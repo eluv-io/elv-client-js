@@ -11,7 +11,7 @@ const path = require("path");
 const fs = require("fs");
 const HttpClient = require("../HttpClient");
 const Fraction = require("fraction.js");
-const {ValidateObject, ValidatePresence} = require("../Validation");
+const {ValidateObject, ValidatePresence, ValidateLibrary} = require("../Validation");
 const ContentObjectAudit = require("../ContentObjectAudit");
 const {slugify} = require("../../utilities/lib/helpers");
 const LRCProfile = require("../live_recording_config_profiles/live_recording_config_default");
@@ -1244,7 +1244,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
 };
 
 /**
- * Close the edge write token and make the stream object inactive.
+ * Close the edge write token, back up with a new VoD, and make the stream object inactive.
  *
  * @methodGroup Live Stream
  * @namedParams
@@ -1336,15 +1336,42 @@ exports.StreamStopRecording = async function({name}) {
       metadata: finalizeMetadata
     });
 
-    let fin = await this.FinalizeContentObject({
+    let finalizeResponse = await this.FinalizeContentObject({
       libraryId,
       objectId,
       writeToken,
       commitMessage: `Deactivate live stream - stop time ${stopTime}`
     });
 
+    const vodObjectId = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: "live_recording/status/vod_object_id"
+    });
+
+    // Create/Update VoD
+    if(vodObjectId) {
+      await this.StreamAssociateVod({
+        objectId,
+        vodObjectId,
+        vodData: {
+          recordingEndTime: stopTime
+          recordingVodTime: stopTime
+        }
+      });
+    } else {
+      await this.StreamCopyToVod({
+        name: objectId,
+        targetLibraryId: libraryId,
+        // TODO: What should we pass for recordingPeriod and startTime
+        recordingPeriod,
+        startTime,
+        endTime: stopTime
+      });
+    }
+
     return {
-      fin,
+      finalizeResponse,
       name,
       state: newState
     };
@@ -2276,7 +2303,8 @@ exports.StreamListUrls = async function({siteId}={}) {
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} name - Object ID or name of the live stream
- * @param {string} targetObjectId - Object ID of the target VOD object
+ * @param {string=} targetObjectId - Object ID of the target VoD object. If not provided, a new objet will be created
+ * @param {string=} targetLibraryId - ID of the library to create the VoD
  * @param {string=} eventId -
  * @param {boolean=} finalize - If enabled, target object will be finalized after copy to vod operations
  * @param {number=} recordingPeriod - Determines which recording period to copy, which are 0-based. -1 copies the current (or last) period
@@ -2319,6 +2347,7 @@ exports.StreamListUrls = async function({siteId}={}) {
 exports.StreamCopyToVod = async function({
   name,
   targetObjectId,
+  targetLibraryId,
   eventId,
   streams=null,
   finalize=true,
@@ -2334,9 +2363,31 @@ exports.StreamCopyToVod = async function({
 
   this.Log(`Copying stream ${name} to target ${targetObjectId}`);
 
-  ValidateObject(targetObjectId);
+  if(!targetObjectId) {
+    ValidateLibrary(targetLibraryId);
 
-  const targetLibraryId = await this.ContentObjectLibraryId({objectId: targetObjectId});
+    const titleType = yield this.client.ContentObjectMetadata({
+      libraryId: tenantContractId.replace("iten", "ilib"),
+      objectId: tenantContractId.replace("iten", "iq__"),
+      metadataSubtree: "public/content_types/title",
+    });
+
+    const createResponse = yield this.client.CreateContentObject({
+      libraryId: targetLibraryId,
+      options: titleType ?
+        {
+          type: titleType,
+          meta: {
+            public: {
+              name: `${name} VoD`
+            }
+          }
+        } :
+        {}
+    });
+  } else {
+    const targetLibraryId = await this.ContentObjectLibraryId({objectId: targetObjectId});
+  }
 
   // Validation - ensure target object has content encryption keys
   const kmsAddress = await this.authClient.KMSAddress({objectId: targetObjectId});
