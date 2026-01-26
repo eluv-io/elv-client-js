@@ -2938,4 +2938,118 @@ exports.StreamRestartRecording = async function({objectId, persistent, partTtl})
   return finalizeResponse;
 };
 
-exports.StreamUpdatePlayoutConfig = async function() {};
+/**
+ * Update playout configuration for a live stream (ladder specs, DRM, watermarks)
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} objectId - Object ID of the live stream
+ * @param {Object} playoutConfig - Partial playout configuration to merge
+ * @param {Object=} playoutConfig.ladder_specs - Encoding ladder specifications
+ * @param {string=} playoutConfig.drm -DRM configuration
+ * @param {Object=} playoutConfig.simple_watermark - Text watermark settings. A null value triggers removal of any existing watermark.
+ * @param {Object=} playoutConfig.image_watermark - Image
+ watermark settings. A null value triggers removal of any existing watermark.
+ * @param {Object=} playoutConfig.forensic_watermark - Forensic
+ watermark settings. A null value triggers removal of any existing watermark.
+ * @param {string=} writeToken - Write token of the draft
+ * @param {boolean=} finalize - If enabled, object will be finalized after update
+ *
+ * @return {Promise<Object>} - The finalize response or write token
+ */
+exports.StreamUpdatePlayoutConfig = async function({
+  libraryId,
+  objectId,
+  writeToken,
+  playoutConfig,
+  finalize=false
+}) {
+  ValidateObject(objectId);
+
+  const existingConfig = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    metadataSubtree: "live_recording/playout_config"
+  });
+
+  if(!existingConfig) {
+    throw Error("Stream must be configured before updating playout config");
+  }
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  if(!writeToken) {
+    ({writeToken} = await this.EditContentObject({
+      libraryId,
+      objectId
+    }));
+  }
+
+  // Handle watermark removal for null values
+  const watermarkTypes = ['simple_watermark', 'image_watermark', 'forensic_watermark'];
+  const watermarksToRemove = watermarkTypes.filter(type => (Object.prototype.hasOwnProperty.call(playoutConfig, type) && playoutConfig[type] === null)
+  );
+
+  const cleanedPlayoutConfig = {...playoutConfig };
+  watermarksToRemove.forEach(type => delete cleanedPlayoutConfig[type]);
+
+  const updatedConfig = R.mergeDeepRight(existingConfig, cleanedPlayoutConfig);
+
+  watermarksToRemove.forEach(type => delete updatedConfig[type]);
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken: resolvedWriteToken,
+    metadataSubtree: "live_recording/playout_config",
+    metadata: updatedConfig
+  });
+
+  // Update edge write token if stream is active
+  const edgeWriteToken = await
+    this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: "live_recording/fabric_config/edge_write_token"
+  });
+
+  if(edgeWriteToken) {
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: edgeWriteToken,
+      metadataSubtree:
+        "live_recording/playout_config",
+      metadata: updatedConfig
+    });
+  }
+
+  const status = await this.StreamStatus({name: objectId});
+
+  if(!["uninitialized", "unconfigured"].includes(status.state)) {
+    const drmOption = ENCRYPTION_OPTIONS.find(option => option.value === playoutConfig?.drm);
+
+    await this.StreamInitialize({
+      name: objectId,
+      drm: (!playoutConfig?.drm || playoutConfig?.drm === "clear") ? false : true,
+      format: drmOption ? drmOption?.format?.join(",") : "",
+      writeToken,
+      finalize: false
+    });
+  }
+
+  // ladder spec update
+
+  if(finalize) {
+    return this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Update playout configuration"
+    });
+  }
+
+  return {writeToken};
+};
