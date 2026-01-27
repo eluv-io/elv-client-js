@@ -2788,14 +2788,17 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
 };
 
 /**
- * Associate a VOD object to a live stream
+ * Associate a VOD object to a live stream.
+ * Creates bidirectional links between the stream and VOD objects.
  *
+ * @methodGroup Live Stream
+ * @namedParams
  * @param {string} objectId - Object ID of the live stream
- * @param {string} vodObjectId - Object ID of the VOD object
- * @param {Object=} vodData - Additional VoD data
- * @param {Object=} vodData.recordingStartTime - The start time of the recording
- * @param {Object=} vodData.recordingEndTime - The end time of the recording
- * @param {Object=} vodData.recordingVodTime - The time the last VoD was taken
+ * @param {string} vodObjectId - Object ID of the VOD object to associate
+ * @param {Object=} vodData - Additional VoD metadata
+ * @param {string=} vodData.recordingStartTime - The start time of the recording
+ * @param {string=} vodData.recordingEndTime - The end time of the recording
+ * @param {string=} vodData.recordingVodTime - The time the last VoD was taken
  *
  * @returns {Promise<Object>} - The finalize response
  */
@@ -2966,14 +2969,16 @@ const CreateAudioStreamsConfig = function({audioData}) {
 
 /**
  * Build audio ladder specs from audioData and ladder profile.
+ * This is a helper function used by StreamUpdateLadderSpecs.
  *
- * @param {Object} params
- * @param {string} params.objectId - Object ID of the live stream
- * @param {string=} params.libraryId - Library ID
- * @param {string=} params.writeToken - Write token
- * @param {Object} params.ladderSpecs - Ladder profile with audio array
- * @param {Object=} params.audioData - Audio data from metadata
- * @param {boolean=} params.edit - If true, preserves existing default settings
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} objectId - Object ID of the live stream
+ * @param {string=} libraryId - Library ID
+ * @param {string=} writeToken - Write token
+ * @param {Object} ladderSpecs - Ladder profile with audio array
+ * @param {Object=} audioData - Audio data from metadata. If not provided, will be fetched from object metadata.
+ * @param {boolean=} edit - If true, preserves existing default audio stream settings (default: false)
  *
  * @returns {Promise<Object>} - { nAudio, globalAudioBitrate, audioLadderSpecs, audioIndexMeta }
  */
@@ -3041,6 +3046,20 @@ exports.UpdateAudioLadderSpecs = async function({
   };
 };
 
+/**
+ * Update the encoding ladder specs for a live stream based on a profile.
+ * Fetches the ladder profile, builds video and audio specs, and updates the stream metadata.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} objectId - Object ID of the live stream
+ * @param {string=} libraryId - Library ID of the live stream
+ * @param {string=} profile - Name of the ladder profile to use (defaults to "default")
+ * @param {string=} writeToken - Write token of the draft. If not provided, a new draft will be created.
+ * @param {boolean=} finalize - If enabled, object will be finalized after update (default: true)
+ *
+ * @returns {Promise<void>}
+ */
 exports.StreamUpdateLadderSpecs = async function({
   objectId,
   libraryId,
@@ -3152,23 +3171,26 @@ exports.StreamUpdateLadderSpecs = async function({
 };
 
 /**
- * Update playout configuration for a live stream (ladder specs, DRM, watermarks)
+ * Update playout configuration for a live stream (DRM, watermarks, etc.).
+ * Uses deep merge so only specified fields are updated; existing config is preserved.
+ * Set a watermark field to null to explicitly remove it.
  *
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} objectId - Object ID of the live stream
+ * @param {string=} libraryId - Library ID of the live stream
  * @param {Object} playoutConfig - Partial playout configuration to merge
- * @param {Object=} playoutConfig.ladder_specs - Encoding ladder specifications
- * @param {string=} playoutConfig.drm -DRM configuration
- * @param {Object=} playoutConfig.simple_watermark - Text watermark settings. A null value triggers removal of any existing watermark.
- * @param {Object=} playoutConfig.image_watermark - Image
- watermark settings. A null value triggers removal of any existing watermark.
- * @param {Object=} playoutConfig.forensic_watermark - Forensic
- watermark settings. A null value triggers removal of any existing watermark.
+ * @param {string=} playoutConfig.drm - DRM configuration
+ * @param {Object=} playoutConfig.simple_watermark - Text watermark settings (null to remove)
+ * @param {Object=} playoutConfig.image_watermark - Image watermark settings (null to remove)
+ * @param {Object=} playoutConfig.forensic_watermark - Forensic watermark settings (null to remove)
+ * @param {boolean=} playoutConfig.dvr_enabled - Whether DVR is enabled
+ * @param {number=} playoutConfig.dvr_max_duration - Maximum DVR duration in seconds
+ * @param {string=} profile - Name of the ladder profile to apply (optional)
  * @param {string=} writeToken - Write token of the draft
- * @param {boolean=} finalize - If enabled, object will be finalized after update
+ * @param {boolean=} finalize - If enabled, object will be finalized after update (default: false)
  *
- * @return {Promise<Object>} - The finalize response or write token
+ * @returns {Promise<Object>} - The finalize response or write token
  */
 exports.StreamUpdatePlayoutConfig = async function({
   libraryId,
