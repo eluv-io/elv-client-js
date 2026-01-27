@@ -2939,6 +2939,219 @@ exports.StreamRestartRecording = async function({objectId, persistent, partTtl})
 };
 
 /**
+ * Convert audioData metadata format to audioStreams format.
+ *
+ * @param {Object} audioData - Audio data from metadata (keyed by stream index)
+ * @returns {Object} audioStreams - Normalized audio streams config
+ */
+const CreateAudioStreamsConfig = function({audioData}) {
+  const audioStreams = {};
+
+  Object.keys(audioData || {}).forEach(audioIndex => {
+    const audio = audioData[audioIndex];
+
+    audioStreams[audioIndex] = {
+      recordingChannels: audio.recording_channels || 2,
+      recordingBitrate: audio.recording_bitrate || 192000,
+      lang: audio.lang
+    };
+
+    if(audio.playout) {
+      audioStreams[audioIndex].playoutLabel = audio.playout_label || `Audio ${audioIndex}`;
+    }
+  });
+
+  return audioStreams;
+};
+
+/**
+ * Build audio ladder specs from audioData and ladder profile.
+ *
+ * @param {Object} params
+ * @param {string} params.objectId - Object ID of the live stream
+ * @param {string=} params.libraryId - Library ID
+ * @param {string=} params.writeToken - Write token
+ * @param {Object} params.ladderSpecs - Ladder profile with audio array
+ * @param {Object=} params.audioData - Audio data from metadata
+ * @param {boolean=} params.edit - If true, preserves existing default settings
+ *
+ * @returns {Promise<Object>} - { nAudio, globalAudioBitrate, audioLadderSpecs, audioIndexMeta }
+ */
+exports.UpdateAudioLadderSpecs = async function({
+  objectId,
+  libraryId,
+  writeToken,
+  ladderSpecs,
+  audioData,
+  edit=false
+}) {
+  let globalAudioBitrate = 0;
+  let nAudio = 0;
+  const audioLadderSpecs = [];
+
+  if(!audioData) {
+    audioData = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "live_recording_config/audio"
+    });
+  }
+
+  const audioIndexMeta = [0, 0, 0, 0, 0, 0, 0, 0];
+  const audioStreams = CreateAudioStreamsConfig({audioData});
+  const audioKeys = Object.keys(audioStreams || {});
+
+  audioKeys.forEach((audioIndex, i) => {
+    const audio = audioStreams[audioIndex];
+
+    audioIndexMeta[i] = parseInt(audioIndex);
+
+    if(!audioData[audioIndex].record) { return; }
+
+    const audioLadderSpec = LiveConf.BuildAudioLadderSpec({
+      ladderProfileAudio: ladderSpecs.audio,
+      recordingChannels: audio.recordingChannels,
+      audioIndex,
+      streamLabel: audioData[audioIndex].playout ? audioData[audioIndex].playout_label : null,
+      lang: audioData[audioIndex].lang
+    });
+
+    // Set default audio stream if only one exists
+    if(audioKeys.length === 1 && !edit) {
+      audioLadderSpec.default = true;
+    } else {
+      audioLadderSpec.default = audioData[audioIndex].default;
+    }
+
+    audioLadderSpecs.push(audioLadderSpec);
+
+    if(audio.recordingBitrate > globalAudioBitrate) {
+      globalAudioBitrate = audio.recordingBitrate;
+    }
+
+    nAudio++;
+  });
+
+  return {
+    nAudio,
+    globalAudioBitrate,
+    audioLadderSpecs,
+    audioIndexMeta
+  };
+};
+
+exports.StreamUpdateLadderSpecs = async function({
+  objectId,
+  libraryId,
+  profile="",
+  writeToken,
+  finalize=true
+}) {
+  let profileData;
+  let topLadderRate = 0;
+  let ladderSpecs = [];
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  if(!writeToken) {
+    ({writeToken} = await this.EditContentObject({
+      libraryId,
+      objectId
+    }));
+  }
+
+  const ladderProfiles = await this.StreamLadderProfiles();
+
+  let audioData = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    metadataSubtree: "live_recording_config/audio"
+  });
+
+  if(!audioData || Object.keys(audioData || {}).length === 0) {
+    ({audioData} = await this.rootStore.dataStore.LoadStreamProbeData({
+      objectId
+    }));
+  }
+
+  if(!ladderProfiles) {
+    throw Error("Unable to update ladder specs. No profiles were found.");
+  }
+
+  if(!!profile && profile.toLowerCase() !== "default") {
+    profileData = ladderProfiles.custom.find(item => item.name === profile);
+  } else {
+    profileData = ladderProfiles.default;
+  }
+
+  // Add fully-formed video specs
+  profileData.ladder_specs.video.forEach(spec => {
+    if(spec.bit_rate > topLadderRate) {
+      topLadderRate = spec.bit_rate;
+    }
+
+    const videoSpec = {
+      ...spec,
+      media_type: 1,
+      representation: `videovideo_${spec.width}x${spec.height}_h264@${spec.bit_rate}`,
+      stream_index: 0,
+      stream_name: "video"
+    };
+
+    ladderSpecs.push(videoSpec);
+  });
+
+  const {nAudio, globalAudioBitrate, audioLadderSpecs, audioIndexMeta} = await this.UpdateAudioLadderSpecs({
+    libraryId,
+    objectId,
+    ladderSpecs: profileData.ladder_specs,
+    audioData
+  });
+
+  ladderSpecs = ladderSpecs.concat(audioLadderSpecs);
+
+  await this.MergeMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "live_recording/recording_config/recording_params/xc_params",
+    metadata: {
+      audio_bitrate: globalAudioBitrate,
+      video_bitrate: topLadderRate,
+      n_audio: nAudio
+    }
+  });
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "live_recording/recording_config/recording_params/ladder_specs",
+    metadata: ladderSpecs
+  });
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "live_recording/recording_config/recording_params/xc_params/audio_index",
+    metadata: audioIndexMeta
+  });
+
+  if(finalize) {
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Update ladder_specs"
+    });
+  }
+};
+
+/**
  * Update playout configuration for a live stream (ladder specs, DRM, watermarks)
  *
  * @methodGroup Live Stream
@@ -2962,6 +3175,7 @@ exports.StreamUpdatePlayoutConfig = async function({
   objectId,
   writeToken,
   playoutConfig,
+  profile,
   finalize=false
 }) {
   ValidateObject(objectId);
@@ -3040,7 +3254,13 @@ exports.StreamUpdatePlayoutConfig = async function({
     });
   }
 
-  // ladder spec update
+  await this.StreamUpdateLadderSpecs({
+    libraryId,
+    objectId,
+    writeToken,
+    profile,
+    finalize: false
+  });
 
   if(finalize) {
     return this.FinalizeContentObject({

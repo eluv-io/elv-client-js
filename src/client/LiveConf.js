@@ -1,53 +1,6 @@
 /* eslint no-console: 0 */
 const R = require("ramda");
 
-const DefaultABRLadder = {
-  "video" : [
-    {
-      bit_rate: 14000000,
-      codecs: "avc1.640028,mp4a.40.2",
-      height: 2160,
-      width: 3840
-    },
-    {
-      bit_rate: 9500000,
-      codecs: "avc1.640028,mp4a.40.2",
-      height: 1080,
-      width: 1920
-    },
-    {
-      bit_rate: 4500000,
-      codecs: "avc1.640028,mp4a.40.2",
-      height: 720,
-      width: 1280
-    },
-    {
-      bit_rate: 2000000,
-      codecs: "avc1.640028,mp4a.40.2",
-      height: 540,
-      width: 960
-    },
-    {
-      bit_rate: 900000,
-      codecs: "avc1.640028,mp4a.40.2",
-      height: 540,
-      width: 960
-    }
-  ],
-  "audio" : [
-    {
-      bit_rate: 192000,
-      channels: 2,
-      codecs: "mp4a.40.2",
-    },
-    {
-      bit_rate: 384000,
-      channels: 6,
-      codecs: "mp4a.40.2",
-    }
-  ]
-};
-
 const LiveconfTemplate = {
   live_recording: {
     fabric_config: {
@@ -132,6 +85,163 @@ class LiveConf {
     this.overwriteOriginUrl = overwriteOriginUrl;
     this.syncAudioToVideo = syncAudioToVideo;
     this.currentLiveRecordingMeta = liveRecordingMeta;
+  }
+
+  static DefaultABRLadder = {
+    "video": [
+      {
+        bit_rate: 14000000,
+        codecs: "avc1.640028,mp4a.40.2",
+        height: 2160,
+        width: 3840
+      },
+      {
+        bit_rate: 9500000,
+        codecs: "avc1.640028,mp4a.40.2",
+        height: 1080,
+        width: 1920
+      },
+      {
+        bit_rate: 4500000,
+        codecs: "avc1.640028,mp4a.40.2",
+        height: 720,
+        width: 1280
+      },
+      {
+        bit_rate: 2000000,
+        codecs: "avc1.640028,mp4a.40.2",
+        height: 540,
+        width: 960
+      },
+      {
+        bit_rate: 900000,
+        codecs: "avc1.640028,mp4a.40.2",
+        height: 540,
+        width: 960
+      }
+    ],
+    "audio": [
+      {
+        bit_rate: 192000,
+        channels: 2,
+        codecs: "mp4a.40.2",
+      },
+      {
+        bit_rate: 384000,
+        channels: 6,
+        codecs: "mp4a.40.2",
+      }
+    ]
+  };
+
+  /**
+   * Build a single audio ladder spec from profile and audio stream info.
+   *
+   * @param {Object} params
+   * @param {Object} params.ladderProfileAudio - Audio array from ladder profile
+   * @param {number} params.recordingChannels - Number of audio channels
+   * @param {string|number} params.audioIndex - Stream index
+   * @param {string=} params.streamLabel - Optional stream label
+   * @param {string=} params.lang - Optional language code
+   *
+   * @returns {Object} audioLadderSpec - The audio ladder spec object
+   */
+  static BuildAudioLadderSpec({ladderProfileAudio, recordingChannels, audioIndex, streamLabel, lang}) {
+    // Find ladder rung for the specific channel layout (2 or 6 channels)
+    let audioLadderSpec = ladderProfileAudio.find(a => a.channels === recordingChannels);
+
+    // If no channel layout match, use the first element in the ladder
+    if(!audioLadderSpec) {
+      audioLadderSpec = { ...ladderProfileAudio[0] };
+    } else {
+      audioLadderSpec = { ...audioLadderSpec };
+    }
+
+    audioLadderSpec.representation = `audioaudio_aac@${audioLadderSpec.bit_rate}`;
+    audioLadderSpec.channels = recordingChannels;
+    audioLadderSpec.stream_index = parseInt(audioIndex);
+    audioLadderSpec.stream_name = `audio_${audioIndex}`;
+    audioLadderSpec.stream_label = streamLabel || null;
+    audioLadderSpec.media_type = 2;
+    audioLadderSpec.lang = lang ?? "";
+
+    return audioLadderSpec;
+  }
+
+  /**
+   * Build ladder specs from a profile, video stream info, and audio streams.
+   *
+   * @namedParams
+   * @param {Object} ladderProfile - Ladder profile with video and audio arrays
+   * @param {Object} videoStream - Video stream info (needs height property)
+   * @param {Object} audioStreams - Audio streams keyed by index, each with:
+   *   - recordingChannels: number
+   *   - recordingBitrate: number
+   *   - playoutLabel?: string
+   *   - lang?: string
+   *
+   * @returns {Object} result
+   * @returns {Array} result.ladderSpecs - The generated ladder specs array
+   * @returns {number} result.topLadderRate - Highest video bitrate in ladder
+   * @returns {number} result.globalAudioBitrate - Highest audio bitrate
+   * @returns {number} result.nAudio - Number of audio streams
+   */
+  static BuildLadderSpecs({ladderProfile, videoStream, audioStreams}) {
+    const ladderSpecs = [];
+    let topLadderRate = 0;
+    let globalAudioBitrate = 0;
+    let nAudio = 0;
+
+    // Video specs
+    for(const elem of ladderProfile.video) {
+      if(elem.height > videoStream.height) {
+        continue;
+      }
+
+      if(elem.bit_rate > topLadderRate) {
+        topLadderRate = elem.bit_rate;
+      }
+
+      ladderSpecs.push({
+        ...elem,
+        media_type: 1,
+        stream_name: "video",
+        stream_index: 0,
+        representation: `videovideo_${elem.width}x${elem.height}_h264@${elem.bit_rate}`
+      });
+    }
+
+    // Audio specs
+    for(let i = 0; i < Object.keys(audioStreams).length; i++) {
+      const audioIndex = Object.keys(audioStreams)[i];
+      const audio = audioStreams[audioIndex];
+
+      const audioLadderSpec = LiveConf.BuildAudioLadderSpec({
+        ladderProfileAudio: ladderProfile.audio,
+        recordingChannels: audio.recordingChannels,
+        audioIndex,
+        streamLabel: audio.playoutLabel,
+        lang: audio.lang
+      });
+
+      if(Object.keys(audioStreams).length === 1) {
+        audioLadderSpec.default = true;
+      }
+
+      ladderSpecs.push(audioLadderSpec);
+
+      if(audio.recordingBitrate > globalAudioBitrate) {
+        globalAudioBitrate = audio.recordingBitrate;
+      }
+      nAudio++;
+    }
+
+    return {
+      ladderSpecs,
+      topLadderRate,
+      globalAudioBitrate,
+      nAudio
+    };
   }
 
   getFormat() {
@@ -573,76 +683,19 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs;
     }
 
-    const ladderProfile = customSettings.ladder_profile || DefaultABRLadder;
+    const ladderProfile = customSettings.ladder_profile || LiveConf.DefaultABRLadder;
 
     conf.live_recording.recording_config.recording_params.xc_params.enc_height = videoStream.height;
     conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;
 
-    // Reset ladder specs (updating existing stream will carry over old specs
-    conf.live_recording.recording_config.recording_params.ladder_specs = [];
+    const { ladderSpecs, topLadderRate, globalAudioBitrate, nAudio } = LiveConf.BuildLadderSpecs({
+      ladderProfile,
+      videoStream,
+      audioStreams
+    });
 
-    // Determine video recording bitrate and ABR ladder
-    let topLadderRate = 0;
-    for(let i = 0; i < ladderProfile.video.length; i ++) {
-      let elem = ladderProfile.video[i];
-      if(elem.height > videoStream.height)
-        continue;
-      if(elem.bit_rate > topLadderRate) {
-        topLadderRate = elem.bit_rate;
-      }
-      elem.media_type = 1;
-      elem.stream_name = "video";
-      elem.stream_index = 0;
-      elem.representation = "videovideo_" + elem.width + "x" + elem.height + "_h264@" + elem.bit_rate;
-      conf.live_recording.recording_config.recording_params.ladder_specs.push(elem);
-    }
-    // Currently the recording bitrate is the top bitrate of the ladder (it will be configurable separately in the future)
+    conf.live_recording.recording_config.recording_params.ladder_specs = ladderSpecs;
     conf.live_recording.recording_config.recording_params.xc_params.video_bitrate = topLadderRate;
-
-    // Determine audio recording bitrate and ABR ladder
-    let globalAudioBitrate = 0;
-    let nAudio = 0;
-
-    for(let i = 0; i < Object.keys(audioStreams).length; i++) {
-      let audioLadderSpec = {};
-      const audioIndex = Object.keys(audioStreams)[i];
-      const audio = audioStreams[audioIndex];
-
-      // Find ladder rung for the specific channel layout (2 or 6 channels)
-      for(let j = 0; j < ladderProfile.audio.length; j ++) {
-        let elem = ladderProfile.audio[j];
-        if(elem.channels == audio.recordingChannels) {
-          audioLadderSpec = {...elem};
-          break;
-        }
-      }
-
-      if(Object.keys(audioLadderSpec).length === 0) {
-        // If no channels layout match, just use the first element in the ladder
-        audioLadderSpec = {...ladderProfile.audio[0]};
-      }
-
-      audioLadderSpec.representation = `audioaudio_aac@${audioLadderSpec.bit_rate}`;
-      audioLadderSpec.channels = audio.recordingChannels;
-      audioLadderSpec.stream_index = parseInt(audioIndex);
-      audioLadderSpec.stream_name = `audio_${audioIndex}`;
-      audioLadderSpec.stream_label = audio.playoutLabel ? audio.playoutLabel : null;
-      audioLadderSpec.media_type = 2;
-      audioLadderSpec.lang = audio.lang ?? "";
-
-
-      if(Object.keys(audioStreams).length === 1) {
-        audioLadderSpec.default = true;
-      }
-
-      conf.live_recording.recording_config.recording_params.ladder_specs.push(audioLadderSpec);
-      if(audio.recordingBitrate > globalAudioBitrate) {
-        globalAudioBitrate = audio.recordingBitrate;
-      }
-      nAudio++;
-    }
-
-    // Global recording bitrate for all audio streams
     conf.live_recording.recording_config.recording_params.xc_params.audio_bitrate = globalAudioBitrate;
     conf.live_recording.recording_config.recording_params.xc_params.n_audio = nAudio;
 
