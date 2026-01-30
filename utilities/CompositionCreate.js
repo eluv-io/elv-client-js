@@ -26,6 +26,7 @@
  *   --base-object-id iq__xxxxxxxxxxxxxxxx \
  *   --items iq__100:default_dash:1_2_3_4:2_3_4_5,iq__200:default_dash,iq__300:default_dash
  *   --base-range 1_2_3_4:2_3_4_5 => (hh_mm_ss_ms)
+ *   --base-offering-key default_dash
  *
  * Without offering:
  * node CompositionCreate.js \
@@ -244,7 +245,7 @@ class CompositionCreate extends Utility {
             concerns: [ArgLibraryId, FabricObject],
             options: [
                 ModOpt("libraryId", { demand: true }),
-                StdOpt("name", { demand: true, forX: "channel object" }),
+                StdOpt("name", { forX: "channel object" }),
                 NewOpt("baseObjectId", {
                     demand: true,
                     descTemplate: "Base object ID to write channel metadata to",
@@ -275,7 +276,7 @@ class CompositionCreate extends Utility {
 
     async body() {
         const logger = this.logger;
-        const { name, items, libraryId, baseObjectId, baseRange, baseOfferingKey } = this.args;
+        const { items, libraryId, baseObjectId, baseRange, baseOfferingKey } = this.args;
         console.log(baseOfferingKey);
 
         let baseObjectStartTC , baseObjectEndTC ;
@@ -291,9 +292,13 @@ class CompositionCreate extends Utility {
             objectId: baseObjectId
         });
 
+        
 
         // Determine base offering
         const baseOfferingKeyUsed = baseOfferingKey || Object.keys(baseMetadata.offerings ?? {})[0] || "default";
+
+        const name = this.args.name || baseMetadata.public?.name + " - " + baseOfferingKeyUsed || baseObjectId;
+        logger.log(`Creating composition '${name}' on base object ${baseObjectId}`);
 
         // Parse items
         let itemList = items? items.split(",").map(itemParser):[];
@@ -502,7 +507,7 @@ class CompositionCreate extends Utility {
     }
 
     header() {
-        return `Create composition '${this.args.name}' in lib ${this.args.libraryId}`;
+        return `Create composition in object ${this.args.baseObjectId}`;
     }
 }
 
