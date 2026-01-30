@@ -251,7 +251,6 @@ class CompositionCreate extends Utility {
                     string: true
                 }),
                 NewOpt("items", {
-                    demand: true,
                     descTemplate:
                         "Comma-separated list of OBJECT_ID:OFFERING_KEY:START_TIME:END_TIME, The start and end time are provide in form HH_MM_SS_MS (e.g. iq__100:default_dash:1_20_3_5:1_30_0_0,iq__200:default_dash)",
                     string: true
@@ -264,6 +263,11 @@ class CompositionCreate extends Utility {
                 NewOpt("baseRange", {
                     descTemplate: "Provide start and end time for base object id (format START_TIME:END_TIME)",
                     type: "string",
+                }),
+                NewOpt("baseOfferingKey", {
+                    descTemplate: "Offering key to use for base object if no objects in items list",
+                    type: "string",
+                    default: ""
                 })
             ]
         };
@@ -271,7 +275,8 @@ class CompositionCreate extends Utility {
 
     async body() {
         const logger = this.logger;
-        const { name, items, libraryId, baseObjectId, baseRange } = this.args;
+        const { name, items, libraryId, baseObjectId, baseRange, baseOfferingKey } = this.args;
+        console.log(baseOfferingKey);
 
         let baseObjectStartTC , baseObjectEndTC ;
         if(baseRange) {
@@ -288,17 +293,14 @@ class CompositionCreate extends Utility {
 
 
         // Determine base offering
-        const baseOfferingKey =
-            baseMetadata.offerings && Object.keys(baseMetadata.offerings).length > 0
-                ? Object.keys(baseMetadata.offerings)[0]
-                : "default";
+        const baseOfferingKeyUsed = baseOfferingKey || Object.keys(baseMetadata.offerings ?? {})[0] || "default";
 
         // Parse items
-        let itemList = items.split(",").map(itemParser);
+        let itemList = items? items.split(",").map(itemParser):[];
 
         // Add baseObjectId to itemList if not already included
         if (!itemList.some(item => item.objectId === baseObjectId)) {
-            itemList.unshift({ objectId: baseObjectId, offering: baseOfferingKey, startTC: baseObjectStartTC, endTC: baseObjectEndTC});
+            itemList.unshift({ objectId: baseObjectId, offering: baseOfferingKeyUsed, startTC: baseObjectStartTC, endTC: baseObjectEndTC});
         }
 
         logger.log("\nChecking items for any parameter mismatches...");
@@ -401,7 +403,7 @@ class CompositionCreate extends Utility {
 
 
         // Base offering for channel
-        const baseOffering = baseMetadata.offerings?.[baseOfferingKey] || {};
+        const baseOffering = baseMetadata.offerings?.[baseOfferingKeyUsed] || {};
 
         // Normalize playout_formats and streams to arrays
         const basePlayoutFormats =
@@ -423,7 +425,7 @@ class CompositionCreate extends Utility {
             display_name: name,
             items: [],
             key,
-            offeringKey: baseOfferingKey,
+            offeringKey: baseOfferingKeyUsed,
             playout: {
                 playout_formats: basePlayoutFormats,
                 streams: baseStreams
@@ -434,7 +436,7 @@ class CompositionCreate extends Utility {
                 libraryId,
                 name: baseMetadata.public?.name || name,
                 objectId: baseObjectId,
-                offeringKey: baseOfferingKey,
+                offeringKey: baseOfferingKeyUsed,
                 profileKey: "",
                 prompt: "",
                 type: "elvmediatool"
