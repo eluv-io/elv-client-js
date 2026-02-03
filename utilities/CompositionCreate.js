@@ -277,7 +277,6 @@ class CompositionCreate extends Utility {
     async body() {
         const logger = this.logger;
         const { items, libraryId, baseObjectId, baseRange, baseOfferingKey } = this.args;
-        console.log(baseOfferingKey);
 
         let baseObjectStartTC , baseObjectEndTC ;
         if(baseRange) {
