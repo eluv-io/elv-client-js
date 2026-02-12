@@ -292,6 +292,7 @@ class LiveConf {
         seg.video = seg.videoTimeBase * 30.03;
         seg.keyint = 120;
         seg.duration = "30.03";
+        seg.videoFrameDurationTs = 1001;
         break;
       default:
         throw "unsupported frame rate for MPEGTS - " + frameRate;
