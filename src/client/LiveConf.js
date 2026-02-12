@@ -104,7 +104,7 @@ const LiveconfTemplate = {
           video_bitrate: null,
           video_seg_duration_ts: null,
           video_time_base: null,
-          video_frame_duration_ts: 1001,
+          video_frame_duration_ts: null,
           xc_type: 3
         }
       }
@@ -352,6 +352,7 @@ class LiveConf {
         seg.video = sourceTimescale * 30.03;
         seg.keyint = 120;
         seg.duration = "30.03";
+        seg.videoFrameDurationTs = 1001;
         break;
       default:
         throw "unsupported frame rate for RTMP - " + frameRate;
@@ -478,7 +479,7 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.source_timescale = this.calcOutputTimebase(segDurations.videoTimeBase);
     }
     if(segDurations.videoFrameDurationTs) {
-      conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs ?? 1001;
+      conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs;
     }
 
     const ladderProfile = customSettings.ladder_profile || DefaultABRLadder;
