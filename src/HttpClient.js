@@ -2,18 +2,20 @@ const URI = require("urijs");
 const Fetch = typeof fetch !== "undefined" ? fetch : require("node-fetch").default;
 const {LogMessage} = require("./LogMessage");
 const Utils = require("./Utils");
+const UrlJoin = require("url-join");
 
 class HttpClient {
   Log(message, error=false) {
     LogMessage(this, message, error);
   }
 
-  constructor({uris, debug}) {
+  constructor({uris, debug, normalizePath=false}) {
     this.uris = uris;
     this.uriIndex = 0;
     this.debug = debug;
     this.draftURIs = {};
     this.retries = Math.max(3, uris.length);
+    this.normalizePath = normalizePath;
   }
 
   BaseURI(uriIndex) {
@@ -69,6 +71,7 @@ class HttpClient {
     // If URL contains a write token, it must go to the correct server and can not fail over
     const writeTokenMatch = path.replace(/^\//, "").match(/(qlibs\/ilib[a-zA-Z0-9]+|q|qid)\/(tqw__[a-zA-Z0-9]+)/);
     const writeToken = writeTokenMatch ? writeTokenMatch[2] : undefined;
+    let writeTokenCached = false;
 
     if(writeToken) {
       allowFailover = false;
@@ -76,14 +79,17 @@ class HttpClient {
       if(this.draftURIs[writeToken]) {
         // Use saved write token URI
         baseURI = this.draftURIs[writeToken];
+        writeTokenCached = true;
       } else {
         // Save current URI for all future requests involving this write token
         this.draftURIs[writeToken] = baseURI;
       }
     }
 
+    const normalizedPath = (this.normalizePath && !writeTokenCached) ? UrlJoin(baseURI.path(), path).replace("/as/as", "/as") : path;
+
     let uri = baseURI
-      .path(path)
+      .path(normalizedPath)
       .query(queryParams)
       .hash("");
 
@@ -235,9 +241,11 @@ class HttpClient {
       baseURI = this.draftURIs[writeToken];
     }
 
+    const normalizedPath = (this.normalizePath && !this.draftURIs[writeToken]) ? UrlJoin(baseURI.path(), path).replace("/as/as", "/as") : path;
+
     return (
       baseURI
-        .path(path)
+        .path(normalizedPath)
         .query(queryParams)
         .hash("")
         .toString()

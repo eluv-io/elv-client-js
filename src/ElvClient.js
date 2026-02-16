@@ -430,7 +430,7 @@ class ElvClient {
     this.inaccessibleLibraries = {};
 
     const uris = this.service === "search" ? this.searchURIs : this.fabricURIs;
-    this.HttpClient = new HttpClient({uris, debug: this.debug});
+    this.HttpClient = new HttpClient({uris, debug: this.debug, normalizePath: true});
     this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, debug: this.debug});
     this.FileServiceHttpClient = new HttpClient({uris: this.fileServiceURIs, debug: this.debug});
     this.SearchHttpClient = new HttpClient({uris: this.searchURIs || [], debug: this.debug});
