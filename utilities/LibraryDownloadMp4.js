@@ -75,7 +75,13 @@ class LibraryDownloadMp4 extends Utility {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-    async retry(fn, retries = 3, delay = 1000) {
+    async retry(fn, opts = {}) {
+        const {
+            retries = 3,
+            delay = 1000,
+            onRetry = null
+        } = opts;
+
         let attempt = 0;
         while (attempt < retries) {
             try {
@@ -83,11 +89,15 @@ class LibraryDownloadMp4 extends Utility {
             } catch (err) {
                 attempt++;
                 if (attempt >= retries) throw err;
-                this.logger.warn(`Retry ${attempt}/${retries} after error: ${err.message}`);
+
+                if (onRetry) onRetry(err, attempt);
+                else this.logger.warn(`Retry ${attempt}/${retries} after error: ${err.message}`);
+
                 await this.sleep(delay * Math.pow(2, attempt));
             }
         }
     }
+
 
     async downloadFile(url, filepath) {
         return this.retry(() => {
