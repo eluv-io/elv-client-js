@@ -91,7 +91,7 @@ const GetNodeFromStreamUrl = async ({client, url}) => {
   const nodes = await client.SpaceNodes({matchEndpoint: hostName});
 
   if(nodes.length < 1) {
-    throw new Error(`No node found for stream URL: ${streamUrlObject.href}`);
+    throw new Error(`No node found for stream URL: ${streamUrlObject.href}. Wrong network?`);
   }
 
   const node = {
