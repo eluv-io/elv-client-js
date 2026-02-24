@@ -2055,8 +2055,7 @@ exports.StreamConfig = async function({
     ({node, endpoint, streamUrlObject: streamUrl} = await GetNodeFromStreamUrl({client: this, url: liveRecordingConfigProfile.url}));
     status.node = node;
   } catch(error) {
-    status.error = error.message;
-    return status;
+    throw error;
   }
 
   // No stream data provided ; probe the stream for info
