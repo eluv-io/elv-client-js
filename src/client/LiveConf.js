@@ -438,7 +438,7 @@ class LiveConf {
                 ...(recording_params?.xc_params ||
                 {}),
                 connection_timeout: recording_config?.connection_timeout,
-                copy_mpeg_ts: recording_config?.copy_mpeg_ts,
+                copy_mpegts: recording_config?.copy_mpegts,
                 input_cfg: recording_config?.input_cfg
               }
             }

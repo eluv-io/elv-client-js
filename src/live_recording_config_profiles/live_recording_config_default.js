@@ -4,7 +4,7 @@ const LiveRecordingConfigDefault = {
     part_ttl: 86400,
     reconnect_timeout: 3600,
     connection_timeout: 3600,
-    copy_mpeg_ts: false,
+    copy_mpegts: false,
   },
   profile: {
     ladder_specs: {

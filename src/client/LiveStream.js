@@ -13,7 +13,7 @@ const HttpClient = require("../HttpClient");
 const Fraction = require("fraction.js");
 const {ValidateObject, ValidatePresence} = require("../Validation");
 const ContentObjectAudit = require("../ContentObjectAudit");
-const {slugify} = require("../../utilities/lib/helpers");
+const slugify = str => (str || "").toLowerCase().trim().replace(/ /g, "-").replace(/[^a-z0-9-]/g, "");
 const LRCProfile = require("../live_recording_config_profiles/live_recording_config_default");
 const R = require("ramda");
 
@@ -1882,7 +1882,7 @@ exports.StreamLadderProfile = async function({profileName="default"}) {
  * @property {number=} recording_config.part_ttl - Time-to-live for stream parts in seconds
  * @property {number=} recording_config.connection_timeout - Initial connection timeout when starting the stream, in seconds
  * @property {number=} recording_config.reconnect_timeout - Duration to listen after disconnect detection, in seconds
- * @property {boolean=} recording_config.copy_mpeg_ts - Whether to copy MPEG-TS data
+ * @property {boolean=} recording_config.copy_mpegts - Whether to copy MPEG-TS data
  * @property {Object=} recording_config.input_cfg - Input configuration settings
  * @property {boolean=} recording_config.input_cfg.bypass_libav_reader - Whether to bypass libav reader
  * @property {string=} recording_config.input_cfg.copy_mode - Copy mode setting: "" (empty), "none", "raw", or "remuxed"
