@@ -346,10 +346,20 @@ exports.StreamCreate = async function({
  *
  * @methodGroup Live Stream
  * @namedParams
+ * @param {Object=} streamOptions - Options for the stream metadata read
+ * @param {boolean=} streamOptions.resolveIncludeSource - If specified, resolved links will include the hash of the link at the root of the metadata
+ * @param {boolean=} streamOptions.resolveLinks - If specified, links in the metadata will be resolved
+ * @param {boolean=} streamOptions.resolveIgnoreErrors - If specified, link errors within the requested metadata will not cause the entire response to result in an error
  *
  * @return {Promise<Object>}
  */
-exports.StreamGetSiteData = async function() {
+exports.StreamGetSiteData = async function({streamOptions={}}={}) {
+  const {
+    resolveIncludeSource=true,
+    resolveLinks=true,
+    resolveIgnoreErrors
+  } = streamOptions;
+
   try {
     let tenantId = await this.userProfileClient.TenantContractId();
 
@@ -365,8 +375,9 @@ exports.StreamGetSiteData = async function() {
       libraryId: siteLibraryId,
       objectId: siteObjectId,
       metadataSubtree: "public/asset_metadata/live_streams",
-      resolveIncludeSource: true,
-      resolveLinks: true
+      resolveIncludeSource,
+      resolveLinks,
+      resolveIgnoreErrors
     });
 
     return {
@@ -431,6 +442,10 @@ exports.StreamLinkToSite = async function({
       }
     });
 
+    console.log("Meta", {...streamMetadata,
+      [slugify(objectName)]: streamData})
+    return
+
     await this.FinalizeContentObject({
       libraryId: siteLibraryId,
       objectId: siteObjectId,
@@ -459,7 +474,7 @@ exports.StreamRemoveLinkToSite = async function({objectId}) {
   try {
     ValidateObject(objectId);
 
-    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData();
+    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData({streamOptions: {resolveIncludeSource: false, resolveLinks: false}});
     let slugToRemove;
 
     Object.keys(streamMetadata || {}).forEach(slug => {
