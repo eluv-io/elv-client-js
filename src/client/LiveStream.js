@@ -408,7 +408,6 @@ exports.StreamLinkToSite = async function({
     ValidateObject(objectId);
 
     const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData({streamOptions: {resolveIncludeSource: false, resolveLinks: false}});
-    console.log("stream meta", streamMetadata)
 
     const objectName = await this.ContentObjectMetadata({
       libraryId: await this.ContentObjectLibraryId({objectId}),
@@ -442,13 +441,6 @@ exports.StreamLinkToSite = async function({
         [slugify(objectName)]: streamData
       }
     });
-    console.log("replaced", {
-      metadata: {
-        ...streamMetadata,
-        [slugify(objectName)]: streamData
-      }
-    })
-    // return
 
     await this.FinalizeContentObject({
       libraryId: siteLibraryId,
