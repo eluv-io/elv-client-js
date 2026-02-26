@@ -442,10 +442,6 @@ exports.StreamLinkToSite = async function({
       }
     });
 
-    console.log("Meta", {...streamMetadata,
-      [slugify(objectName)]: streamData})
-    return
-
     await this.FinalizeContentObject({
       libraryId: siteLibraryId,
       objectId: siteObjectId,
