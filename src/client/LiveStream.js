@@ -13,6 +13,9 @@ const HttpClient = require("../HttpClient");
 const Fraction = require("fraction.js");
 const {ValidateObject, ValidatePresence} = require("../Validation");
 const ContentObjectAudit = require("../ContentObjectAudit");
+const slugify = str => (str || "").toLowerCase().trim().replace(/ /g, "-").replace(/[^a-z0-9-]/g, "");
+const LRCProfile = require("../live_recording_config_profiles/live_recording_config_default");
+const R = require("ramda");
 
 const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   const tok = await client.authClient.AuthorizationToken({libraryId, objectId,
@@ -26,13 +29,87 @@ const Sleep = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
 
+const ENCRYPTION_OPTIONS = [
+  {value: "drm-public", format: ["hls-sample-aes", "hls-aes128", "dash-widevine", "hls-playready-cenc"], id: "drm-public"},
+  {value: "drm-all",  format: ["hls-sample-aes", "hls-aes128", "hls-fairplay", "hls-widevine-cenc", "hls-playready-cenc", "dash-widevine"], id: "drm-all"},
+  {value: "drm-fairplay", format: ["hls-fairplay"], id: "drm-fairplay"},
+  {value: "drm-widevine", format: ["hls-widevine-cenc", "dash-widevine"], id: "drm-widevine"},
+  {value: "drm-playready", format: ["hls-playready-cenc"], id: "drm-playready"},
+  {value: "clear", format: ["hls-clear", "dash-clear"], id: "clear"}
+];
+
+const GetStreamProbe = async ({client, libraryId, objectId, streamUrl, endpoint}) => {
+  client.SetNodes({fabricURIs: [endpoint]});
+
+  let probe = {};
+
+  try {
+    const probeUrl = await client.Rep({
+      libraryId,
+      objectId,
+      rep: "probe"
+    });
+
+    probe = await client.utils.ResponseToJson(
+      await HttpClient.Fetch(probeUrl, {
+        body: JSON.stringify({
+          "filename": streamUrl.href,
+          "listen": true
+        }),
+        method: "POST"
+      })
+    );
+
+    if(probe.errors) {
+      throw probe.errors[0];
+    }
+  } catch(error) {
+    if(error.code === "ETIMEDOUT") {
+      throw "Stream probe timed out - make sure the stream source is available";
+    } else {
+      throw error;
+    }
+  }
+
+  probe.format.filename = streamUrl.href;
+
+  return probe;
+};
+
+const GetNodeFromStreamUrl = async ({client, url}) => {
+  const parsedName = url
+    .replace("udp://", "https://")
+    .replace("rtmp://", "https://")
+    .replace("rtp://", "https://")
+    .replace("srt://", "https://");
+
+  const hostName = new URL(parsedName).hostname;
+  const streamUrlObject = new URL(url);
+
+  client.Log(`Retrieving nodes - matching: ${hostName}`);
+
+  const nodes = await client.SpaceNodes({matchEndpoint: hostName});
+
+  if(nodes.length < 1) {
+    throw new Error(`No node found for stream URL: ${streamUrlObject.href}. Wrong network?`);
+  }
+
+  const node = {
+    endpoints: nodes[0].services.fabric_api.urls,
+    id: nodes[0].id
+  };
+
+  const endpoint = node.endpoints[0];
+
+  return {node, endpoint, streamUrlObject};
+};
+
 const CueInfo = async ({eventId, status}) => {
   let cues;
   try {
     const lroStatusResponse = await this.utils.ResponseToJson(
       await HttpClient.Fetch(status.lro_status_url)
     );
-    console.log("lroStatusResponse", lroStatusResponse);
     cues = lroStatusResponse.custom.cues;
   } catch(error) {
     console.log("LRO status failed", error);
@@ -59,6 +136,382 @@ const CueInfo = async ({eventId, status}) => {
   }
 
   return {eventStart, eventEnd, eventId};
+};
+
+/**
+ * Create a live stream object
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} libraryId - ID of the library for the new live stream object
+ * @param {string} url - Source stream URL
+ * @param {boolean=} finalize - If enabled, object will be finalized after creation (default: true)
+ * @param {LiveRecordingConfig=} liveRecordingConfig - Configuration profile for the live stream including recording, playout, and transcoding settings
+ *
+ * @param {Object=} options - Additional options for customizing a live stream
+ * @param {string=} options.name - Name of the live stream
+ * @param {string=} options.displayTitle - Display title for the live stream
+ * @param {string=} options.description - Description for the live stream
+ * @param {Array<string>=} options.accessGroups - Access group addresses to receive 'manage' permissions
+ * @param {string=} options.permission - Permission level to set on the object
+ * @param {boolean=} options.linkToSite - If enabled, will create a link in the live stream site
+ * @param {boolean=} options.initializeDrm - If enabled, will initialize DRM for the object
+ * @param {string=} options.ingressNodeApi - API endpoint of the ingress node used for stream allocation (required for non-public nodes)
+ *
+ * @return {Promise<Object>} - Object containing objectId, libraryId, writeToken, and hash if finalized
+ */
+exports.StreamCreate = async function({
+  libraryId,
+  objectId,
+  url,
+  finalize=true,
+  liveRecordingConfig,
+  options={}
+}) {
+  const defaultName = `LIVE STREAM - ${new Date().toISOString().slice(0, 10)}`;
+  const existingObject = !!objectId;
+  let contentType;
+  let adminGroups = options.accessGroups ?? [];
+
+  // Retrieve live stream content type
+  try {
+    const tenantId = await this.userProfileClient.TenantContractId();
+
+    const tenantMeta = await this.ContentObjectMetadata({
+      libraryId: tenantId.replace("iten", "ilib"),
+      objectId: tenantId.replace("iten", "iq__"),
+      metadataSubtree: "public",
+      select: [
+        "content_types/live_stream"
+      ]
+    });
+
+    const tenantContentAdminGroup = await this.ContentAdminGroup({tenantContractId: tenantId});
+    adminGroups = adminGroups.concat(tenantContentAdminGroup ?? []);
+
+    contentType = tenantMeta.content_types?.live_stream;
+
+    if(!contentType) {
+      throw new Error(`No content type configured for tenant ${tenantId}`);
+    }
+  } catch(error) {
+    console.error("Unable to load tenant data", error);
+  }
+
+  let editResponse;
+  if(objectId) {
+     // Edit existing object
+     editResponse = await this.EditContentObject({
+      libraryId,
+      objectId
+    });
+  } else {
+    // Create new object
+    editResponse = await this.CreateContentObject({
+      libraryId,
+      options: {
+        type: contentType
+      }
+    });
+    objectId = editResponse.objectId;
+  }
+
+  const {writeToken} = editResponse;
+  const {
+    accessGroup,
+    name=defaultName,
+    displayTitle,
+    description,
+    permission="editable",
+    ingressNodeApi,
+    initializeDrm=true
+  } = options;
+
+  if(!liveRecordingConfig) {
+    liveRecordingConfig = {};
+  }
+
+  liveRecordingConfig.url = url;
+  liveRecordingConfig.ingress_node_api = ingressNodeApi;
+  liveRecordingConfig.part_ttl = liveRecordingConfig?.recording_config?.part_ttl ?? 86400;
+
+  // Add access group permissions
+  await Promise.all(
+    adminGroups.filter(el => !!el).map(async(group) => {
+      if(!group) { return; }
+
+      await
+        this.AddContentObjectGroupPermission({
+          objectId,
+          groupAddress: group,
+          permission: "manage"
+        });
+    })
+  );
+
+
+  await this.MergeMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadata: {
+      public: {
+        name,
+        description,
+        asset_metadata: {
+          display_title: displayTitle || name,
+          title: name || displayTitle || defaultName,
+          title_type: "live_stream",
+          video_type: "live",
+          slug: slugify(name)
+        }
+      },
+      "live_recording_config": liveRecordingConfig
+    }
+  });
+
+  await this.CreateLinks({
+    libraryId,
+    objectId,
+    writeToken,
+    links: [{
+      type: "rep",
+      path: "public/asset_metadata/sources/default",
+      target: "playout/default/options.json"
+    }]
+  });
+
+  await this.SetPermission({
+    objectId,
+    permission: permission,
+    writeToken
+  });
+
+  let returnResponse = {
+    objectId,
+    libraryId,
+    writeToken
+  };
+
+  // If stream info is provided, continue to configure
+  if(liveRecordingConfig?.input_stream_info) {
+    await this.StreamConfig({
+      name: objectId,
+      liveRecordingConfig,
+      inputStreamInfo: liveRecordingConfig.input_stream_info,
+      writeToken,
+      finalize: false
+    });
+  }
+
+  if(initializeDrm) {
+    const drmOption = ENCRYPTION_OPTIONS.find(option => option.value === liveRecordingConfig?.playout_config?.drm);
+
+    await this.StreamInitialize({
+      name: objectId,
+      drm: (!liveRecordingConfig?.playout_config?.drm || liveRecordingConfig?.playout_config?.drm === "clear") ? false : true,
+      format: drmOption ? drmOption?.format?.join(",") : "",
+      writeToken,
+      finalize: false
+    });
+  }
+
+  if(finalize) {
+    let finalizeResponse;
+    try {
+      finalizeResponse = await this.FinalizeContentObject({
+        libraryId,
+        objectId,
+        writeToken,
+        commitMessage: existingObject ? "Update live stream" : "Create live stream"
+      });
+    } catch(error) {
+      console.log("FAIL FINALIZE", JSON.stringify(error, null, 2));
+    }
+
+    returnResponse = {...returnResponse, ...finalizeResponse};
+  }
+
+  if(options.linkToSite) {
+    await this.StreamLinkToSite({
+      objectId
+    });
+  }
+
+  return returnResponse;
+};
+
+/**
+ * Load live stream data from site object
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {Object=} streamOptions - Options for the stream metadata read
+ * @param {boolean=} streamOptions.resolveIncludeSource - If specified, resolved links will include the hash of the link at the root of the metadata
+ * @param {boolean=} streamOptions.resolveLinks - If specified, links in the metadata will be resolved
+ * @param {boolean=} streamOptions.resolveIgnoreErrors - If specified, link errors within the requested metadata will not cause the entire response to result in an error
+ *
+ * @return {Promise<Object>}
+ */
+exports.StreamGetSiteData = async function({streamOptions={}}={}) {
+  const {
+    resolveIncludeSource=true,
+    resolveLinks=true,
+    resolveIgnoreErrors
+  } = streamOptions;
+
+  try {
+    let tenantId = await this.userProfileClient.TenantContractId();
+
+    const siteObjectId = await this.ContentObjectMetadata({
+      libraryId: tenantId.replace("iten", "ilib"),
+      objectId: tenantId.replace("iten", "iq__"),
+      metadataSubtree: "public/sites/live_streams",
+    });
+
+    const siteLibraryId = await this.ContentObjectLibraryId({objectId: siteObjectId});
+
+    const streamMetadata = await this.ContentObjectMetadata({
+      libraryId: siteLibraryId,
+      objectId: siteObjectId,
+      metadataSubtree: "public/asset_metadata/live_streams",
+      resolveIncludeSource,
+      resolveLinks,
+      resolveIgnoreErrors
+    });
+
+    return {
+      streamMetadata,
+      siteObjectId,
+      siteLibraryId
+    };
+  } catch(error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to load live streams from site", error);
+  }
+};
+
+/**
+ * Link a live stream object to a site by adding it to the site's live_streams metadata.
+ * Creates a fabric link to the stream object with proper ordering.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} objectId - Object ID of the live stream to link to the site
+ *
+ * @return {Promise<void>}
+ */
+exports.StreamLinkToSite = async function({
+  objectId
+}) {
+  try {
+    ValidateObject(objectId);
+
+    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData({streamOptions: {resolveIncludeSource: false, resolveLinks: false}});
+
+    const objectName = await this.ContentObjectMetadata({
+      libraryId: await this.ContentObjectLibraryId({objectId}),
+      objectId,
+      metadataSubtree: "public/name"
+    });
+
+    const streamData = {
+      ".": {
+        container: await this.LatestVersionHash({objectId: siteObjectId}),
+        auto_update: {
+          tag: "latest"
+        }
+      },
+      "/": `/qfab/${await this.LatestVersionHash({objectId})}/meta/public/asset_metadata`,
+      order: Object.keys(streamMetadata).length + 1
+    };
+
+    const {writeToken} = await this.EditContentObject({
+      libraryId: siteLibraryId,
+      objectId: siteObjectId
+    });
+
+    await this.ReplaceMetadata({
+      libraryId: siteLibraryId,
+      objectId: siteObjectId,
+      writeToken,
+      metadataSubtree: "public/asset_metadata/live_streams",
+      metadata: {
+        ...streamMetadata,
+        [slugify(objectName)]: streamData
+      }
+    });
+
+    await this.FinalizeContentObject({
+      libraryId: siteLibraryId,
+      objectId: siteObjectId,
+      writeToken,
+      commitMessage: "Add live stream",
+      awaitCommitConfirmation: true
+    });
+  } catch(error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to link stream object to site", JSON.stringify(error, null, 2));
+  }
+};
+
+/**
+ * Unlink a live stream object from a site by removing it from the site's live_streams metadata.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} objectId - Object ID of the live stream to link to the site
+ * @param {string=} siteObjectId - Object ID of the site (defaults to rootStore.dataStore.siteId)
+ * @param {string=} siteLibraryId - Library ID of the site (defaults to rootStore.dataStore.siteLibraryId)
+ *
+ * @return {Promise<void>}
+ */
+exports.StreamRemoveLinkToSite = async function({objectId}) {
+  try {
+    ValidateObject(objectId);
+
+    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData({streamOptions: {resolveIncludeSource: false, resolveLinks: false}});
+    let slugToRemove;
+
+    Object.keys(streamMetadata || {}).forEach(slug => {
+      const source = streamMetadata[slug]["."]?.source;
+      const id = this.utils.DecodeVersionHash(source).objectId;
+
+      if(id === objectId) {
+        slugToRemove = slug;
+      }
+    });
+
+    if(slugToRemove) {
+      delete streamMetadata[slugToRemove];
+
+      const {writeToken} = await this.EditContentObject({
+        libraryId: siteLibraryId,
+        objectId: siteObjectId
+      });
+
+      await this.ReplaceMetadata({
+        libraryId: siteLibraryId,
+        objectId: siteObjectId,
+        writeToken,
+        metadataSubtree: "public/asset_metadata/live_streams",
+        metadata: streamMetadata
+      });
+
+      await this.FinalizeContentObject({
+        libraryId: siteLibraryId,
+        objectId: siteObjectId,
+        writeToken,
+        commitMessage: "Remove live stream",
+        awaitCommitConfirmation: true
+      });
+    } else {
+      throw new Error(`Provided objectId ${objectId} not found in site live_streams`);
+    }
+  } catch(error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to remove stream object link from site", error);
+  }
 };
 
 /**
@@ -358,7 +811,7 @@ const StreamGenerateOffering = async({
  *
  * @return {Promise<Object>} - The status response for the object, as well as logs, warnings and errors from the master initialization
  */
-exports.StreamStatus = async function({name, showParams=false}) {
+exports.StreamStatus = async function({name, showParams=false, writeToken}) {
   let objectId = name;
   let status = {name: name};
 
@@ -370,13 +823,14 @@ exports.StreamStatus = async function({name, showParams=false}) {
     let mainMeta = await this.ContentObjectMetadata({
       libraryId,
       objectId,
+      writeToken,
       select: [
         "live_recording_config",
         "live_recording"
       ]
     });
 
-    status.reference_url = mainMeta.live_recording_config.reference_url;
+    status.ingress_node_api = mainMeta.live_recording_config?.ingress_node_api;
 
     if(mainMeta.live_recording_config == undefined || mainMeta.live_recording_config.url == undefined) {
       status.state = "unconfigured";
@@ -612,7 +1066,7 @@ exports.StreamStatus = async function({name, showParams=false}) {
  * @return {Promise<Object>} - The status response for the object
  *
 */
-exports.StreamCreate = async function({name, start=false}) {
+exports.StreamStartRecording = async function({name, start=false}) {
   let status = await this.StreamStatus({name});
   if(status.state != "uninitialized" && status.state !== "inactive" && status.state !== "terminated" && status.state !== "stopped") {
     return {
@@ -809,7 +1263,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
  *
  * @return {Promise<Object>} - The finalize response for the stream object
  */
-exports.StreamStopSession = async function({name}) {
+exports.StreamStopRecording = async function({name}) {
   try {
     this.Log(`Terminating stream session for: ${name}`);
     let objectId = name;
@@ -845,13 +1299,16 @@ exports.StreamStopSession = async function({name}) {
         writeToken: metaEdgeWriteToken
       });
 
-      const status = await this.StreamStatus({name});
+      let status = await this.StreamStatus({name});
 
       if(status.state !== "stopped") {
-        return {
-          state: status.state,
-          error: "The stream must be stopped before terminating"
-        };
+        status = await this.StreamStartOrStopOrReset({name, op: start});
+        if(status.state !== "stopped") {
+          return {
+            status,
+            error: "The stream is not stopped"
+          }
+        }
       }
 
       await this.DeleteWriteToken({
@@ -929,45 +1386,49 @@ exports.StreamInitialize = async function({
   writeToken,
   finalize=true
 }) {
-  let typeAbrMaster;
-  let typeLiveStream;
+  try {
+    let typeAbrMaster;
+    let typeLiveStream;
 
-  // Fetch Title and Live Stream content types from tenant meta
-  const tenantContractId = await this.userProfileClient.TenantContractId();
-  const {live_stream, title} = await this.ContentObjectMetadata({
-    libraryId: tenantContractId.replace("iten", "ilib"),
-    objectId: tenantContractId.replace("iten", "iq__"),
-    metadataSubtree: "public/content_types",
-    select: [
-      "live_stream",
-      "title"
-    ]
-  });
+    // Fetch Title and Live Stream content types from tenant meta
+    const tenantContractId = await this.userProfileClient.TenantContractId();
+    const {live_stream, title} = await this.ContentObjectMetadata({
+      libraryId: tenantContractId.replace("iten", "ilib"),
+      objectId: tenantContractId.replace("iten", "iq__"),
+      metadataSubtree: "public/content_types",
+      select: [
+        "live_stream",
+        "title"
+      ]
+    });
 
-  if(live_stream) {
-    typeLiveStream = live_stream;
+    if(live_stream) {
+      typeLiveStream = live_stream;
+    }
+
+    if(title) {
+      typeAbrMaster = title;
+    }
+
+    if(typeAbrMaster === undefined || typeLiveStream === undefined) {
+      console.log("ERROR - unable to find content types", "ABR Master", typeAbrMaster, "Live Stream", typeLiveStream);
+      return {};
+    }
+
+    res = await this.StreamSetOfferingAndDRM({
+      name,
+      typeAbrMaster,
+      typeLiveStream,
+      drm,
+      format,
+      writeToken,
+      finalize
+    });
+
+    return res;
+  } catch(error) {
+    console.error("Unable to intitialize stream", error);
   }
-
-  if(title) {
-    typeAbrMaster = title;
-  }
-
-  if(typeAbrMaster === undefined || typeLiveStream === undefined) {
-    console.log("ERROR - unable to find content types", "ABR Master", typeAbrMaster, "Live Stream", typeLiveStream);
-    return {};
-  }
-
-  const res = await this.StreamSetOfferingAndDRM({
-    name,
-    typeAbrMaster,
-    typeLiveStream,
-    drm,
-    format,
-    writeToken,
-    finalize
-  });
-
-  return res;
 };
 
 /**
@@ -996,7 +1457,9 @@ exports.StreamSetOfferingAndDRM = async function({
   finalize=true
 }) {
   let status = await this.StreamStatus({name});
-  if(status.state != "uninitialized" && status.state != "inactive" && status.state != "stopped") {
+  console.log('StreamSetOfferingAndDrm', status)
+  const validStates = ["uninitialized", "inactive", "stopped", "unconfigured", "initialized"];
+  if(!validStates.includes(status.state)) {
     return {
       state: status.state,
       error: "stream still active - must terminate first"
@@ -1087,7 +1550,18 @@ exports.StreamSetOfferingAndDRM = async function({
       writeToken
     });
 
-    let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
+    const url = mainMeta?.live_recording?.fabric_config?.ingress_node_api || mainMeta?.live_recording_config?.url
+
+    let node, endpoint, streamUrlObject;
+    try {
+      ({node, endpoint, streamUrlObject} = await GetNodeFromStreamUrl({client: this, url}));
+      status.node = node;
+    } catch(error) {
+      status.error = error.message;
+      return status;
+    }
+
+    let fabURI = endpoint;
     // Support both hostname and URL ingress_node_api
     if(!fabURI.startsWith("http")) {
       // Assume https
@@ -1096,7 +1570,7 @@ exports.StreamSetOfferingAndDRM = async function({
 
     this.SetNodes({fabricURIs: [fabURI]});
 
-    let streamUrl = mainMeta.live_recording.recording_config.recording_params.origin_url;
+    let streamUrl = mainMeta?.live_recording?.recording_config?.recording_params?.origin_url || mainMeta?.live_recording_config?.url;
 
     await StreamGenerateOffering({
       client: this,
@@ -1335,32 +1809,192 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
 };
 
 /**
- * Configure the stream based on built-in logic and optional custom settings.
+ * Get all available ladder profiles from the live stream site configuration.
+ * Ladder profiles define encoding settings for transcoding live streams including video bitrates, resolutions, and audio configurations.
  *
- * Custom settings format:
- *    {
- *      "audio" {
- *        "1" : {  // This is the stream index
- *          "tags" : "language: english",
- *          "codec" : "aac",
- *          "bitrate": 204000,
- *          "record":  true,
- *          "recording_bitrate" : 192000,
- *          "recording_channels" : 2,
- *          "playout": bool
- *          "playout_label": "English (Stereo)"
- *        },
- *        "3": {
- *          ...
- *        }
- *      }
- *    }
+ * @methodGroup Live Stream
+ *
+ * @returns {Promise<Object>} - Object
+ containing all ladder profiles
+ */
+exports.StreamLadderProfiles = async function() {
+  const {siteObjectId, siteLibraryId} = await this.StreamGetSiteData();
+
+  return this.ContentObjectMetadata({
+    libraryId: siteLibraryId,
+    objectId: siteObjectId,
+    metadataSubtree: "public/asset_metadata/profiles"
+  });
+};
+
+/**
+ * Get a specific ladder profile's encoding specifications by name.
+ * If the requested profile is not found, falls back to the default profile.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} profileName - Name of the ladder profile to retrieve (default: "default")
+ * Can be "default" or the name of any custom profile
+ *
+ @returns {Promise<Object>} - The ladder
+  specifications for the requested profile
+ *
+ */
+
+exports.StreamLadderProfile = async function({profileName="default"}) {
+  const profiles = await this.StreamLadderProfiles();
+
+  if(!profiles) {
+    throw new Error("No profiles found.");
+  }
+
+  let profileData;
+  if(profileName.toLowerCase() === "default") {
+    profileData = profiles.default;
+  } else {
+    profileData = profiles.custom.find(item => item.name === profileName);
+  }
+
+  if(!profileData) {
+    console.warn(`Ladder profile ${profileName} not found. Defaulting to the built-in profile.`);
+    profileData = profiles.default ?? LRCProfile;
+  }
+
+  return profileData.ladder_specs;
+};
+
+/**
+ * @typedef {Object} InputStreamInfo
+ * @property {Object=} input_stream_info - Simplified probe information for the input stream
+ * @property {Object=} input_stream_info.format - Format information
+ * @property {string=} input_stream_info.format.format_name - Format name (e.g., "mpegts")
+ * @property {string=} input_stream_info.format.filename - Stream URL
+ * @property {Array<Object>=} input_stream_info.streams - Array of stream information
+ * @property {string=} input_stream_info.streams[].codec_name - Codec name (e.g., "h264", "aac")
+ * @property {string=} input_stream_info.streams[].codec_type - Codec type ("video" or "audio")
+ * @property {string=} input_stream_info.streams[].display_aspect_ratio - Display aspect ratio (e.g., "16/9")
+ * @property {string=} input_stream_info.streams[].field_order - Field order (e.g., "progressive")
+ * @property {string=} input_stream_info.streams[].frame_rate - Frame rate (e.g., "50")
+ * @property {number=} input_stream_info.streams[].height - Video height in pixels
+ * @property {number=} input_stream_info.streams[].width - Video width in pixels
+ * @property {number=} input_stream_info.streams[].level - Codec level
+ * @property {number=} input_stream_info.streams[].stream_id - Stream ID
+ * @property {number=} input_stream_info.streams[].stream_index - Stream index
+ * @property {number=} input_stream_info.streams[].channel_layout - Audio channel layout
+ * @property {number=} input_stream_info.streams[].channels - Number of audio channels
+ * @property {number=} input_stream_info.streams[].sample_rate - Audio sample rate
+ */
+
+/**
+ * @typedef {Object} LiveRecordingConfig
+ * @property {string=} name - Name of the profile
+ *
+ * @property {Object=} recording_config - Recording configuration settings
+ * @property {number=} recording_config.part_ttl - Time-to-live for stream parts in seconds
+ * @property {number=} recording_config.connection_timeout - Initial connection timeout when starting the stream, in seconds
+ * @property {number=} recording_config.reconnect_timeout - Duration to listen after disconnect detection, in seconds
+ * @property {boolean=} recording_config.copy_mpegts - Whether to copy MPEG-TS data
+ * @property {Object=} recording_config.input_cfg - Input configuration settings
+ * @property {boolean=} recording_config.input_cfg.bypass_libav_reader - Whether to bypass libav reader
+ * @property {string=} recording_config.input_cfg.copy_mode - Copy mode setting: "" (empty), "none", "raw", or "remuxed"
+ * @property {string=} recording_config.input_cfg.copy_packaging - Copy packaging mode: "raw_ts" or "rtp_ts"
+ *
+ * @property {Object=} playout_config - Playout configuration settings
+ * @property {Object=} playout_config.image_watermark - Image watermark configuration
+ * @property {string=} playout_config.image_watermark.align_h - Horizontal alignment (e.g., "left", "center", "right")
+ * @property {string=} playout_config.image_watermark.align_v - Vertical alignment (e.g., "top", "middle", "bottom")
+ * @property {string=} playout_config.image_watermark.image - Path to watermark image file
+ * @property {boolean=} playout_config.image_watermark.wm_enabled - Whether the image watermark is enabled
+ * @property {Object=} playout_config.simple_watermark - Simple text watermark configuration
+ * @property {string=} playout_config.simple_watermark.font_color - Font color (e.g., "white@0.5")
+ * @property {number=} playout_config.simple_watermark.font_relative_height - Font size relative to video height
+ * @property {boolean=} playout_config.simple_watermark.shadow - Whether to add shadow to text
+ * @property {string=} playout_config.simple_watermark.shadow_color - Shadow color (e.g., "black@0.5")
+ * @property {string=} playout_config.simple_watermark.template - Watermark text template
+ * @property {string=} playout_config.simple_watermark.x - Horizontal position expression
+ * @property {string=} playout_config.simple_watermark.y - Vertical position expression
+ * @property {boolean=} playout_config.dvr - Whether to enable DVR functionality
+ * TODO: update possible drm types
+ * @property {string=} playout_config.drm - DRM configuration ("drm-all", "custom", or specific DRM type)
+ * TODO: update possible playout formats
+ * @property {Array<string>=} playout_config.playout_formats - List of playout format names (e.g., "dash-widevine", "hls-widevine")
+ * @property {Object=} playout_config.ladder_specs - Encoding ladder specifications
+ * @property {Array<Object>=} playout_config.ladder_specs.audio - Audio encoding ladder
+ * @property {number=} playout_config.ladder_specs.audio[].bit_rate - Audio bitrate
+ * @property {number=} playout_config.ladder_specs.audio[].channels - Number of audio channels
+ * @property {string=} playout_config.ladder_specs.audio[].codecs - Audio codec identifier
+ * @property {Array<Object>=} playout_config.ladder_specs.video - Video encoding ladder
+ * @property {number=} playout_config.ladder_specs.video[].bit_rate - Video bitrate
+ * @property {string=} playout_config.ladder_specs.video[].codecs - Video codec identifier
+ * @property {number=} playout_config.ladder_specs.video[].height - Video height in pixels
+ * @property {number=} playout_config.ladder_specs.video[].width - Video width in pixels
+ *
+ * @property {Object=} recording_stream_config - Stream recording configuration
+ * @property {Object=} recording_stream_config.audio - Audio stream recording configuration indexed by stream number
+ * @property {number=} recording_stream_config.audio[].bitrate - Stream bitrate
+ * @property {string=} recording_stream_config.audio[].codec - Audio codec (e.g., "aac")
+ * @property {boolean=} recording_stream_config.audio[].playout - Whether to include this stream in playout
+ * @property {string=} recording_stream_config.audio[].playout_label - Label for playout (e.g., "Audio 1")
+ * @property {boolean=} recording_stream_config.audio[].record - Whether to record this audio stream
+ * @property {number=} recording_stream_config.audio[].recording_bitrate - Recording bitrate
+ * @property {number=} recording_stream_config.audio[].recording_channels - Number of recording channels
+ *
+ * @property {InputStreamInfo=} input_stream_info - Simplified probe information for the input stream
+ *
+ * @property {Object=} recording_params - Advanced recording parameters
+ * @property {Object=} recording_params.xc_params - Transcoding parameters
+ * @property {number=} recording_params.xc_params.audio_bitrate - Audio bitrate for encoding
+ * @property {Object=} recording_params.xc_params.audio_index - Audio stream index mapping (indexed by output stream number)
+ * @property {number=} recording_params.xc_params.audio_seg_duration_ts - Audio segment duration in time scale units
+ * @property {number=} recording_params.xc_params.connection_timeout - Connection timeout in seconds
+ * @property {boolean=} recording_params.xc_params.copy_mpegts - Whether to copy MPEG-TS data
+ * @property {string=} recording_params.xc_params.ecodec2 - Audio encoder codec (e.g., "aac")
+ * @property {number=} recording_params.xc_params.enc_height - Encoding height in pixels
+ * @property {number=} recording_params.xc_params.enc_width - Encoding width in pixels
+ * @property {string=} recording_params.xc_params.filter_descriptor - FFmpeg filter descriptor string
+ * @property {number=} recording_params.xc_params.force_keyint - Force keyframe interval
+ * @property {string=} recording_params.xc_params.format - Output format (e.g., "fmp4-segment")
+ * @property {boolean=} recording_params.xc_params.listen - Whether to listen for incoming stream
+ * @property {number=} recording_params.xc_params.n_audio - Number of audio streams
+ * @property {string=} recording_params.xc_params.preset - Encoding preset (e.g., "faster", "medium", "slow")
+ * @property {number=} recording_params.xc_params.sample_rate - Audio sample rate in Hz
+ * @property {string=} recording_params.xc_params.seg_duration - Segment duration in seconds (as string)
+ * @property {boolean=} recording_params.xc_params.skip_decoding - Whether to skip decoding
+ * @property {string=} recording_params.xc_params.start_segment_str - Starting segment number (as string)
+ * @property {number=} recording_params.xc_params.stream_id - Stream ID (-1 for auto)
+ * @property {number=} recording_params.xc_params.sync_audio_to_stream_id - Stream ID to sync audio to
+ * @property {number=} recording_params.xc_params.video_bitrate - Video bitrate for encoding
+ * @property {number=} recording_params.xc_params.video_frame_duration_ts - Video frame duration in time scale units (null for auto)
+ * @property {number=} recording_params.xc_params.video_seg_duration_ts - Video segment duration in time scale units
+ * @property {string=} recording_params.xc_params.video_time_base - Video time base (null for auto)
+ * @property {number=} recording_params.xc_params.xc_type - Transcoding type identifier
+ *
+ * @property {Object=} probe_info - Full probe information (stored for historical/debugging purposes, only in live_recording_config)
+ *
+ * @property {(Object|string)=} profile - Encoding ladder profile specifications
+ *
+ * Pass an object with ladder_specs, or a string profile name
+ *
+ * When profile is an Object:
+ * @property {Array<Object>=} profile.audio - Audio encoding ladder rungs
+ * @property {number=} profile.audio[].bit_rate - Audio bitrate for this rung
+ * @property {number=} profile.audio[].channels - Number of audio channels for this rung
+ * @property {string=} profile.audio[].codecs - Audio codec identifier for this rung
+ * @property {Array<Object>=} profile.video - Video encoding ladder rungs
+ * @property {number=} profile.video[].bit_rate - Video bitrate for this rung
+ * @property {string=} profile.video[].codecs - Video codec identifier for this rung
+ * @property {number=} profile.video[].height - Video height in pixels for this rung
+ * @property {number=} profile.video[].width - Video width in pixels for this rung
+ */
+
+/**
+ * Configure the stream based on built-in logic and optional custom settings.
  *
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} name - Object ID or name of the live stream object
- * @param {Object=} customSettings - Additional options to customize configuration settings
- * @param {Object=} probeMetadata - Metadata for the probe. If not specified, a new probe will be configured
+ * @param {LiveRecordingConfig=} liveRecordingConfig - Configuration profile for the live stream including recording, playout, and transcoding settings
+ * @param {InputStreamInfo=} inputStreamInfo - Simplified probe metadata
  * @param {string=} writeToken - Write token of the draft
  * @param {boolean=} finalize - If enabled, target object will be finalized after configuring
  *
@@ -1369,91 +2003,108 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  */
 exports.StreamConfig = async function({
   name,
-  customSettings={},
-  customMetaValues={},
-  probeMetadata,
+  liveRecordingConfig,
+  inputStreamInfo,
   writeToken,
   finalize=true
 }) {
-  let objectId = name;
-  let status = {name};
+  const objectId = name;
+  let probe = inputStreamInfo || liveRecordingConfig?.input_stream_info;
 
-  let libraryId = await this.ContentObjectLibraryId({objectId});
-  status.library_id = libraryId;
-  status.object_id = objectId;
+  const currentStatus = await this.StreamStatus({name, writeToken});
 
-  let probe = probeMetadata;
+  if(!["uninitialized", "inactive", "unconfigured"].includes(currentStatus.state)) {
+    return {
+      state: currentStatus.state,
+      error: "Stream still active - must deactivate first"
+    };
+  }
 
-  let mainMeta = await this.ContentObjectMetadata({
+  const libraryId = await this.ContentObjectLibraryId({objectId});
+
+  const status = {
+    name,
+    library_id: libraryId,
+    object_id: objectId,
+  }
+
+  const liveRecordingMeta = await this.ContentObjectMetadata({
     libraryId: libraryId,
-    objectId: objectId
+    objectId,
+    writeToken,
+    metadataSubtree: "/live_recording"
   });
 
-  let userConfig = mainMeta.live_recording_config;
-  status.user_config = userConfig;
+  let liveRecordingConfigProfile;
+  if(liveRecordingConfig && Object.keys(liveRecordingConfig || {}).length > 0) {
+    // Extract values that may have been saved during Create but aren't being repeated in the Config step
+    const savedConfigData = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "/live_recording_config"
+    });
+
+    liveRecordingConfigProfile = R.mergeDeepRight(liveRecordingConfig, savedConfigData ?? {});
+  } else {
+    const lrcMeta = await this.ContentObjectMetadata({
+      libraryId: libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "/live_recording_config",
+    });
+
+    // Save liveRecordingConfig as saved profile or default
+    liveRecordingConfigProfile = lrcMeta ?? LRCProfile;
+  }
+
+  status.user_config = liveRecordingConfigProfile;
 
   // Get node URI from user config
-  const parsedName = userConfig.url
-    .replace("udp://", "https://")
-    .replace("rtmp://", "https://")
-    .replace("srt://", "https://");
-  const hostName = new URL(parsedName).hostname;
-  const streamUrl = new URL(userConfig.url);
-
-  this.Log(`Retrieving nodes - matching: ${hostName}`);
-  let nodes = await this.SpaceNodes({matchEndpoint: hostName});
-  if(nodes.length < 1) {
-    status.error = "No node matching stream URL " + streamUrl.href;
-    return status;
+  let node, endpoint, streamUrl;
+  try {
+    ({node, endpoint, streamUrlObject: streamUrl} = await GetNodeFromStreamUrl({client: this, url: liveRecordingConfigProfile.url}));
+    status.node = node;
+  } catch(error) {
+    throw error;
   }
-  const node = {
-    endpoints: nodes[0].services.fabric_api.urls,
-    id: nodes[0].id
-  };
-  status.node = node;
-  let endpoint = node.endpoints[0];
 
+  // No stream data provided ; probe the stream for info
   if(!probe) {
-    this.SetNodes({fabricURIs: [endpoint]});
-
-    // Probe the stream
-    probe = {};
-    try {
-      let probeUrl = await this.Rep({
-        libraryId,
-        objectId,
-        rep: "probe"
-      });
-
-      probe = await this.utils.ResponseToJson(
-        await HttpClient.Fetch(probeUrl, {
-          body: JSON.stringify({
-            "filename": streamUrl.href,
-            "listen": true
-          }),
-          method: "POST"
-        })
-      );
-
-      if(probe.errors) {
-        throw probe.errors[0];
-      }
-    } catch(error) {
-      if(error.code === "ETIMEDOUT") {
-        throw "Stream probe time out - make sure the stream source is available";
-      } else {
-        throw error;
-      }
-    }
-
-    probe.format.filename = streamUrl.href;
+    probe = await GetStreamProbe({
+      client: this,
+      libraryId,
+      objectId,
+      streamUrl,
+      endpoint
+    });
   }
 
   // Create live recording config
-  let lc = new LiveConf(probe, node.id, endpoint, false, false, true);
+  const liveConf = new LiveConf({
+    url: liveRecordingConfigProfile.url,
+    probeData: probe,
+    liveRecordingMeta,
+    nodeId: node.id,
+    nodeUrl: endpoint,
+    includeAVSegDurations: false,
+    overwriteOriginUrl: false,
+    syncAudioToVideo: true
+  });
 
-  const liveRecordingConfig = lc.generateLiveConf({
-    customSettings
+  let profileData;
+  if(liveRecordingConfigProfile?.profile && typeof liveRecordingConfigProfile.profile === "string") {
+    profileData = await this.StreamLadderProfile({profileName: liveRecordingConfigProfile.profile});
+  } else {
+    profileData = await this.StreamLadderProfile({profileName: "default"});
+  }
+
+  const liveRecordingConfigMeta = liveConf.generateLiveConf({
+    customSettings: {
+      audio: liveRecordingConfigProfile?.recording_stream_config?.audio,
+      ladder_profile: profileData,
+      liveRecordingProfile: liveRecordingConfigProfile
+    }
   });
 
   // Store live recording config into the stream object
@@ -1465,12 +2116,24 @@ exports.StreamConfig = async function({
     writeToken = e.write_token;
   }
 
+  if(["uninitialized", "unconfigured"].includes(currentStatus.state)) {
+    const drmOption = ENCRYPTION_OPTIONS.find(option => option.value === liveRecordingConfigMeta.live_recording.playout_config?.drm);
+
+    await this.StreamInitialize({
+      name: objectId,
+      drm: (!liveRecordingConfigMeta?.live_recording.playout_config?.drm || liveRecordingConfigMeta.live_recording.playout_config?.drm === "clear") ? false : true,
+      format: drmOption ? drmOption?.format?.join(",") : "",
+      writeToken,
+      finalize: false
+    });
+  }
+
   await this.ReplaceMetadata({
     libraryId,
     objectId,
     writeToken,
     metadataSubtree: "live_recording",
-    metadata: liveRecordingConfig.live_recording
+    metadata: liveRecordingConfigMeta.live_recording
   });
 
   await this.ReplaceMetadata({
@@ -1561,13 +2224,15 @@ exports.StreamListUrls = async function({siteId}={}) {
             objectId,
             libraryId,
             select: [
+              // live_recording_config/reference_url is an old path
               "live_recording_config/reference_url",
+              "live_recording_config/ingress_node_api",
               // live_recording_config/url is the old path
               "live_recording_config/url"
             ]
           });
 
-          const url = streamMeta.live_recording_config.reference_url || streamMeta.live_recording_config.url;
+          const url = streamMeta.live_recording_config.ingress_node_api || streamMeta.live_recording_config.reference_url || streamMeta.live_recording_config.url;
           const isActive = [STATUS_MAP.STARTING, STATUS_MAP.RUNNING, STATUS_MAP.STALLED, STATUS_MAP.STOPPED].includes(status.state);
 
           if(url && isActive) {

@@ -77,6 +77,9 @@ const suppressNullLike = x => kindOf(x) === "null" || kindOf(x) === "undefined"
 
 const trimSlashes = R.compose(removeLeadingSlash, removeTrailingSlash);
 
+const slugify = str =>
+  (str || "").toLowerCase().trim().replace(/ /g, "-").replace(/[^a-z0-9-]/g, "");
+
 // --------------------------------------------
 // time formatting
 // --------------------------------------------
@@ -225,6 +228,7 @@ module.exports = {
   removeTrailingSlash,
   seconds,
   singleEntryMap,
+  slugify,
   spaceAfter,
   stringOrFileContents,
   subst,

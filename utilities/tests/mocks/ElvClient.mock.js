@@ -307,6 +307,13 @@ const StartABRMezzanineJobs = async (args) => {
   };
 };
 
+const StreamCreate = async (args) => {
+  calls.push("StreamCreate: " + JSON.stringify(args));
+  return {
+    id: "iq__dummy_new_id"
+  };
+};
+
 const UploadFiles = async (args) => {
   calls.push("UploadFiles: " + JSON.stringify(args));
 };
@@ -332,6 +339,7 @@ const MockClient = {
   ReplaceMetadata,
   SetVisibility,
   StartABRMezzanineJobs,
+  StreamCreate,
   UploadFiles
 };
 
