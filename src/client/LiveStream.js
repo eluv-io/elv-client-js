@@ -984,9 +984,15 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
 
     if(state === "running") {
       let playout_urls = {};
-      let playout_options = await this.PlayoutOptions({
-        objectId
-      });
+      let playout_options;
+
+      try {
+        playout_options = await this.PlayoutOptions({
+          objectId
+        });
+      } catch(error) {
+        console.log("Failed to generate playout options based on 'default' offering:", error);
+      }
 
       let hls_clear_enabled = (
         playout_options &&
