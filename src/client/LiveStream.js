@@ -1815,58 +1815,81 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
 };
 
 /**
- * Get all available ladder profiles from the live stream site configuration.
- * Ladder profiles define encoding settings for transcoding live streams including video bitrates, resolutions, and audio configurations.
+ * Get all available live recording config profiles from the live stream site configuration.
+ * Ladder profiles define settings for configuring live streams including recording config, playout config, and recording params.
  *
  * @methodGroup Live Stream
  *
- * @returns {Promise<Object>} - Object
- containing all ladder profiles
+ * @returns {Promise<Object>} - Object containing all live recording config profiles
  */
-exports.StreamLadderProfiles = async function() {
+exports.StreamLiveRecordingConfigProfiles = async function({resolveLinks=false}) {
   const {siteObjectId, siteLibraryId} = await this.StreamGetSiteData();
 
   return this.ContentObjectMetadata({
     libraryId: siteLibraryId,
     objectId: siteObjectId,
-    metadataSubtree: "public/asset_metadata/profiles"
+    metadataSubtree: "public/asset_metadata/profiles",
+    resolveLinks
   });
 };
 
 /**
- * Get a specific ladder profile's encoding specifications by name.
- * If the requested profile is not found, falls back to the default profile.
+ * Get a specific live recording config profile's specifications by name.
  *
  * @methodGroup Live Stream
  * @namedParams
- * @param {string=} profileName - Name of the ladder profile to retrieve (default: "default")
- * Can be "default" or the name of any custom profile
+ * @param {string} profileName - Name of the profile to retrieve
  *
- @returns {Promise<Object>} - The ladder
-  specifications for the requested profile
+ @returns {Promise<Object>} - The specifications for the requested profile
  *
  */
 
-exports.StreamLadderProfile = async function({profileName="default"}) {
-  const profiles = await this.StreamLadderProfiles();
+exports.StreamLiveRecordingConfigProfile = async function({profileName}) {
+  ValidatePresence("Profile name", profileName);
+
+  const profiles = await this.StreamLiveRecordingConfigProfiles();
 
   if(!profiles) {
     throw new Error("No profiles found.");
   }
 
-  let profileData;
-  if(profileName.toLowerCase() === "default") {
-    profileData = profiles.default;
-  } else {
-    profileData = profiles.custom.find(item => item.name === profileName);
-  }
+  const profileData = profiles[profileName];
 
   if(!profileData) {
-    console.warn(`Ladder profile ${profileName} not found. Defaulting to the built-in profile.`);
-    profileData = profiles.default ?? LRCProfile;
+    console.warn(`Live Recording Config profile ${profileName} not found.`);
   }
 
-  return profileData.ladder_specs;
+  return profileData;
+};
+
+exports.StreamSaveLiveRecordingConfigProfile = async function({filePath}) {
+  const profiles = await this.StreamLiveRecordingConfigProfiles({resolveLinks: true});
+  const {siteObjectId, siteLibraryId} = await this.StreamGetSiteData();
+
+  const {writeToken} = await this.EditContentObject({
+    libraryId: siteLibraryId,
+    objectId: siteObjectId
+  });
+
+  const fileName = path.parse(filePath).name;
+
+  await this.CreateLinks({
+    libraryId: siteLibraryId,
+    objectId: siteObjectId,
+    writeToken,
+    links: [{
+      type: "file",
+      path: `public/asset_metadata/profiles/${fileName}`,
+      target: `live_stream_profiles/${filePath}`
+    }]
+  });
+
+  await this.FinalizeContentObject({
+    libraryId: siteLibraryId,
+    objectId: siteObjectId,
+    writeToken,
+    commitMessage: "Add live recording config profile"
+  });
 };
 
 /**
