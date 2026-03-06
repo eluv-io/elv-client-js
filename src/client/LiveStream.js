@@ -1854,7 +1854,9 @@ exports.StreamLiveRecordingConfigProfile = async function({profileName}) {
     throw new Error("No profiles found.");
   }
 
-  const profileData = profiles[profileName];
+  const profileData = Object.entries(profiles).find(
+    ([key]) => key.toLowerCase() === profileName.toLowerCase()
+  )?.[1];
 
   if(!profileData) {
     console.warn(`Live Recording Config profile ${profileName} not found.`);
