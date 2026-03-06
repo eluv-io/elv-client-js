@@ -1977,10 +1977,6 @@ exports.StreamLadderProfile = async function({profileName="default"}) {
  *
  * @property {Object=} probe_info - Full probe information (stored for historical/debugging purposes, only in live_recording_config)
  *
- * @property {(Object|string)=} profile - Encoding ladder profile specifications
- *
- * Pass an object with ladder_specs, or a string profile name
- *
  * When profile is an Object:
  * @property {Array<Object>=} profile.audio - Audio encoding ladder rungs
  * @property {number=} profile.audio[].bit_rate - Audio bitrate for this rung
@@ -2098,18 +2094,9 @@ exports.StreamConfig = async function({
     syncAudioToVideo: true
   });
 
-  let profileData;
-  if(liveRecordingConfigProfile?.profile && typeof liveRecordingConfigProfile.profile === "string") {
-    profileData = await this.StreamLadderProfile({profileName: liveRecordingConfigProfile.profile});
-  } else {
-    profileData = await this.StreamLadderProfile({profileName: "default"});
-  }
-
   const liveRecordingConfigMeta = liveConf.generateLiveConf({
     customSettings: {
-      audio: liveRecordingConfigProfile?.recording_stream_config?.audio,
-      ladder_profile: profileData,
-      liveRecordingProfile: liveRecordingConfigProfile
+      liveRecordingConfigProfile
     }
   });
 

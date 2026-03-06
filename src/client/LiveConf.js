@@ -2,7 +2,7 @@
 const R = require("ramda");
 
 const DefaultABRLadder = {
-  "video" : [
+  "video": [
     {
       bit_rate: 14000000,
       codecs: "avc1.640028,mp4a.40.2",
@@ -34,7 +34,7 @@ const DefaultABRLadder = {
       width: 960
     }
   ],
-  "audio" : [
+  "audio": [
     {
       bit_rate: 192000,
       channels: 2,
@@ -452,14 +452,16 @@ class LiveConf {
   * Generate audio streams recording configuration based on the optional custom settings.
   * If no custom "audio" section is present, record all the acceptable audio streams found in the probe
   */
-  generateAudioStreamsConfig({customSettings}) {
-    let audioStreams = {};
-    const ladderProfile = customSettings?.ladder_profile;
+  generateAudioStreamsConfig({liveRecordingConfigProfile}) {
+    const ladderProfile = liveRecordingConfigProfile?.playout_config?.ladder_specs;
+    const audioSettings = liveRecordingConfigProfile?.recording_stream_config?.audio;
 
-    if(customSettings && customSettings.audio && Object.keys(customSettings.audio).length > 0) {
-      for(let i = 0; i < Object.keys(customSettings.audio).length; i ++) {
-        const audioIdx = Object.keys(customSettings.audio)[i];
-        const audio = customSettings.audio[audioIdx];
+    let audioStreams = {};
+
+    if(audioSettings && Object.keys(audioSettings).length > 0) {
+      for(let i = 0; i < Object.keys(audioSettings).length; i ++) {
+        const audioIdx = Object.keys(audioSettings)[i];
+        const audio = audioSettings[audioIdx];
         const profileAudioForType = ladderProfile?.audio.find(a => a.channels === (audio.channels ?? 2));
 
         audioStreams[audioIdx] = {
@@ -474,8 +476,8 @@ class LiveConf {
     }
 
     // If no audio streams specified in custom config, set up all the suitable audio streams in the probe
-    if(!customSettings.audio || Object.keys(customSettings.audio).length == 0) {
-      audioStreams = this.getAudioStreamsFromProbe({ladderProfile: customSettings?.ladder_profile});
+    if(!audioSettings || Object.keys(audioSettings).length === 0) {
+      audioStreams = this.getAudioStreamsFromProbe({ladderProfile});
     }
 
     return audioStreams;
@@ -493,15 +495,15 @@ class LiveConf {
         {live_recording: this.currentLiveRecordingMeta});
     }
 
-    if(customSettings.liveRecordingProfile) {
+    if(customSettings.liveRecordingConfigProfile) {
       conf = R.mergeDeepRight(conf,
         this.MapCustomProfileToLiveConfig({
-          customProfile: customSettings.liveRecordingProfile
+          customProfile: customSettings.liveRecordingConfigProfile
         }));
     }
 
     const fileName = this.url;
-    const audioStreams = this.generateAudioStreamsConfig({customSettings});
+    const audioStreams = this.generateAudioStreamsConfig({liveRecordingConfigProfile: customSettings.liveRecordingConfigProfile});
 
     // Retrieve one audio stream from the probe to read the sample rate and codec name
     const audioStream = this.getStreamDataForCodecType("audio");
@@ -573,7 +575,7 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs;
     }
 
-    const ladderProfile = customSettings.ladder_profile || DefaultABRLadder;
+    const ladderProfile = customSettings.liveRecordingConfigProfile?.playout_config?.ladder_specs || DefaultABRLadder;
 
     conf.live_recording.recording_config.recording_params.xc_params.enc_height = videoStream.height;
     conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;

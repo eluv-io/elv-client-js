@@ -29,7 +29,6 @@ const CreateStream = async() => {
       linkToSite: false
     },
     liveRecordingConfig: {
-      profile: "M6",
       playout_config: {
         drm: "drm-all" // drm-public | drm-all | drm-fairplay | drm-widevine | drm-playready | clear
       },
