@@ -857,7 +857,8 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
     }
 
     status.fabric_api = fabURI;
-    status.url = mainMeta.live_recording.recording_config.recording_params.origin_url;
+    status.url = mainMeta.live_recording_config?.url || mainMeta.live_recording.recording_config.recording_params.origin_url;
+
 
     let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
     if(!edgeWriteToken) {
