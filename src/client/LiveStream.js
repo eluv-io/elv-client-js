@@ -831,6 +831,7 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
     });
 
     status.ingress_node_api = mainMeta.live_recording_config?.ingress_node_api;
+    status.url = mainMeta.live_recording_config?.url;
 
     if(mainMeta.live_recording_config == undefined || mainMeta.live_recording_config.url == undefined) {
       status.state = "unconfigured";
@@ -857,7 +858,6 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
     }
 
     status.fabric_api = fabURI;
-    status.url = mainMeta.live_recording_config?.url || mainMeta.live_recording.recording_config.recording_params.origin_url;
 
 
     let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
