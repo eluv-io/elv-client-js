@@ -16,6 +16,7 @@ const ContentObjectAudit = require("../ContentObjectAudit");
 const slugify = str => (str || "").toLowerCase().trim().replace(/ /g, "-").replace(/[^a-z0-9-]/g, "");
 const LRCProfile = require("../live_recording_config_profiles/live_recording_config_default");
 const R = require("ramda");
+const UrlJoin = require("url-join");
 
 const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   const tok = await client.authClient.AuthorizationToken({libraryId, objectId,
@@ -37,6 +38,31 @@ const ENCRYPTION_OPTIONS = [
   {value: "drm-playready", format: ["hls-playready-cenc"], id: "drm-playready"},
   {value: "clear", format: ["hls-clear", "dash-clear"], id: "clear"}
 ];
+
+/**
+ * Converts a list of File objects into an array of file info objects suitable for upload.
+ *
+ * @param {string} path - The destination path prefix for the files
+ * @param {FileList|Array<File>} fileList - The list of File objects to process
+ *
+ * @returns {Promise<Array<Object>>} - Array of file info objects with path, type, size, mime_type, and data
+ */
+const FileInfo = async ({path, fileList}) => {
+  return await Promise.all(
+    Array.from(fileList).map(async file => {
+      const data = file;
+      const filePath = file.webkitRelativePath || file.name;
+      return {
+        path: UrlJoin(path, filePath).replace(/^\/+/g, ""),
+        type: "file",
+        size: file.size,
+        mime_type: file.type,
+        data,
+        name: file.name
+      };
+    })
+  );
+};
 
 const GetStreamProbe = async ({client, libraryId, objectId, streamUrl, endpoint}) => {
   client.SetNodes({fabricURIs: [endpoint]});
@@ -1865,31 +1891,75 @@ exports.StreamLiveRecordingConfigProfile = async function({profileName}) {
   return profileData;
 };
 
-exports.StreamSaveLiveRecordingConfigProfile = async function({filePath}) {
+/**
+ * Save a live recording config profile to the live stream site object.
+ * Uploads any provided profile files or profile metadata and creates a metadata link to the profile. One must be specified. The argument profileMetadata takes precendence if both are provided.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {FileList|Array<File>=} files - Profile files to upload to the site object
+ * @param {Object=} profileMetadata - Metadata for the profile
+ *
+ * @returns {Promise<void>}
+ */
+exports.StreamSaveLiveRecordingConfigProfile = async function({files, profileMetadata}) {
+  if(!files && !profileMetadata) {
+    throw new Error("Missing required field: Please specify files or profileMetadata.")
+  }
+
   const profiles = await this.StreamLiveRecordingConfigProfiles({resolveLinks: true});
-  const {siteObjectId, siteLibraryId} = await this.StreamGetSiteData();
+  const {
+    siteObjectId: objectId,
+    siteLibraryId: libraryId
+  } = await this.StreamGetSiteData();
 
   const {writeToken} = await this.EditContentObject({
-    libraryId: siteLibraryId,
-    objectId: siteObjectId
+    libraryId,
+    objectId
   });
 
-  const fileName = path.parse(filePath).name;
+  if(profileMetadata) {
+    const defaultName = `Profile-${new Date().toISOString().slice(0, 10)}`;
+    const blob = new Blob([JSON.stringify(profileMetadata, null, 2)], {type: "application/json"});
+    const metaFile = new File([blob], `${profileMetadata.name || defaultName}.json`, {type: "application/json"});
+    files = files ? [...Array.from(files), metaFile] : [metaFile];
+  }
 
-  await this.CreateLinks({
-    libraryId: siteLibraryId,
-    objectId: siteObjectId,
-    writeToken,
-    links: [{
+  let fileInfo;
+  if(files) {
+    fileInfo = await FileInfo({
+      path: "live_stream_profiles",
+      fileList: files
+    });
+
+    await this.UploadFiles({
+      libraryId,
+      objectId,
+      writeToken,
+      fileInfo
+    });
+  }
+
+  const links = fileInfo.map(file => {
+    const fileName = path.parse(file.name).name;
+
+    return {
       type: "file",
       path: `public/asset_metadata/profiles/${fileName}`,
-      target: `live_stream_profiles/${filePath}`
-    }]
+      target: file.path
+    }
+  });
+
+  await this.CreateLinks({
+    libraryId,
+    objectId,
+    writeToken,
+    links
   });
 
   await this.FinalizeContentObject({
-    libraryId: siteLibraryId,
-    objectId: siteObjectId,
+    libraryId,
+    objectId,
     writeToken,
     commitMessage: "Add live recording config profile"
   });
