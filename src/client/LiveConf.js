@@ -453,7 +453,7 @@ class LiveConf {
   * If no custom "audio" section is present, record all the acceptable audio streams found in the probe
   */
   generateAudioStreamsConfig({liveRecordingConfigProfile}) {
-    const ladderProfile = liveRecordingConfigProfile?.playout_config?.ladder_specs;
+    const ladderProfile = liveRecordingConfigProfile?.playout_config?.ladder_specs || DefaultABRLadder;
     const audioSettings = liveRecordingConfigProfile?.recording_stream_config?.audio;
 
     let audioStreams = {};
@@ -575,7 +575,8 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs;
     }
 
-    const ladderProfile = customSettings.liveRecordingConfigProfile?.playout_config?.ladder_specs || DefaultABRLadder;
+    const ladder_specs = customSettings.liveRecordingConfigProfile?.playout_config?.ladder_specs;
+    const ladderProfile = ladder_specs?.video?.length > 0 ? ladder_specs : DefaultABRLadder;
 
     conf.live_recording.recording_config.recording_params.xc_params.enc_height = videoStream.height;
     conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;
