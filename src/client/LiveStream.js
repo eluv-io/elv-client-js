@@ -843,8 +843,8 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
 
   try {
     let libraryId = await this.ContentObjectLibraryId({objectId});
-    status.library_id = libraryId;
-    status.object_id = objectId;
+    status.libraryId = libraryId;
+    status.objectId = objectId;
 
     let mainMeta = await this.ContentObjectMetadata({
       libraryId,
@@ -856,7 +856,7 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
       ]
     });
 
-    status.ingress_node_api = mainMeta.live_recording_config?.ingress_node_api;
+    status.ingressNodeApi = mainMeta.live_recording_config?.ingress_node_api;
     status.url = mainMeta.live_recording_config?.url;
 
     if(mainMeta.live_recording_config == undefined || mainMeta.live_recording_config.url == undefined) {
@@ -883,7 +883,7 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
       fabURI = "https://" + fabURI;
     }
 
-    status.fabric_api = fabURI;
+    status.fabricApi = fabURI;
 
 
     let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
@@ -894,8 +894,8 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
 
     this.RecordWriteToken({writeToken: edgeWriteToken, fabricNodeUrl: fabURI});
 
-    status.edge_write_token = edgeWriteToken;
-    status.stream_id = edgeWriteToken; // By convention the stream ID is its write token
+    status.edgeWriteToken = edgeWriteToken;
+    status.streamId = edgeWriteToken; // By convention the stream ID is its write token
     let edgeMeta;
     try {
       edgeMeta = await this.CallBitcodeMethod({
@@ -916,7 +916,7 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
       return status;
     }
 
-    status.edge_meta_size = JSON.stringify(edgeMeta || "").length;
+    status.edgeMetaSize = JSON.stringify(edgeMeta || "").length;
 
     // If a stream has never been started return state 'inactive'
     if(edgeMeta.live_recording === undefined ||
@@ -928,7 +928,7 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
     }
 
     let recordings = edgeMeta.live_recording.recordings;
-    status.recording_period_sequence = recordings.recording_sequence;
+    status.recordingPeriodSequence = recordings.recording_sequence;
 
     let sequence = recordings.recording_sequence;
     let period = recordings.live_offering[sequence - 1];
@@ -945,19 +945,19 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
       sinceLastFinalize = Math.floor(new Date().getTime() / 1000) - videoLastFinalizationTimeEpochSec;
     }
 
-    let recording_period = {
-      activation_time_epoch_sec: period.recording_start_time_epoch_sec,
-      start_time_epoch_sec: period.start_time_epoch_sec,
-      start_time_text: new Date(period.start_time_epoch_sec * 1000).toLocaleString(),
-      end_time_epoch_sec: period.end_time_epoch_sec,
-      end_time_text:  period.end_time_epoch_sec === 0 ? null : new Date(period.end_time_epoch_sec * 1000).toLocaleString(),
-      video_parts: videoFinalizedParts,
-      video_last_part_finalized_epoch_sec: videoLastFinalizationTimeEpochSec,
-      video_since_last_finalize_sec : sinceLastFinalize
+    const recordingPeriod = {
+      activationTimeEpochSec: period.recording_start_time_epoch_sec,
+      startTimeEpochSec: period.start_time_epoch_sec,
+      startTimeText: new Date(period.start_time_epoch_sec * 1000).toLocaleString(),
+      endTimeEpochSec: period.end_time_epoch_sec,
+      endTimeText: period.end_time_epoch_sec === 0 ? null : new Date(period.end_time_epoch_sec * 1000).toLocaleString(),
+      videoParts: videoFinalizedParts,
+      videoLastPartFinalizedEpochSec: videoLastFinalizationTimeEpochSec,
+      videoSinceLastFinalizeSec: sinceLastFinalize
     };
-    status.recording_period = recording_period;
+    status.recordingPeriod = recordingPeriod;
 
-    status.lro_status_url = await this.FabricUrl({
+    status.lroStatusUrl = await this.FabricUrl({
       libraryId: libraryId,
       objectId: objectId,
       writeToken: edgeWriteToken,
@@ -969,30 +969,30 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
       (edgeMeta.live_recording.playout_config.interleaves[sequence] != undefined)) {
       let insertions = edgeMeta.live_recording.playout_config.interleaves[sequence];
       for(let i = 0; i < insertions.length; i ++) {
-        let insertionTimeSinceEpoch = recording_period.start_time_epoch_sec + insertions[i].insertion_time;
+        let insertionTimeSinceEpoch = recordingPeriod.startTimeEpochSec + insertions[i].insertion_time;
         status.insertions[i] = {
-          insertion_time_since_start: insertions[i].insertion_time,
-          insertion_time: new Date(insertionTimeSinceEpoch * 1000).toISOString(),
-          insertion_time_local: new Date(insertionTimeSinceEpoch * 1000).toLocaleString(),
+          insertionTimeSinceStart: insertions[i].insertion_time,
+          insertionTime: new Date(insertionTimeSinceEpoch * 1000).toISOString(),
+          insertionTimeLocal: new Date(insertionTimeSinceEpoch * 1000).toLocaleString(),
           target: insertions[i].playout};
       }
     }
 
     if(showParams) {
-      status.recording_params = edgeMeta.live_recording.recording_config.recording_params;
+      status.recordingParams = edgeMeta.live_recording.recording_config.recording_params;
     }
 
     let state = "stopped";
     let lroStatus = "";
     try {
       lroStatus = await this.utils.ResponseToJson(
-        await HttpClient.Fetch(status.lro_status_url)
+        await HttpClient.Fetch(status.lroStatusUrl)
       );
       state = lroStatus.state;
       status.warnings = lroStatus.custom && lroStatus.custom.warnings;
       status.quality = lroStatus.custom && lroStatus.custom.quality;
       if(lroStatus.custom && lroStatus.custom.status) {
-        status.recording_status = lroStatus.custom.status;
+        status.recordingStatus = lroStatus.custom.status;
       }
     } catch(error) {
       console.log("LRO Status (failed): ", error.response.statusCode);
@@ -1010,7 +1010,7 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
     status.state = state;
 
     if(state === "running") {
-      let playout_urls = {};
+      let playoutUrls = {};
       let playout_options;
 
       try {
@@ -1028,7 +1028,7 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
         playout_options.hls.playoutMethods.clear !== undefined
       );
       if(hls_clear_enabled) {
-        playout_urls.hls_clear = await this.FabricUrl({
+        playoutUrls.hlsClear = await this.FabricUrl({
           libraryId: libraryId,
           objectId: objectId,
           rep: "playout/default/hls-clear/playlist.m3u8",
@@ -1042,7 +1042,7 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
         playout_options.hls.playoutMethods["aes-128"] !== undefined
       );
       if(hls_aes128_enabled) {
-        playout_urls.hls_aes128 = await this.FabricUrl({
+        playoutUrls.hlsAes128 = await this.FabricUrl({
           libraryId: libraryId,
           objectId: objectId,
           rep: "playout/default/hls-aes128/playlist.m3u8",
@@ -1056,7 +1056,7 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
         playout_options.hls.playoutMethods["sample-aes"] !== undefined
       );
       if(hls_sample_aes_enabled) {
-        playout_urls.hls_sample_aes = await this.FabricUrl({
+        playoutUrls.hlsSampleAes = await this.FabricUrl({
           libraryId: libraryId,
           objectId: objectId,
           rep: "playout/default/hls-sample-aes/playlist.m3u8",
@@ -1076,10 +1076,9 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
       if(networkInfo.name.includes("demo")) {
         embed_net = "demo";
       }
-      let embed_url = `https://embed.v3.contentfabric.io/?net=${embed_net}&p&ct=h&oid=${objectId}&mt=lv&ath=${token}`;
-      playout_urls.embed_url = embed_url;
+      playoutUrls.embedUrl = `https://embed.v3.contentfabric.io/?net=${embed_net}&p&ct=h&oid=${objectId}&mt=lv&ath=${token}`;
 
-      status.playout_urls = playout_urls;
+      status.playoutUrls = playoutUrls;
     }
   } catch(error) {
     console.error(error);
@@ -1108,7 +1107,7 @@ exports.StreamStartRecording = async function({name, start=false}) {
     };
   }
 
-  let objectId = status.object_id;
+  let objectId = status.objectId;
   console.log("START: ", name, "start", start);
 
   let libraryId = await this.ContentObjectLibraryId({objectId: objectId});
@@ -1177,12 +1176,12 @@ exports.StreamStartRecording = async function({name, start=false}) {
   this.Log("Finalized object: ", objectHash);
 
   status = {
-    object_id: objectId,
+    objectId: objectId,
     hash: objectHash,
-    library_id: libraryId,
-    stream_id: edgeToken,
-    edge_write_token: edgeToken,
-    fabric_api: fabURI,
+    libraryId: libraryId,
+    streamId: edgeToken,
+    edgeWriteToken: edgeToken,
+    fabricApi: fabURI,
     state: "stopped"
   };
 
@@ -1222,9 +1221,9 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
     if(status.state == "running" || status.state == "starting" || status.state == "stalled") {
       try {
         await this.CallBitcodeMethod({
-          libraryId: status.library_id,
-          objectId: status.object_id,
-          writeToken: status.edge_write_token,
+          libraryId: status.libraryId,
+          objectId: status.objectId,
+          writeToken: status.edgeWriteToken,
           method: "/live/stop/" + status.tlro,
           constant: false
         });
@@ -1253,13 +1252,13 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
       return status;
     }
 
-    console.log("STARTING", "edge_write_token", status.edge_write_token);
+    console.log("STARTING", "edgeWriteToken", status.edgeWriteToken);
 
     try {
       await this.CallBitcodeMethod({
-        libraryId: status.library_id,
-        objectId: status.object_id,
-        writeToken: status.edge_write_token,
+        libraryId: status.libraryId,
+        objectId: status.objectId,
+        writeToken: status.edgeWriteToken,
         method: "/live/start",
         constant: false
       });
@@ -1499,7 +1498,7 @@ exports.StreamSetOfferingAndDRM = async function({
     };
   }
 
-  let objectId = status.object_id;
+  let objectId = status.objectId;
 
   console.log("INIT: ", name, objectId);
 
@@ -1634,7 +1633,7 @@ exports.StreamSetOfferingAndDRM = async function({
 
     return {
       name,
-      object_id: objectId,
+      objectId: objectId,
       state: "initialized"
     };
   } catch(error) {
@@ -2122,8 +2121,8 @@ exports.StreamConfig = async function({
 
   const status = {
     name,
-    library_id: libraryId,
-    object_id: objectId,
+    libraryId: libraryId,
+    objectId: objectId,
   }
 
   const liveRecordingMeta = await this.ContentObjectMetadata({
@@ -2156,7 +2155,7 @@ exports.StreamConfig = async function({
     liveRecordingConfigProfile = lrcMeta ?? LRCProfile;
   }
 
-  status.user_config = liveRecordingConfigProfile;
+  status.userConfig = liveRecordingConfigProfile;
 
   // Get node URI from user config
   let node, endpoint, streamUrl;
@@ -2429,7 +2428,7 @@ exports.StreamCopyToVod = async function({
   const abrProfile = require("../abr_profiles/abr_profile_live_to_vod.js");
 
   const status = await this.StreamStatus({name});
-  const libraryId = status.library_id;
+  const libraryId = status.libraryId;
 
   this.Log(`Copying stream ${name} to target ${targetObjectId}`);
 
@@ -2451,10 +2450,10 @@ exports.StreamCopyToVod = async function({
   }
 
   try {
-    status.live_object_id = objectId;
+    status.liveObjectId = objectId;
 
     const liveHash = await this.LatestVersionHash({objectId, libraryId});
-    status.live_hash = liveHash;
+    status.liveHash = liveHash;
 
     if(eventId) {
       // Retrieve start and end times for the event
@@ -2470,9 +2469,9 @@ exports.StreamCopyToVod = async function({
       libraryId: targetLibraryId
     });
 
-    status.target_object_id = targetObjectId;
-    status.target_library_id = targetLibraryId;
-    status.target_write_token = writeToken;
+    status.targetObjectId = targetObjectId;
+    status.targetLibraryId = targetLibraryId;
+    status.targetWriteToken = writeToken;
 
     this.Log("Process live source (takes around 20 sec per hour of content)");
 
@@ -2544,15 +2543,15 @@ exports.StreamCopyToVod = async function({
         commitMessage: "Live Stream to VoD"
       });
 
-      status.target_hash = finalizeResponse.hash;
+      status.targetHash = finalizeResponse.hash;
     }
 
     // Clean up unnecessary status items
-    delete status.playout_urls;
-    delete status.lro_status_url;
-    delete status.recording_period;
-    delete status.recording_period_sequence;
-    delete status.edge_meta_size;
+    delete status.playoutUrls;
+    delete status.lroStatusUrl;
+    delete status.recordingPeriod;
+    delete status.recordingPeriodSequence;
+    delete status.edgeMetaSize;
     delete status.insertions;
 
     return status;
