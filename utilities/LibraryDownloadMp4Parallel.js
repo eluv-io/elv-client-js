@@ -125,6 +125,10 @@ class LibraryDownloadMp4 extends Utility {
                     descTemplate: "Write failures to a JSON file",
                     type: "string",
                 }),
+                NewOpt("manifest", {
+                    descTemplate: "Path to a JSON manifest file that records completed downloads — used to skip already-downloaded objects on re-runs",
+                    type: "string",
+                }),
                 NewOpt("concurrency", {
                     descTemplate: "Number of parallel downloads (default: 5)",
                     type: "number",
@@ -279,7 +283,7 @@ class LibraryDownloadMp4 extends Utility {
             .substring(0, 180);
     }
 
-    async processObject(e, client, libraryId, format, offering, targetDir, failedDownloads, failPath, slot, display) {
+    async processObject(e, client, libraryId, format, offering, targetDir, failedDownloads, failPath, completedIds, manifestPath, slot, display) {
         const objectId = e.objectId;
         const objectName = R.path(["metadata", "public", "name"], e) || objectId;
         // Truncate long names so progress lines stay within one terminal line
@@ -301,11 +305,10 @@ class LibraryDownloadMp4 extends Utility {
             }
         };
 
-        // Skip existing
-        const existing = fs.readdirSync(targetDir).find((f) => f.includes(objectId));
-        if (existing) {
-            logLine(`  SKIP  ${shortName} — already exists`);
-            updateSlot("skipped (already exists)");
+        // Skip if already recorded in the manifest
+        if (completedIds.has(objectId)) {
+            logLine(`  SKIP  ${shortName} — in manifest`);
+            updateSlot("skipped (manifest)");
             formattedObj.download_url = "SKIPPED_ALREADY_EXISTS";
             return formattedObj;
         }
@@ -411,6 +414,25 @@ class LibraryDownloadMp4 extends Utility {
             logLine(`  DONE  ${shortName} → ${filename}`);
             logLine(`        Download URL:    ${downloadUrl}`);
             updateSlot("done ✔");
+
+            // Record success in manifest immediately so re-runs skip this object
+            if (manifestPath) {
+                completedIds.add(objectId);
+                const entry = {
+                    object_id: objectId,
+                    name: objectName,
+                    version_hash: versionHash,
+                    filename,
+                    download_url: downloadUrl,
+                    completed_at: new Date().toISOString(),
+                };
+                const existing = fs.existsSync(manifestPath)
+                    ? JSON.parse(fs.readFileSync(manifestPath, "utf8"))
+                    : [];
+                existing.push(entry);
+                fs.writeFileSync(manifestPath, JSON.stringify(existing, null, 2));
+            }
+
             return formattedObj;
 
         } catch (err) {
@@ -463,8 +485,26 @@ class LibraryDownloadMp4 extends Utility {
         const failPath = this.args.failLog ? path.resolve(this.args.failLog) : null;
         if (failPath) {
             fs.writeFileSync(failPath, "[]");
-            this.logger.log(`Failure log: ${failPath}\n`);
+            this.logger.log(`Failure log: ${failPath}`);
         }
+
+        // Load or create the manifest that tracks completed downloads across re-runs
+        const manifestPath = this.args.manifest ? path.resolve(this.args.manifest) : null;
+        let completedIds; // Set<string>
+        if (manifestPath) {
+            if (fs.existsSync(manifestPath)) {
+                const saved = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+                completedIds = new Set(saved.map((e) => e.object_id));
+                this.logger.log(`Manifest: ${manifestPath} (${completedIds.size} already completed)`);
+            } else {
+                completedIds = new Set();
+                fs.writeFileSync(manifestPath, "[]");
+                this.logger.log(`Manifest: ${manifestPath} (new)`);
+            }
+        } else {
+            completedIds = new Set();
+        }
+        this.logger.log("");
 
         // Start the multi-line progress display (one line per concurrent worker slot)
         const numSlots = Math.min(concurrency, objectList.length);
@@ -473,7 +513,7 @@ class LibraryDownloadMp4 extends Utility {
 
         // Each task factory receives its worker slot index from parallelLimit
         const tasks = objectList.map((obj) => (slot) =>
-            this.processObject(obj, client, libraryId, format, offering, targetDir, failedDownloads, failPath, slot, display)
+            this.processObject(obj, client, libraryId, format, offering, targetDir, failedDownloads, failPath, completedIds, manifestPath, slot, display)
         );
 
         const results = await this.parallelLimit(tasks, concurrency);
