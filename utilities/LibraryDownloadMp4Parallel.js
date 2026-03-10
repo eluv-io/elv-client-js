@@ -14,6 +14,67 @@ const path = require("path");
 const fs = require("fs");
 const https = require("https");
 
+/**
+ * Manages a fixed block of N terminal lines for parallel progress display.
+ * Each slot occupies one dedicated line; updates use ANSI cursor movement so
+ * concurrent jobs never overwrite each other.
+ *
+ * Layout (after start()):
+ *   [slot 0 line]
+ *   [slot 1 line]
+ *   ...
+ *   [slot N-1 line]
+ *   <- cursor stays here
+ *
+ * logAbove() inserts a new line above the block (permanent log output) and
+ * keeps the block intact below it.
+ */
+class MultiProgressDisplay {
+    constructor(numSlots) {
+        this.numSlots = numSlots;
+        this.lines = new Array(numSlots).fill("");
+    }
+
+    /** Reserve N blank lines for the progress block. Call once before any updates. */
+    start() {
+        for (let i = 0; i < this.numSlots; i++) {
+            process.stdout.write("\n");
+        }
+    }
+
+    /**
+     * Overwrite the line for `slot` with `text`.
+     * Cursor returns to the position below slot N-1 after each call.
+     */
+    update(slot, text) {
+        this.lines[slot] = text;
+        const up = this.numSlots - slot; // always >= 1
+        process.stdout.write(`\x1B[${up}A\r\x1B[2K${text}\x1B[${up}B`);
+    }
+
+    /**
+     * Print `text` as a persistent log line above the progress block.
+     * Uses CSI IL (insert line) so no existing slot content is lost.
+     */
+    logAbove(text) {
+        // Move cursor to slot 0 line, insert a blank line (shifts all slots down),
+        // write the message, then move down past all N slots back to base position.
+        process.stdout.write(
+            `\x1B[${this.numSlots}A` +      // up to slot 0
+            `\x1B[1L` +                      // insert blank line; slots shift to +1..+N
+            `\r\x1B[2K${text}` +             // write log line
+            `\x1B[${this.numSlots + 1}B`     // down N+1 lines back to base
+        );
+    }
+
+    /** Clear all progress lines (call after all tasks finish). */
+    finish() {
+        for (let slot = 0; slot < this.numSlots; slot++) {
+            this.update(slot, "");
+        }
+    }
+}
+
 class LibraryDownloadMp4 extends Utility {
     blueprint() {
         return {
@@ -99,29 +160,44 @@ class LibraryDownloadMp4 extends Utility {
 
     /**
      * Run an array of async task factories with a max concurrency limit.
-     * Each item in `tasks` is a zero-arg async function that returns a result.
+     * Each task factory receives its worker slot index (0-based) so it can
+     * update the correct progress line.
      */
     async parallelLimit(tasks, limit) {
         const results = new Array(tasks.length);
         let index = 0;
 
-        async function worker() {
+        const worker = async (slot) => {
             while (index < tasks.length) {
                 const i = index++;
-                results[i] = await tasks[i]();
+                results[i] = await tasks[i](slot);
             }
-        }
+        };
 
-        const workers = Array.from({ length: Math.min(limit, tasks.length) }, worker);
-        await Promise.all(workers);
+        const numWorkers = Math.min(limit, tasks.length);
+        await Promise.all(Array.from({ length: numWorkers }, (_, slot) => worker(slot)));
         return results;
     }
 
-    async downloadFile(url, filepath) {
+    /** Render a compact ASCII progress bar for download progress. */
+    renderBar(downloaded, totalSize, width = 24) {
+        const dlMB = (downloaded / 1e6).toFixed(1);
+        if (totalSize > 0) {
+            const pct = Math.min(100, (downloaded / totalSize) * 100);
+            const filled = Math.round((pct / 100) * width);
+            const bar = "█".repeat(filled) + "░".repeat(width - filled);
+            const totalMB = (totalSize / 1e6).toFixed(1);
+            return `[${bar}] ${pct.toFixed(1)}% ${dlMB}/${totalMB} MB`;
+        }
+        return `[${"▒".repeat(width)}] ${dlMB} MB`;
+    }
+
+    async downloadFile(url, filepath, slot, display) {
         return this.retry(() => {
             return new Promise((resolve, reject) => {
                 // Keep-alive agent to reuse TCP connections across downloads
                 const agent = new https.Agent({ keepAlive: true });
+                const filename = path.basename(filepath);
 
                 const startDownload = (currentUrl, redirCount = 0) => {
                     if (redirCount > 5) return reject(new Error("Too many redirects"));
@@ -140,21 +216,24 @@ class LibraryDownloadMp4 extends Utility {
 
                         const totalSize = parseInt(res.headers["content-length"] || "0", 10);
                         let downloaded = 0;
-                        const filename = path.basename(filepath);
 
                         const writeStream = fs.createWriteStream(filepath);
 
                         res.on("data", (chunk) => {
                             downloaded += chunk.length;
-                            if (totalSize > 0) {
-                                const pct = ((downloaded / totalSize) * 100).toFixed(1);
-                                process.stdout.write(`\r[${filename}] ${pct}% (${(downloaded / 1e6).toFixed(2)}/${(totalSize / 1e6).toFixed(2)} MB)`);
+                            const bar = this.renderBar(downloaded, totalSize);
+                            const line = `  [${filename}] ${bar}`;
+                            if (display != null && slot != null) {
+                                display.update(slot, line);
                             } else {
-                                process.stdout.write(`\r[${filename}] ${(downloaded / 1e6).toFixed(2)} MB downloaded`);
+                                process.stdout.write(`\r${line}`);
                             }
                         });
 
-                        res.on("end", () => process.stdout.write("\n"));
+                        res.on("end", () => {
+                            if (display == null) process.stdout.write("\n");
+                        });
+
                         res.pipe(writeStream);
                         writeStream.on("finish", () => writeStream.close(resolve));
                         writeStream.on("error", (err) => {
@@ -162,8 +241,8 @@ class LibraryDownloadMp4 extends Utility {
                         });
                     });
 
-                    // 30s connection timeout only — don't timeout mid-transfer
-                    req.setTimeout(30_000, () => {
+                    // 5-minute socket inactivity timeout — generous for large video files
+                    req.setTimeout(300_000, () => {
                         req.abort();
                         reject(new Error("DOWNLOAD_TIMEOUT"));
                     });
@@ -183,7 +262,11 @@ class LibraryDownloadMp4 extends Utility {
             retries: 3,
             onRetry: (err, attempt) => {
                 const reason = err.message === "DOWNLOAD_TIMEOUT" ? "timed out" : `failed: ${err.message}`;
-                this.logger.warn(`Download ${reason}. Retrying attempt ${attempt}...`);
+                if (display != null && slot != null) {
+                    display.logAbove(`  [WARN] ${path.basename(filepath)}: ${reason} — retry ${attempt}/3`);
+                } else {
+                    this.logger.warn(`Download ${reason}. Retrying attempt ${attempt}...`);
+                }
             },
         });
     }
@@ -196,20 +279,38 @@ class LibraryDownloadMp4 extends Utility {
             .substring(0, 180);
     }
 
-    async processObject(e, client, libraryId, format, offering, targetDir, failedDownloads) {
+    async processObject(e, client, libraryId, format, offering, targetDir, failedDownloads, slot, display) {
         const objectId = e.objectId;
         const objectName = R.path(["metadata", "public", "name"], e) || objectId;
+        // Truncate long names so progress lines stay within one terminal line
+        const shortName = objectName.length > 40 ? objectName.substring(0, 37) + "..." : objectName;
 
-        this.logger.log(`\n--- Processing ${objectName} (${objectId}) ---`);
         const formattedObj = { object_id: objectId, name: objectName };
+
+        const updateSlot = (text) => {
+            if (display != null && slot != null) {
+                display.update(slot, `  [${shortName}] ${text}`);
+            }
+        };
+
+        const logLine = (text) => {
+            if (display != null) {
+                display.logAbove(text);
+            } else {
+                this.logger.log(text);
+            }
+        };
 
         // Skip existing
         const existing = fs.readdirSync(targetDir).find((f) => f.includes(objectId));
         if (existing) {
-            this.logger.log(`Skipping ${objectName}: already exists (${existing})`);
+            logLine(`  SKIP  ${shortName} — already exists`);
+            updateSlot("skipped (already exists)");
             formattedObj.download_url = "SKIPPED_ALREADY_EXISTS";
             return formattedObj;
         }
+
+        updateSlot("starting...");
 
         try {
             const versionHash = await this.retry(() =>
@@ -227,7 +328,7 @@ class LibraryDownloadMp4 extends Utility {
             );
 
             const jobId = response.job_id;
-            this.logger.log(`[${objectName}] Started job ${jobId}`);
+            logLine(`  START ${shortName} (job ${jobId})`);
 
             // Poll until complete
             let status;
@@ -242,12 +343,12 @@ class LibraryDownloadMp4 extends Utility {
                 );
                 const progress = status?.progress || 0;
                 if (progress !== lastProgress) {
-                    process.stdout.write(`\r[${objectName}] Transcoding: ${progress.toFixed(1)}%`);
+                    const filled = Math.round((progress / 100) * 20);
+                    const bar = "█".repeat(filled) + "░".repeat(20 - filled);
+                    updateSlot(`transcoding [${bar}] ${progress.toFixed(1)}%`);
                     lastProgress = progress;
                 }
             } while (status?.status !== "completed");
-
-            process.stdout.write("\n");
 
             const filename = this.sanitizeFilename(status.filename, `${objectId}.mp4`);
             const outputFile = path.join(targetDir, filename);
@@ -264,14 +365,17 @@ class LibraryDownloadMp4 extends Utility {
             );
 
             formattedObj.download_url = downloadUrl;
+            updateSlot("downloading...");
 
-            this.logger.log(`[${objectName}] Downloading → ${outputFile}`);
-            await this.downloadFile(downloadUrl, outputFile);
-            this.logger.log(`[${objectName}] ✔ Completed`);
+            await this.downloadFile(downloadUrl, outputFile, slot, display);
+
+            logLine(`  DONE  ${shortName} → ${filename}`);
+            updateSlot("done ✔");
             return formattedObj;
 
         } catch (err) {
-            this.logger.error(`FAILED: ${objectId} - ${err.message}`);
+            logLine(`  FAIL  ${shortName}: ${err.message}`);
+            updateSlot(`failed: ${err.message}`);
             failedDownloads.push({
                 object_id: objectId,
                 name: objectName,
@@ -310,12 +414,20 @@ class LibraryDownloadMp4 extends Utility {
 
         if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
 
-        // Build task list and run in parallel with concurrency cap
-        const tasks = objectList.map((obj) => () =>
-            this.processObject(obj, client, libraryId, format, offering, targetDir, failedDownloads)
+        // Start the multi-line progress display (one line per concurrent worker slot)
+        const numSlots = Math.min(concurrency, objectList.length);
+        const display = new MultiProgressDisplay(numSlots);
+        display.start();
+
+        // Each task factory receives its worker slot index from parallelLimit
+        const tasks = objectList.map((obj) => (slot) =>
+            this.processObject(obj, client, libraryId, format, offering, targetDir, failedDownloads, slot, display)
         );
 
         const results = await this.parallelLimit(tasks, concurrency);
+
+        // Clear the progress lines before printing summary
+        display.finish();
 
         // Summary
         this.logger.log("\n=== SUMMARY ===");
@@ -343,3 +455,4 @@ if (require.main === module) {
 } else {
     module.exports = LibraryDownloadMp4;
 }
+
