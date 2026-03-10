@@ -179,10 +179,10 @@ class LiveConf {
       const currentStreamIndex = audioStreamData[index].stream_index;
       const currentStreamData = audioStreamData[index];
 
-      const profileAudioForType = ladderProfile?.audio.find(a => a.channels === currentStreamData.channels);
+      const profileAudioForType = ladderProfile?.audio?.find(a => a.channels === currentStreamData.channels);
 
       audioStreams[currentStreamIndex] = {
-        recordingBitrate: ladderProfile?.audio ? profileAudioForType.bit_rate : Math.max(currentStreamData.bit_rate ?? 0, 12800),
+        recordingBitrate: profileAudioForType?.bit_rate ?? Math.max(currentStreamData.bit_rate ?? 0, 12800),
         recordingChannels: currentStreamData.channels,
         playoutLabel: `Audio ${index + 1}`
       };
