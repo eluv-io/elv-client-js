@@ -279,13 +279,13 @@ class LibraryDownloadMp4 extends Utility {
             .substring(0, 180);
     }
 
-    async processObject(e, client, libraryId, format, offering, targetDir, failedDownloads, slot, display) {
+    async processObject(e, client, libraryId, format, offering, targetDir, failedDownloads, failPath, slot, display) {
         const objectId = e.objectId;
         const objectName = R.path(["metadata", "public", "name"], e) || objectId;
         // Truncate long names so progress lines stay within one terminal line
         const shortName = objectName.length > 40 ? objectName.substring(0, 37) + "..." : objectName;
 
-        const formattedObj = { object_id: objectId, name: objectName };
+        const formattedObj = { object_id: objectId, name: objectName, version_hash: null, file_service_url: null, download_url: null };
 
         const updateSlot = (text) => {
             if (display != null && slot != null) {
@@ -317,6 +317,19 @@ class LibraryDownloadMp4 extends Utility {
                 this.concerns.FabricObject.latestVersionHash({ libraryId, objectId })
             );
 
+            formattedObj.version_hash = versionHash;
+
+            // Resolve the file service base URL for this object
+            const fileServiceUrl = await this.retry(() =>
+                client.FabricUrl({
+                    versionHash,
+                    call: "/media/files",
+                    service: "files",
+                })
+            );
+
+            formattedObj.file_service_url = fileServiceUrl;
+
             // Start transcoding job
             const response = await this.retry(() =>
                 client.MakeFileServiceRequest({
@@ -329,10 +342,20 @@ class LibraryDownloadMp4 extends Utility {
 
             const jobId = response.job_id;
             logLine(`  START ${shortName} (job ${jobId})`);
+            logLine(`        ID:              ${objectId}`);
+            logLine(`        Version hash:    ${versionHash}`);
+            logLine(`        File svc URL:    ${fileServiceUrl}`);
 
-            // Poll until complete
+            // Poll until complete, with stall detection and absolute timeout
+            const STALL_TIMEOUT_MS  = 10 * 60 * 1000; // 10 min without progress change → stall
+            const TOTAL_TIMEOUT_MS  = 2  * 60 * 60 * 1000; // 2 h absolute cap
+            const TERMINAL_STATUSES = new Set(["completed", "failed", "error", "cancelled"]);
+
             let status;
-            let lastProgress = -1;
+            let lastProgress   = -1;
+            let lastProgressAt = Date.now();
+            const jobStartedAt = Date.now();
+
             do {
                 await this.sleep(2000);
                 status = await this.retry(() =>
@@ -341,12 +364,28 @@ class LibraryDownloadMp4 extends Utility {
                         path: `/call/media/files/${jobId}`,
                     })
                 );
+
                 const progress = status?.progress || 0;
+                const now = Date.now();
+
                 if (progress !== lastProgress) {
+                    lastProgress   = progress;
+                    lastProgressAt = now;
                     const filled = Math.round((progress / 100) * 20);
                     const bar = "█".repeat(filled) + "░".repeat(20 - filled);
                     updateSlot(`transcoding [${bar}] ${progress.toFixed(1)}%`);
-                    lastProgress = progress;
+                }
+
+                if (TERMINAL_STATUSES.has(status?.status) && status?.status !== "completed") {
+                    throw new Error(`Transcoding job ${jobId} ended with status "${status.status}"`);
+                }
+
+                if (now - lastProgressAt > STALL_TIMEOUT_MS) {
+                    throw new Error(`Transcoding stalled at ${lastProgress.toFixed(1)}% for >10 min`);
+                }
+
+                if (now - jobStartedAt > TOTAL_TIMEOUT_MS) {
+                    throw new Error(`Transcoding exceeded 2-hour absolute timeout`);
                 }
             } while (status?.status !== "completed");
 
@@ -370,18 +409,24 @@ class LibraryDownloadMp4 extends Utility {
             await this.downloadFile(downloadUrl, outputFile, slot, display);
 
             logLine(`  DONE  ${shortName} → ${filename}`);
+            logLine(`        Download URL:    ${downloadUrl}`);
             updateSlot("done ✔");
             return formattedObj;
 
         } catch (err) {
             logLine(`  FAIL  ${shortName}: ${err.message}`);
             updateSlot(`failed: ${err.message}`);
-            failedDownloads.push({
+            const entry = {
                 object_id: objectId,
                 name: objectName,
                 error: err.message,
                 timestamp: new Date().toISOString(),
-            });
+            };
+            failedDownloads.push(entry);
+            if (failPath) {
+                // Rewrite the full array so the file is always valid JSON
+                fs.writeFileSync(failPath, JSON.stringify(failedDownloads, null, 2));
+            }
             return formattedObj;
         }
     }
@@ -414,6 +459,13 @@ class LibraryDownloadMp4 extends Utility {
 
         if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
 
+        // Create (or reset) the fail log immediately so it exists from the start
+        const failPath = this.args.failLog ? path.resolve(this.args.failLog) : null;
+        if (failPath) {
+            fs.writeFileSync(failPath, "[]");
+            this.logger.log(`Failure log: ${failPath}\n`);
+        }
+
         // Start the multi-line progress display (one line per concurrent worker slot)
         const numSlots = Math.min(concurrency, objectList.length);
         const display = new MultiProgressDisplay(numSlots);
@@ -421,7 +473,7 @@ class LibraryDownloadMp4 extends Utility {
 
         // Each task factory receives its worker slot index from parallelLimit
         const tasks = objectList.map((obj) => (slot) =>
-            this.processObject(obj, client, libraryId, format, offering, targetDir, failedDownloads, slot, display)
+            this.processObject(obj, client, libraryId, format, offering, targetDir, failedDownloads, failPath, slot, display)
         );
 
         const results = await this.parallelLimit(tasks, concurrency);
@@ -438,12 +490,7 @@ class LibraryDownloadMp4 extends Utility {
         if (failedDownloads.length > 0) {
             this.logger.warn("\n=== FAILED DOWNLOADS ===");
             this.logger.logTable({ list: failedDownloads });
-
-            if (this.args.failLog) {
-                const failPath = path.resolve(this.args.failLog);
-                fs.writeFileSync(failPath, JSON.stringify(failedDownloads, null, 2));
-                this.logger.warn(`Failures written to: ${failPath}`);
-            }
+            if (failPath) this.logger.warn(`Failures logged to: ${failPath}`);
         }
 
         return { results, failedDownloads };
@@ -455,4 +502,3 @@ if (require.main === module) {
 } else {
     module.exports = LibraryDownloadMp4;
 }
-
