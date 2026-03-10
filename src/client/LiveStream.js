@@ -372,20 +372,17 @@ exports.StreamCreate = async function({
  *
  * @methodGroup Live Stream
  * @namedParams
- * @param {Object=} streamOptions - Options for the stream metadata read
- * @param {boolean=} streamOptions.resolveIncludeSource - If specified, resolved links will include the hash of the link at the root of the metadata
- * @param {boolean=} streamOptions.resolveLinks - If specified, links in the metadata will be resolved
- * @param {boolean=} streamOptions.resolveIgnoreErrors - If specified, link errors within the requested metadata will not cause the entire response to result in an error
+ * @param {boolean=} resolveIncludeSource - If specified, resolved links will include the hash of the link at the root of the metadata
+ * @param {boolean=} resolveLinks - If specified, links in the metadata will be resolved
+ * @param {boolean=} resolveIgnoreErrors - If specified, link errors within the requested metadata will not cause the entire response to result in an error
  *
  * @return {Promise<Object>}
  */
-exports.StreamGetSiteData = async function({streamOptions={}}={}) {
-  const {
-    resolveIncludeSource=true,
-    resolveLinks=true,
-    resolveIgnoreErrors
-  } = streamOptions;
-
+exports.StreamGetSiteData = async function({
+  resolveLinks=true,
+  resolveIncludeSource=true,
+  resolveIgnoreErrors=true
+}={}) {
   try {
     let tenantId = await this.userProfileClient.TenantContractId();
 
@@ -433,7 +430,7 @@ exports.StreamLinkToSite = async function({
   try {
     ValidateObject(objectId);
 
-    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData({streamOptions: {resolveIncludeSource: false, resolveLinks: false}});
+    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData({resolveIncludeSource: false, resolveLinks: false});
 
     const objectName = await this.ContentObjectMetadata({
       libraryId: await this.ContentObjectLibraryId({objectId}),
@@ -496,7 +493,7 @@ exports.StreamRemoveLinkToSite = async function({objectId}) {
   try {
     ValidateObject(objectId);
 
-    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData({streamOptions: {resolveIncludeSource: false, resolveLinks: false}});
+    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData({resolveIncludeSource: false, resolveLinks: false});
     let slugToRemove;
 
     Object.keys(streamMetadata || {}).forEach(slug => {
