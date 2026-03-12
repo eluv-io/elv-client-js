@@ -11,6 +11,7 @@ const HttpClient = require("./HttpClient");
 const RemoteSigner = require("./RemoteSigner");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
+const NetworkUrls = require("./NetworkUrls");
 const {LogMessage} = require("./LogMessage");
 
 const Pako = require("pako");
@@ -20,14 +21,6 @@ const {
   ValidateWriteToken
 } = require("./Validation");
 const UrlJoin = require("url-join");
-
-const networks = {
-  "main": "https://main.net955305.contentfabric.io",
-  "demo": "https://demov3.net955210.contentfabric.io",
-  "demov3": "https://demov3.net955210.contentfabric.io",
-  "local": "http://127.0.0.1:8008/config?qspace=dev&self",
-  "test": "https://test.net955203.contentfabric.io"
-};
 
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
@@ -302,7 +295,7 @@ class ElvClient {
    * @return {Object} - An object using network names as keys and configuration URLs as values.
    */
   static Networks() {
-    return Object.assign({}, networks);
+    return Object.assign({}, NetworkUrls);
   }
 
   /**
@@ -332,7 +325,7 @@ class ElvClient {
     noAuth=false,
     assumeV3
   }) {
-    const configUrl = networks[networkName];
+    const configUrl = this.Networks()[networkName];
 
     if(!configUrl) { throw Error("Invalid network name: " + networkName); }
 
@@ -430,10 +423,10 @@ class ElvClient {
     this.inaccessibleLibraries = {};
 
     const uris = this.service === "search" ? this.searchURIs : this.fabricURIs;
-    this.HttpClient = new HttpClient({uris, debug: this.debug});
-    this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, debug: this.debug});
-    this.FileServiceHttpClient = new HttpClient({uris: this.fileServiceURIs, debug: this.debug});
-    this.SearchHttpClient = new HttpClient({uris: this.searchURIs || [], debug: this.debug});
+    this.HttpClient = new HttpClient({uris, networkName: this.networkName, debug: this.debug});
+    this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, networkName: this.networkName, debug: this.debug});
+    this.FileServiceHttpClient = new HttpClient({uris: this.fileServiceURIs, networkName: this.networkName, debug: this.debug});
+    this.SearchHttpClient = new HttpClient({uris: this.searchURIs || [], networkName: this.networkName, debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, networkId: this.networkId, debug: this.debug, timeout: this.ethereumContractTimeout});
 
     if(!this.signer) {
@@ -1224,7 +1217,7 @@ class ElvClient {
       this.oauthToken = token;
 
       const path = "/ks/jwt/wlt";
-      const httpClient = new HttpClient({uris: this.kmsURIs, debug: this.debug});
+      const httpClient = new HttpClient({uris: this.kmsURIs, networkName: this.networkName, debug: this.debug});
 
       const response = await this.utils.ResponseToJson(
         httpClient.Request({
