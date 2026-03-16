@@ -30,7 +30,7 @@ const CreateStream = async() => {
     },
     liveRecordingConfig: {
       playout_config: {
-        drm: "drm-all" // drm-public | drm-all | drm-fairplay | drm-widevine | drm-playready | clear
+        playout_formats: ["hls-sample-aes", "hls-aes128", "hls-fairplay", "hls-widevine-cenc", "hls-playready-cenc", "dash-widevine"]
       },
       recording_config: {
         part_ttl: 3600, // seconds
