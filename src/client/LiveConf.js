@@ -412,41 +412,40 @@ class LiveConf {
    * @return {Object} - Mapped config in live_recording format
    */
   MapCustomProfileToLiveConfig({customProfile}) {
-      if(!customProfile) return {};
+    if(!customProfile) return {};
 
-      const {recording_config, playout_config, recording_params} = customProfile;
+    const CompactDeep = (obj) => {
+      if(obj === null || typeof obj !== "object" || Array.isArray(obj)) {
+        return obj;
+      }
 
-      const CompactDeep = (obj) => {
-        if(obj === null || typeof obj !==
-          'object' || Array.isArray(obj)) {
-          return obj;
-        }
+      return R.pipe(
+        R.reject(R.isNil),
+        R.map(val => typeof val === "object" ? CompactDeep(val) : val)
+      )(obj);
+    };
 
-        return R.pipe(
-          R.reject(R.isNil), // Remove undefined/null values
-          R.map(val => typeof val === 'object' ? CompactDeep(val) : val)
-        )(obj);
-      };
+    const {recording_config, recording_params, ...rest} = customProfile;
 
     return CompactDeep({
-        live_recording: {
-          recording_config: {
-            recording_params: {
-              part_ttl: recording_config?.part_ttl,
-              reconnect_timeout: recording_config?.reconnect_timeout,
-              xc_params: {
-                ...(recording_params?.xc_params ||
-                {}),
-                connection_timeout: recording_config?.connection_timeout,
-                copy_mpegts: recording_config?.copy_mpegts,
-                input_cfg: recording_config?.input_cfg
-              }
+      live_recording: {
+        ...rest,
+        recording_config: {
+          recording_params: {
+            ...recording_params,
+            part_ttl: recording_config?.part_ttl,
+            reconnect_timeout: recording_config?.reconnect_timeout,
+            xc_params: {
+              ...(recording_params?.xc_params || {}),
+              connection_timeout: recording_config?.connection_timeout,
+              copy_mpegts: recording_config?.copy_mpegts,
+              input_cfg: recording_config?.input_cfg
             }
-          },
-          playout_config
+          }
         }
-      });
-    }
+      }
+    });
+  }
 
   /*
   * Generate audio streams recording configuration based on the optional custom settings.

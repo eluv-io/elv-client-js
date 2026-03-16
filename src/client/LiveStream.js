@@ -170,6 +170,7 @@ const CueInfo = async ({eventId, status}) => {
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} libraryId - ID of the library for the new live stream object
+ * @param {string=} objectId - ID of the object
  * @param {string} url - Source stream URL
  * @param {boolean=} finalize - If enabled, object will be finalized after creation (default: true)
  * @param {LiveRecordingConfig=} liveRecordingConfig - Configuration profile for the live stream including recording, playout, and transcoding settings
