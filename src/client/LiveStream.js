@@ -234,6 +234,15 @@ exports.StreamCreate = async function({
       libraryId,
       objectId
     });
+
+     // If no new URL is provided, use value from saved config
+     if(!url) {
+       url = await this.ContentObjectMetadata({
+         libraryId,
+         objectId,
+         metadataSubtree: "live_recording_config/url"
+       });
+     }
   } else {
     // Create new object
     editResponse = await this.CreateContentObject({
