@@ -2221,7 +2221,7 @@ exports.StreamConfig = async function({
     await this.StreamInitialize({
       name: objectId,
       drm: (formats || []).some(el => !el.includes("clear")) ? true : false,
-      format: formats ? formats?.join(",") : ""
+      format: formats ? formats?.join(",") : "",
       writeToken,
       finalize: false
     });
