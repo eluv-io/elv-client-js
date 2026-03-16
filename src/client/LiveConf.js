@@ -553,7 +553,9 @@ class LiveConf {
 
     switch(this.getProtocol()) {
       case "srt":
-        conf.live_recording.recording_config.recording_params.live_delay_nano = 6000000000;
+        if(!customSettings.liveRecordingConfigProfile?.recording_params?.live_delay_nano) {
+          conf.live_recording.recording_config.recording_params.live_delay_nano = 6000000000;
+        }
         break;
     }
 

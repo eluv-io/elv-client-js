@@ -336,12 +336,12 @@ exports.StreamCreate = async function({
   }
 
   if(initializeDrm) {
-    const drmOption = ENCRYPTION_OPTIONS.find(option => option.value === liveRecordingConfig?.playout_config?.drm);
+    const formats = liveRecordingConfig?.playout_config?.playout_formats;
 
     await this.StreamInitialize({
       name: objectId,
-      drm: (!liveRecordingConfig?.playout_config?.drm || liveRecordingConfig?.playout_config?.drm === "clear") ? false : true,
-      format: drmOption ? drmOption?.format?.join(",") : "",
+      drm: (formats || []).some(el => !el.includes("clear")) ? true : false,
+      format: formats ? formats?.join(",") : "",
       writeToken,
       finalize: false
     });
@@ -2144,7 +2144,7 @@ exports.StreamConfig = async function({
       metadataSubtree: "/live_recording_config"
     });
 
-    liveRecordingConfigProfile = R.mergeDeepRight(liveRecordingConfig, savedConfigData ?? {});
+    liveRecordingConfigProfile = R.mergeDeepRight(savedConfigData ?? {}, liveRecordingConfig);
   } else {
     const lrcMeta = await this.ContentObjectMetadata({
       libraryId: libraryId,
