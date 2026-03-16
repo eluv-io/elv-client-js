@@ -296,16 +296,20 @@ exports.StreamCreate = async function({
     }
   });
 
-  await this.CreateLinks({
-    libraryId,
-    objectId,
-    writeToken,
-    links: [{
-      type: "rep",
-      path: "public/asset_metadata/sources/default",
-      target: "playout/default/options.json"
-    }]
-  });
+  try {
+    await this.CreateLinks({
+      libraryId,
+      objectId,
+      writeToken,
+      links: [{
+        type: "rep",
+        path: "public/asset_metadata/sources/default",
+        target: "playout/default/options.json"
+      }]
+    });
+  } catch(error) {
+    console.log("Failed to create links", error);
+  }
 
   await this.SetPermission({
     objectId,
