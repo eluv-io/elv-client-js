@@ -30,13 +30,15 @@ const Sleep = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
 
-const ENCRYPTION_OPTIONS = [
-  {value: "drm-public", format: ["hls-sample-aes", "hls-aes128", "dash-widevine", "hls-playready-cenc"], id: "drm-public"},
-  {value: "drm-all",  format: ["hls-sample-aes", "hls-aes128", "hls-fairplay", "hls-widevine-cenc", "hls-playready-cenc", "dash-widevine"], id: "drm-all"},
-  {value: "drm-fairplay", format: ["hls-fairplay"], id: "drm-fairplay"},
-  {value: "drm-widevine", format: ["hls-widevine-cenc", "dash-widevine"], id: "drm-widevine"},
-  {value: "drm-playready", format: ["hls-playready-cenc"], id: "drm-playready"},
-  {value: "clear", format: ["hls-clear", "dash-clear"], id: "clear"}
+const VALID_PLAYOUT_FORMATS = [
+  "hls-sample-aes",
+  "hls-aes128",
+  "hls-fairplay",
+  "hls-widevine-cenc",
+  "hls-playready-cenc",
+  "dash-widevine",
+  "hls-clear",
+  "dash-clear"
 ];
 
 /**
@@ -256,6 +258,14 @@ exports.StreamCreate = async function({
 
   if(!liveRecordingConfig) {
     liveRecordingConfig = {};
+  }
+
+  const playoutFormats = liveRecordingConfig?.playout_config?.playout_formats;
+  if(playoutFormats) {
+    const invalid = playoutFormats.filter(f => !VALID_PLAYOUT_FORMATS.includes(f));
+    if(invalid.length > 0) {
+      throw new Error(`Invalid playout_formats: ${invalid.join(", ")}. Valid values: ${VALID_PLAYOUT_FORMATS.join(", ")}`);
+    }
   }
 
   liveRecordingConfig.url = url;
@@ -2018,7 +2028,6 @@ exports.StreamSaveLiveRecordingConfigProfile = async function({files, profileMet
  * @property {string=} playout_config.simple_watermark.y - Vertical position expression
  * @property {boolean=} playout_config.dvr - Whether to enable DVR functionality
  * TODO: update possible drm types
- * @property {string=} playout_config.drm - DRM configuration ("drm-all", "custom", or specific DRM type)
  * TODO: update possible playout formats
  * @property {Array<string>=} playout_config.playout_formats - List of playout format names (e.g., "dash-widevine", "hls-widevine")
  * @property {Object=} playout_config.ladder_specs - Encoding ladder specifications
@@ -2207,12 +2216,12 @@ exports.StreamConfig = async function({
   }
 
   if(["uninitialized", "unconfigured"].includes(currentStatus.state)) {
-    const drmOption = ENCRYPTION_OPTIONS.find(option => option.value === liveRecordingConfigMeta.live_recording.playout_config?.drm);
+    const formats = liveRecordingConfigMeta?.live_recording.playout_config?.playout_formats;
 
     await this.StreamInitialize({
       name: objectId,
-      drm: (!liveRecordingConfigMeta?.live_recording.playout_config?.drm || liveRecordingConfigMeta.live_recording.playout_config?.drm === "clear") ? false : true,
-      format: drmOption ? drmOption?.format?.join(",") : "",
+      drm: (formats || []).some(el => !el.includes("clear")) ? true : false,
+      format: formats ? formats?.join(",") : ""
       writeToken,
       finalize: false
     });
