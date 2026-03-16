@@ -92,7 +92,7 @@ const New = context => {
     );
   };
 
-  const add = async ({libraryId, objectId, writeToken, files, access, encrypt, copy}) => {
+  const add = async ({libraryId, objectId, writeToken, files, access, encrypt, copy, resume}) => {
     if(kindOf(copy) === "undefined") copy = isCopy();
     files = files || context.args.files;
     const groupedFiles = groupByPathMatch(access, files);
@@ -118,6 +118,7 @@ const New = context => {
         accessKey,
         secret,
         copy,
+        resume,
         callback,
         encryption: encrypt ? "cgck" : "none"
       });
