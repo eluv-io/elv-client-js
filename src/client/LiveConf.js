@@ -434,6 +434,7 @@ class LiveConf {
         recording_config: {
           recording_params: {
             ...recording_params,
+            live_delay_nano: recording_params?.live_delay_nano,
             part_ttl: recording_config?.part_ttl,
             reconnect_timeout: recording_config?.reconnect_timeout,
             xc_params: {
