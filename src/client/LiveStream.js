@@ -1553,8 +1553,8 @@ exports.StreamSetOfferingAndDRM = async function({
     drm = true; // Override DRM parameter
     playoutFormats = {};
     let formats = format.split(",");
-    for(let i = 0; i < formats.length; i++) {
-      if(formats[i] === "hls-clear") {
+    for(let option of formats) {
+      if(option === "hls-clear") {
         abrProfile.drm_optional = true;
         playoutFormats["hls-clear"] = {
           "drm": null,
@@ -1564,7 +1564,7 @@ exports.StreamSetOfferingAndDRM = async function({
         };
         continue;
       }
-      if(formats[i] === "dash-clear") {
+      if(option === "dash-clear") {
         abrProfile.drm_optional = true;
         playoutFormats["dash-clear"] = {
           "drm": null,
