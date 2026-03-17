@@ -1876,15 +1876,41 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  *
  * @returns {Promise<Object>} - Object containing all live recording config profiles
  */
-exports.StreamLiveRecordingConfigProfiles = async function({resolveLinks=false}) {
+exports.StreamConfigProfiles = async function({resolveLinks=false}={}) {
   const {siteObjectId, siteLibraryId} = await this.StreamGetSiteData();
 
-  return this.ContentObjectMetadata({
+  const profiles = await this.ContentObjectMetadata({
     libraryId: siteLibraryId,
     objectId: siteObjectId,
     metadataSubtree: "public/asset_metadata/profiles",
     resolveLinks
   });
+
+  if(!profiles || !resolveLinks) {
+    return profiles;
+  }
+
+  // The fabric's resolve=true only follows metadata links, not file links.
+  // Detect unresolved file links (e.g. { '/': './files/...' }) and fetch them individually.
+  const resolved = {};
+  await Promise.all(
+    Object.entries(profiles).map(async ([name, profile]) => {
+      if(profile && typeof profile["/"] === "string" && profile["/"].startsWith("./files/")) {
+        try {
+          resolved[name] = await this.LinkData({
+            libraryId: siteLibraryId,
+            objectId: siteObjectId,
+            linkPath: `public/asset_metadata/profiles/${name}`,
+            format: "json"
+          });
+        } catch(e) {
+          resolved[name] = profile;
+        }
+      }
+    })
+  );
+
+  return resolved;
 };
 
 /**
@@ -1898,10 +1924,10 @@ exports.StreamLiveRecordingConfigProfiles = async function({resolveLinks=false})
  *
  */
 
-exports.StreamLiveRecordingConfigProfile = async function({profileName}) {
+exports.StreamConfigProfile = async function({profileName}) {
   ValidatePresence("Profile name", profileName);
 
-  const profiles = await this.StreamLiveRecordingConfigProfiles();
+  const profiles = await this.StreamConfigProfiles({resolveLinks: true});
 
   if(!profiles) {
     throw new Error("No profiles found.");
@@ -1934,7 +1960,7 @@ exports.StreamSaveLiveRecordingConfigProfile = async function({files, profileMet
     throw new Error("Missing required field: Please specify files or profileMetadata.")
   }
 
-  const profiles = await this.StreamLiveRecordingConfigProfiles({resolveLinks: true});
+  const profiles = await this.StreamConfigProfiles({resolveLinks: true});
   const {
     siteObjectId: objectId,
     siteLibraryId: libraryId
