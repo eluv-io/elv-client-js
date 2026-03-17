@@ -2236,12 +2236,17 @@ exports.StreamConfig = async function({
     });
   }
 
+  const allowList = ["fabric_config", "playout_config", "recording_config"];
+  const filteredMeta = Object.fromEntries(
+    Object.entries(liveRecordingConfigMeta.live_recording || {}).filter(([key]) => allowList.includes(key))
+  );
+
   await this.ReplaceMetadata({
     libraryId,
     objectId,
     writeToken,
     metadataSubtree: "live_recording",
-    metadata: liveRecordingConfigMeta.live_recording
+    metadata: filteredMeta
   });
 
   await this.ReplaceMetadata({
