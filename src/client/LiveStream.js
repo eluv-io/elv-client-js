@@ -367,17 +367,12 @@ exports.StreamCreate = async function({
   }
 
   if(finalize) {
-    let finalizeResponse;
-    try {
-      finalizeResponse = await this.FinalizeContentObject({
-        libraryId,
-        objectId,
-        writeToken,
-        commitMessage: existingObject ? "Update live stream" : "Create live stream"
-      });
-    } catch(error) {
-      console.log("FAIL FINALIZE", JSON.stringify(error, null, 2));
-    }
+    let finalizeResponse = await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: existingObject ? "Update live stream" : "Create live stream"
+    });
 
     returnResponse = {...returnResponse, ...finalizeResponse};
   }
@@ -1576,7 +1571,7 @@ exports.StreamSetOfferingAndDRM = async function({
         continue;
       }
 
-      playoutFormats[formats[i]] = abrProfile.playout_formats[formats[i]];
+      playoutFormats[option] = abrProfile.playout_formats[option];
     }
   } else if(!drm) {
     abrProfile.drm_optional = true;
