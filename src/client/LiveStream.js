@@ -2236,7 +2236,7 @@ exports.StreamConfig = async function({
     });
   }
 
-  const allowList = ["fabric_config", "playout_config", "recording_config"];
+  const allowList = ["fabric_config", "playout_config", "recording_config", "url"];
   const filteredMeta = Object.fromEntries(
     Object.entries(liveRecordingConfigMeta.live_recording || {}).filter(([key]) => allowList.includes(key))
   );

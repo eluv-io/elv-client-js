@@ -70,7 +70,7 @@ const LiveconfTemplate = {
         max_duration_sec: -1,
         name: "",
         origin_url: "",
-        part_ttl: 3600,
+        part_ttl: 86400,
         playout_type: "live",
         source_timescale: null,
         reconnect_timeout: 600,
