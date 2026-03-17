@@ -1950,7 +1950,12 @@ exports.StreamConfigProfile = async function({profileName}) {
  *
  * @returns {Promise<void>}
  */
-exports.StreamSaveConfigProfile = async function({files, profileMetadata}) {
+exports.StreamSaveConfigProfile = async function({
+  files,
+  profileMetadata,
+  writeToken,
+  finalize=true
+}) {
   if(!files && !profileMetadata) {
     throw new Error("Missing required field: Please specify files or profileMetadata.")
   }
@@ -1961,10 +1966,12 @@ exports.StreamSaveConfigProfile = async function({files, profileMetadata}) {
     siteLibraryId: libraryId
   } = await this.StreamGetSiteData();
 
-  const {writeToken} = await this.EditContentObject({
-    libraryId,
-    objectId
-  });
+  if(!writeToken) {
+    ({writeToken} = await this.EditContentObject({
+      libraryId,
+      objectId
+    }));
+  }
 
   if(profileMetadata) {
     const defaultName = `Profile-${new Date().toISOString().slice(0, 10)}`;
@@ -2005,12 +2012,14 @@ exports.StreamSaveConfigProfile = async function({files, profileMetadata}) {
     links
   });
 
-  await this.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken,
-    commitMessage: "Add live recording config profile"
-  });
+  if(finalize) {
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Add live recording config profile"
+    });
+  }
 };
 
 /**
