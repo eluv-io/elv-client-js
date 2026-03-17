@@ -521,7 +521,14 @@ exports.StreamRemoveLinkToSite = async function({objectId}) {
     let slugToRemove;
 
     Object.keys(streamMetadata || {}).forEach(slug => {
-      const source = streamMetadata[slug]["."]?.source;
+      let source = streamMetadata[slug]["."]?.source;
+
+      // If object has been deleted, resolving the link will not return a source, so check link hq__
+      if(!source) {
+      const match = streamMetadata[slug]?.["/"].match(/(hq__[^/]+)/);
+        source = match ? match[1] : undefined;
+      }
+
       const id = this.utils.DecodeVersionHash(source).objectId;
 
       if(id === objectId) {
