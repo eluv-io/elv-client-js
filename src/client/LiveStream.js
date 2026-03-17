@@ -1955,7 +1955,7 @@ exports.StreamConfigProfile = async function({profileName}) {
  *
  * @returns {Promise<void>}
  */
-exports.StreamSaveLiveRecordingConfigProfile = async function({files, profileMetadata}) {
+exports.StreamSaveConfigProfile = async function({files, profileMetadata}) {
   if(!files && !profileMetadata) {
     throw new Error("Missing required field: Please specify files or profileMetadata.")
   }

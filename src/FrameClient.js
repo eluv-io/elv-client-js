@@ -508,7 +508,7 @@ class FrameClient {
       "StreamListUrls",
       "StreamRemoveLinkToSite",
       "StreamRemoveWatermark",
-      "StreamSaveLiveRecordingConfigProfile",
+      "StreamSaveConfigProfile",
       "StreamSetOfferingAndDRM",
       "StreamStartRecording",
       "StreamStartOrStopOrReset",
