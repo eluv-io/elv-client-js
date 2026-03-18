@@ -1975,8 +1975,9 @@ exports.StreamSaveConfigProfile = async function({
 
   if(profileMetadata) {
     const defaultName = `Profile-${new Date().toISOString().slice(0, 10)}`;
+    const metaFileName = slugify(profileMetadata.name || defaultName);
     const blob = new Blob([JSON.stringify(profileMetadata, null, 2)], {type: "application/json"});
-    const metaFile = new File([blob], `${profileMetadata.name || defaultName}.json`, {type: "application/json"});
+    const metaFile = new File([blob], `${metaFileName}.json`, {type: "application/json"});
     files = files ? [...Array.from(files), metaFile] : [metaFile];
   }
 
@@ -2000,7 +2001,7 @@ exports.StreamSaveConfigProfile = async function({
 
     return {
       type: "file",
-      path: `public/asset_metadata/profiles/${fileName}`,
+      path: `public/asset_metadata/profiles/${slugify(fileName)}`,
       target: file.path
     }
   });
