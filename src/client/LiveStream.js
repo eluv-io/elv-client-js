@@ -1921,6 +1921,7 @@ exports.StreamConfigProfiles = async function({resolveLinks=false}={}) {
 
 exports.StreamConfigProfile = async function({profileName}) {
   ValidatePresence("Profile name", profileName);
+  const slug = slugify(profileName);
 
   const profiles = await this.StreamConfigProfiles({resolveLinks: true});
 
@@ -1929,7 +1930,7 @@ exports.StreamConfigProfile = async function({profileName}) {
   }
 
   const profileData = Object.entries(profiles).find(
-    ([key]) => key.toLowerCase() === profileName.toLowerCase()
+    ([key]) => key === slug
   )?.[1];
 
   if(!profileData) {
