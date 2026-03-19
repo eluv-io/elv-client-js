@@ -1,4 +1,5 @@
 const {NewOpt} = require("./lib/options");
+
 const Utility = require("./lib/Utility");
 
 const Client = require("./lib/concerns/Client");
@@ -21,7 +22,6 @@ class CollectionList extends Utility {
     const {collectionId} = await this.args;
 
     const client = await this.concerns.Client.get();
-
     
     if (collectionId) {
       this.logger.log(`Listing contents of collection ${collectionId}...`);
