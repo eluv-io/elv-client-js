@@ -1841,20 +1841,48 @@ exports.CreateContentFolder = async function({libraryId, name, displayTitle, tag
  * @methodGroup Content Groups
  * @namedParams
  * @param {string} libraryId - ID of the library
- * @param {string} writeToken - Write token of the draft
+ * @param {string} writeToken - Write token on the object to be added to group(s)
  * @param {Array<string>} groupIds - List of group IDs to associate with content object
  *
  * @returns {Promise<Array<string>>} - Response containing the newly created object groups
  */
-exports.AddContentObjectFolders = async function({libraryId, writeToken, groupIds}) {
+exports.AddContentObjectFolders = async function({libraryId, objectId, writeToken, groupIds}) {
   ValidateLibrary(libraryId);
   ValidateWriteToken(writeToken);
+  ValidateObject(objectId);
 
   const path = UrlJoin("qlibs", libraryId, "q", writeToken, "groups");
 
   return this.HttpClient.RequestJsonBody({
-    headers: await this.authClient.AuthorizationHeader({libraryId, writeToken, update: true}),
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, writeToken, update: true}),
     method: "POST",
+    path: path,
+    body: groupIds,
+    allowFailover: false
+  });
+};
+
+/**
+ * Remove a content object from given groups (folders)
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token on the object to remove from group(s)
+ * @param {Array<string>} groupIds - List of group IDs to remove content object from
+ *
+ * @returns {Promise<Array<string>>} - Response containing the remaining object groups
+ */
+exports.RemoveContentObjectFolders = async function({libraryId, objectId, writeToken, groupIds}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+  ValidateObject(objectId);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "groups");
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, writeToken, update: true}),
+    method: "DELETE",
     path: path,
     body: groupIds,
     allowFailover: false
