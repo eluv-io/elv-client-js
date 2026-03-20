@@ -457,6 +457,13 @@ exports.StreamLinkToSite = async function({
       metadataSubtree: "public/name"
     });
 
+    const streamKey = slugify(objectName);
+
+    // If stream link exists, skip entirely
+    if(streamMetadata[streamKey]) {
+      return;
+    }
+
     const streamData = {
       ".": {
         container: await this.LatestVersionHash({objectId: siteObjectId}),
