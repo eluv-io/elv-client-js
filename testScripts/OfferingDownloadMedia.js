@@ -15,8 +15,8 @@ class OfferingDownloadMedia2 extends ScriptBase {
     const versionHash=this.args.versionHash;
     const offeringKey=this.args.offeringKey;
     const streamKey=this.args.streamKey;
-    const startTime=this.args.startTime;
-    let endTime=this.args.endTime;
+    const startTime=0;
+    let endTime=999999999;
     const out=this.args.out;
 
     if(!objectId && !versionHash) throw new Error("Require object-id or object-hash to be provided");
@@ -85,7 +85,7 @@ class OfferingDownloadMedia2 extends ScriptBase {
       console.log(`Directory already exists at ${dirPath}`);
     }
     // create directory for object provided : iq_XXX_start-time_end-time
-    const contentObjDirPath = path.join(dirPath, `${objectId}_${this.secondsToHms(startTime, "-")}_${this.secondsToHms(endTime, "-")}`);
+    const contentObjDirPath = path.join(dirPath, `${objectId}`);
     // if(fs.existsSync(contentObjDirPath)) throw new Error(`Directory already exists at ${contentObjDirPath}`);
     // fs.mkdirSync(contentObjDirPath, { recursive: true });
     if(!fs.existsSync(contentObjDirPath)) {
@@ -93,10 +93,6 @@ class OfferingDownloadMedia2 extends ScriptBase {
       console.log(`Directory created at ${contentObjDirPath}`);
     }
 
-    const trimmedDirectory = path.join(contentObjDirPath, "trimmed");
-    if(!fs.existsSync(trimmedDirectory)) {
-      fs.mkdirSync(trimmedDirectory, { recursive: true });
-    }
 
     // Download and concatenate the parts for each streamKey
     // Then, trim the concatenated media
@@ -105,35 +101,6 @@ class OfferingDownloadMedia2 extends ScriptBase {
       const partsFile = await this.downloadParts(contentObjDirPath, libraryId, objectId, streamKey, parts);
       console.log(`parts file for ${streamKey}: ${partsFile}\n`);
 
-      // concatenate the parts
-      let mediaFile=path.join(contentObjDirPath, `${streamKey}.mp4`);
-      let cmd=`ffmpeg -f concat -safe 0 -i ${partsFile} -c copy ${mediaFile}`;
-      console.log("Running", cmd);
-      try {
-        execSync(cmd);
-        console.log("Concatenation complete.");
-      } catch(error) {
-        console.error("Error running ffmpeg:", error);
-      }
-
-      // trim the parts
-      let trimStartTime=null;
-      let trimEndTime=null;
-      // since new concatenated video starts from 0s
-      if(minStart !== null && maxEnd !== null) {
-        trimStartTime=startTime - minStart;
-        trimEndTime=endTime - minStart;
-      }
-
-      let mediaTrimmedFile=path.join(trimmedDirectory, `${streamKey}_trimmed.mp4`);
-      cmd=`ffmpeg -i ${mediaFile} -ss ${this.secondsToHms(trimStartTime, ":")} -t ${this.secondsToHms(trimEndTime - trimStartTime, ":")} ${mediaTrimmedFile}`;
-      console.log("Running", cmd);
-      try {
-        execSync(cmd);
-        console.log(`\nTrimmed ${streamKey} file: ${mediaTrimmedFile}`);
-      } catch(error) {
-        console.error("Error running ffmpeg:", error);
-      }
 
       console.log("================================================");
     }
@@ -207,7 +174,8 @@ class OfferingDownloadMedia2 extends ScriptBase {
 
     console.log("\nDownloading parts...\n");
     for(const [index, partHash] of parts.entries()) {
-      let ph=(index + 1).toString().padStart(4, "0") + "." + partHash;
+      let ph=(index + 1).toString().padStart(5, "0") + "." + partHash;
+      let file=(index + 1).toString().padStart(5, "0") + ".mp4";
       console.log(`processing ${ph}...`);
 
       const buf=await client.DownloadPart({
@@ -218,18 +186,13 @@ class OfferingDownloadMedia2 extends ScriptBase {
         chunked: false,
       });
 
-      let partFile=path.join(mtPath, ph + ".mp4");
-      fs.appendFileSync(partFile, buf, (err) => {
+      let partFile=path.join(mtPath, file);
+      fs.writeFileSync(partFile, buf, (err) => {
         if(err) {
           console.log(err);
         }
       });
-
-      fs.appendFileSync(partsFile, `file '${partFile}'\n`, (err) => {
-        if(err) {
-          console.log(err);
-        }
-      });
+      
     }
     return partsFile;
   }
