@@ -449,7 +449,16 @@ exports.StreamLinkToSite = async function({
   try {
     ValidateObject(objectId);
 
-    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData({resolveIncludeSource: false, resolveLinks: false});
+    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData();
+
+    const alreadyLinked = Object.values(streamMetadata || {}).some(entry => {
+      const source = entry["."]?.source;
+      return source && this.utils.DecodeVersionHash(source).objectId === objectId;
+    });
+
+    if(alreadyLinked) {
+      return;
+    }
 
     const objectName = await this.ContentObjectMetadata({
       libraryId: await this.ContentObjectLibraryId({objectId}),
@@ -458,11 +467,6 @@ exports.StreamLinkToSite = async function({
     });
 
     const streamKey = slugify(objectName);
-
-    // If stream link exists, skip entirely
-    if(streamMetadata[streamKey]) {
-      return;
-    }
 
     const streamData = {
       ".": {
@@ -480,15 +484,14 @@ exports.StreamLinkToSite = async function({
       objectId: siteObjectId
     });
 
+    streamMetadata[streamKey] = streamData;
+
     await this.ReplaceMetadata({
       libraryId: siteLibraryId,
       objectId: siteObjectId,
       writeToken,
       metadataSubtree: "public/asset_metadata/live_streams",
-      metadata: {
-        ...streamMetadata,
-        [slugify(objectName)]: streamData
-      }
+      metadata: streamMetadata
     });
 
     await this.FinalizeContentObject({
