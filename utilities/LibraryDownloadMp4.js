@@ -238,6 +238,8 @@ class LibraryDownloadMp4 extends Utility {
             return formattedObj;
         }
 
+        let jobId = null;
+
         try {
             // Version hash
             const versionHash = await this.retry(() =>
@@ -260,6 +262,7 @@ class LibraryDownloadMp4 extends Utility {
                 this.fatalExit(`File service request failed for ${objectId}: ${err.message}`, failLogPath, {
                     object_id: objectId,
                     name: objectName,
+                    job_id: response?.job_id,
                     error: err.message,
                     file_service_url: fileServiceUrl,
                     timestamp: new Date().toISOString(),
@@ -267,7 +270,7 @@ class LibraryDownloadMp4 extends Utility {
             }
 
             console.log("response:", JSON.stringify(response, null, 2));
-            const jobId = response.job_id;
+            jobId = response.job_id;
             this.logger.log(`Started job ${jobId}`);
 
             // Poll job
@@ -291,6 +294,7 @@ class LibraryDownloadMp4 extends Utility {
                     this.fatalExit(`File service poll failed for job ${jobId} (${objectId}): ${err.message}`, failLogPath, {
                         object_id: objectId,
                         name: objectName,
+                        job_id: jobId,
                         error: err.message,
                         file_service_url: fileServiceUrl,
                         timestamp: new Date().toISOString(),
@@ -346,6 +350,7 @@ class LibraryDownloadMp4 extends Utility {
                 this.fatalExit(`Failed to build download URL for ${objectId}: ${err.message}`, failLogPath, {
                     object_id: objectId,
                     name: objectName,
+                    job_id: jobId,
                     error: err.message,
                     file_service_url: fileServiceUrl,
                     timestamp: new Date().toISOString(),
@@ -375,6 +380,7 @@ class LibraryDownloadMp4 extends Utility {
             const failEntry = {
                 object_id: objectId,
                 name: objectName,
+                job_id: jobId,
                 error: err.message,
                 file_service_url: fileServiceUrl,
                 timestamp: new Date().toISOString(),
