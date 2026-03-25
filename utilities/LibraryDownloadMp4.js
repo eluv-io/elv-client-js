@@ -238,6 +238,8 @@ class LibraryDownloadMp4 extends Utility {
             // Poll job
             let status;
             let lastProgress = -1;
+            const maxPolls = 300; // 10 minutes at 2s intervals
+            let pollCount = 0;
 
             do {
                 await this.sleep(2000);
@@ -248,6 +250,16 @@ class LibraryDownloadMp4 extends Utility {
                         path: `/call/media/files/${jobId}`,
                     })
                 );
+
+                const jobStatus = status?.status;
+                if (jobStatus === "failed" || jobStatus === "error") {
+                    throw new Error(`Job ${jobId} failed with status: ${jobStatus}`);
+                }
+
+                pollCount++;
+                if (pollCount >= maxPolls) {
+                    throw new Error(`Job ${jobId} timed out after ${maxPolls} polling attempts`);
+                }
 
                 const progress = status?.progress || 0;
                 if (progress !== lastProgress) {
@@ -288,10 +300,13 @@ class LibraryDownloadMp4 extends Utility {
         } catch (err) {
             this.logger.error(`FAILED: ${objectId} - ${err.message}`);
 
+            const fileServiceUrl = client.FileServiceHttpClient.uris[client.FileServiceHttpClient.uriIndex];
+
             failedDownloads.push({
                 object_id: objectId,
                 name: objectName,
                 error: err.message,
+                file_service_url: fileServiceUrl,
                 timestamp: new Date().toISOString(),
             });
 
