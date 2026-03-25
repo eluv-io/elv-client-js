@@ -785,10 +785,6 @@ exports.SetTenantContractId = async function({contractAddress, objectId, version
   if(tenantContractId && (!tenantContractId.startsWith("iten") || !Utils.ValidHash(tenantContractId))) {
     throw Error(`Invalid tenant ID: ${tenantContractId}`);
   }
-<<<<<<< HEAD
-  const tenantAddress = Utils.HashToAddress(tenantContractId);
-=======
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
 
   const version = await this.authClient.AccessType(tenantContractId);
   if(version !== this.authClient.ACCESS_TYPES.TENANT) {
@@ -796,16 +792,7 @@ exports.SetTenantContractId = async function({contractAddress, objectId, version
   }
 
   // get tenant admin group
-<<<<<<< HEAD
-  const tenantAdminGroupAddress = await this.CallContractMethod({
-    contractAddress: tenantAddress,
-    methodName: "groupsMapping",
-    methodArgs: ["tenant_admin", 0],
-    formatArguments: true,
-  });
-=======
   const tenantAdminGroupAddress = await this.TenantAdminGroup({tenantContractId});
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
 
   const hasPutMetaMethod = await this.authClient.ContractHasMethod({
     contractAddress: contractAddress,
@@ -935,8 +922,6 @@ exports.ResetTenantId = async function({contractAddress, objectId, versionHash})
   }
 };
 
-<<<<<<< HEAD
-=======
 async function GetTenantGroupAddress({ctx, tenantContractId, groupName}) {
   if(!tenantContractId) {
     throw new Error("tenantContractId is required");
@@ -1024,7 +1009,6 @@ exports.TenantUsersGroup = async function({tenantContractId}){
   });
 };
 
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
 /**
  * Enum for object types that can be cleaned up after object deletion.
  * Used by the ObjectCleanup method to determine which associated objects to clean.

@@ -11,10 +11,7 @@ const HttpClient = require("./HttpClient");
 const RemoteSigner = require("./RemoteSigner");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
-<<<<<<< HEAD
-=======
 const NetworkUrls = require("./NetworkUrls");
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
 const {LogMessage} = require("./LogMessage");
 
 const Pako = require("pako");
@@ -25,17 +22,6 @@ const {
 } = require("./Validation");
 const UrlJoin = require("url-join");
 
-<<<<<<< HEAD
-const networks = {
-  "main": "https://main.net955305.contentfabric.io",
-  "demo": "https://demov3.net955210.contentfabric.io",
-  "demov3": "https://demov3.net955210.contentfabric.io",
-  "local": "http://127.0.0.1:8008/config?qspace=dev&self",
-  "test": "https://test.net955203.contentfabric.io"
-};
-
-=======
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
   // eslint-disable-next-line no-global-assign
@@ -309,11 +295,7 @@ class ElvClient {
    * @return {Object} - An object using network names as keys and configuration URLs as values.
    */
   static Networks() {
-<<<<<<< HEAD
-    return Object.assign({}, networks);
-=======
     return Object.assign({}, NetworkUrls);
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
   }
 
   /**
@@ -343,11 +325,7 @@ class ElvClient {
     noAuth=false,
     assumeV3
   }) {
-<<<<<<< HEAD
-    const configUrl = networks[networkName];
-=======
     const configUrl = this.Networks()[networkName];
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
 
     if(!configUrl) { throw Error("Invalid network name: " + networkName); }
 
@@ -445,17 +423,10 @@ class ElvClient {
     this.inaccessibleLibraries = {};
 
     const uris = this.service === "search" ? this.searchURIs : this.fabricURIs;
-<<<<<<< HEAD
-    this.HttpClient = new HttpClient({uris, debug: this.debug});
-    this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, debug: this.debug});
-    this.FileServiceHttpClient = new HttpClient({uris: this.fileServiceURIs, debug: this.debug});
-    this.SearchHttpClient = new HttpClient({uris: this.searchURIs || [], debug: this.debug});
-=======
     this.HttpClient = new HttpClient({uris, networkName: this.networkName, debug: this.debug});
     this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, networkName: this.networkName, debug: this.debug});
     this.FileServiceHttpClient = new HttpClient({uris: this.fileServiceURIs, networkName: this.networkName, debug: this.debug});
     this.SearchHttpClient = new HttpClient({uris: this.searchURIs || [], networkName: this.networkName, debug: this.debug});
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, networkId: this.networkId, debug: this.debug, timeout: this.ethereumContractTimeout});
 
     if(!this.signer) {
@@ -860,18 +831,11 @@ class ElvClient {
    * @param {Array<string>=} signerURIs - (Only if using custom OAuth) - URIs corresponding to the key server(s) to use
    * @param {boolean=} unsignedPublicAuth=false - If specified, the client will use an unsigned static token for calls that don't require authorization (reduces remote signature calls)
    */
-<<<<<<< HEAD
-  async SetRemoteSigner({idToken, authToken, tenantId, extraData, signerURIs, unsignedPublicAuth}) {
-    const signer = new RemoteSigner({
-      signerURIs: signerURIs || this.authServiceURIs,
-      idToken,
-=======
   async SetRemoteSigner({idToken, userIdCode, authToken, tenantId, extraData, signerURIs, unsignedPublicAuth}) {
     const signer = new RemoteSigner({
       signerURIs: signerURIs || this.authServiceURIs,
       idToken,
       userIdCode,
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
       authToken,
       tenantId,
       provider: await this.ethClient.Provider(),
@@ -1253,11 +1217,7 @@ class ElvClient {
       this.oauthToken = token;
 
       const path = "/ks/jwt/wlt";
-<<<<<<< HEAD
-      const httpClient = new HttpClient({uris: this.kmsURIs, debug: this.debug});
-=======
       const httpClient = new HttpClient({uris: this.kmsURIs, networkName: this.networkName, debug: this.debug});
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
 
       const response = await this.utils.ResponseToJson(
         httpClient.Request({

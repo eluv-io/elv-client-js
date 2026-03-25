@@ -597,21 +597,6 @@ exports.ContentObject = async function({objectId, versionHash, writeToken, noCac
   const id = writeToken || versionHash || objectId;
   if(noCache || !this.objectInfo[id] || Date.now() - this.objectInfo[id].retrievedAt > 30000) {
     let path = UrlJoin("q", id);
-<<<<<<< HEAD
-    this.objectInfo[id] = {
-      retrievedAt: Date.now(),
-      info: (
-        await this.HttpClient.RequestJsonBody({
-          headers: await this.authClient.AuthorizationHeader({objectId, versionHash}),
-          method: "GET",
-          path: path,
-          queryParams: {
-            details: true,
-            profile: true
-          }
-        })
-      )
-=======
     const info = await this.HttpClient.RequestJsonBody({
       headers: await this.authClient.AuthorizationHeader({objectId, versionHash}),
       method: "GET",
@@ -625,7 +610,6 @@ exports.ContentObject = async function({objectId, versionHash, writeToken, noCac
     this.objectInfo[id] = {
       retrievedAt: Date.now(),
       info
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
     };
   }
 
@@ -1521,10 +1505,7 @@ exports.PlayoutOptions = async function({
       playoutMethods: {
         ...((playoutMap[protocol] || {}).playoutMethods || {}),
         [drm || "clear"]: {
-<<<<<<< HEAD
-=======
           properties: option.properties || {},
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
           playoutUrl:
             signedLink ?
               await this.LinkUrl({
@@ -1929,10 +1910,7 @@ exports.MakeFileServiceRequest = async function({
  * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
  * @param {string=} writeToken - Write token of an object draft - if calling bitcode of a draft object
  * @param {string} method - Bitcode method to call
-<<<<<<< HEAD
-=======
  * @param {string} verb - HTTP verb (GET, POST, PUT, DELETE, ...)
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
  * @param {Object=} queryParams - Query parameters to include in the request
  * @param {Object=} body - Request body to include, if calling a non-constant method
  * @param {Object=} headers - Request headers to include
@@ -1948,10 +1926,7 @@ exports.CallBitcodeMethod = async function({
   versionHash,
   writeToken,
   method,
-<<<<<<< HEAD
-=======
   verb,
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
   queryParams={},
   body={},
   headers={},
@@ -1980,16 +1955,10 @@ exports.CallBitcodeMethod = async function({
     ).Authorization;
   }
 
-<<<<<<< HEAD
-  this.Log(
-    `Calling bitcode method: ${libraryId || ""} ${objectId || versionHash} ${writeToken || ""}
-      ${constant ? "GET" : "POST"} ${path}
-=======
   verb = verb ? verb : (constant ? "GET" : "POST");
   this.Log(
     `Calling bitcode method: ${libraryId || ""} ${objectId || versionHash} ${writeToken || ""}
       ${verb} ${path}
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
       Query Params:
       ${JSON.stringify(queryParams || "")}
       Body:
@@ -2003,11 +1972,7 @@ exports.CallBitcodeMethod = async function({
     await this.HttpClient.Request({
       body,
       headers,
-<<<<<<< HEAD
-      method: constant ? "GET" : "POST",
-=======
       method: verb,
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
       path,
       queryParams,
       allowFailover: false

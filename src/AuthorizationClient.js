@@ -1013,12 +1013,8 @@ class AuthorizationClient {
     }
 
     const kmsHttpClient = new HttpClient({
-<<<<<<< HEAD
-      uris: kmsUrls
-=======
       uris: kmsUrls,
       networkName: this.client.networkName
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
     });
 
     return await kmsHttpClient.Request({

@@ -1,10 +1,6 @@
 {
   "name": "@eluvio/elv-client-js",
-<<<<<<< HEAD
-  "version": "4.2.1",
-=======
   "version": "4.2.14",
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
   "description": "Javascript client for the Eluvio Content Fabric",
   "main": "src/index.js",
   "author": "Kevin Talmadge",
@@ -105,11 +101,8 @@
     "@babel/cli": "^7.28.0",
     "@babel/plugin-transform-runtime": "^7.8.3",
     "@babel/preset-env": "^7.4.5",
-<<<<<<< HEAD
-=======
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.1",
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
     "@jsdoc/salty": "^0.2.9",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
@@ -117,10 +110,6 @@
     "colors": "^1.4.0",
     "copy-webpack-plugin": "^6.0.2",
     "eslint": "^9.32.0",
-<<<<<<< HEAD
-    "eslint-plugin-html": "^5.0.0",
-=======
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
     "jsdoc": "^4.0.0",
     "jsdom": "^26.1.0",
     "moment": "^2.27.0",

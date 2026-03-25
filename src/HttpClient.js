@@ -2,30 +2,20 @@ const URI = require("urijs");
 const Fetch = typeof fetch !== "undefined" ? fetch : require("node-fetch").default;
 const {LogMessage} = require("./LogMessage");
 const Utils = require("./Utils");
-<<<<<<< HEAD
-=======
 const UrlJoin = require("url-join");
 const NetworkUrls = require("./NetworkUrls");
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
 
 class HttpClient {
   Log(message, error=false) {
     LogMessage(this, message, error);
   }
 
-<<<<<<< HEAD
-  constructor({uris, debug}) {
-=======
   constructor({uris, networkName, debug}) {
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
     this.uris = uris;
     this.uriIndex = 0;
     this.debug = debug;
     this.draftURIs = {};
-<<<<<<< HEAD
-=======
     this.networkName = networkName;
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
     this.retries = Math.max(3, uris.length);
   }
 
@@ -90,8 +80,6 @@ class HttpClient {
         // Use saved write token URI
         baseURI = this.draftURIs[writeToken];
       } else {
-<<<<<<< HEAD
-=======
         // Retrieve the node that this write token is for to ensure it is correct.
         if(this.networkName) {
           try {
@@ -105,7 +93,6 @@ class HttpClient {
           }
         }
 
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
         // Save current URI for all future requests involving this write token
         this.draftURIs[writeToken] = baseURI;
       }

@@ -202,8 +202,4 @@ if(require.main === module) {
   Utility.cmdLineInvoke(ChannelCreate);
 } else {
   module.exports = ChannelCreate;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480

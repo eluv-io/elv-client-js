@@ -486,12 +486,9 @@ class FrameClient {
       "SetStaticToken",
       "SetTenantContractId",
       "SetTenantId",
-<<<<<<< HEAD
-=======
       "TenantAdminGroup",
       "ContentAdminGroup",
       "TenantUsersGroup",
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
       "SetVisibility",
       "SetPermission",
       "ShareInfo",

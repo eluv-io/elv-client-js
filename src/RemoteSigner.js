@@ -8,10 +8,7 @@ class RemoteSigner extends Ethers.Signer {
   constructor({
     signerURIs,
     idToken,
-<<<<<<< HEAD
-=======
     userIdCode,
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
     authToken,
     tenantId,
     provider,
@@ -25,10 +22,7 @@ class RemoteSigner extends Ethers.Signer {
 
     this.HttpClient = new HttpClient({uris: signerURIs});
     this.idToken = idToken;
-<<<<<<< HEAD
-=======
     this.userIdCode = userIdCode;
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
     this.tenantId = tenantId;
 
     this.authToken = authToken;
@@ -41,15 +35,6 @@ class RemoteSigner extends Ethers.Signer {
 
   async Initialize() {
     if(!this.authToken) {
-<<<<<<< HEAD
-      const {addr, eth, token} = await Utils.ResponseToJson(
-        this.HttpClient.Request({
-          path: UrlJoin("as", "wlt", "login", "jwt"),
-          method: "POST",
-          body: this.tenantId ? { tid: this.tenantId, ext: this.extraLoginData || {} } : { ext: this.extraLoginData || {} },
-          headers: {
-            Authorization: `Bearer ${this.idToken}`
-=======
       let body = {
         ext: this.extraLoginData || {}
       };
@@ -69,7 +54,6 @@ class RemoteSigner extends Ethers.Signer {
           body,
           headers: {
             Authorization: `Bearer ${this.userIdCode || this.idToken}`
->>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
           }
         })
       );
