@@ -200,6 +200,15 @@ class LibraryDownloadMp4 extends Utility {
             .substring(0, 180);
     }
 
+    fatalExit(message, failLogPath, failEntry) {
+        this.logger.error(`FATAL: ${message}`);
+        if (failLogPath && failEntry) {
+            this.appendFailEntry(failLogPath, failEntry);
+            this.logger.warn(`Failure recorded → ${failLogPath}`);
+        }
+        process.exit(1);
+    }
+
     appendFailEntry(failLogPath, entry) {
         let entries = [];
         if (fs.existsSync(failLogPath)) {
@@ -236,51 +245,74 @@ class LibraryDownloadMp4 extends Utility {
             );
 
             // Start job
-            const response = await this.retry(() =>
-                client.MakeFileServiceRequest({
-                    versionHash,
-                    path: "/call/media/files",
-                    method: "POST",
-                    body: { format, offering },
-                })
-            );
+            let response;
+            try {
+                response = await this.retry(() =>
+                    client.MakeFileServiceRequest({
+                        versionHash,
+                        path: "/call/media/files",
+                        method: "POST",
+                        body: { format, offering },
+                    })
+                );
+            } catch (err) {
+                const fileServiceUrl = client.FileServiceHttpClient?.uris?.[client.FileServiceHttpClient.uriIndex] || "unknown";
+                this.fatalExit(`File service request failed for ${objectId}: ${err.message}`, failLogPath, {
+                    object_id: objectId,
+                    name: objectName,
+                    error: err.message,
+                    file_service_url: fileServiceUrl,
+                    timestamp: new Date().toISOString(),
+                });
+            }
 
+            console.log("response:", JSON.stringify(response, null, 2));
             const jobId = response.job_id;
             this.logger.log(`Started job ${jobId}`);
 
             // Poll job
             let status;
             let lastProgress = -1;
-            const maxPolls = 300; // 10 minutes at 2s intervals
-            let pollCount = 0;
+            const noProgressTimeoutMs = 10 * 60 * 1000; // 10 minutes with no progress
+            let lastProgressTime = Date.now();
 
             do {
                 await this.sleep(2000);
 
-                status = await this.retry(() =>
-                    client.MakeFileServiceRequest({
-                        versionHash,
-                        path: `/call/media/files/${jobId}`,
-                    })
-                );
+                try {
+                    status = await this.retry(() =>
+                        client.MakeFileServiceRequest({
+                            versionHash,
+                            path: `/call/media/files/${jobId}`,
+                        })
+                    );
+                } catch (err) {
+                    const fileServiceUrl = client.FileServiceHttpClient?.uris?.[client.FileServiceHttpClient.uriIndex] || "unknown";
+                    this.fatalExit(`File service poll failed for job ${jobId} (${objectId}): ${err.message}`, failLogPath, {
+                        object_id: objectId,
+                        name: objectName,
+                        error: err.message,
+                        file_service_url: fileServiceUrl,
+                        timestamp: new Date().toISOString(),
+                    });
+                }
 
                 const jobStatus = status?.status;
                 if (jobStatus === "failed" || jobStatus === "error") {
                     throw new Error(`Job ${jobId} failed with status: ${jobStatus}`);
                 }
 
-                pollCount++;
-                if (pollCount >= maxPolls) {
-                    throw new Error(`Job ${jobId} timed out after ${maxPolls} polling attempts`);
-                }
-
                 const progress = status?.progress || 0;
                 if (progress !== lastProgress) {
                     process.stdout.write(`Progress: ${progress.toFixed(1)}%\r`);
                     lastProgress = progress;
+                    lastProgressTime = Date.now(); // reset stall timer on any progress
+                } else if (Date.now() - lastProgressTime > noProgressTimeoutMs) {
+                    throw new Error(`Job ${jobId} stalled — no progress for 10 minutes`);
                 }
             } while (status?.status !== "completed");
 
+            console.log("status:", JSON.stringify(status, null, 2));
             process.stdout.write("\n");
 
             const filename = this.sanitizeFilename(
@@ -290,17 +322,37 @@ class LibraryDownloadMp4 extends Utility {
 
             const outputFile = path.join(targetDir, filename);
 
-            const downloadUrl = await this.retry(() =>
-                client.FabricUrl({
-                    versionHash,
-                    call: `/media/files/${jobId}/download`,
-                    service: "files",
-                    queryParams: {
-                        "header-x_set_content_disposition": `attachment; filename=${filename}`,
-                    },
-                })
-            );
+            let downloadUrl;
+            try {
+                const noProgressTimeoutMs = 10 * 60 * 1000;
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Download URL generation stalled — no response for 10 minutes")), noProgressTimeoutMs)
+                );
+                downloadUrl = await Promise.race([
+                    this.retry(() =>
+                        client.FabricUrl({
+                            versionHash,
+                            call: `/media/files/${jobId}/download`,
+                            service: "files",
+                            queryParams: {
+                                "header-x_set_content_disposition": `attachment; filename=${filename}`,
+                            },
+                        })
+                    ),
+                    timeoutPromise,
+                ]);
+            } catch (err) {
+                const fileServiceUrl = client.FileServiceHttpClient?.uris?.[client.FileServiceHttpClient.uriIndex] || "unknown";
+                this.fatalExit(`Failed to build download URL for ${objectId}: ${err.message}`, failLogPath, {
+                    object_id: objectId,
+                    name: objectName,
+                    error: err.message,
+                    file_service_url: fileServiceUrl,
+                    timestamp: new Date().toISOString(),
+                });
+            }
 
+            console.log("downloadUrl:", downloadUrl);
             formattedObj.download_url = downloadUrl;
 
             if (fs.existsSync(outputFile)) {
