@@ -200,7 +200,20 @@ class LibraryDownloadMp4 extends Utility {
             .substring(0, 180);
     }
 
-    async processObject(e, client, libraryId, format, offering, targetDir, failedDownloads) {
+    appendFailEntry(failLogPath, entry) {
+        let entries = [];
+        if (fs.existsSync(failLogPath)) {
+            try {
+                entries = JSON.parse(fs.readFileSync(failLogPath, "utf8"));
+            } catch {
+                // If the file is malformed just start fresh
+            }
+        }
+        entries.push(entry);
+        fs.writeFileSync(failLogPath, JSON.stringify(entries, null, 2));
+    }
+
+    async processObject(e, client, libraryId, format, offering, targetDir, failedDownloads, failLogPath) {
         const objectId = e.objectId;
         const objectName = R.path(["metadata", "public", "name"], e) || objectId;
 
@@ -305,15 +318,22 @@ class LibraryDownloadMp4 extends Utility {
         } catch (err) {
             this.logger.error(`FAILED: ${objectId} - ${err.message}`);
 
-            const fileServiceUrl = client.FileServiceHttpClient.uris[client.FileServiceHttpClient.uriIndex];
+            const fileServiceUrl = client.FileServiceHttpClient?.uris?.[client.FileServiceHttpClient.uriIndex] || "unknown";
 
-            failedDownloads.push({
+            const failEntry = {
                 object_id: objectId,
                 name: objectName,
                 error: err.message,
                 file_service_url: fileServiceUrl,
                 timestamp: new Date().toISOString(),
-            });
+            };
+
+            failedDownloads.push(failEntry);
+
+            if (failLogPath) {
+                this.appendFailEntry(failLogPath, failEntry);
+                this.logger.warn(`Failure recorded → ${failLogPath}`);
+            }
 
             return formattedObj;
         }
@@ -348,6 +368,13 @@ class LibraryDownloadMp4 extends Utility {
         if (!fs.existsSync(targetDir))
             fs.mkdirSync(targetDir, { recursive: true });
 
+        // Initialize fail log file with empty array at the start of the run
+        const failLogPath = this.args.failLog ? path.resolve(this.args.failLog) : null;
+        if (failLogPath) {
+            fs.writeFileSync(failLogPath, JSON.stringify([], null, 2));
+            this.logger.log(`Fail log initialized: ${failLogPath}`);
+        }
+
         // Sequential downloads
         const results = [];
         for (const obj of objectList) {
@@ -358,7 +385,8 @@ class LibraryDownloadMp4 extends Utility {
                 format,
                 offering,
                 targetDir,
-                failedDownloads
+                failedDownloads,
+                failLogPath
             );
             results.push(r);
         }
@@ -373,10 +401,8 @@ class LibraryDownloadMp4 extends Utility {
             this.logger.warn("\n=== FAILED DOWNLOADS ===");
             this.logger.logTable({ list: failedDownloads });
 
-            if (this.args.failLog) {
-                const failPath = path.resolve(this.args.failLog);
-                fs.writeFileSync(failPath, JSON.stringify(failedDownloads, null, 2));
-                this.logger.warn(`Failures written to: ${failPath}`);
+            if (failLogPath) {
+                this.logger.warn(`Full failure log: ${failLogPath}`);
             }
         }
 
