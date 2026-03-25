@@ -290,6 +290,11 @@ class LibraryDownloadMp4 extends Utility {
 
             formattedObj.download_url = downloadUrl;
 
+            if (fs.existsSync(outputFile)) {
+                this.logger.log(`Skipping ${objectName}: already exists (${filename})`);
+                return formattedObj;
+            }
+
             // NOW using HTTPS downloader
             this.logger.log(`Downloading → ${outputFile}`);
             await this.downloadFile(downloadUrl, outputFile);
