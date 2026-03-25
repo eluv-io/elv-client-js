@@ -785,7 +785,10 @@ exports.SetTenantContractId = async function({contractAddress, objectId, version
   if(tenantContractId && (!tenantContractId.startsWith("iten") || !Utils.ValidHash(tenantContractId))) {
     throw Error(`Invalid tenant ID: ${tenantContractId}`);
   }
+<<<<<<< HEAD
   const tenantAddress = Utils.HashToAddress(tenantContractId);
+=======
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
 
   const version = await this.authClient.AccessType(tenantContractId);
   if(version !== this.authClient.ACCESS_TYPES.TENANT) {
@@ -793,12 +796,16 @@ exports.SetTenantContractId = async function({contractAddress, objectId, version
   }
 
   // get tenant admin group
+<<<<<<< HEAD
   const tenantAdminGroupAddress = await this.CallContractMethod({
     contractAddress: tenantAddress,
     methodName: "groupsMapping",
     methodArgs: ["tenant_admin", 0],
     formatArguments: true,
   });
+=======
+  const tenantAdminGroupAddress = await this.TenantAdminGroup({tenantContractId});
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
 
   const hasPutMetaMethod = await this.authClient.ContractHasMethod({
     contractAddress: contractAddress,
@@ -928,6 +935,96 @@ exports.ResetTenantId = async function({contractAddress, objectId, versionHash})
   }
 };
 
+<<<<<<< HEAD
+=======
+async function GetTenantGroupAddress({ctx, tenantContractId, groupName}) {
+  if(!tenantContractId) {
+    throw new Error("tenantContractId is required");
+  }
+
+  if(!tenantContractId.startsWith("iten")) {
+    throw new Error(`Invalid Tenant Contract ID format: ${tenantContractId}`);
+  }
+
+  const tenantAddress = Utils.HashToAddress(tenantContractId);
+
+  // Needs to be tenant type
+  const version = await ctx.authClient.AccessType(tenantContractId);
+  if(version !== ctx.authClient.ACCESS_TYPES.TENANT) {
+    throw new Error(
+      `Contract ${tenantContractId} is not a Tenant. Actual version: ${version}`
+    );
+  }
+
+  try {
+    const groupAddress = await ctx.CallContractMethod({
+      contractAddress: tenantAddress,
+      methodName: "groupsMapping",
+      methodArgs: [groupName, 0],
+      formatArguments: true,
+    });
+
+    if (!groupAddress) {
+      throw new Error(`${groupName} group address not set.`);
+    }
+
+    return groupAddress;
+  } catch (err) {
+    this.Log(err);
+    throw new Error(`Failed to retrieve ${groupName} group address.`);
+  }
+
+}
+
+/**
+ * Returns the tenant_admin group address for a given tenant contract.
+ *
+ * @methodGroup Tenant
+ * @namedParams
+ * @param {string=} tenantContractId - The ID of the tenant contract
+ * @returns {Promise<*|undefined>}
+ */
+exports.TenantAdminGroup = async function({ tenantContractId }) {
+  return GetTenantGroupAddress({
+    ctx : this,
+    tenantContractId,
+    groupName: "tenant_admin"
+  });
+};
+
+/**
+ * Returns the content_admin group address for a given tenant contract.
+ *
+ * @methodGroup Tenant
+ * @namedParams
+ * @param {string=} tenantContractId - The ID of the tenant contract
+ * @returns {Promise<*|undefined>}
+ */
+exports.ContentAdminGroup = async function({tenantContractId}){
+  return GetTenantGroupAddress({
+    ctx : this,
+    tenantContractId,
+    groupName: "content_admin"
+  });
+};
+
+/**
+ * Returns the tenant_users group address for a given tenant contract.
+ *
+ * @methodGroup Tenant
+ * @namedParams
+ * @param {string=} tenantContractId - The ID of the tenant contract
+ * @returns {Promise<*|undefined>}
+ */
+exports.TenantUsersGroup = async function({tenantContractId}){
+  return GetTenantGroupAddress({
+    ctx : this,
+    tenantContractId,
+    groupName: "tenant_users"
+  });
+};
+
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
 /**
  * Enum for object types that can be cleaned up after object deletion.
  * Used by the ObjectCleanup method to determine which associated objects to clean.

@@ -29,4 +29,8 @@ const LogMessage = (reporter, message, error = false) => {
       console.log(standardMsg);
 };
 
+<<<<<<< HEAD
 module.exports = {LogMessage};
+=======
+module.exports = {LogMessage};
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480

@@ -476,6 +476,10 @@ class ElvWalletClient {
    */
   async AuthenticateOAuth({
     idToken,
+<<<<<<< HEAD
+=======
+    userIdCode,
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
     tenantId,
     email,
     signerURIs,
@@ -494,7 +498,21 @@ class ElvWalletClient {
       tenantId = this.selectedMarketplaceInfo.tenantId;
     }
 
+<<<<<<< HEAD
     await this.client.SetRemoteSigner({idToken, tenantId, signerURIs, extraData: { ...extraData, share_email: shareEmail }, unsignedPublicAuth: true});
+=======
+    await this.client.SetRemoteSigner({
+      idToken,
+      userIdCode,
+      tenantId,
+      signerURIs,
+      extraData: {
+        ...extraData,
+        share_email: shareEmail
+      },
+      unsignedPublicAuth: true
+    });
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
 
     let fabricToken, refreshToken, expiresAt;
     if(createRemoteToken && this.client.signer.remoteSigner) {
@@ -511,9 +529,15 @@ class ElvWalletClient {
         context: email ? {usr: {email}} : {}
       });
     }
+<<<<<<< HEAD
     const address = this.client.utils.FormatAddress(this.client.CurrentAccountAddress());
 
     if(!email) {
+=======
+
+    const address = this.client.utils.FormatAddress(this.client.CurrentAccountAddress());
+    if(!email && idToken) {
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
       try {
         const decodedToken = JSON.parse(this.utils.FromB64URL(idToken.split(".")[1]));
         email = decodedToken.email;
@@ -1253,7 +1277,11 @@ class ElvWalletClient {
       return response
         .map(status => {
           let [op, address, id] = status.op.split(":");
+<<<<<<< HEAD
           address = address.startsWith("0x") ? Utils.FormatAddress(address) : address;
+=======
+          address = address && address.startsWith("0x") ? Utils.FormatAddress(address) : address;
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
 
           let confirmationId, tokenId, offerId, giftId;
           if(op === "nft-buy") {

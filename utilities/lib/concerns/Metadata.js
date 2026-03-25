@@ -119,9 +119,16 @@ const New = context => {
     });
   };
 
+<<<<<<< HEAD
   const write = async ({libraryId, metadata, noWait, objectId, writeToken}) => {
     return await context.concerns.Edit.writeMetadata({
       libraryId,
+=======
+  const write = async ({libraryId, metadataSubtree, metadata, noWait, objectId, writeToken}) => {
+    return await context.concerns.Edit.writeMetadata({
+      libraryId,
+      metadataSubtree,
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
       metadata,
       noWait,
       objectId,
