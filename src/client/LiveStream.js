@@ -429,7 +429,7 @@ exports.StreamGetSiteData = async function({
     };
   } catch(error) {
     // eslint-disable-next-line no-console
-    console.error("Failed to load live streams from site", error);
+    console.error("Failed to load site data", error);
   }
 };
 
@@ -1924,24 +1924,30 @@ exports.StreamConfigProfiles = async function({resolveLinks=false}={}) {
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} profileName - Name of the profile to retrieve
+ * @param {string} profileSlug - Slug of the profile to retrieve
  *
  @returns {Promise<Object>} - The specifications for the requested profile
  *
  */
 
-exports.StreamConfigProfile = async function({profileName}) {
-  ValidatePresence("Profile name", profileName);
-  const slug = slugify(profileName);
-
-  const profiles = await this.StreamConfigProfiles({resolveLinks: true});
-
-  if(!profiles) {
-    throw new Error("No profiles found.");
+exports.StreamConfigProfile = async function({profileName, profileSlug}) {
+  console.log({profileName, profileSlug})
+  if(!profileName && !profileSlug) {
+    throw new Error("Either profileName or profileSlug must be provided.");
   }
 
-  const profileData = Object.entries(profiles).find(
-    ([key]) => key === slug
-  )?.[1];
+  if(!profileSlug) {
+    profileSlug = slugify(profileName);
+  }
+
+  const {siteObjectId, siteLibraryId} = await this.StreamGetSiteData();
+
+  const profileData = await this.ContentObjectMetadata({
+    libraryId: siteLibraryId,
+    objectId: siteObjectId,
+    metadataSubtree: `public/asset_metadata/profiles/${profileSlug}`,
+    resolveLinks: true
+  });
 
   if(!profileData) {
     console.warn(`Live Recording Config profile ${profileName} not found.`);
@@ -2032,6 +2038,210 @@ exports.StreamSaveConfigProfile = async function({
       commitMessage: "Add live recording config profile"
     });
   }
+};
+
+/**
+ * Assign a live recording config profile to a stream by adding the stream to the
+ * profile's stream index on the site object. If the stream is already assigned, this is a no-op.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} profileSlug - Slug of the profile to assign
+ * @param {string} streamObjectId - Object ID of the stream to assign the profile to
+ * @param {string=} writeToken - Write token for the site object. If not provided, a new edit will be opened and finalized.
+ * @param {boolean=} finalize - If enabled, the site object will be finalized after the assignment (default: true)
+ *
+ * @returns {Promise<void>}
+ */
+exports.StreamAssignProfile = async function({
+  profileSlug,
+  streamObjectId,
+  writeToken,
+  finalize=true
+}) {
+  try {
+    const {siteObjectId: objectId, siteLibraryId: libraryId} = await this.StreamGetSiteData({
+      streamOptions: {
+        resolveIncludeSource: false,
+        resolveLinks: false
+      }
+    });
+
+    if(!objectId || !libraryId) {
+      throw new Error("Site object must be configured first.")
+    }
+
+    const profileStreams = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: `public/asset_metadata/profile_streams/${profileSlug}`
+    }) || [];
+
+    if(!profileStreams.includes(streamObjectId)) {
+      profileStreams.push(streamObjectId);
+
+      if(!writeToken) {
+        ({writeToken} = await this.EditContentObject({
+          libraryId,
+          objectId
+        }))
+      }
+
+      await this.ReplaceMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadataSubtree: `public/asset_metadata/profile_streams/${profileSlug}`,
+        metadata: profileStreams
+      });
+
+      if(finalize) {
+        await this.FinalizeContentObject({
+          libraryId,
+          objectId,
+          writeToken,
+          commitMessage: "Assign profile to stream"
+        });
+      }
+    }
+  } catch(error) {
+    console.error("Unable to assign profile to stream", error);
+    throw error;
+  }
+};
+
+/**
+ * Unassign a live recording config profile from a stream by removing the stream from the
+ * profile's stream index on the site object.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} profileSlug - Slug of the profile to unassign
+ * @param {string} streamObjectId - Object ID of the stream to remove from the profile
+ * @param {string=} writeToken - Write token for the site object. If not provided, a new edit will be opened and finalized.
+ * @param {boolean=} finalize - If enabled, the site object will be finalized after the unassignment (default: true)
+ *
+ * @returns {Promise<void>}
+ */
+exports.StreamUnassignProfile = async function({
+  profileSlug,
+  streamObjectId,
+  writeToken,
+  finalize=true
+}) {
+  try {
+    const {siteObjectId: objectId, siteLibraryId: libraryId} = await this.StreamGetSiteData({
+      streamOptions: {
+        resolveIncludeSource: false,
+        resolveLinks: false
+      }
+    });
+
+    if(!objectId || !libraryId) {
+      throw new Error("Site object must be configured first.")
+    }
+
+    let profileStreams = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: `public/asset_metadata/profile_streams/${profileSlug}`
+    }) || [];
+
+    profileStreams = profileStreams.filter(id => id !== streamObjectId);
+
+    if(!writeToken) {
+      ({writeToken} = await this.EditContentObject({
+        libraryId,
+        objectId
+      }));
+    }
+
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: `public/asset_metadata/profile_streams/${profileSlug}`,
+      metadata: profileStreams
+    });
+
+    if(finalize) {
+      await this.FinalizeContentObject({
+        libraryId,
+        objectId,
+        writeToken,
+        commitMessage: "Unassign profile to stream"
+      });
+    }
+  } catch(error) {
+    console.error("Unable to unassign profile to stream", error);
+    throw error;
+  }
+};
+
+/**
+ * Apply a live recording config profile to a stream, writing the profile's configuration
+ * to the stream's live_recording_config metadata and updating the profile's stream index.
+ * Use this for CLI workflows where the full apply operation should happen in one call.
+ * For app workflows where the config edit is part of a larger operation, use StreamAssignProfile directly.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} profileSlug - Slug of the profile to apply. Required if profile is not provided.
+ * @param {Object=} profile - Profile object to apply. Required if profileSlug is not provided. If both are provided, profile is used and profileSlug is derived from profile.name.
+ * @param {string} streamObjectId - Object ID of the stream to apply the profile to
+ * @param {Object=} additionalSettings - Additional settings to deep-merge over the profile config
+ *
+ * @returns {Promise<Object>} - The merged config that was saved
+ */
+exports.StreamApplyProfile = async function({
+  profileSlug,
+  profile,
+  streamObjectId,
+  additionalSettings={}
+}) {
+  if(!profile && !profileSlug) {
+    throw new Error("Either profile or profileSlug must be provided.");
+  }
+
+  if(!profile) {
+    profile = await this.StreamConfigProfile({profileSlug});
+  }
+
+  // Load the base config profile and merge with additional user settings
+  const config = R.mergeDeepRight(profile, additionalSettings);
+
+  const libraryId = await this.ContentObjectLibraryId({objectId: streamObjectId});
+
+  const {writeToken} = await this.EditContentObject({
+    libraryId,
+    objectId: streamObjectId
+  });
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId: streamObjectId,
+    writeToken,
+    metadataSubtree: "live_recording_config",
+    metadata: config
+  });
+
+  await this.FinalizeContentObject({
+    libraryId,
+    objectId: streamObjectId,
+    writeToken,
+    commitMessage: "Apply profile to stream"
+  });
+
+  if(!profileSlug) {
+    profileSlug = slugify(profile.name);
+  }
+
+  await this.StreamAssignProfile({
+    profileSlug,
+    streamObjectId
+  });
+
+  return config;
 };
 
 /**
@@ -2141,16 +2351,6 @@ exports.StreamSaveConfigProfile = async function({
  *
  * @property {Object=} probe_info - Full probe information (stored for historical/debugging purposes, only in live_recording_config)
  *
- * When profile is an Object:
- * @property {Array<Object>=} profile.audio - Audio encoding ladder rungs
- * @property {number=} profile.audio[].bit_rate - Audio bitrate for this rung
- * @property {number=} profile.audio[].channels - Number of audio channels for this rung
- * @property {string=} profile.audio[].codecs - Audio codec identifier for this rung
- * @property {Array<Object>=} profile.video - Video encoding ladder rungs
- * @property {number=} profile.video[].bit_rate - Video bitrate for this rung
- * @property {string=} profile.video[].codecs - Video codec identifier for this rung
- * @property {number=} profile.video[].height - Video height in pixels for this rung
- * @property {number=} profile.video[].width - Video width in pixels for this rung
  */
 
 /**
