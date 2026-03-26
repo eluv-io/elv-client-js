@@ -2188,7 +2188,9 @@ exports.StreamUnassignProfile = async function({
  * @namedParams
  * @param {string=} profileSlug - Slug of the profile to apply. Required if profile is not provided.
  * @param {Object=} profile - Profile object to apply. Required if profileSlug is not provided. If both are provided, profile is used and profileSlug is derived from profile.name.
- * @param {string} streamObjectId - Object ID of the stream to apply the profile to
+ * @param {string} objectId - Object ID of the stream to apply the profile to
+ * @param {string=} writeToken - Write token of the draft
+ * @param {boolean=} finalize - If enabled, stream object will be finalized after update
  * @param {Object=} additionalSettings - Additional settings to deep-merge over the profile config
  *
  * @returns {Promise<Object>} - The merged config that was saved
@@ -2196,7 +2198,9 @@ exports.StreamUnassignProfile = async function({
 exports.StreamApplyProfile = async function({
   profileSlug,
   profile,
-  streamObjectId,
+  objectId,
+  writeToken,
+  finalize=true
   additionalSettings={}
 }) {
   if(!profile && !profileSlug) {
@@ -2210,9 +2214,19 @@ exports.StreamApplyProfile = async function({
   // Load the base config profile and merge with additional user settings
   const config = R.mergeDeepRight(profile, additionalSettings);
 
+  const currentProfileName = await this.client.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "live_recording_config/profile"
+  });
+  const currentProfileSlug = slugify(currentProfileName);
+
   await this.StreamUpdateConfig({
     libraryId,
-    objectId: streamObjectId,
+    objectId,
+    writeToken,
+    finalize,
     liveRecordingConfig: config
   });
 
@@ -2220,9 +2234,31 @@ exports.StreamApplyProfile = async function({
     profileSlug = slugify(profile.name);
   }
 
+  const {siteObjectId, siteLibraryId} = await client.StreamGetSiteData({streamOptions: {resolveIncludeSource: false, resolveLinks: false}});
+
+  const {writeToken: siteWriteToken} = await this.EditContentObject({libraryId: siteLibraryId, objectId: siteObjectId});
+
+  if(currentProfileSlug && currentProfileSlug !== profileSlug) {
+    await this.StreamUnassignProfile({
+      profileSlug,
+      streamObjectId: objectId,
+      writeToken: siteWriteToken,
+      finalize: false
+    })
+  }
+
   await this.StreamAssignProfile({
     profileSlug,
-    streamObjectId
+    streamObjectId: objectId,
+    writeToken: siteWriteToken,
+    finalize: false
+  });
+
+  await this.FinalizeContentObject({
+    libraryId: siteLibraryId,
+    objectId: siteObjectId,
+    writeToken,
+    commitMessage: "Update profile streams"
   });
 
   return config;
