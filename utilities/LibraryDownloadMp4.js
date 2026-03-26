@@ -127,21 +127,14 @@ class LibraryDownloadMp4 extends Utility {
 
                         const writeStream = fs.createWriteStream(filepath);
 
-                        // Progress bar
                         res.on("data", (chunk) => {
                             downloaded += chunk.length;
 
                             if (totalSize > 0) {
                                 const pct = (downloaded / totalSize) * 100;
-                                const barLength = 30;
-                                const filled = Math.round((pct / 100) * barLength);
-                                const bar = "█".repeat(filled) + "░".repeat(barLength - filled);
-
-                                process.stdout.write(
-                                    `\r${bar} ${pct.toFixed(1)}% (${(downloaded / 1e6).toFixed(2)}MB/${(totalSize / 1e6).toFixed(2)}MB)`
-                                );
+                                process.stdout.write(`\rDownloading: ${pct.toFixed(1)}% (${(downloaded / 1e6).toFixed(2)}MB / ${(totalSize / 1e6).toFixed(2)}MB)`);
                             } else {
-                                process.stdout.write(`\rDownloaded ${(downloaded / 1e6).toFixed(2)}MB`);
+                                process.stdout.write(`\rDownloading: ${(downloaded / 1e6).toFixed(2)}MB`);
                             }
                         });
 
@@ -159,7 +152,7 @@ class LibraryDownloadMp4 extends Utility {
                     // -----------------------------
                     // Add timeout here
                     // -----------------------------
-                    const timeoutMs = 5000; // 5 seconds
+                    const timeoutMs = 30 * 1000; // 30 seconds of inactivity
                     req.setTimeout(timeoutMs, () => {
                         req.abort();
                         // Throw a special error for retry logic
@@ -308,7 +301,7 @@ class LibraryDownloadMp4 extends Utility {
 
                 const progress = status?.progress || 0;
                 if (progress !== lastProgress) {
-                    process.stdout.write(`Progress: ${progress.toFixed(1)}%\r`);
+                    process.stdout.write(`\rJob progress: ${progress.toFixed(1)}%`);
                     lastProgress = progress;
                     lastProgressTime = Date.now(); // reset stall timer on any progress
                 } else if (Date.now() - lastProgressTime > noProgressTimeoutMs) {
