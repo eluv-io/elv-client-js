@@ -512,37 +512,41 @@ exports.StreamLinkToSite = async function({
  *
  * @methodGroup Live Stream
  * @namedParams
- * @param {string} objectId - Object ID of the live stream to link to the site
+ * @param {string=} objectId - Object ID of the live stream to link to the site
+ * @param {string=} slug - Slug of the object
  * @param {string=} siteObjectId - Object ID of the site (defaults to rootStore.dataStore.siteId)
  * @param {string=} siteLibraryId - Library ID of the site (defaults to rootStore.dataStore.siteLibraryId)
  *
  * @return {Promise<void>}
  */
-exports.StreamRemoveLinkToSite = async function({objectId}) {
+exports.StreamRemoveLinkToSite = async function({objectId, slug}) {
   try {
-    ValidateObject(objectId);
+    if(!objectId && !slug) {
+      throw new Error("Either objectId or slug must be provided.");
+    }
 
     const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData({resolveIncludeSource: false, resolveLinks: false});
-    let slugToRemove;
 
-    Object.keys(streamMetadata || {}).forEach(slug => {
-      let source = streamMetadata[slug]["."]?.source;
+    if(objectId) {
+      Object.keys(streamMetadata || {}).forEach(streamSlug => {
+        let source = streamMetadata[streamSlug]["."]?.source;
 
-      // If object has been deleted, resolving the link will not return a source, so check link hq__
-      if(!source) {
-      const match = streamMetadata[slug]?.["/"].match(/(hq__[^/]+)/);
-        source = match ? match[1] : undefined;
-      }
+        // If object has been deleted, resolving the link will not return a source, so check link hq__
+        if(!source) {
+        const match = streamMetadata[slug]?.["/"].match(/(hq__[^/]+)/);
+          source = match ? match[1] : undefined;
+        }
 
-      const id = this.utils.DecodeVersionHash(source).objectId;
+        const id = this.utils.DecodeVersionHash(source).objectId;
 
-      if(id === objectId) {
-        slugToRemove = slug;
-      }
-    });
+        if(id === objectId) {
+          slug = streamSlug;
+        }
+      });
+    }
 
-    if(slugToRemove) {
-      delete streamMetadata[slugToRemove];
+    if(slug) {
+      delete streamMetadata[slug];
 
       const {writeToken} = await this.EditContentObject({
         libraryId: siteLibraryId,
