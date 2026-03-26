@@ -2210,26 +2210,10 @@ exports.StreamApplyProfile = async function({
   // Load the base config profile and merge with additional user settings
   const config = R.mergeDeepRight(profile, additionalSettings);
 
-  const libraryId = await this.ContentObjectLibraryId({objectId: streamObjectId});
-
-  const {writeToken} = await this.EditContentObject({
-    libraryId,
-    objectId: streamObjectId
-  });
-
-  await this.ReplaceMetadata({
+  await this.StreamUpdateConfig({
     libraryId,
     objectId: streamObjectId,
-    writeToken,
-    metadataSubtree: "live_recording_config",
-    metadata: config
-  });
-
-  await this.FinalizeContentObject({
-    libraryId,
-    objectId: streamObjectId,
-    writeToken,
-    commitMessage: "Apply profile to stream"
+    liveRecordingConfig: config
   });
 
   if(!profileSlug) {
@@ -2242,6 +2226,61 @@ exports.StreamApplyProfile = async function({
   });
 
   return config;
+};
+
+/**
+ * Update the live recording configuration of a stream object.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} libraryId - Library ID of the stream object
+ * @param {string} objectId - Object ID of the stream
+ * @param {string} commitMessage - Message to include about this commit
+ * @param {string=} writeToken - Write token for the stream object. If not provided, a new edit will be opened.
+ * @param {LiveRecordingConfig} liveRecordingConfig - The live recording configuration to write
+ * @param {boolean=} finalize - If enabled, the stream object will be finalized after the update (default: true)
+ *
+ * @returns {Promise<{writeToken: string}|void>} - The write token if finalize is false, otherwise void
+ */
+exports.StreamUpdateConfig = async function({
+  libraryId,
+  objectId,
+  writeToken,
+  liveRecordingConfig,
+  commitMessage,
+  finalize=true
+}) {
+  if(!writeToken) {
+    ({writeToken} = await this.EditContentObject({
+      libraryId,
+      objectId
+    }));
+  }
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  await this.MergeMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "live_recording_config",
+    metadata: liveRecordingConfig
+  });
+
+  if(finalize) {
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: commitMessage ?? "Update stream config"
+    });
+  }
+
+  if(!finalize) {
+    return {writeToken};
+  }
 };
 
 /**
