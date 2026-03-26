@@ -2204,7 +2204,7 @@ exports.StreamApplyProfile = async function({
   profile,
   objectId,
   writeToken,
-  finalize=true
+  finalize=true,
   additionalSettings={}
 }) {
   if(!profile && !profileSlug) {
