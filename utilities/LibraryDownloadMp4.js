@@ -125,7 +125,8 @@ class LibraryDownloadMp4 extends Utility {
                         const totalSize = parseInt(res.headers["content-length"] || "0", 10);
                         let downloaded = 0;
 
-                        const writeStream = fs.createWriteStream(filepath);
+                        const tmpPath = filepath + ".tmp";
+                        const writeStream = fs.createWriteStream(tmpPath);
 
                         res.on("data", (chunk) => {
                             downloaded += chunk.length;
@@ -142,10 +143,26 @@ class LibraryDownloadMp4 extends Utility {
 
                         res.pipe(writeStream);
 
-                        writeStream.on("finish", () => writeStream.close(resolve));
+                        writeStream.on("finish", () => {
+                            writeStream.close(() => {
+                                if (totalSize > 0 && downloaded !== totalSize) {
+                                    fs.unlink(tmpPath, () => {});
+                                    return reject(new Error(
+                                        `Incomplete download: received ${downloaded} of ${totalSize} bytes`
+                                    ));
+                                }
+                                fs.rename(tmpPath, filepath, (err) => {
+                                    if (err) {
+                                        fs.unlink(tmpPath, () => {});
+                                        return reject(err);
+                                    }
+                                    resolve();
+                                });
+                            });
+                        });
 
                         writeStream.on("error", (err) => {
-                            fs.unlink(filepath, () => reject(err));
+                            fs.unlink(tmpPath, () => reject(err));
                         });
                     });
 
@@ -262,7 +279,6 @@ class LibraryDownloadMp4 extends Utility {
                 });
             }
 
-            console.log("response:", JSON.stringify(response, null, 2));
             jobId = response.job_id;
             this.logger.log(`Started job ${jobId}`);
 
@@ -309,7 +325,6 @@ class LibraryDownloadMp4 extends Utility {
                 }
             } while (status?.status !== "completed");
 
-            console.log("status:", JSON.stringify(status, null, 2));
             process.stdout.write("\n");
 
             const filename = this.sanitizeFilename(
