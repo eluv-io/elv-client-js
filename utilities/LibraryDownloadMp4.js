@@ -268,15 +268,7 @@ class LibraryDownloadMp4 extends Utility {
                     })
                 );
             } catch (err) {
-                const fileServiceUrl = client.FileServiceHttpClient?.uris?.[client.FileServiceHttpClient.uriIndex] || "unknown";
-                this.fatalExit(`File service request failed for ${objectId}: ${err.message}`, failLogPath, {
-                    object_id: objectId,
-                    name: objectName,
-                    job_id: response?.job_id,
-                    error: err.message,
-                    file_service_url: fileServiceUrl,
-                    timestamp: new Date().toISOString(),
-                });
+                throw new Error(`File service request failed for ${objectId}: ${err.message}`);
             }
 
             jobId = response.job_id;
@@ -299,15 +291,7 @@ class LibraryDownloadMp4 extends Utility {
                         })
                     );
                 } catch (err) {
-                    const fileServiceUrl = client.FileServiceHttpClient?.uris?.[client.FileServiceHttpClient.uriIndex] || "unknown";
-                    this.fatalExit(`File service poll failed for job ${jobId} (${objectId}): ${err.message}`, failLogPath, {
-                        object_id: objectId,
-                        name: objectName,
-                        job_id: jobId,
-                        error: err.message,
-                        file_service_url: fileServiceUrl,
-                        timestamp: new Date().toISOString(),
-                    });
+                    throw new Error(`File service poll failed for job ${jobId} (${objectId}): ${err.message}`);
                 }
 
                 const jobStatus = status?.status;
@@ -354,15 +338,7 @@ class LibraryDownloadMp4 extends Utility {
                     timeoutPromise,
                 ]);
             } catch (err) {
-                const fileServiceUrl = client.FileServiceHttpClient?.uris?.[client.FileServiceHttpClient.uriIndex] || "unknown";
-                this.fatalExit(`Failed to build download URL for ${objectId}: ${err.message}`, failLogPath, {
-                    object_id: objectId,
-                    name: objectName,
-                    job_id: jobId,
-                    error: err.message,
-                    file_service_url: fileServiceUrl,
-                    timestamp: new Date().toISOString(),
-                });
+                throw new Error(`Failed to build download URL for ${objectId}: ${err.message}`);
             }
 
             console.log("downloadUrl:", downloadUrl);
@@ -434,11 +410,13 @@ class LibraryDownloadMp4 extends Utility {
         if (!fs.existsSync(targetDir))
             fs.mkdirSync(targetDir, { recursive: true });
 
-        // Initialize fail log file with empty array at the start of the run
+        // Ensure fail log file exists with a valid JSON array — never overwrite existing entries
         const failLogPath = this.args.failLog ? path.resolve(this.args.failLog) : null;
-        if (failLogPath) {
+        if (failLogPath && !fs.existsSync(failLogPath)) {
             fs.writeFileSync(failLogPath, JSON.stringify([], null, 2));
-            this.logger.log(`Fail log initialized: ${failLogPath}`);
+            this.logger.log(`Fail log created: ${failLogPath}`);
+        } else if (failLogPath) {
+            this.logger.log(`Fail log will append to: ${failLogPath}`);
         }
 
         // Sequential downloads
