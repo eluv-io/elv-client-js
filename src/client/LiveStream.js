@@ -2201,26 +2201,28 @@ exports.StreamUnassignProfile = async function({
 };
 
 /**
- * Apply a live recording config profile to a stream, writing the profile's configuration
- * to the stream's live_recording_config metadata and updating the profile's stream index.
- * Use this for CLI workflows where the full apply operation should happen in one call.
- * For app workflows where the config edit is part of a larger operation, use StreamAssignProfile directly.
+ * Apply a live recording config profile to a stream, writing the merged configuration
+ * to the stream's live_recording_config and updating the profile's stream index on the site object.
+ * Handles switching profiles by unassigning the previous profile from the index.
+ * Use this for CLI workflows. For app workflows managing the config edit separately, use StreamAssignProfile directly.
  *
  * @methodGroup Live Stream
  * @namedParams
  * @param {string=} profileSlug - Slug of the profile to apply. Required if profile is not provided.
  * @param {Object=} profile - Profile object to apply. Required if profileSlug is not provided. If both are provided, profile is used and profileSlug is derived from profile.name.
  * @param {string} objectId - Object ID of the stream to apply the profile to
- * @param {string=} writeToken - Write token of the draft
- * @param {boolean=} finalize - If enabled, stream object will be finalized after update
+ * @param {string=} streamWriteToken - Write token for the stream object. If not provided, a new edit will be opened.
+ * @param {string=} siteWriteToken - Write token for the site object. If not provided, a new edit will be opened.
+ * @param {boolean=} finalize - If enabled, both the stream and site objects will be finalized (default: true)
  *
- * @returns {Promise<Object>} - The merged config that was saved
+ * @returns {Promise<{config: Object}|{streamWriteToken: string, siteWriteToken: string}>} - The merged config if finalized, otherwise the open write tokens
  */
 exports.StreamApplyProfile = async function({
   profileSlug,
   profile,
   objectId,
-  writeToken,
+  streamWriteToken,
+  siteWriteToken,
   finalize=true
 }) {
   if(!profile && !profileSlug) {
@@ -2231,27 +2233,29 @@ exports.StreamApplyProfile = async function({
     profile = await this.StreamConfigProfile({profileSlug});
   }
 
-  if(!writeToken) {
-    ({writeToken} = await this.EditContentObject({
+  const libraryId = await this.ContentObjectLibraryId({objectId});
+
+  if(!streamWriteToken) {
+    ({writeToken: streamWriteToken} = await this.EditContentObject({
       libraryId,
       objectId
     }));
   }
 
   // Load the base config profile and merge with overrides
-  const overrides = await this.client.ContentObjectMetadata({
+  const overrides = await this.ContentObjectMetadata({
     libraryId,
     objectId,
-    writeToken,
+    writeToken: streamWriteToken,
     metadataSubtree: "live_recording_overrides"
   }) || {};
 
   const config = R.mergeDeepRight(profile, overrides);
 
-  const currentProfileName = await this.client.ContentObjectMetadata({
+  const currentProfileName = await this.ContentObjectMetadata({
     libraryId,
     objectId,
-    writeToken,
+    writeToken: streamWriteToken,
     metadataSubtree: "live_recording_config/profile"
   });
   const currentProfileSlug = slugify(currentProfileName);
@@ -2259,8 +2263,8 @@ exports.StreamApplyProfile = async function({
   await this.StreamUpdateConfig({
     libraryId,
     objectId,
-    writeToken,
-    finalize: true,
+    writeToken: streamWriteToken,
+    finalize: false,
     liveRecordingConfig: config
   });
 
@@ -2268,13 +2272,15 @@ exports.StreamApplyProfile = async function({
     profileSlug = slugify(profile.name);
   }
 
-  const {siteObjectId, siteLibraryId} = await client.StreamGetSiteData({streamOptions: {resolveIncludeSource: false, resolveLinks: false}});
+  const {siteObjectId, siteLibraryId} = await this.StreamGetSiteData({streamOptions: {resolveIncludeSource: false, resolveLinks: false}});
 
-  const {writeToken: siteWriteToken} = await this.EditContentObject({libraryId: siteLibraryId, objectId: siteObjectId});
+  if(!siteWriteToken) {
+    ({writeToken: siteWriteToken} = await this.EditContentObject({libraryId: siteLibraryId, objectId: siteObjectId}));
+  }
 
   if(currentProfileSlug && currentProfileSlug !== profileSlug) {
     await this.StreamUnassignProfile({
-      profileSlug,
+      profileSlug: currentProfileSlug,
       streamObjectId: objectId,
       writeToken: siteWriteToken,
       finalize: false
@@ -2288,14 +2294,27 @@ exports.StreamApplyProfile = async function({
     finalize: false
   });
 
-  await this.FinalizeContentObject({
-    libraryId: siteLibraryId,
-    objectId: siteObjectId,
-    writeToken,
-    commitMessage: "Update profile streams"
-  });
+  if(finalize) {
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: streamWriteToken,
+      commitMessage: "Update profile"
+    });
 
-  return config;
+    await this.FinalizeContentObject({
+      libraryId: siteLibraryId,
+      objectId: siteObjectId,
+      writeToken: siteWriteToken,
+      commitMessage: "Update profile streams"
+    });
+  }
+
+  if(!finalize) {
+    return {streamWriteToken, siteWriteToken};
+  } else {
+    return {config};
+  }
 };
 
 /**
