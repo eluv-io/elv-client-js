@@ -295,25 +295,36 @@ exports.StreamCreate = async function({
     })
   );
 
+  const metadata = {
+    public: {
+      name,
+      description,
+      asset_metadata: {
+        display_title: displayTitle || name,
+        title: name || displayTitle || defaultName,
+        title_type: "live_stream",
+        video_type: "live",
+        slug: slugify(name)
+      }
+    },
+    "live_recording_config": liveRecordingConfig
+  };
+
+  const oldProfile = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    metadataSubtree: "live_recording_config/name"
+  });
+
+  if(liveRecordingConfig?.name && liveRecordingConfig.name !== oldProfile) {
+    metadata.public.asset_metadata.profile_last_updated = new Date().toISOString();
+  }
 
   await this.MergeMetadata({
     libraryId,
     objectId,
     writeToken,
-    metadata: {
-      public: {
-        name,
-        description,
-        asset_metadata: {
-          display_title: displayTitle || name,
-          title: name || displayTitle || defaultName,
-          title_type: "live_stream",
-          video_type: "live",
-          slug: slugify(name)
-        }
-      },
-      "live_recording_config": liveRecordingConfig
-    }
+    metadata
   });
 
   try {
@@ -375,6 +386,11 @@ exports.StreamCreate = async function({
     });
 
     returnResponse = {...returnResponse, ...finalizeResponse};
+  }
+
+  if(finalize && liveRecordingConfig?.name) {
+    const slug = slugify(liveRecordingConfig?.name);
+    await this.StreamAssignProfile({profileSlug: slug, streamObjectId: objectId});
   }
 
   if(options.linkToSite) {
@@ -1996,6 +2012,8 @@ exports.StreamSaveConfigProfile = async function({
 
   if(profileMetadata) {
     const defaultName = `Profile-${new Date().toISOString().slice(0, 10)}`;
+    profileMetadata.last_updated = new Date().toISOString();
+
     const metaFileName = slugify(profileMetadata.name || defaultName);
     const blob = new Blob([JSON.stringify(profileMetadata, null, 2)], {type: "application/json"});
     const metaFile = new File([blob], `${metaFileName}.json`, {type: "application/json"});
@@ -2278,6 +2296,7 @@ exports.StreamApplyProfile = async function({
  * @param {string} commitMessage - Message to include about this commit
  * @param {string=} writeToken - Write token for the stream object. If not provided, a new edit will be opened.
  * @param {LiveRecordingConfig} liveRecordingConfig - The live recording configuration to write
+ * @param {Object=} overrideSettings - Partial LiveRecordingConfig deep-merged over liveRecordingConfig
  * @param {boolean=} finalize - If enabled, the stream object will be finalized after the update (default: true)
  *
  * @returns {Promise<{writeToken: string}|void>} - The write token if finalize is false, otherwise void
@@ -2287,6 +2306,7 @@ exports.StreamUpdateConfig = async function({
   objectId,
   writeToken,
   liveRecordingConfig,
+  overrideSettings={},
   commitMessage,
   finalize=true
 }) {
@@ -2301,7 +2321,19 @@ exports.StreamUpdateConfig = async function({
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  await this.MergeMetadata({
+  if(overrideSettings) {
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "live_recording_overrides",
+      metadata: overrideSettings
+    });
+
+    liveRecordingConfig = R.mergeDeepRight(liveRecordingConfig, overrideSettings);
+  }
+
+  await this.ReplaceMetadata({
     libraryId,
     objectId,
     writeToken,
@@ -2358,6 +2390,8 @@ exports.StreamUpdateConfig = async function({
  * @property {boolean=} recording_config.input_cfg.bypass_libav_reader - Whether to bypass libav reader
  * @property {string=} recording_config.input_cfg.copy_mode - Copy mode setting: "" (empty), "none", "raw", or "remuxed"
  * @property {string=} recording_config.input_cfg.copy_packaging - Copy packaging mode: "raw_ts" or "rtp_ts"
+ * @property {boolean=} recording_config.input_cfg.custom_read_loop_enabled - Legacy reader
+ * @property {string=} recording_config.input_cfg.input_packaging - Input Packaging
  *
  * @property {Object=} playout_config - Playout configuration settings
  * @property {Object=} playout_config.image_watermark - Image watermark configuration
