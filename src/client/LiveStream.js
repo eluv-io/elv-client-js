@@ -2213,7 +2213,6 @@ exports.StreamUnassignProfile = async function({
  * @param {string} objectId - Object ID of the stream to apply the profile to
  * @param {string=} writeToken - Write token of the draft
  * @param {boolean=} finalize - If enabled, stream object will be finalized after update
- * @param {Object=} additionalSettings - Additional settings to deep-merge over the profile config
  *
  * @returns {Promise<Object>} - The merged config that was saved
  */
@@ -2222,8 +2221,7 @@ exports.StreamApplyProfile = async function({
   profile,
   objectId,
   writeToken,
-  finalize=true,
-  additionalSettings={}
+  finalize=true
 }) {
   if(!profile && !profileSlug) {
     throw new Error("Either profile or profileSlug must be provided.");
@@ -2233,8 +2231,22 @@ exports.StreamApplyProfile = async function({
     profile = await this.StreamConfigProfile({profileSlug});
   }
 
-  // Load the base config profile and merge with additional user settings
-  const config = R.mergeDeepRight(profile, additionalSettings);
+  if(!writeToken) {
+    ({writeToken} = await this.EditContentObject({
+      libraryId,
+      objectId
+    }));
+  }
+
+  // Load the base config profile and merge with overrides
+  const overrides = await this.client.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "live_recording_overrides"
+  }) || {};
+
+  const config = R.mergeDeepRight(profile, overrides);
 
   const currentProfileName = await this.client.ContentObjectMetadata({
     libraryId,
@@ -2248,7 +2260,7 @@ exports.StreamApplyProfile = async function({
     libraryId,
     objectId,
     writeToken,
-    finalize,
+    finalize: true,
     liveRecordingConfig: config
   });
 
