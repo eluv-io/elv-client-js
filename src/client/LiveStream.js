@@ -465,7 +465,7 @@ exports.StreamLinkToSite = async function({
   try {
     ValidateObject(objectId);
 
-    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData();
+    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData({resolveLinks: false, resolveIncludeSource: false, resolveIgnoreErrors: false});
 
     const alreadyLinked = Object.values(streamMetadata || {}).some(entry => {
       const source = entry["."]?.source;
