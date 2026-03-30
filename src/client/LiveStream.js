@@ -2232,6 +2232,7 @@ exports.StreamApplyProfile = async function({
   if(!profile) {
     profile = await this.StreamConfigProfile({profileSlug});
   }
+  console.log("profile", profile)
 
   const libraryId = await this.ContentObjectLibraryId({objectId});
 
@@ -2337,7 +2338,7 @@ exports.StreamUpdateConfig = async function({
   objectId,
   writeToken,
   liveRecordingConfig,
-  overrideSettings={},
+  overrideSettings,
   commitMessage,
   finalize=true
 }) {
