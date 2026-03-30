@@ -497,6 +497,7 @@ class FrameClient {
       "SpaceNodes",
       "StartABRMezzanineJobs",
       "StreamAddWatermark",
+      "StreamApplyProfile",
       "StreamAssignProfile",
       "StreamConfig",
       "StreamConfigProfile",
