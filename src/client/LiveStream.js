@@ -2232,7 +2232,6 @@ exports.StreamApplyProfile = async function({
   if(!profile) {
     profile = await this.StreamConfigProfile({profileSlug});
   }
-  console.log("profile", profile)
 
   const libraryId = await this.ContentObjectLibraryId({objectId});
 
@@ -2287,6 +2286,15 @@ exports.StreamApplyProfile = async function({
       finalize: false
     })
   }
+
+  // Update profile update timestamp
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken: streamWriteToken,
+    metadataSubtree: "public/asset_metadata/profile_last_updated",
+    metadata: new Date().toISOString()
+  });
 
   await this.StreamAssignProfile({
     profileSlug,
@@ -2739,7 +2747,7 @@ exports.StreamListUrls = async function({siteId}={}) {
             ]
           });
 
-          const url = streamMeta.live_recording_config.ingress_node_api || streamMeta.live_recording_config.reference_url || streamMeta.live_recording_config.url;
+          const url = streamMeta.live_recording_config?.ingress_node_api || streamMeta.live_recording_config?.reference_url || streamMeta.live_recording_config?.url;
           const isActive = [STATUS_MAP.STARTING, STATUS_MAP.RUNNING, STATUS_MAP.STALLED, STATUS_MAP.STOPPED].includes(status.state);
 
           if(url && isActive) {
