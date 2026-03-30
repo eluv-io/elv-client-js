@@ -2745,7 +2745,7 @@ exports.StreamListUrls = async function({siteId}={}) {
               // live_recording_config/url is the old path
               "live_recording_config/url"
             ]
-          });
+          }) || {};
 
           const url = streamMeta.live_recording_config?.ingress_node_api || streamMeta.live_recording_config?.reference_url || streamMeta.live_recording_config?.url;
           const isActive = [STATUS_MAP.STARTING, STATUS_MAP.RUNNING, STATUS_MAP.STALLED, STATUS_MAP.STOPPED].includes(status.state);
