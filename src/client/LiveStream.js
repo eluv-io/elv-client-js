@@ -569,12 +569,11 @@ exports.StreamRemoveLinkToSite = async function({objectId, slug}) {
         objectId: siteObjectId
       });
 
-      await this.ReplaceMetadata({
+      await this.DeleteMetadata({
         libraryId: siteLibraryId,
         objectId: siteObjectId,
         writeToken,
-        metadataSubtree: "public/asset_metadata/live_streams",
-        metadata: streamMetadata
+        metadataSubtree: `public/asset_metadata/live_streams/${slug}`
       });
 
       await this.FinalizeContentObject({
