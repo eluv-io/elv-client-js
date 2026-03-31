@@ -2255,7 +2255,7 @@ exports.StreamApplyProfile = async function({
     libraryId,
     objectId,
     writeToken: streamWriteToken,
-    metadataSubtree: "live_recording_config/profile"
+    metadataSubtree: "live_recording_config/name"
   });
   const currentProfileSlug = slugify(currentProfileName);
 
