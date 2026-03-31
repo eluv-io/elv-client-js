@@ -2249,7 +2249,15 @@ exports.StreamApplyProfile = async function({
     metadataSubtree: "live_recording_overrides"
   }) || {};
 
-  const config = R.mergeDeepRight(profile, overrides);
+  const currentConfig = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    writeToken: streamWriteToken,
+    metadataSubtree: "live_recording_config"
+  }) || {};
+
+  // Preserve stream-specific fields (e.g. url) from the current config, then apply profile, then overrides
+  const config = R.mergeDeepRight(R.mergeDeepRight(currentConfig, profile), overrides);
 
   const currentProfileName = await this.ContentObjectMetadata({
     libraryId,
