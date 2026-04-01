@@ -279,7 +279,6 @@ exports.StreamCreate = async function({
 
   liveRecordingConfig.url = url;
   liveRecordingConfig.ingress_node_api = ingressNodeApi;
-  liveRecordingConfig.part_ttl = liveRecordingConfig?.recording_config?.part_ttl ?? 86400;
 
   // Add access group permissions
   await Promise.all(
