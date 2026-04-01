@@ -56,7 +56,7 @@ const LiveconfTemplate = {
     },
     playout_config: {
       dvr_enabled: true,
-      dvr_max_duration: 4,
+      dvr_max_duration: 14400,
       rebroadcast_start_time_sec_epoch: 0,
       playout_sharding_level: 2,
       vod_enabled: false
