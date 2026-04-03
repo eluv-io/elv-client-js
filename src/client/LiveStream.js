@@ -3279,6 +3279,8 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  * @returns {Promise<Object>} - Map of output IDs to output info, each with srt_url and state fields added
  */
 exports.OutputsList = async function({libraryId, objectId, srtEndpoints}) {
+  ValidateObject(objectId);
+
   if(!libraryId) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
@@ -3296,8 +3298,9 @@ exports.OutputsList = async function({libraryId, objectId, srtEndpoints}) {
 
     // Get status
     try {
-      value.state = await this.OutputState({outputId: key, objectId});
+      value.state = await this.OutputsState({outputId: key, objectId});
     } catch(error) {
+      this.Log(`Failed to retrieve state for output ${key}: ${error.message}`, true);
       value.state = {};
     }
   }
@@ -3316,7 +3319,10 @@ exports.OutputsList = async function({libraryId, objectId, srtEndpoints}) {
  *
  * @returns {Promise<Object>} - Current state of the output including client_stats and srt_stats
  */
-exports.OutputState = async function({libraryId, objectId, outputId}) {
+exports.OutputsState = async function({libraryId, objectId, outputId}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputId", outputId);
+
   if(!libraryId) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
@@ -3333,4 +3339,79 @@ exports.OutputState = async function({libraryId, objectId, outputId}) {
   });
 
   return state;
+};
+
+/**
+ * Create a new live output for a stream object.
+ *
+ * Note: Output creation and modification is transactional. To create multiple outputs in a single
+ * transaction, use EditContentObject to open a write token, call CallBitcodeMethod for each output,
+ * then finalize with FinalizeContentObject. This method handles a single output end-to-end.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the outputs settings object
+ * @param {string=} streamObjectId - Object ID of the input stream to use as the output source
+ * @param {string=} name - Display name for the output
+ * @param {string=} description - Description of the output
+ * @param {Array<string>=} geos - List of geo regions for SRT delivery (e.g. ["test"])
+ * @param {string=} passphrase - SRT passphrase for encrypted delivery
+ * @param {boolean=} stripRtp - Whether to strip RTP headers (default: false)
+ * @param {Object=} srtConfig - Additional SRT connection configuration (see openapi-bitcode.html#tocssrtconnectionconfig)
+ *
+ * @returns {Promise<Object>} - The created output
+ */
+exports.OutputsCreate = async function({
+  libraryId,
+  objectId,
+  streamObjectId,
+  name,
+  description,
+  externalId,
+  geos=[],
+  passphrase,
+  stripRtp=false,
+  srtConfig
+}) {
+  ValidateObject(objectId);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  const output = {
+    enabled: true,
+    name,
+    description,
+    external_id: externalId,
+    input: streamObjectId ? {stream: streamObjectId} : null,
+    srt_pull: {
+      connection: srtConfig ?? {},
+      elvgeos: geos,
+      passphrase,
+      strip_rtp: stripRtp
+    }
+  };
+
+  const {writeToken} = await this.EditContentObject({libraryId, objectId});
+
+  // Note - you may create multiple outputs here, then finalize the transaction below
+  const outputs = await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    writeToken,
+    method: "live/outputs",
+    constant: false,
+    body: output
+  });
+
+  await this.FinalizeContentObject({
+    libraryId,
+    objectId,
+    writeToken,
+    commitMessage: "Create output"
+  });
+
+  return outputs;
 };
