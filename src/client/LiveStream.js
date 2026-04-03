@@ -3342,7 +3342,7 @@ exports.OutputsState = async function({libraryId, objectId, outputId}) {
 };
 
 /**
- * Create a new live output for a stream object.
+ * Create a new live output.
  *
  * Note: Output creation and modification is transactional. To create multiple outputs in a single
  * transaction, use EditContentObject to open a write token, call CallBitcodeMethod for each output,
@@ -3385,9 +3385,9 @@ exports.OutputsCreate = async function({
     name,
     description,
     external_id: externalId,
-    input: streamObjectId ? {stream: streamObjectId} : null,
+    input: streamObjectId ? {stream: streamObjectId} : undefined,
     srt_pull: {
-      connection: srtConfig ?? {},
+      connection: srtConfig ?? undefined,
       elvgeos: geos,
       passphrase,
       strip_rtp: stripRtp
@@ -3414,4 +3414,156 @@ exports.OutputsCreate = async function({
   });
 
   return outputs;
+};
+
+/**
+ * Modify an existing live output.
+ *
+ * Note: Supply all fields when modifying an output — read the current output first, then apply changes.
+ *
+ * Note: Output modification is transactional. To modify multiple outputs in a single
+ * transaction, use EditContentObject to open a write token, call CallBitcodeMethod for each output,
+ * then finalize with FinalizeContentObject. This method handles a single output end-to-end.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output to modify
+ * @param {string=} streamObjectId - Object ID of the input stream to use as the output source
+ * @param {string=} name - Display name for the output
+ * @param {string=} description - Description of the output
+ * @param {boolean=} enabled - Whether the output is enabled
+ * @param {boolean=} reset - Whether to reset the output
+ * @param {Array<string>=} geos - List of geo regions for SRT delivery (e.g. ["test"])
+ * @param {string=} passphrase - SRT passphrase for encrypted delivery
+ * @param {boolean=} stripRtp - Whether to strip RTP headers (default: false)
+ * @param {Object=} srtConfig - Additional SRT connection configuration (see openapi-bitcode.html#tocssrtconnectionconfig)
+ *
+ * @returns {Promise<Object>} - The modified output
+ */
+exports.OutputsModify = async function({
+  libraryId,
+  objectId,
+  outputId,
+  streamObjectId,
+  name,
+  description,
+  enabled,
+  reset,
+  geos=[],
+  passphrase,
+  stripRtp=false,
+  srtConfig
+}) {
+  ValidateObject(objectId);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  const output = {
+    enabled,
+    reset,
+    name,
+    description,
+    input: streamObjectId ? {stream: streamObjectId} : undefined,
+    srt_pull: {
+      connection: srtConfig ?? undefined,
+      elvgeos: geos,
+      passphrase,
+      strip_rtp: stripRtp
+    }
+  };
+
+  const {writeToken} = await this.EditContentObject({libraryId, objectId});
+
+  const outputs = await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    writeToken,
+    method: UrlJoin("live", "outputs", outputId),
+    verb: "PUT",
+    constant: false,
+    body: output
+  });
+
+  await this.FinalizeContentObject({
+    libraryId,
+    objectId,
+    writeToken,
+    commitMessage: "Modify output"
+  });
+
+  return outputs;
+};
+
+/**
+ * Stop a live output.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output to stop
+ *
+ * @returns {Promise<Object>} - Response from the stop call
+ */
+exports.OutputsStop = async function({libraryId, objectId, outputId}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputId", outputId);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  const {writeToken} = await this.EditContentObject({libraryId, objectId});
+
+  return this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    writeToken,
+    method: UrlJoin("live", "outputs", outputId, "ctrl", "stop"),
+    constant: false
+  });
+};
+
+/**
+ * Delete a live output.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output to delete
+ *
+ * @returns {Promise<Object>} - Response from the delete call
+ */
+exports.OutputsDelete = async function({libraryId, objectId, outputId}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputId", outputId);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  const {writeToken} = await this.EditContentObject({libraryId, objectId});
+
+  const result = await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    writeToken,
+    method: UrlJoin("live", "outputs", outputId),
+    verb: "DELETE",
+    constant: false,
+  });
+
+  await this.FinalizeContentObject({
+    libraryId,
+    objectId,
+    writeToken,
+    commitMessage: "Remove output"
+  });
+
+  return result;
 };
