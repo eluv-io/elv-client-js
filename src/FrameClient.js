@@ -447,6 +447,8 @@ class FrameClient {
       "Nodes",
       "NTPInstance",
       "ObjectCleanup",
+      "OutputState",
+      "OutputsList",
       "Permission",
       "PlayoutOptions",
       "PlayoutPathResolution",

@@ -3266,3 +3266,71 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
     authorizationToken
   });
 };
+
+/**
+ * List all live outputs for a stream object, enriched with SRT URLs and current state.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {Array<string>} srtEndpoints - List of SRT endpoint hostnames used to construct output SRT URLs
+ *
+ * @returns {Promise<Object>} - Map of output IDs to output info, each with srt_url and state fields added
+ */
+exports.OutputsList = async function({libraryId, objectId, srtEndpoints}) {
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  const outputs = await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    method: "live/outputs",
+    constant:  true
+  });
+
+  for(const [key, value] of Object.entries(outputs)) {
+    const srtUrl = `${srtEndpoints[0]}:11080?streamid=live-out.${objectId}-${key}.main`;
+    value.srt_url = srtUrl;
+
+    // Get status
+    try {
+      value.state = await this.OutputState({outputId: key, objectId});
+    } catch(error) {
+      value.state = {};
+    }
+  }
+
+  return outputs;
+};
+
+/**
+ * Get the current state of a specific live output, including client and SRT stats.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output to retrieve state for
+ *
+ * @returns {Promise<Object>} - Current state of the output including client_stats and srt_stats
+ */
+exports.OutputState = async function({libraryId, objectId, outputId}) {
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  const state = await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    method: UrlJoin("live", "outputs", outputId, "state"),
+    queryParams: {
+      "client_stats": 1,
+      "srt_stats": 1
+    },
+    constant:  true
+  });
+
+  return state;
+};
