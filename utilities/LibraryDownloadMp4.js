@@ -141,10 +141,20 @@ class LibraryDownloadMp4 extends Utility {
 
                         res.on("end", () => process.stdout.write("\n"));
 
+                        res.on("error", (err) => {
+                            fs.unlink(tmpPath, () => reject(err));
+                        });
+
                         res.pipe(writeStream);
 
                         writeStream.on("finish", () => {
                             writeStream.close(() => {
+                                if (!res.complete) {
+                                    fs.unlink(tmpPath, () => {});
+                                    return reject(new Error(
+                                        "Incomplete download: connection closed before transfer completed"
+                                    ));
+                                }
                                 if (totalSize > 0 && downloaded !== totalSize) {
                                     fs.unlink(tmpPath, () => {});
                                     return reject(new Error(
@@ -419,6 +429,26 @@ class LibraryDownloadMp4 extends Utility {
             this.logger.log(`Fail log will append to: ${failLogPath}`);
         }
 
+        // Skip objects already present in downloadDir before starting any jobs
+        const existingFiles = fs.readdirSync(targetDir);
+        const alreadyDownloaded = objectList.filter((obj) =>
+            existingFiles.some((f) => f.includes(obj.objectId))
+        );
+
+        if (alreadyDownloaded.length > 0) {
+            this.logger.log(`Skipping ${alreadyDownloaded.length} already downloaded object(s):`);
+            for (const obj of alreadyDownloaded) {
+                const name = R.path(["metadata", "public", "name"], obj) || obj.objectId;
+                this.logger.log(`  - ${name} (${obj.objectId})`);
+            }
+        }
+
+        objectList = objectList.filter((obj) =>
+            !existingFiles.some((f) => f.includes(obj.objectId))
+        );
+
+        this.logger.log(`Starting downloads for ${objectList.length} remaining object(s)\n`);
+
         // Sequential downloads
         const results = [];
         for (const obj of objectList) {
@@ -437,6 +467,7 @@ class LibraryDownloadMp4 extends Utility {
 
         // Summary
         this.logger.log("\n=== SUMMARY ===");
+        this.logger.log(`Skipped:    ${alreadyDownloaded.length}`);
         this.logger.log(`Processed:  ${objectList.length}`);
         this.logger.log(`Successful: ${results.length - failedDownloads.length}`);
         this.logger.log(`Failed:     ${failedDownloads.length}`);
