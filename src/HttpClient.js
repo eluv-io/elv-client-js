@@ -2,17 +2,20 @@ const URI = require("urijs");
 const Fetch = typeof fetch !== "undefined" ? fetch : require("node-fetch").default;
 const {LogMessage} = require("./LogMessage");
 const Utils = require("./Utils");
+const UrlJoin = require("url-join");
+const NetworkUrls = require("./NetworkUrls");
 
 class HttpClient {
   Log(message, error=false) {
     LogMessage(this, message, error);
   }
 
-  constructor({uris, debug}) {
+  constructor({uris, networkName, debug}) {
     this.uris = uris;
     this.uriIndex = 0;
     this.debug = debug;
     this.draftURIs = {};
+    this.networkName = networkName;
     this.retries = Math.max(3, uris.length);
   }
 
@@ -77,6 +80,19 @@ class HttpClient {
         // Use saved write token URI
         baseURI = this.draftURIs[writeToken];
       } else {
+        // Retrieve the node that this write token is for to ensure it is correct.
+        if(this.networkName) {
+          try {
+            const configUrl = new URL(NetworkUrls[this.networkName]);
+            configUrl.pathname = UrlJoin("/s", this.networkName, "nodes");
+            configUrl.searchParams.set("token", writeToken);
+            baseURI = new URI((await (await fetch(configUrl)).json()).nodes[0].services.fabric_api.urls[0]);
+          } catch(error) {
+            this.Log("Failed to retrieve write token node for " + writeToken);
+            this.Log(error);
+          }
+        }
+
         // Save current URI for all future requests involving this write token
         this.draftURIs[writeToken] = baseURI;
       }

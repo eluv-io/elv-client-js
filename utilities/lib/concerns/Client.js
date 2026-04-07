@@ -31,6 +31,11 @@ const blueprint = {
       descTemplate: "Geographic region for the fabric nodes.",
       group: "API",
       type: "string"
+    }),
+    NewOpt("node", {
+      descTemplate: "Pin all fabric and file-service requests to a specific node hostname or URL (e.g. host-76-74-28-240.contentfabric.io). Overrides the nodes returned by the config URL.",
+      group: "API",
+      type: "string"
     })
   ]
 };

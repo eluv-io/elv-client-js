@@ -1506,6 +1506,7 @@ exports.PlayoutOptions = async function({
       playoutMethods: {
         ...((playoutMap[protocol] || {}).playoutMethods || {}),
         [drm || "clear"]: {
+          properties: option.properties || {},
           playoutUrl:
             signedLink ?
               await this.LinkUrl({
