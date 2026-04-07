@@ -242,7 +242,25 @@ class LibraryDownloadMp4 extends Utility {
         fs.writeFileSync(failLogPath, JSON.stringify(entries, null, 2));
     }
 
-    async processObject(e, client, libraryId, format, offering, targetDir, failedDownloads, failLogPath) {
+    loadManifest(manifestPath) {
+        if (fs.existsSync(manifestPath)) {
+            try {
+                const data = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+                return new Set(Array.isArray(data) ? data : []);
+            } catch {
+                // malformed — start fresh
+            }
+        }
+        return new Set();
+    }
+
+    recordManifest(manifestPath, objectId) {
+        const ids = this.loadManifest(manifestPath);
+        ids.add(objectId);
+        fs.writeFileSync(manifestPath, JSON.stringify([...ids], null, 2));
+    }
+
+    async processObject(e, client, libraryId, format, offering, targetDir, failedDownloads, failLogPath, manifestPath) {
         const objectId = e.objectId;
         const objectName = R.path(["metadata", "public", "name"], e) || objectId;
 
@@ -250,17 +268,23 @@ class LibraryDownloadMp4 extends Utility {
 
         const formattedObj = { object_id: objectId, name: objectName };
 
-        // Skip existing
-        const existing = fs.readdirSync(targetDir).find((f) => f.includes(objectId));
-        if (existing) {
-            this.logger.log(`Skipping ${objectName}: already exists (${existing})`);
-            formattedObj.download_url = "SKIPPED_ALREADY_EXISTS";
-            return formattedObj;
-        }
-
         let jobId = null;
 
         try {
+            // Check for existing file by predicted name before starting job
+            const predictedBase = this.sanitizeFilename(objectName, objectId);
+            const existingFile = fs.readdirSync(targetDir).find((f) => {
+                const fBase = path.basename(f, path.extname(f));
+                const pBase = path.basename(predictedBase, path.extname(predictedBase));
+                return fBase === pBase;
+            });
+            if (existingFile) {
+                this.logger.log(`Skipping ${objectName}: file already exists (${existingFile})`);
+                this.recordManifest(manifestPath, objectId);
+                formattedObj.download_url = "SKIPPED_ALREADY_EXISTS";
+                return formattedObj;
+            }
+
             // Version hash
             const versionHash = await this.retry(() =>
                 this.concerns.FabricObject.latestVersionHash({ libraryId, objectId })
@@ -355,7 +379,8 @@ class LibraryDownloadMp4 extends Utility {
             formattedObj.download_url = downloadUrl;
 
             if (fs.existsSync(outputFile)) {
-                this.logger.log(`Skipping ${objectName}: already exists (${filename})`);
+                this.logger.log(`Skipping download — file already exists: ${outputFile}`);
+                this.recordManifest(manifestPath, objectId);
                 return formattedObj;
             }
 
@@ -363,6 +388,7 @@ class LibraryDownloadMp4 extends Utility {
             this.logger.log(`Downloading → ${outputFile}`);
             await this.downloadFile(downloadUrl, outputFile);
 
+            this.recordManifest(manifestPath, objectId);
             this.logger.log(`✔ Completed: ${outputFile}`);
             return formattedObj;
 
@@ -429,11 +455,11 @@ class LibraryDownloadMp4 extends Utility {
             this.logger.log(`Fail log will append to: ${failLogPath}`);
         }
 
-        // Skip objects already present in downloadDir before starting any jobs
-        const existingFiles = fs.readdirSync(targetDir);
-        const alreadyDownloaded = objectList.filter((obj) =>
-            existingFiles.some((f) => f.includes(obj.objectId))
-        );
+        // Load manifest of completed downloads to skip already-downloaded objects before starting any jobs
+        const manifestPath = path.join(targetDir, "_manifest.json");
+        const downloadedIds = this.loadManifest(manifestPath);
+
+        const alreadyDownloaded = objectList.filter((obj) => downloadedIds.has(obj.objectId));
 
         if (alreadyDownloaded.length > 0) {
             this.logger.log(`Skipping ${alreadyDownloaded.length} already downloaded object(s):`);
@@ -443,9 +469,7 @@ class LibraryDownloadMp4 extends Utility {
             }
         }
 
-        objectList = objectList.filter((obj) =>
-            !existingFiles.some((f) => f.includes(obj.objectId))
-        );
+        objectList = objectList.filter((obj) => !downloadedIds.has(obj.objectId));
 
         this.logger.log(`Starting downloads for ${objectList.length} remaining object(s)\n`);
 
@@ -460,7 +484,8 @@ class LibraryDownloadMp4 extends Utility {
                 offering,
                 targetDir,
                 failedDownloads,
-                failLogPath
+                failLogPath,
+                manifestPath
             );
             results.push(r);
         }
