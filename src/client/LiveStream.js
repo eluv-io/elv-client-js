@@ -3296,6 +3296,19 @@ exports.OutputsList = async function({libraryId, objectId, srtEndpoints}) {
     const srtUrl = `${srtEndpoints[0]}:11080?streamid=live-out.${objectId}-${key}.main`;
     value.srt_url = srtUrl;
 
+    if(value.input?.stream) {
+      const streamMetadata = await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        metadataSubtree: "public/name"
+      });
+
+      const streamStatus = await this.StreamStatus({name: value.input.stream});
+
+      value.input.name = streamMetadata;
+      value.input.status = streamStatus?.state;
+    }
+
     // Get status
     try {
       value.state = await this.OutputsState({outputId: key, objectId});
