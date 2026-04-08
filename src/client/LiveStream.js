@@ -3459,35 +3459,14 @@ exports.OutputsModify = async function({
   libraryId,
   objectId,
   outputId,
-  streamObjectId,
-  name,
-  description,
-  enabled,
-  reset,
-  geos=[],
-  passphrase,
-  stripRtp=false,
-  srtConfig
+  output
 }) {
   ValidateObject(objectId);
+  ValidatePresence("output", output);
 
   if(!libraryId) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
-
-  const output = {
-    enabled,
-    reset,
-    name,
-    description,
-    input: streamObjectId ? {stream: streamObjectId} : undefined,
-    srt_pull: {
-      connection: srtConfig ?? undefined,
-      elvgeos: geos,
-      passphrase,
-      strip_rtp: stripRtp
-    }
-  };
 
   const {writeToken} = await this.EditContentObject({libraryId, objectId});
 
