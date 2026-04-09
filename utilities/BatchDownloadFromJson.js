@@ -52,10 +52,15 @@ class BatchDownloadFromJson extends Utility {
     }
 
     runCurl(curlCmd, label) {
-        return new Promise((resolve, reject) => {
-            this.logger.log(`\nStarting: ${label}`);
+        return new Promise((resolve) => {
+            this.logger.log(`Starting: ${label}`);
 
-            const child = spawn(curlCmd, { shell: true, stdio: "inherit" });
+            // Use -s (silent) to suppress curl's progress meter, and pipe stdio
+            // so concurrent processes don't fight over the terminal and stall each other
+            const child = spawn(curlCmd + " -s", {
+                shell: true,
+                stdio: ["ignore", "pipe", "pipe"],
+            });
 
             child.on("close", (code) => {
                 if (code === 0) {
