@@ -51,13 +51,12 @@ class BatchDownloadFromJson extends Utility {
         return "Batch download objects from JSON using curl";
     }
 
-    runCurl(curlCmd, label) {
+    runCurl(curlBin, curlArgs, label) {
         return new Promise((resolve) => {
             this.logger.log(`Starting: ${label}`);
 
-            // Ignore all stdio so concurrent processes don't fight over the terminal
-            const child = spawn(curlCmd, {
-                shell: true,
+            // Spawn curl directly without a shell — avoids cmd.exe/PowerShell escaping issues
+            const child = spawn(curlBin, curlArgs, {
                 stdio: "ignore",
             });
 
@@ -138,10 +137,14 @@ class BatchDownloadFromJson extends Utility {
                 });
 
                 const outputPath = path.join(downloadDir, filename);
-                const psUrl = downloadUrl.replace(/@/g, "`@");
-                const curlCmd = `curl.exe -o "${outputPath}" "${psUrl}" -H "Authorization: Bearer ${token}"`;
+                const curlBin = process.platform === "win32" ? "curl.exe" : "curl";
+                const curlArgs = [
+                    "-o", outputPath,
+                    downloadUrl,
+                    "-H", `Authorization: Bearer ${token}`,
+                ];
 
-                const result = await this.runCurl(curlCmd, filename);
+                const result = await this.runCurl(curlBin, curlArgs, filename);
                 results.push({ ...result, object_id: objectId, name, label: filename });
             } catch (err) {
                 this.logger.error(`Failed to generate token for ${objectId}: ${err.message}`);
