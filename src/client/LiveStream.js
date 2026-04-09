@@ -104,19 +104,28 @@ const GetStreamProbe = async ({client, libraryId, objectId, streamUrl, endpoint}
   return probe;
 };
 
-const GetNodeFromStreamUrl = async ({client, url}) => {
-  const parsedName = url
-    .replace("udp://", "https://")
-    .replace("rtmp://", "https://")
-    .replace("rtp://", "https://")
-    .replace("srt://", "https://");
+const GetNodeFromStreamData = async ({client, url, nodeId}) => {
+  let nodes;
+  if(url) {
+    const parsedName = url
+      .replace("udp://", "https://")
+      .replace("rtmp://", "https://")
+      .replace("rtp://", "https://")
+      .replace("srt://", "https://");
 
-  const hostName = new URL(parsedName).hostname;
+    const hostName = new URL(parsedName).hostname;
+
+    client.Log(`Retrieving nodes - matching: ${hostName}`);
+
+    nodes = await client.SpaceNodes({matchEndpoint: hostName});
+  } else if(nodeId) {
+    console.log("nodeid", nodeId)
+    nodes = await client.SpaceNodes({matchNodeId: nodeId});
+
+    url = nodes?.[0].services.fabric_api?.urls?.[0];
+  }
+
   const streamUrlObject = new URL(url);
-
-  client.Log(`Retrieving nodes - matching: ${hostName}`);
-
-  const nodes = await client.SpaceNodes({matchEndpoint: hostName});
 
   if(nodes.length < 1) {
     throw new Error(`No node found for stream URL: ${streamUrlObject.href}. Wrong network?`);
@@ -1637,7 +1646,7 @@ exports.StreamSetOfferingAndDRM = async function({
 
     let node, endpoint, streamUrlObject;
     try {
-      ({node, endpoint, streamUrlObject} = await GetNodeFromStreamUrl({client: this, url}));
+      ({node, endpoint, streamUrlObject} = await GetNodeFromStreamData({client: this, url}));
       status.node = node;
     } catch(error) {
       status.error = error.message;
@@ -2583,15 +2592,20 @@ exports.StreamConfig = async function({
     liveRecordingConfigProfile = lrcMeta ?? LRCProfile;
   }
 
+  let nodeId = liveRecordingConfigProfile?.ingress_node_api;
+
   status.userConfig = liveRecordingConfigProfile;
 
-  // Get node URI from user config
-  let node, endpoint, streamUrl;
-  try {
-    ({node, endpoint, streamUrlObject: streamUrl} = await GetNodeFromStreamUrl({client: this, url: liveRecordingConfigProfile.url}));
-    status.node = node;
-  } catch(error) {
-    throw error;
+  if(!nodeId) {
+    // Get node URI from user config
+    let node, endpoint, streamUrl;
+    try {
+      ({node, endpoint, streamUrlObject: streamUrl} = await GetNodeFromStreamData({client: this, url: liveRecordingConfigProfile.url}));
+      status.node = node;
+      nodeId = node.id;
+    } catch(error) {
+      throw error;
+    }
   }
 
   // No stream data provided ; probe the stream for info
@@ -2610,7 +2624,7 @@ exports.StreamConfig = async function({
     url: liveRecordingConfigProfile.url,
     probeData: probe,
     liveRecordingMeta,
-    nodeId: node.id,
+    nodeId,
     nodeUrl: endpoint,
     includeAVSegDurations: false,
     overwriteOriginUrl: false,
