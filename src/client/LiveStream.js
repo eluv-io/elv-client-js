@@ -2596,16 +2596,24 @@ exports.StreamConfig = async function({
 
   status.userConfig = liveRecordingConfigProfile;
 
-  if(!nodeId) {
-    // Get node URI from user config
-    let node, endpoint, streamUrl;
-    try {
-      ({node, endpoint, streamUrlObject: streamUrl} = await GetNodeFromStreamData({client: this, url: liveRecordingConfigProfile.url}));
-      status.node = node;
-      nodeId = node.id;
-    } catch(error) {
-      throw error;
-    }
+  const streamData = {
+    client: this
+  };
+
+  if(nodeId) {
+    streamData.nodeId = nodeId;
+  } else {
+    streamData.url = liveRecordingConfigProfile.url;
+  }
+
+  // Get node URI from user config
+  let node, endpoint, streamUrl;
+  try {
+    ({node, endpoint, streamUrlObject: streamUrl} = await GetNodeFromStreamData(streamData));
+    status.node = node;
+    nodeId = node.id;
+  } catch(error) {
+    throw error;
   }
 
   // No stream data provided ; probe the stream for info
