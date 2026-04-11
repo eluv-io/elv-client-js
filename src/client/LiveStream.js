@@ -3306,7 +3306,7 @@ exports.OutputsList = async function({libraryId, objectId, srtEndpoints}) {
 
       const streamStatus = await this.StreamStatus({name: streamId});
 
-      value.input.name = streamMetadata.public?.name;
+      value.input.name = streamMetadata;
       value.input.status = streamStatus?.state;
     }
 
