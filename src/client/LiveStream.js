@@ -3295,17 +3295,18 @@ exports.OutputsList = async function({libraryId, objectId, srtEndpoints}) {
   for(const [key, value] of Object.entries(outputs)) {
     const srtUrl = `${srtEndpoints[0]}:11080?streamid=live-out.${objectId}-${key}.main`;
     value.srt_url = srtUrl;
+    const streamId = value.input?.stream;
 
-    if(value.input?.stream) {
+    if(streamId) {
       const streamMetadata = await this.ContentObjectMetadata({
-        libraryId,
-        objectId,
-        metadataSubtree: "public/name"
+        libraryId: await this.ContentObjectLibraryId({objectId: streamId}),
+        objectId: streamId,
+        metadataSubtree: "/public/name",
       });
 
-      const streamStatus = await this.StreamStatus({name: value.input.stream});
+      const streamStatus = await this.StreamStatus({name: streamId});
 
-      value.input.name = streamMetadata;
+      value.input.name = streamMetadata.public?.name;
       value.input.status = streamStatus?.state;
     }
 
@@ -3379,6 +3380,7 @@ exports.OutputsCreate = async function({
   libraryId,
   objectId,
   streamObjectId,
+  enabled,
   name,
   description,
   externalId,
@@ -3394,7 +3396,7 @@ exports.OutputsCreate = async function({
   }
 
   const output = {
-    enabled: true,
+    enabled,
     name,
     description,
     external_id: externalId,
