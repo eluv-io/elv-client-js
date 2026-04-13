@@ -66,7 +66,7 @@ const FileInfo = async ({path, fileList}) => {
   );
 };
 
-const GetStreamProbe = async ({client, libraryId, objectId, streamUrl, endpoint}) => {
+const GetStreamProbe = async ({client, libraryId, objectId, streamHref, endpoint}) => {
   client.SetNodes({fabricURIs: [endpoint]});
 
   let probe = {};
@@ -81,7 +81,7 @@ const GetStreamProbe = async ({client, libraryId, objectId, streamUrl, endpoint}
     probe = await client.utils.ResponseToJson(
       await HttpClient.Fetch(probeUrl, {
         body: JSON.stringify({
-          "filename": streamUrl.href,
+          "filename": streamHref,
           "listen": true
         }),
         method: "POST"
@@ -99,13 +99,13 @@ const GetStreamProbe = async ({client, libraryId, objectId, streamUrl, endpoint}
     }
   }
 
-  probe.format.filename = streamUrl.href;
+  probe.format.filename = streamHref;
 
   return probe;
 };
 
 const GetNodeFromStreamData = async ({client, url, nodeId, nodeApi}) => {
-  let nodes, streamUrlObject;
+  let nodes;
   if(url) {
     const parsedName = url
       .replace("udp://", "https://")
@@ -113,7 +113,8 @@ const GetNodeFromStreamData = async ({client, url, nodeId, nodeApi}) => {
       .replace("rtp://", "https://")
       .replace("srt://", "https://");
 
-    const hostName = new URL(parsedName).hostname;
+    // Use regex for hostname extraction — new URL() rejects ports > 65535 (e.g. SRT streams)
+    const hostName = parsedName.match(/^https?:\/\/([^/:]+)/)?.[1];
 
     client.Log(`Retrieving nodes - matching: ${hostName}`);
 
@@ -124,14 +125,11 @@ const GetNodeFromStreamData = async ({client, url, nodeId, nodeApi}) => {
     url = nodes?.[0].services.fabric_api?.urls?.[0];
   }
 
-  if(nodeApi) {
-    streamUrlObject = new URL(nodeApi);
-  } else {
-    streamUrlObject = new URL(url);
-  }
+  // Preserve the original stream URL (including any high port numbers) as a plain string
+  const streamHref = nodeApi ?? url;
 
   if(nodes.length < 1) {
-    throw new Error(`No node found for stream URL: ${streamUrlObject.href}. Wrong network?`);
+    throw new Error(`No node found for stream URL: ${streamHref}. Wrong network?`);
   }
 
   const node = {
@@ -141,7 +139,7 @@ const GetNodeFromStreamData = async ({client, url, nodeId, nodeApi}) => {
 
   const endpoint = node.endpoints[0];
 
-  return {node, endpoint, streamUrlObject};
+  return {node, endpoint, streamHref};
 };
 
 const CueInfo = async ({eventId, status}) => {
@@ -1654,9 +1652,9 @@ exports.StreamSetOfferingAndDRM = async function({
       streamData = {client: this, url};
     }
 
-    let node, endpoint, streamUrlObject;
+    let node, endpoint;
     try {
-      ({node, endpoint, streamUrlObject} = await GetNodeFromStreamData(streamData));
+      ({node, endpoint} = await GetNodeFromStreamData(streamData));
       status.node = node;
     } catch(error) {
       status.error = error.message;
@@ -2618,9 +2616,9 @@ exports.StreamConfig = async function({
   }
 
   // Get node URI from user config
-  let node, endpoint, streamUrl;
+  let node, endpoint, streamHref;
   try {
-    ({node, endpoint, streamUrlObject: streamUrl} = await GetNodeFromStreamData(streamData));
+    ({node, endpoint, streamHref} = await GetNodeFromStreamData(streamData));
     status.node = node;
     nodeId = node.id;
   } catch(error) {
@@ -2633,7 +2631,7 @@ exports.StreamConfig = async function({
       client: this,
       libraryId,
       objectId,
-      streamUrl,
+      streamHref,
       endpoint
     });
   }
