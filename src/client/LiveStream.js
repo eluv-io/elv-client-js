@@ -1645,11 +1645,18 @@ exports.StreamSetOfferingAndDRM = async function({
       writeToken
     });
 
-    const url = mainMeta?.live_recording?.fabric_config?.ingress_node_api || mainMeta?.live_recording_config?.url
+    const nodeId = mainMeta?.live_recording_config?.ingress_node_id;
+    let streamData;
+    if(nodeId) {
+      streamData = {client: this, nodeId, nodeApi: mainMeta?.live_recording_config?.url};
+    } else {
+      const url = mainMeta?.live_recording?.fabric_config?.ingress_node_api || mainMeta?.live_recording_config?.url;
+      streamData = {client: this, url};
+    }
 
     let node, endpoint, streamUrlObject;
     try {
-      ({node, endpoint, streamUrlObject} = await GetNodeFromStreamData({client: this, url}));
+      ({node, endpoint, streamUrlObject} = await GetNodeFromStreamData(streamData));
       status.node = node;
     } catch(error) {
       status.error = error.message;
