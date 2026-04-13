@@ -104,8 +104,8 @@ const GetStreamProbe = async ({client, libraryId, objectId, streamUrl, endpoint}
   return probe;
 };
 
-const GetNodeFromStreamData = async ({client, url, nodeId}) => {
-  let nodes;
+const GetNodeFromStreamData = async ({client, url, nodeId, nodeApi}) => {
+  let nodes, streamUrlObject;
   if(url) {
     const parsedName = url
       .replace("udp://", "https://")
@@ -119,13 +119,16 @@ const GetNodeFromStreamData = async ({client, url, nodeId}) => {
 
     nodes = await client.SpaceNodes({matchEndpoint: hostName});
   } else if(nodeId) {
-    console.log("nodeid", nodeId)
     nodes = await client.SpaceNodes({matchNodeId: nodeId});
 
     url = nodes?.[0].services.fabric_api?.urls?.[0];
   }
 
-  const streamUrlObject = new URL(url);
+  if(nodeApi) {
+    streamUrlObject = new URL(nodeApi);
+  } else {
+    streamUrlObject = new URL(url);
+  }
 
   if(nodes.length < 1) {
     throw new Error(`No node found for stream URL: ${streamUrlObject.href}. Wrong network?`);
@@ -194,7 +197,7 @@ const CueInfo = async ({eventId, status}) => {
  * @param {string=} options.permission - Permission level to set on the object
  * @param {boolean=} options.linkToSite - If enabled, will create a link in the live stream site
  * @param {boolean=} options.initializeDrm - If enabled, will initialize DRM for the object
- * @param {string=} options.ingressNodeApi - API endpoint of the ingress node used for stream allocation (required for non-public nodes)
+ * @param {string=} options.ingressNodeId - ID of the ingress node used for stream allocation (required for non-public nodes)
  *
  * @return {Promise<Object>} - Object containing objectId, libraryId, writeToken, and hash if finalized
  */
@@ -270,7 +273,7 @@ exports.StreamCreate = async function({
     displayTitle,
     description,
     permission="editable",
-    ingressNodeApi,
+    ingressNodeId,
     initializeDrm=true
   } = options;
 
@@ -287,7 +290,7 @@ exports.StreamCreate = async function({
   }
 
   liveRecordingConfig.url = url;
-  liveRecordingConfig.ingress_node_api = ingressNodeApi;
+  liveRecordingConfig.ingress_node_id = ingressNodeId;
 
   // Add access group permissions
   await Promise.all(
@@ -2592,7 +2595,7 @@ exports.StreamConfig = async function({
     liveRecordingConfigProfile = lrcMeta ?? LRCProfile;
   }
 
-  let nodeId = liveRecordingConfigProfile?.ingress_node_api;
+  let nodeId = liveRecordingConfigProfile?.ingress_node_id;
 
   status.userConfig = liveRecordingConfigProfile;
 
@@ -2602,6 +2605,7 @@ exports.StreamConfig = async function({
 
   if(nodeId) {
     streamData.nodeId = nodeId;
+    streamData.nodeApi = liveRecordingConfigProfile?.url;
   } else {
     streamData.url = liveRecordingConfigProfile.url;
   }
