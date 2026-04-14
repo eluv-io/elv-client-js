@@ -3626,7 +3626,9 @@ exports.OutputsModify = async function({
   libraryId,
   objectId,
   outputId,
-  output
+  output,
+  writeToken,
+  finalize=true
 }) {
   ValidateObject(objectId);
   ValidatePresence("output", output);
@@ -3636,6 +3638,9 @@ exports.OutputsModify = async function({
   }
 
   const {restore} = await RouteToOutputNode({client: this, libraryId, objectId, outputId});
+  if(!writeToken) {
+    ({writeToken} = await this.EditContentObject({libraryId, objectId}));
+  }
 
   try {
     const {writeToken} = await this.EditContentObject({libraryId, objectId});
@@ -3649,6 +3654,14 @@ exports.OutputsModify = async function({
       constant: false,
       body: output
     });
+  if(finalize) {
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Modify output"
+    });
+  }
 
     await this.FinalizeContentObject({
       libraryId,
