@@ -3441,6 +3441,12 @@ const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}
     nodeId = config?.srt_pull?.node_ids?.[0];
   }
 
+  // For the cases when a node ID isn't specified in the output (eg. create, or delete an output not associated with a node),
+  // use any eligible live egress node
+  if(!nodeId) {
+    nodeId = await RetrieveOutputNodeId({client});
+  }
+
   let egressEndpoint;
   if(nodeId) {
     const nodes = await client.SpaceNodes({matchNodeId: nodeId});
@@ -3560,40 +3566,52 @@ exports.OutputsCreate = async function({
 
   const resolvedNodeId = await RetrieveOutputNodeId({client: this, nodeIds, geos});
 
-  const output = {
-    enabled,
-    name,
-    description,
-    external_id: externalId,
-    input: streamObjectId ? {stream: streamObjectId} : undefined,
-    srt_pull: {
-      connection: srtConfig ?? undefined,
-      node_ids: [resolvedNodeId],
-      passphrase,
-      strip_rtp: stripRtp
-    }
-  };
+  // Route to the resolved egress node
+  const savedURIs = [...this.fabricURIs];
+  const nodes = await this.SpaceNodes({matchNodeId: resolvedNodeId});
+  const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+  if(fabricUrl) {
+    this.SetNodes({fabricURIs: [fabricUrl]});
+  }
 
-  const {writeToken} = await this.EditContentObject({libraryId, objectId});
+  try {
+    const output = {
+      enabled: streamObjectId ? enabled : false, // Oputput must be disabled if no stream specified
+      name,
+      description,
+      external_id: externalId,
+      input: streamObjectId ? {stream: streamObjectId} : undefined,
+      srt_pull: {
+        connection: srtConfig ?? undefined,
+        node_ids: [resolvedNodeId],
+        passphrase,
+        strip_rtp: stripRtp
+      }
+    };
 
-  // Note - you may create multiple outputs here, then finalize the transaction below
-  const outputs = await this.CallBitcodeMethod({
-    libraryId,
-    objectId,
-    writeToken,
-    method: "live/outputs",
-    constant: false,
-    body: output
-  });
+    const {writeToken} = await this.EditContentObject({libraryId, objectId});
 
-  await this.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken,
-    commitMessage: "Create output"
-  });
+    // Note - you may create multiple outputs here, then finalize the transaction below
+    const outputs = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      writeToken,
+      method: "live/outputs",
+      constant: false,
+      body: output
+    });
 
-  return outputs;
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Create output"
+    });
+
+    return outputs;
+  } finally {
+    this.SetNodes({fabricURIs: savedURIs});
+  }
 };
 
 /**
@@ -3731,23 +3749,29 @@ exports.OutputsDelete = async function({libraryId, objectId, outputId}) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  const {writeToken} = await this.EditContentObject({libraryId, objectId});
+  const {restore} = await RouteToOutputNode({client: this, libraryId, objectId, outputId});
 
-  const result = await this.CallBitcodeMethod({
-    libraryId,
-    objectId,
-    writeToken,
-    method: UrlJoin("live", "outputs", outputId),
-    verb: "DELETE",
-    constant: false,
-  });
+  try {
+    const {writeToken} = await this.EditContentObject({libraryId, objectId});
 
-  await this.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken,
-    commitMessage: "Remove output"
-  });
+    const result = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      writeToken,
+      method: UrlJoin("live", "outputs", outputId),
+      verb: "DELETE",
+      constant: false,
+    });
 
-  return result;
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Remove output"
+    });
+
+    return result;
+  } finally {
+    restore();
+  }
 };
