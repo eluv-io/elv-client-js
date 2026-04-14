@@ -3656,12 +3656,11 @@ exports.OutputsModify = async function({
   }
 
   const {restore} = await RouteToOutputNode({client: this, libraryId, objectId, outputId});
-  if(!writeToken) {
-    ({writeToken} = await this.EditContentObject({libraryId, objectId}));
-  }
 
   try {
-    const {writeToken} = await this.EditContentObject({libraryId, objectId});
+    if(!writeToken) {
+      ({writeToken} = await this.EditContentObject({libraryId, objectId}));
+    }
 
     const outputs = await this.CallBitcodeMethod({
       libraryId,
@@ -3672,21 +3671,15 @@ exports.OutputsModify = async function({
       constant: false,
       body: output
     });
-  if(finalize) {
-    await this.FinalizeContentObject({
-      libraryId,
-      objectId,
-      writeToken,
-      commitMessage: "Modify output"
-    });
-  }
 
-    await this.FinalizeContentObject({
-      libraryId,
-      objectId,
-      writeToken,
-      commitMessage: "Modify output"
-    });
+    if(finalize) {
+      await this.FinalizeContentObject({
+        libraryId,
+        objectId,
+        writeToken,
+        commitMessage: "Modify output"
+      });
+    }
 
     return outputs;
   } finally {
