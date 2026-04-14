@@ -17,6 +17,7 @@ const slugify = str => (str || "").toLowerCase().trim().replace(/ /g, "-").repla
 const LRCProfile = require("../live_recording_config_profiles/live_recording_config_default");
 const R = require("ramda");
 const UrlJoin = require("url-join");
+const URI = require("urijs");
 
 const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   const tok = await client.authClient.AuthorizationToken({libraryId, objectId,
@@ -3299,17 +3300,16 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
 };
 
 /**
- * List all live outputs for a stream object, enriched with SRT URLs and current state.
+ * List all live outputs for a stream object, enriched with current state.
  *
  * @methodGroup Live Stream
  * @namedParams
  * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
  * @param {string} objectId - Object ID of the output settings object
- * @param {Array<string>} srtEndpoints - List of SRT endpoint hostnames used to construct output SRT URLs
  *
- * @returns {Promise<Object>} - Map of output IDs to output info, each with srt_url and state fields added
+ * @returns {Promise<Object>} - Map of output IDs to output info, each with state field added
  */
-exports.OutputsList = async function({libraryId, objectId, srtEndpoints}) {
+exports.OutputsList = async function({libraryId, objectId}) {
   ValidateObject(objectId);
 
   if(!libraryId) {
@@ -3324,8 +3324,6 @@ exports.OutputsList = async function({libraryId, objectId, srtEndpoints}) {
   });
 
   for(const [key, value] of Object.entries(outputs)) {
-    const srtUrl = `${srtEndpoints[0]}:11080?streamid=live-out.${objectId}-${key}.main`;
-    value.srt_url = srtUrl;
     const streamId = value.input?.stream;
 
     if(streamId) {
@@ -3341,9 +3339,26 @@ exports.OutputsList = async function({libraryId, objectId, srtEndpoints}) {
       value.input.status = streamStatus?.state;
     }
 
-    // Get status
+    // Get live state and SRT URL from the output's egress node
     try {
-      value.state = await this.OutputsState({outputId: key, objectId});
+      const nodeId = value.srt_pull?.node_ids?.[0];
+
+      if(nodeId) {
+        const nodes = await this.SpaceNodes({matchNodeId: nodeId});
+        const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+        if(fabricUrl) {
+          // At this version of the live outputs API we need to replace the SRT URL here.
+          const egressHost = new URL(fabricUrl).hostname;
+          if(value.srt_pull?.urls) {
+            value.srt_pull.urls = value.srt_pull.urls.map(url =>
+              url.replace(/^srt:\/\/[^:/?]+/, `srt://${egressHost}`)
+            );
+          }
+        }
+      }
+
+      const result = await this.OutputsState({outputId: key, objectId, libraryId, nodeId});
+      value.state = result.state;
     } catch(error) {
       this.Log(`Failed to retrieve state for output ${key}: ${error.message}`, true);
       value.state = {};
@@ -3355,16 +3370,19 @@ exports.OutputsList = async function({libraryId, objectId, srtEndpoints}) {
 
 /**
  * Get the current state of a specific live output, including client and SRT stats.
+ * Retrieves the output config first to determine the egress node, then queries
+ * that specific node for live state.
  *
  * @methodGroup Live Stream
  * @namedParams
  * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
  * @param {string} objectId - Object ID of the output settings object
  * @param {string} outputId - ID of the output to retrieve state for
+ * @param {string=} nodeId - Node ID to query for state. If not provided, it will be retrieved from the output's config.
  *
  * @returns {Promise<Object>} - Current state of the output including client_stats and srt_stats
  */
-exports.OutputsState = async function({libraryId, objectId, outputId}) {
+exports.OutputsState = async function({libraryId, objectId, outputId, nodeId}) {
   ValidateObject(objectId);
   ValidatePresence("outputId", outputId);
 
@@ -3372,22 +3390,124 @@ exports.OutputsState = async function({libraryId, objectId, outputId}) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  const state = await this.CallBitcodeMethod({
-    libraryId,
-    objectId,
-    method: UrlJoin("live", "outputs", outputId, "state"),
-    queryParams: {
-      "client_stats": 1,
-      "srt_stats": 1
-    },
-    constant:  true
-  });
+  const {restore, config} = await RouteToOutputNode({client: this, libraryId, objectId, outputId, nodeId});
 
-  return state;
+  try {
+    const state = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: UrlJoin("live", "outputs", outputId, "state"),
+      queryParams: {
+        "client_stats": 1,
+        "srt_stats": 1
+      },
+      constant: true
+    });
+
+    return {
+      ...config,
+      state
+    };
+  } finally {
+    restore();
+  }
+};
+
+/**
+ * Pin (route) the client to the egress node for a specific output. Fetches the output config
+ * to determine the node ID then sets the client fabric URIs.
+ * Currently node ID is retrieved from srt_pull.node_ids (only srt_pull outputs are supported).
+ * Returns a function that restores the original fabric URIs.
+ *
+ * @param {Object} client - ElvClient instance
+ * @param {string} libraryId - Library ID of the output settings object
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output
+ * @param {string=} nodeId - Node ID if already known (skips config fetch)
+ * @returns {Promise<{restore: Function, config: Object, egressEndpoint: string}>} - restore function, output config, and egress node hostname
+ */
+const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}) => {
+  const savedURIs = [...client.fabricURIs];
+  const restore = () => client.SetNodes({fabricURIs: savedURIs});
+
+  let config;
+  if(!nodeId) {
+    config = await client.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: UrlJoin("live", "outputs", outputId),
+      constant: true
+    });
+    nodeId = config?.srt_pull?.node_ids?.[0];
+  }
+
+  let egressEndpoint;
+  if(nodeId) {
+    const nodes = await client.SpaceNodes({matchNodeId: nodeId});
+    const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+    if(fabricUrl) {
+      egressEndpoint = new URL(fabricUrl).hostname;
+      client.SetNodes({fabricURIs: [fabricUrl]});
+    }
+  }
+
+  // At this version of the live outputs API we need to replace the SRT URL here.
+  // The server returns an internal URL; replace it with the egress node endpoint.
+  if(config?.srt_pull?.urls && egressEndpoint) {
+    config.srt_pull.urls = config.srt_pull.urls.map(url => {
+      return url.replace(/^srt:\/\/[^:/?]+/, `srt://${egressEndpoint}`);
+    });
+  }
+
+  return {restore, config, egressEndpoint};
+};
+
+/**
+ * Resolve a node ID for live egress output. If nodeIds is provided, uses the first element directly.
+ * Otherwise, calls the /config API (optionally filtered by geo) to get live_egress endpoints,
+ * then resolves the first endpoint to a node ID via SpaceNodes.
+ *
+ * @param {Object} client - ElvClient instance
+ * @param {Array<string>=} nodeIds - Explicit node IDs to use
+ * @param {Array<string>=} geos - Geo regions to filter config API results (max 1)
+ * @returns {Promise<string>} - A node ID for the output
+ */
+const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
+  if(nodeIds) {
+    return nodeIds[0];
+  }
+
+  const uri = new URI(client.ConfigUrl());
+  uri.pathname("/config");
+  if(geos && geos.length > 0) {
+    uri.addSearch("elvgeo", geos[0]);
+  }
+
+  const fabricInfo = await client.utils.ResponseToJson(
+    HttpClient.Fetch(uri.toString())
+  );
+
+  const liveEgressUrls = fabricInfo.network.services.live_egress;
+  if(!liveEgressUrls || liveEgressUrls.length === 0) {
+    throw new Error("No live_egress endpoints found in fabric config");
+  }
+
+  // Extract hostname from the first live_egress URL and resolve to a node ID
+  const hostname = new URL(liveEgressUrls[0]).hostname;
+  const nodes = await client.SpaceNodes({matchEndpoint: hostname});
+  if(!nodes || nodes.length === 0) {
+    throw new Error(`No node found matching live_egress endpoint: ${hostname}`);
+  }
+
+  return nodes[0].id;
 };
 
 /**
  * Create a new live output.
+ *
+ * At the current version of the live outputs API an output will be pinned to a node, by either:
+ * - specifying the node directly in 'nodeIds'
+ * - specifying an 'elvgeo' and use fabric config 'live_egress' services to pick a node ID
  *
  * Note: Output creation and modification is transactional. To create multiple outputs in a single
  * transaction, use EditContentObject to open a write token, call CallBitcodeMethod for each output,
@@ -3400,7 +3520,8 @@ exports.OutputsState = async function({libraryId, objectId, outputId}) {
  * @param {string=} streamObjectId - Object ID of the input stream to use as the output source
  * @param {string=} name - Display name for the output
  * @param {string=} description - Description of the output
- * @param {Array<string>=} geos - List of geo regions for SRT delivery (e.g. ["test"])
+ * @param {Array<string>=} nodeIds - Explicit node ID(s) for SRT delivery (max 1)
+ * @param {Array<string>=} geos - Geo regions for SRT delivery (max 1) — used to resolve a node from live_egress endpoints
  * @param {string=} passphrase - SRT passphrase for encrypted delivery
  * @param {boolean=} stripRtp - Whether to strip RTP headers (default: false)
  * @param {Object=} srtConfig - Additional SRT connection configuration (see openapi-bitcode.html#tocssrtconnectionconfig)
@@ -3415,6 +3536,7 @@ exports.OutputsCreate = async function({
   name,
   description,
   externalId,
+  nodeIds,
   geos=[],
   passphrase,
   stripRtp=false,
@@ -3422,9 +3544,21 @@ exports.OutputsCreate = async function({
 }) {
   ValidateObject(objectId);
 
+  if(nodeIds && geos.length > 0) {
+    throw new Error("Specify either nodeIds or geos, not both");
+  }
+  if(nodeIds && nodeIds.length > 1) {
+    throw new Error("Only one node ID is supported — nodeIds must have at most 1 element");
+  }
+  if(geos.length > 1) {
+    throw new Error("Only one geo is supported — geos must have at most 1 element");
+  }
+
   if(!libraryId) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
+
+  const resolvedNodeId = await RetrieveOutputNodeId({client: this, nodeIds, geos});
 
   const output = {
     enabled,
@@ -3434,7 +3568,7 @@ exports.OutputsCreate = async function({
     input: streamObjectId ? {stream: streamObjectId} : undefined,
     srt_pull: {
       connection: srtConfig ?? undefined,
-      elvgeos: geos,
+      node_ids: [resolvedNodeId],
       passphrase,
       strip_rtp: stripRtp
     }
@@ -3501,26 +3635,32 @@ exports.OutputsModify = async function({
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  const {writeToken} = await this.EditContentObject({libraryId, objectId});
+  const {restore} = await RouteToOutputNode({client: this, libraryId, objectId, outputId});
 
-  const outputs = await this.CallBitcodeMethod({
-    libraryId,
-    objectId,
-    writeToken,
-    method: UrlJoin("live", "outputs", outputId),
-    verb: "PUT",
-    constant: false,
-    body: output
-  });
+  try {
+    const {writeToken} = await this.EditContentObject({libraryId, objectId});
 
-  await this.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken,
-    commitMessage: "Modify output"
-  });
+    const outputs = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      writeToken,
+      method: UrlJoin("live", "outputs", outputId),
+      verb: "PUT",
+      constant: false,
+      body: output
+    });
 
-  return outputs;
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Modify output"
+    });
+
+    return outputs;
+  } finally {
+    restore();
+  }
 };
 
 /**
@@ -3542,15 +3682,21 @@ exports.OutputsStop = async function({libraryId, objectId, outputId}) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  const {writeToken} = await this.EditContentObject({libraryId, objectId});
+  const {restore} = await RouteToOutputNode({client: this, libraryId, objectId, outputId});
 
-  return this.CallBitcodeMethod({
-    libraryId,
-    objectId,
-    writeToken,
-    method: UrlJoin("live", "outputs", outputId, "ctrl", "stop"),
-    constant: false
-  });
+  try {
+    const {writeToken} = await this.EditContentObject({libraryId, objectId});
+
+    return await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      writeToken,
+      method: UrlJoin("live", "outputs", outputId, "ctrl", "stop"),
+      constant: false
+    });
+  } finally {
+    restore();
+  }
 };
 
 /**
