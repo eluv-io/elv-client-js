@@ -3427,6 +3427,7 @@ exports.OutputsState = async function({libraryId, objectId, outputId, nodeId}) {
  * @returns {Promise<{restore: Function, config: Object, egressEndpoint: string}>} - restore function, output config, and egress node hostname
  */
 const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}) => {
+  console.log("ROuteToOutputNode", {outputId, nodeId})
   const savedURIs = [...client.fabricURIs];
   const restore = () => client.SetNodes({fabricURIs: savedURIs});
 
@@ -3439,12 +3440,14 @@ const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}
       constant: true
     });
     nodeId = config?.srt_pull?.node_ids?.[0];
+    console.log("nodeId from live/outputs/:id", nodeId)
   }
 
   // For the cases when a node ID isn't specified in the output (eg. create, or delete an output not associated with a node),
   // use any eligible live egress node
   if(!nodeId) {
     nodeId = await RetrieveOutputNodeId({client});
+    console.log("still no nodeId; retrieve any eligible node", nodeId)
   }
 
   let egressEndpoint;
@@ -3455,6 +3458,7 @@ const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}
       egressEndpoint = new URL(fabricUrl).hostname;
       client.SetNodes({fabricURIs: [fabricUrl]});
     }
+    console.log("SetNodes to fabricUrl: ", fabricUrl)
   }
 
   // At this version of the live outputs API we need to replace the SRT URL here.
@@ -3465,6 +3469,7 @@ const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}
     });
   }
 
+  console.log({restore, config, egressEndpoint})
   return {restore, config, egressEndpoint};
 };
 
@@ -3576,7 +3581,7 @@ exports.OutputsCreate = async function({
 
   try {
     const output = {
-      enabled: streamObjectId ? enabled : false, // Oputput must be disabled if no stream specified
+      enabled: streamObjectId ? enabled : false, // Output must be disabled if no stream specified
       name,
       description,
       external_id: externalId,
