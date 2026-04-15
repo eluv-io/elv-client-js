@@ -1053,6 +1053,7 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
       state = lroStatus.state;
       status.warnings = lroStatus.custom && lroStatus.custom.warnings;
       status.quality = lroStatus.custom && lroStatus.custom.quality;
+      status.input_stats = lroStatus.custom && lroStatus.custom.input_stats;
       if(lroStatus.custom && lroStatus.custom.status) {
         status.recordingStatus = lroStatus.custom.status;
       }
