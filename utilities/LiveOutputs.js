@@ -24,7 +24,7 @@
  */
 const { ElvClient } = require("../src/ElvClient");
 
-const OBJECT_ID = "iq__eiDtwuBbAfyJCQqFKS5drdeDToL";
+const OBJECT_ID = "iq__eiDtwuBbAfyJCQqFKS5drdeDToL";  // demov3
 
 const Init = async () => {
   const client = await ElvClient.FromNetworkName({networkName: "demov3"});
@@ -37,13 +37,13 @@ const Init = async () => {
 
 const List = async () => {
   const client = await Init();
-  const outputs = await client.OutputsList({objectId: OBJECT_ID});
+  const outputs = await client.OutputsList({objectId: OBJECT_ID, includeState: true});
   console.log(JSON.stringify(outputs, null, 2));
 };
 
 const Status = async (outputId) => {
   const client = await Init();
-  const state = await client.OutputsState({objectId: OBJECT_ID, outputId});
+  const state = await client.OutputsState({objectId: OBJECT_ID, outputId, includeState: true});
   console.log(JSON.stringify(state, null, 2));
 };
 
@@ -66,13 +66,7 @@ const Modify = async (outputId, {streamId, enable, passphrase, name}) => {
   const client = await Init();
 
   // Read current output to use as base
-  const outputs = await client.CallBitcodeMethod({
-    objectId: OBJECT_ID,
-    libraryId: await client.ContentObjectLibraryId({objectId: OBJECT_ID}),
-    method: "live/outputs",
-    constant: true
-  });
-  const output = outputs[outputId];
+  let output = await client.OutputsState({objectId: OBJECT_ID, outputId, includeState: false})
 
   if(streamId !== undefined) {
     output.input = {stream: streamId};

@@ -451,6 +451,7 @@ class FrameClient {
       "OutputsDelete",
       "OutputsList",
       "OutputsModify",
+      "OutputsModifyBatch",
       "OutputsState",
       "OutputsStop",
       "Permission",
