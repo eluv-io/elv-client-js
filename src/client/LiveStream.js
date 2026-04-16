@@ -3317,12 +3317,20 @@ exports.OutputsList = async function({libraryId, objectId}) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  const outputs = await this.CallBitcodeMethod({
-    libraryId,
-    objectId,
-    method: "live/outputs",
-    constant:  true
-  });
+  // Route to any live egress node for the initial list call (only necessary until the API is globally available)
+  const {restore} = await RouteToLiveEgress({client: this});
+
+  let outputs;
+  try {
+    outputs = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: "live/outputs",
+      constant:  true
+    });
+  } finally {
+    restore();
+  }
 
   for(const [key, value] of Object.entries(outputs)) {
     const streamId = value.input?.stream;
@@ -3472,6 +3480,32 @@ const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}
 
   console.log({restore, config, egressEndpoint})
   return {restore, config, egressEndpoint};
+};
+
+/**
+ * Pin (route) the client to any eligible live egress node from the /config API.
+ * Returns a function that restores the original fabric URIs.
+ *
+ * @param {Object} client - ElvClient instance
+ * @returns {Promise<{restore: Function, egressEndpoint: string}>} - restore function and egress node hostname
+ */
+const RouteToLiveEgress = async ({client}) => {
+  const savedURIs = [...client.fabricURIs];
+  const restore = () => client.SetNodes({fabricURIs: savedURIs});
+
+  const nodeId = await RetrieveOutputNodeId({client});
+
+  let egressEndpoint;
+  if(nodeId) {
+    const nodes = await client.SpaceNodes({matchNodeId: nodeId});
+    const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+    if(fabricUrl) {
+      egressEndpoint = new URL(fabricUrl).hostname;
+      client.SetNodes({fabricURIs: [fabricUrl]});
+    }
+  }
+
+  return {restore, egressEndpoint};
 };
 
 /**
