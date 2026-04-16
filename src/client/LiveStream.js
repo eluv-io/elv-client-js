@@ -3301,16 +3301,34 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
 };
 
 /**
- * List all live outputs for a stream object, enriched with current state.
+ * @typedef {Object} LiveOutput
+ * @property {boolean=} enabled - Whether the output is enabled
+ * @property {string=} name - Display name for the output
+ * @property {string=} description - Description of the output
+ * @property {string=} external_id - External identifier for the output
+ * @property {boolean=} reset - Whether to reset the output
+ * @property {Object=} input - Input stream configuration
+ * @property {string=} input.stream - Object ID of the input stream (null to disconnect)
+ * @property {Object=} srt_pull - SRT pull delivery configuration
+ * @property {Array<string>=} srt_pull.node_ids - Egress node IDs for SRT delivery (max 1)
+ * @property {string=} srt_pull.passphrase - SRT passphrase for encrypted delivery
+ * @property {boolean=} srt_pull.strip_rtp - Whether to strip RTP headers
+ * @property {Object=} srt_pull.connection - Additional SRT connection configuration
+ * @property {Array<string>=} srt_pull.urls - SRT URLs (returned by server, not set by caller)
+ */
+
+/**
+ * List all live outputs for a stream object, optionally including live state.
  *
  * @methodGroup Live Stream
  * @namedParams
  * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
  * @param {string} objectId - Object ID of the output settings object
+ * @param {boolean=} includeState - If true, also retrieve live state from each output's egress node (default: true)
  *
- * @returns {Promise<Object>} - Map of output IDs to output info, each with state field added
+ * @returns {Promise<Object<string, LiveOutput>>} - Map of output IDs to LiveOutput objects, each optionally with a `state` field
  */
-exports.OutputsList = async function({libraryId, objectId}) {
+exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
   ValidateObject(objectId);
 
   if(!libraryId) {
@@ -3348,29 +3366,30 @@ exports.OutputsList = async function({libraryId, objectId}) {
       value.input.status = streamStatus?.state;
     }
 
-    // Get live state and SRT URL from the output's egress node
-    try {
-      const nodeId = value.srt_pull?.node_ids?.[0];
-
-      if(nodeId) {
-        const nodes = await this.SpaceNodes({matchNodeId: nodeId});
-        const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
-        if(fabricUrl) {
-          // At this version of the live outputs API we need to replace the SRT URL here.
-          const egressHost = new URL(fabricUrl).hostname;
-          if(value.srt_pull?.urls) {
-            value.srt_pull.urls = value.srt_pull.urls.map(url =>
-              url.replace(/^srt:\/\/[^:/?]+/, `srt://${egressHost}`)
-            );
-          }
+    // Resolve egress node and replace SRT URL with the egress endpoint hostname
+    // This is only necessary because the backend API doesn't return the proper SRT URLs currently
+    const nodeId = value.srt_pull?.node_ids?.[0];
+    if(nodeId) {
+      const nodes = await this.SpaceNodes({matchNodeId: nodeId});
+      const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+      if(fabricUrl) {
+        const egressHost = new URL(fabricUrl).hostname;
+        if(value.srt_pull?.urls) {
+          value.srt_pull.urls = value.srt_pull.urls.map(url =>
+            url.replace(/^srt:\/\/[^:/?]+/, `srt://${egressHost}`)
+          );
         }
       }
+    }
 
-      const result = await this.OutputsState({outputId: key, objectId, libraryId, nodeId});
-      value.state = result.state;
-    } catch(error) {
-      this.Log(`Failed to retrieve state for output ${key}: ${error.message}`, true);
-      value.state = {};
+    if(includeState) {
+      try {
+        const result = await this.OutputsState({outputId: key, objectId, libraryId, nodeId, includeState: true});
+        value.state = result.state;
+      } catch(error) {
+        this.Log(`Failed to retrieve state for output ${key}: ${error.message}`, true);
+        value.state = {};
+      }
     }
   }
 
@@ -3378,9 +3397,9 @@ exports.OutputsList = async function({libraryId, objectId}) {
 };
 
 /**
- * Get the current state of a specific live output, including client and SRT stats.
- * Retrieves the output config first to determine the egress node, then queries
- * that specific node for live state.
+ * Get the configuration of a specific live output, optionally including live state.
+ * Retrieves the output config from a live egress node. If includeState is true, also
+ * queries the output's specific egress node for live client and SRT stats.
  *
  * @methodGroup Live Stream
  * @namedParams
@@ -3388,10 +3407,11 @@ exports.OutputsList = async function({libraryId, objectId}) {
  * @param {string} objectId - Object ID of the output settings object
  * @param {string} outputId - ID of the output to retrieve state for
  * @param {string=} nodeId - Node ID to query for state. If not provided, it will be retrieved from the output's config.
+ * @param {boolean=} includeState - If true, also retrieve live state from the output's egress node (default: true)
  *
- * @returns {Promise<Object>} - Current state of the output including client_stats and srt_stats
+ * @returns {Promise<LiveOutput>} - Output config, optionally with a `state` field containing client_stats and srt_stats
  */
-exports.OutputsState = async function({libraryId, objectId, outputId, nodeId}) {
+exports.OutputsState = async function({libraryId, objectId, outputId, nodeId, includeState=true}) {
   ValidateObject(objectId);
   ValidatePresence("outputId", outputId);
 
@@ -3399,9 +3419,16 @@ exports.OutputsState = async function({libraryId, objectId, outputId, nodeId}) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  const {restore, config} = await RouteToOutputNode({client: this, libraryId, objectId, outputId, nodeId});
+  // Route to a live egress node first so the output config fetch below succeeds
+  const {restore} = await RouteToLiveEgress({client: this});
 
   try {
+    const {config} = await RouteToOutputNode({client: this, libraryId, objectId, outputId, nodeId});
+
+    if(!includeState) {
+      return config;
+    }
+
     const state = await this.CallBitcodeMethod({
       libraryId,
       objectId,
@@ -3426,6 +3453,7 @@ exports.OutputsState = async function({libraryId, objectId, outputId, nodeId}) {
  * Pin (route) the client to the egress node for a specific output. Fetches the output config
  * to determine the node ID then sets the client fabric URIs.
  * Currently node ID is retrieved from srt_pull.node_ids (only srt_pull outputs are supported).
+ * Assumes the client is already routed to an eligible egress node (via RouteToLiveEgress).
  * Returns a function that restores the original fabric URIs.
  *
  * @param {Object} client - ElvClient instance
@@ -3433,10 +3461,9 @@ exports.OutputsState = async function({libraryId, objectId, outputId, nodeId}) {
  * @param {string} objectId - Object ID of the output settings object
  * @param {string} outputId - ID of the output
  * @param {string=} nodeId - Node ID if already known (skips config fetch)
- * @returns {Promise<{restore: Function, config: Object, egressEndpoint: string}>} - restore function, output config, and egress node hostname
+ * @returns {Promise<{restore: Function, config: Object}>} - restore function and output config
  */
 const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}) => {
-  console.log("ROuteToOutputNode", {outputId, nodeId})
   const savedURIs = [...client.fabricURIs];
   const restore = () => client.SetNodes({fabricURIs: savedURIs});
 
@@ -3449,37 +3476,26 @@ const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}
       constant: true
     });
     nodeId = config?.srt_pull?.node_ids?.[0];
-    console.log("nodeId from live/outputs/:id", nodeId)
   }
 
-  // For the cases when a node ID isn't specified in the output (eg. create, or delete an output not associated with a node),
-  // use any eligible live egress node
-  if(!nodeId) {
-    nodeId = await RetrieveOutputNodeId({client});
-    console.log("still no nodeId; retrieve any eligible node", nodeId)
-  }
-
-  let egressEndpoint;
   if(nodeId) {
     const nodes = await client.SpaceNodes({matchNodeId: nodeId});
     const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
     if(fabricUrl) {
-      egressEndpoint = new URL(fabricUrl).hostname;
       client.SetNodes({fabricURIs: [fabricUrl]});
+
+      // At this version of the live outputs API we need to replace the SRT URL here.
+      // The server returns an internal URL; replace it with the egress node endpoint.
+      if(config?.srt_pull?.urls) {
+        const egressHost = new URL(fabricUrl).hostname;
+        config.srt_pull.urls = config.srt_pull.urls.map(url =>
+          url.replace(/^srt:\/\/[^:/?]+/, `srt://${egressHost}`)
+        );
+      }
     }
-    console.log("SetNodes to fabricUrl: ", fabricUrl)
   }
 
-  // At this version of the live outputs API we need to replace the SRT URL here.
-  // The server returns an internal URL; replace it with the egress node endpoint.
-  if(config?.srt_pull?.urls && egressEndpoint) {
-    config.srt_pull.urls = config.srt_pull.urls.map(url => {
-      return url.replace(/^srt:\/\/[^:/?]+/, `srt://${egressEndpoint}`);
-    });
-  }
-
-  console.log({restore, config, egressEndpoint})
-  return {restore, config, egressEndpoint};
+  return {restore, config};
 };
 
 /**
@@ -3487,7 +3503,7 @@ const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}
  * Returns a function that restores the original fabric URIs.
  *
  * @param {Object} client - ElvClient instance
- * @returns {Promise<{restore: Function, egressEndpoint: string}>} - restore function and egress node hostname
+ * @returns {Promise<{restore: Function}>} - restore function
  */
 const RouteToLiveEgress = async ({client}) => {
   const savedURIs = [...client.fabricURIs];
@@ -3495,17 +3511,15 @@ const RouteToLiveEgress = async ({client}) => {
 
   const nodeId = await RetrieveOutputNodeId({client});
 
-  let egressEndpoint;
   if(nodeId) {
     const nodes = await client.SpaceNodes({matchNodeId: nodeId});
     const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
     if(fabricUrl) {
-      egressEndpoint = new URL(fabricUrl).hostname;
       client.SetNodes({fabricURIs: [fabricUrl]});
     }
   }
 
-  return {restore, egressEndpoint};
+  return {restore};
 };
 
 /**
@@ -3606,13 +3620,8 @@ exports.OutputsCreate = async function({
 
   const resolvedNodeId = await RetrieveOutputNodeId({client: this, nodeIds, geos});
 
-  // Route to the resolved egress node
-  const savedURIs = [...this.fabricURIs];
-  const nodes = await this.SpaceNodes({matchNodeId: resolvedNodeId});
-  const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
-  if(fabricUrl) {
-    this.SetNodes({fabricURIs: [fabricUrl]});
-  }
+  // Route to any live egress node
+  const {restore} = await RouteToLiveEgress({client: this});
 
   try {
     const output = {
@@ -3650,7 +3659,7 @@ exports.OutputsCreate = async function({
 
     return outputs;
   } finally {
-    this.SetNodes({fabricURIs: savedURIs});
+    restore();
   }
 };
 
@@ -3668,15 +3677,9 @@ exports.OutputsCreate = async function({
  * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
  * @param {string} objectId - Object ID of the output settings object
  * @param {string} outputId - ID of the output to modify
- * @param {string=} streamObjectId - Object ID of the input stream to use as the output source
- * @param {string=} name - Display name for the output
- * @param {string=} description - Description of the output
- * @param {boolean=} enabled - Whether the output is enabled
- * @param {boolean=} reset - Whether to reset the output
- * @param {Array<string>=} geos - List of geo regions for SRT delivery (e.g. ["test"])
- * @param {string=} passphrase - SRT passphrase for encrypted delivery
- * @param {boolean=} stripRtp - Whether to strip RTP headers (default: false)
- * @param {Object=} srtConfig - Additional SRT connection configuration (see openapi-bitcode.html#tocssrtconnectionconfig)
+ * @param {LiveOutput} output - Full output object to PUT (read the current output first, apply changes, then pass the result)
+ * @param {string=} writeToken - Write token to use. If not provided, a new edit will be opened.
+ * @param {boolean=} finalize - If true, finalize after modifying (default: true)
  *
  * @returns {Promise<Object>} - The modified output
  */
@@ -3695,7 +3698,8 @@ exports.OutputsModify = async function({
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  const {restore} = await RouteToOutputNode({client: this, libraryId, objectId, outputId});
+  // Route to any live egress node
+  const {restore} = await RouteToLiveEgress({client: this});
 
   try {
     if(!writeToken) {
@@ -3728,6 +3732,62 @@ exports.OutputsModify = async function({
 };
 
 /**
+ * Modify multiple live outputs in a single transaction.
+ *
+ * Takes a map of output IDs to partial output configurations. Routes to any eligible live
+ * egress node, opens a write token, posts the map to live/outputs, then finalizes.
+ *
+ * Example:
+ *   {
+ *     "out001": { "enabled": false, "input": { "stream": "iq__..." }, "name": "A03" },
+ *     "out002": { "enabled": true }
+ *   }
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {Object<string, LiveOutput>} outputs - Map of output IDs to output configurations
+ *
+ * @returns {Promise<Object>} - The response from the bitcode call
+ */
+exports.OutputsModifyBatch = async function({libraryId, objectId, outputs}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputs", outputs);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  const {restore} = await RouteToLiveEgress({client: this});
+
+  try {
+    const {writeToken} = await this.EditContentObject({libraryId, objectId});
+
+    const result = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      writeToken,
+      method: "live/outputs",
+      verb: "PUT",
+      constant: false,
+      body: outputs
+    });
+
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Modify outputs (batch)"
+    });
+
+    return result;
+  } finally {
+    restore();
+  }
+};
+
+/**
  * Stop a live output.
  *
  * @methodGroup Live Stream
@@ -3746,7 +3806,9 @@ exports.OutputsStop = async function({libraryId, objectId, outputId}) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  const {restore} = await RouteToOutputNode({client: this, libraryId, objectId, outputId});
+  // Route to a live egress node, then to the specific output's node
+  const {restore} = await RouteToLiveEgress({client: this});
+  await RouteToOutputNode({client: this, libraryId, objectId, outputId});
 
   try {
     const {writeToken} = await this.EditContentObject({libraryId, objectId});
@@ -3782,7 +3844,8 @@ exports.OutputsDelete = async function({libraryId, objectId, outputId}) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  const {restore} = await RouteToOutputNode({client: this, libraryId, objectId, outputId});
+  // Route to any live egress node
+  const {restore} = await RouteToLiveEgress({client: this});
 
   try {
     const {writeToken} = await this.EditContentObject({libraryId, objectId});
