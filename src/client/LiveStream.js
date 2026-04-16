@@ -3762,6 +3762,19 @@ exports.OutputsModifyBatch = async function({libraryId, objectId, outputs}) {
   const {restore} = await RouteToLiveEgress({client: this});
 
   try {
+    // Read all current outputs and merge changes on top
+    const current = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: "live/outputs",
+      constant: true
+    });
+
+    const merged = {...current};
+    for(const [id, changes] of Object.entries(outputs)) {
+      merged[id] = {...(current[id] || {}), ...changes};
+    }
+
     const {writeToken} = await this.EditContentObject({libraryId, objectId});
 
     const result = await this.CallBitcodeMethod({
@@ -3771,7 +3784,7 @@ exports.OutputsModifyBatch = async function({libraryId, objectId, outputs}) {
       method: "live/outputs",
       verb: "PUT",
       constant: false,
-      body: outputs
+      body: merged
     });
 
     await this.FinalizeContentObject({
