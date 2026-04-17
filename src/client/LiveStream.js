@@ -3390,6 +3390,7 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
 
     if(includeState) {
       try {
+        const nodeId = value.srt_pull?.node_ids?.[0];
         const result = await this.OutputsState({outputId: key, objectId, libraryId, nodeId, includeState: true});
         value.state = result.state;
       } catch(error) {
