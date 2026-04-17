@@ -3317,6 +3317,24 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  * @property {Array<string>=} srt_pull.urls - SRT URLs (returned by server, not set by caller)
  */
 
+// Resolve egress node and replace SRT URL with the egress endpoint hostname.
+// Necessary because the backend API doesn't return the proper SRT URLs currently.
+exports.OutputsResolveSrtPullUrls = async function({value}) {
+  const nodeId = value.srt_pull?.node_ids?.[0];
+  if(!nodeId) { return; }
+
+  const nodes = await this.SpaceNodes({matchNodeId: nodeId});
+  const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+  if(fabricUrl) {
+    const egressHost = new URL(fabricUrl).hostname;
+    if(value.srt_pull?.urls) {
+      value.srt_pull.urls = value.srt_pull.urls.map(url =>
+        url.replace(/^srt:\/\/[^:/?]+/, `srt://${egressHost}`)
+      );
+    }
+  }
+};
+
 /**
  * List all live outputs for a stream object, optionally including live state.
  *
@@ -3366,21 +3384,7 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
       value.input.status = streamStatus?.state;
     }
 
-    // Resolve egress node and replace SRT URL with the egress endpoint hostname
-    // This is only necessary because the backend API doesn't return the proper SRT URLs currently
-    const nodeId = value.srt_pull?.node_ids?.[0];
-    if(nodeId) {
-      const nodes = await this.SpaceNodes({matchNodeId: nodeId});
-      const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
-      if(fabricUrl) {
-        const egressHost = new URL(fabricUrl).hostname;
-        if(value.srt_pull?.urls) {
-          value.srt_pull.urls = value.srt_pull.urls.map(url =>
-            url.replace(/^srt:\/\/[^:/?]+/, `srt://${egressHost}`)
-          );
-        }
-      }
-    }
+    await this.OutputsResolveSrtPullUrls({value});
 
     if(includeState) {
       try {
@@ -3483,15 +3487,7 @@ const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}
     const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
     if(fabricUrl) {
       client.SetNodes({fabricURIs: [fabricUrl]});
-
-      // At this version of the live outputs API we need to replace the SRT URL here.
-      // The server returns an internal URL; replace it with the egress node endpoint.
-      if(config?.srt_pull?.urls) {
-        const egressHost = new URL(fabricUrl).hostname;
-        config.srt_pull.urls = config.srt_pull.urls.map(url =>
-          url.replace(/^srt:\/\/[^:/?]+/, `srt://${egressHost}`)
-        );
-      }
+      if(config) { await client.OutputsResolveSrtPullUrls({value: config}); }
     }
   }
 
