@@ -3321,7 +3321,7 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
 // Necessary because the backend API doesn't return the proper SRT URLs currently.
 exports.OutputsResolveSrtPullUrls = async function({value}) {
   const nodeId = value.srt_pull?.node_ids?.[0];
-  if(!nodeId) { return; }
+  if(!nodeId) { return value; }
 
   const nodes = await this.SpaceNodes({matchNodeId: nodeId});
   const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
@@ -3333,6 +3333,8 @@ exports.OutputsResolveSrtPullUrls = async function({value}) {
       );
     }
   }
+
+  return value;
 };
 
 /**
@@ -3368,7 +3370,7 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
     restore();
   }
 
-  for(const [key, value] of Object.entries(outputs)) {
+  for(let [key, value] of Object.entries(outputs)) {
     const streamId = value.input?.stream;
 
     if(streamId) {
@@ -3384,7 +3386,7 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
       value.input.status = streamStatus?.state;
     }
 
-    await this.OutputsResolveSrtPullUrls({value});
+    value = await this.OutputsResolveSrtPullUrls({value});
 
     if(includeState) {
       try {
@@ -3487,7 +3489,7 @@ const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}
     const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
     if(fabricUrl) {
       client.SetNodes({fabricURIs: [fabricUrl]});
-      if(config) { await client.OutputsResolveSrtPullUrls({value: config}); }
+      if(config) { config = await client.OutputsResolveSrtPullUrls({value: config}); }
     }
   }
 
