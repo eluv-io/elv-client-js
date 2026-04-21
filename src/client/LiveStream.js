@@ -3883,3 +3883,49 @@ exports.OutputsDelete = async function({libraryId, objectId, outputId}) {
     restore();
   }
 };
+
+/**
+ * Delete multiple live outputs in a single operation.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {Array<string>} outputs - List of output IDs to delete
+ *
+ * @returns {Promise<Object>} - Response from the delete call
+ */
+exports.OutputsDeleteBatch = async function({libraryId, objectId, outputs}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputs", outputs);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  const {restore} = await RouteToLiveEgress({client: this});
+
+  try {
+    const {writeToken} = await this.EditContentObject({libraryId, objectId});
+
+    const result = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      writeToken,
+      method: UrlJoin("live", "outputs", outputId),
+      verb: "DELETE",
+      constant: false,
+    });
+
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Remove outputs (batch)"
+    });
+
+    return result;
+  } finally {
+    restore();
+  }
+};
