@@ -49,7 +49,10 @@ const ContentObjectAudit = {
     ]
       .filter((v, i, s) => s.indexOf(v) === i);
 
-    const httpClient = new HttpClient({uris});
+    const httpClient = new HttpClient({
+      uris,
+      networkName: client.networkName
+    });
 
     let path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, live ? "call/live/audit" : "audit");
     let responses = await httpClient.RequestAll({

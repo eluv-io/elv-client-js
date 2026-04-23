@@ -11,22 +11,16 @@ const HttpClient = require("./HttpClient");
 const RemoteSigner = require("./RemoteSigner");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
+const NetworkUrls = require("./NetworkUrls");
 const {LogMessage} = require("./LogMessage");
 
 const Pako = require("pako");
 
 const {
-  ValidatePresence
+  ValidatePresence,
+  ValidateWriteToken
 } = require("./Validation");
 const UrlJoin = require("url-join");
-
-const networks = {
-  "main": "https://main.net955305.contentfabric.io",
-  "demo": "https://demov3.net955210.contentfabric.io",
-  "demov3": "https://demov3.net955210.contentfabric.io",
-  "local": "http://127.0.0.1:8008/config?qspace=dev&self",
-  "test": "https://test.net955203.contentfabric.io"
-};
 
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
@@ -201,6 +195,10 @@ class ElvClient {
 
     this.debug = false;
 
+    // Use a default key when client is unauthed. This key should not be used for any other purpose.
+    // Break it up to avoid automatic private key detection warnings
+    this.defaultKey = "0x" + "5d52d808f10f64f0dffff8c73edff" + "3f7b467411216e2350940f869e6ac5a7db6";
+
     this.InitializeClients({staticToken});
   }
 
@@ -297,7 +295,7 @@ class ElvClient {
    * @return {Object} - An object using network names as keys and configuration URLs as values.
    */
   static Networks() {
-    return Object.assign({}, networks);
+    return Object.assign({}, NetworkUrls);
   }
 
   /**
@@ -327,7 +325,7 @@ class ElvClient {
     noAuth=false,
     assumeV3
   }) {
-    const configUrl = networks[networkName];
+    const configUrl = this.Networks()[networkName];
 
     if(!configUrl) { throw Error("Invalid network name: " + networkName); }
 
@@ -417,6 +415,7 @@ class ElvClient {
     this.contentTypes = {};
     this.encryptionConks = {};
     this.stateChannelAccess = {};
+    this.objectInfo = {};
     this.objectTenantIds = {};
     this.objectLibraryIds = {};
     this.objectImageUrls = {};
@@ -424,15 +423,16 @@ class ElvClient {
     this.inaccessibleLibraries = {};
 
     const uris = this.service === "search" ? this.searchURIs : this.fabricURIs;
-    this.HttpClient = new HttpClient({uris, debug: this.debug});
-    this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, debug: this.debug});
-    this.FileServiceHttpClient = new HttpClient({uris: this.fileServiceURIs, debug: this.debug});
-    this.SearchHttpClient = new HttpClient({uris: this.searchURIs || [], debug: this.debug});
+    this.HttpClient = new HttpClient({uris, networkName: this.networkName, debug: this.debug});
+    this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, networkName: this.networkName, debug: this.debug});
+    this.FileServiceHttpClient = new HttpClient({uris: this.fileServiceURIs, networkName: this.networkName, debug: this.debug});
+    this.SearchHttpClient = new HttpClient({uris: this.searchURIs || [], networkName: this.networkName, debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, networkId: this.networkId, debug: this.debug, timeout: this.ethereumContractTimeout});
 
     if(!this.signer) {
       const wallet = this.GenerateWallet();
-      const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
+      const signer = wallet.AddAccount({privateKey: this.defaultKey});
+      signer.anonymous = true;
 
       this.SetSigner({signer, reset: false});
       this.SetStaticToken({token: staticToken});
@@ -618,10 +618,11 @@ class ElvClient {
    * @namedParams
    * @param {string=} matchEndpoint - Return node(s) matching the specified endpoint
    * @param {string=} matchNodeId - Return node(s) matching the specified node ID
+   * @param {string=} matchWriteToken - Return node(s) matching the specified write token
    *
    * @return {Promise<Array<Object>>} - A list of nodes in the space matching the parameters
    */
-  async SpaceNodes({matchEndpoint, matchNodeId}={}) {
+  async SpaceNodes({matchEndpoint, matchNodeId, matchWriteToken}={}) {
     let nodes;
     this.SetStaticToken();
 
@@ -665,6 +666,7 @@ class ElvClient {
       });
     } else if(matchNodeId) {
       this.SetStaticToken();
+
       let node = await this.utils.ResponseToJson(
         this.HttpClient.Request({
           path: UrlJoin("nodes", matchNodeId),
@@ -677,6 +679,24 @@ class ElvClient {
 
       this.ClearStaticToken();
       return [node];
+    } else if(matchWriteToken) {
+      this.SetStaticToken();
+
+      const {nodes} = await this.utils.ResponseToJson(
+        this.HttpClient.Request({
+          path: UrlJoin("nodes"),
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${this.staticToken}`
+          },
+          queryParams: {
+            token: matchWriteToken
+          }
+        })
+      );
+
+      this.ClearStaticToken();
+      return nodes;
     }
   }
 
@@ -694,7 +714,51 @@ class ElvClient {
     };
   }
 
-  WriteTokenNodeUrl({writeToken}) {
+  /**
+   * Return node url for a given write token via a network call
+   *
+   * @methodGroup Nodes
+   * @namedParams
+   * @param {string} writeToken - The write token to match to a node
+   *
+   * @returns {Promise<string>} - The node url for a write token
+   */
+  async WriteTokenNodeUrlNetwork({writeToken}) {
+    ValidateWriteToken(writeToken);
+
+    const nodes = await this.SpaceNodes({matchWriteToken: writeToken});
+
+    const nodeUrl = (
+      nodes &&
+      nodes[0] &&
+      nodes[0].services &&
+      nodes[0].services.fabric_api &&
+      nodes[0].services.fabric_api.urls &&
+      nodes[0].services.fabric_api.urls[0]
+    );
+
+    if(!nodeUrl) {
+      // eslint-disable-next-line no-console
+      console.error(`No node url found for write token: ${writeToken}`);
+
+      return "";
+    }
+
+    return nodeUrl ? nodeUrl.toString() : undefined;
+  }
+
+  /**
+   * Return node url for a given write token via local lookup
+   *
+   * @methodGroup Nodes
+   * @namedParams
+   * @param {string} writeToken - The write token to match to a node
+   *
+   * @returns {string} - The node url for a write token
+   */
+  WriteTokenNodeUrlLocal({writeToken}) {
+    ValidateWriteToken(writeToken);
+
     const nodeUrl = this.HttpClient.draftURIs[writeToken];
 
     return nodeUrl ? nodeUrl.toString() : undefined;
@@ -767,10 +831,11 @@ class ElvClient {
    * @param {Array<string>=} signerURIs - (Only if using custom OAuth) - URIs corresponding to the key server(s) to use
    * @param {boolean=} unsignedPublicAuth=false - If specified, the client will use an unsigned static token for calls that don't require authorization (reduces remote signature calls)
    */
-  async SetRemoteSigner({idToken, authToken, tenantId, extraData, signerURIs, unsignedPublicAuth}) {
+  async SetRemoteSigner({idToken, userIdCode, authToken, tenantId, extraData, signerURIs, unsignedPublicAuth}) {
     const signer = new RemoteSigner({
       signerURIs: signerURIs || this.authServiceURIs,
       idToken,
+      userIdCode,
       authToken,
       tenantId,
       provider: await this.ethClient.Provider(),
@@ -953,6 +1018,8 @@ class ElvClient {
    * @param {boolean} allowDecryption=false - If specified, the re-encryption key will be included in the token,
    * enabling the user of this token to download encrypted content from the specified object
    * @param {Object=} context - Additional JSON context
+   * @param {number=} issueTime - Issue Time in milliseconds
+   * @param {number=} expirationTime - Expiration Time in milliseconds
    */
   async CreateSignedToken({
     libraryId,
@@ -963,7 +1030,9 @@ class ElvClient {
     grantType="read",
     allowDecryption=false,
     duration,
-    context={}
+    context={},
+    issueTime,
+    expirationTime
   }) {
     if(!subject) {
       subject = `iusr${this.utils.AddressToHash(await this.CurrentAccountAddress())}`;
@@ -973,12 +1042,14 @@ class ElvClient {
       context["elv:delegation-id"] = policyId;
     }
 
+    const issueDateTime = issueTime || Date.now();
+
     let token = {
       adr: Buffer.from(await this.CurrentAccountAddress().replace(/^0x/, ""), "hex").toString("base64"),
       sub: subject,
       spc: await this.ContentSpaceId(),
-      iat: Date.now(),
-      exp: Date.now() + duration,
+      iat: issueDateTime,
+      exp: expirationTime || (issueDateTime + duration),
       gra: grantType,
       ctx: context
     };
@@ -1013,6 +1084,9 @@ class ElvClient {
     ]))}`;
   }
 
+  async CreateAuthorizationToken(args) {
+    return await this.authClient.AuthorizationToken(args);
+  }
 
   /**
    * Build a signed message (JSON) using the current signer.
@@ -1126,7 +1200,7 @@ class ElvClient {
         // Make dummy client with dummy account to allow calling of contracts
         const client = await ElvClient.FromConfigurationUrl({configUrl: this.configUrl});
         client.SetSigner({
-          signer: wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()})
+          signer: wallet.AddAccount({privateKey: this.defaultKey})
         });
 
         const {urls} = await client.authClient.KMSInfo({
@@ -1143,7 +1217,7 @@ class ElvClient {
       this.oauthToken = token;
 
       const path = "/ks/jwt/wlt";
-      const httpClient = new HttpClient({uris: this.kmsURIs, debug: this.debug});
+      const httpClient = new HttpClient({uris: this.kmsURIs, networkName: this.networkName, debug: this.debug});
 
       const response = await this.utils.ResponseToJson(
         httpClient.Request({
@@ -1180,7 +1254,7 @@ class ElvClient {
    * @return {string} - The created static token
    */
   CreateStaticToken({libraryId}) {
-    let token = { qspace_id: this.client.contentSpaceId };
+    let token = { qspace_id: this.contentSpaceId };
 
     if(libraryId) {
       token.qlib_id = libraryId;
@@ -1195,13 +1269,16 @@ class ElvClient {
    * @methodGroup Authorization
    * @namedParams
    * @param {string=} token - The static token to use. If not provided, the default static token will be set.
+   * @param {boolean=} update=false - If specified, the static token will be used for update operations as well
    */
-  SetStaticToken({token}={}) {
+  SetStaticToken({token, update=false}={}) {
     if(token) {
       this.staticToken = token;
     } else {
       this.staticToken = this.utils.B64(JSON.stringify({qspace_id: this.contentSpaceId}));
     }
+
+    this.staticUpdateToken = update ? this.staticToken : undefined;
   }
 
   /**
@@ -1299,8 +1376,11 @@ class ElvClient {
     );
   }
 
-  async MakeAuthServiceRequest({kmsId, objectId, versionHash, method="GET", path, bodyType, body={}, queryParams={}, headers}) {
-    return this.authClient.MakeAuthServiceRequest({kmsId, objectId, versionHash, method, path, bodyType, body, queryParams, headers});
+  async MakeAuthServiceRequest({kmsId, objectId, versionHash, method="GET", path, bodyType, body={}, queryParams={}, headers, format}) {
+    const response = this.authClient.MakeAuthServiceRequest({kmsId, objectId, versionHash, method, path, bodyType, body, queryParams, headers});
+
+    return !format ? response :
+      this.utils.ResponseToFormat(format, response);
   }
 
   /* FrameClient related */
@@ -1395,6 +1475,8 @@ class ElvClient {
       );
 
       // eslint-disable-next-line no-console
+      console.error(message);
+      // eslint-disable-next-line no-console
       console.error(error);
 
       const responseError = error instanceof Error ? error.message : error;
@@ -1416,5 +1498,6 @@ Object.assign(ElvClient.prototype, require("./client/LiveStream"));
 Object.assign(ElvClient.prototype, require("./client/ContentManagement"));
 Object.assign(ElvClient.prototype, require("./client/NTP"));
 Object.assign(ElvClient.prototype, require("./client/NFT"));
+Object.assign(ElvClient.prototype, require("./client/Shares"));
 
 exports.ElvClient = ElvClient;

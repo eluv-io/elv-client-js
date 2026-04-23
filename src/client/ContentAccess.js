@@ -573,31 +573,47 @@ exports.ContentObjects = async function({libraryId, filterOptions={}}) {
 };
 
 /**
- * Get a specific content object in the library
+ * Get info about a specific content object
  *
  * @methodGroup Content Objects
  * @namedParams
- * @param {string=} libraryId - ID of the library
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
  * @param {string=} writeToken - Write token for an object draft -- if supplied, versionHash will be ignored
  *
  * @returns {Promise<Object>} - Description of content object
  */
-exports.ContentObject = async function({libraryId, objectId, versionHash, writeToken}) {
-  ValidateParameters({libraryId, objectId, versionHash});
+exports.ContentObject = async function({objectId, versionHash, writeToken, noCache}) {
+  this.Log(`Retrieving content object: ${writeToken || versionHash || objectId}`);
 
-  this.Log(`Retrieving content object: ${libraryId || ""} ${writeToken || versionHash || objectId}`);
+  if(writeToken) {
+    objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+  } else if(versionHash) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  }
 
-  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+  ValidateObject(objectId);
 
-  let path = UrlJoin("q", writeToken || versionHash || objectId);
+  const id = writeToken || versionHash || objectId;
+  if(noCache || !this.objectInfo[id] || Date.now() - this.objectInfo[id].retrievedAt > 30000) {
+    let path = UrlJoin("q", id);
+    const info = await this.HttpClient.RequestJsonBody({
+      headers: await this.authClient.AuthorizationHeader({objectId, versionHash}),
+      method: "GET",
+      path: path,
+      queryParams: {
+        details: true,
+        profile: true
+      }
+    })
 
-  return await this.HttpClient.RequestJsonBody({
-    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
-    method: "GET",
-    path: path
-  });
+    this.objectInfo[id] = {
+      retrievedAt: Date.now(),
+      info
+    };
+  }
+
+  return this.objectInfo[id].info;
 };
 
 /**
@@ -605,22 +621,21 @@ exports.ContentObject = async function({libraryId, objectId, versionHash, writeT
  *
  * @methodGroup Content Objects
  * @namedParams
- * @param {string} libraryId
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object
  *
  * @returns {Promise<string>} - The account address of the owner
  */
-exports.ContentObjectOwner = async function({objectId}) {
-  ValidateObject(objectId);
+exports.ContentObjectOwner = async function({objectId, versionHash}) {
+  versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
+  if(versionHash) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  }
 
   this.Log(`Retrieving content object owner: ${objectId}`);
 
-  return this.utils.FormatAddress(
-    await this.ethClient.CallContractMethod({
-      contractAddress: this.utils.HashToAddress(objectId),
-      methodName: "owner",
-      methodArgs: []
-    })
-  );
+  return this.utils.HashToAddress((await this.ContentObject({objectId, versionHash})).content_profile.owner);
 };
 
 /**
@@ -637,16 +652,18 @@ exports.ContentObjectOwner = async function({objectId}) {
 exports.ContentObjectTenantId = async function({objectId, versionHash}) {
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
-  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+  if(versionHash) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  }
 
+  // Cache results because they will never change
   if(!this.objectTenantIds[objectId]) {
-    this.objectTenantIds[objectId] = await this.authClient.MakeElvMasterCall({
-      methodName: "elv_getTenantById",
-      params: [
-        this.contentSpaceId,
-        objectId
-      ]
-    });
+    try {
+      this.objectTenantIds[objectId] = (await this.ContentObject({objectId, versionHash})).content_profile.tenant_id;
+    } catch(error) {
+      error.message = `Unable to determine tenant ID for ${versionHash || objectId}`;
+      throw error;
+    }
   }
 
   return this.objectTenantIds[objectId];
@@ -666,43 +683,21 @@ exports.ContentObjectTenantId = async function({objectId, versionHash}) {
 exports.ContentObjectLibraryId = async function({objectId, versionHash}) {
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
-  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
-
-  switch(await this.authClient.AccessType(objectId)) {
-    case this.authClient.ACCESS_TYPES.LIBRARY:
-      return this.utils.AddressToLibraryId(this.utils.HashToAddress(objectId));
-    case this.authClient.ACCESS_TYPES.OBJECT:
-      if(!this.objectLibraryIds[objectId]) {
-        this.Log(`Retrieving content object library ID: ${objectId || versionHash}`);
-
-        this.objectLibraryIds[objectId] = new Promise(async (resolve, reject) => {
-          try {
-            resolve(
-              this.utils.AddressToLibraryId(
-                await this.CallContractMethod({
-                  contractAddress: this.utils.HashToAddress(objectId),
-                  methodName: "libraryAddress"
-                })
-              )
-            );
-          } catch(error) {
-            reject(error);
-          }
-        });
-      }
-
-      try {
-        return await this.objectLibraryIds[objectId];
-      } catch(error) {
-        delete this.objectLibraryIds[objectId];
-
-        throw error;
-      }
-    case this.authClient.ACCESS_TYPES.OTHER:
-      throw Error(`Unable to retrieve library ID for ${versionHash || objectId}: Unknown type. (wrong network or deleted object?)`);
-    default:
-      return this.contentSpaceLibraryId;
+  if(versionHash) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   }
+
+  // Cache results because they will never change
+  if(!this.objectLibraryIds[objectId]) {
+    try {
+      this.objectLibraryIds[objectId] = (await this.ContentObject({objectId, versionHash})).qlib_id;
+    } catch(error) {
+      error.message = `Unable to determine library ID for ${versionHash || objectId}`;
+      throw error;
+    }
+  }
+
+  return this.objectLibraryIds[objectId];
 };
 
 exports.ProduceMetadataLinks = async function({
@@ -934,8 +929,8 @@ exports.ContentObjectMetadata = async function({
     // For a 404 error, check if error was due to write token not found
     const errQwtoken = objectPath.get(error.body, "errors.0.cause.cause.cause.qwtoken");
     if(errQwtoken) {
-      // if so, re-throw rather than suppress error
-      throw error;
+      // if so, throw more specific/informative error rather than the generic 'Not found' error
+      throw new Error(`Write token ${errQwtoken} not found`);
     } else {
       // For all other 404 errors (not just 'subtree not found'), suppress error and
       // return an empty value. (there are function call chains that depend on this behavior,
@@ -1066,7 +1061,7 @@ exports.ContentObjectVersions = async function({libraryId, objectId}) {
 };
 
 /**
- * Retrieve the version hash of the latest version of the specified object from chain
+ * Retrieve the version hash of the latest version of the specified object via fabric API.
  *
  * @methodGroup Content Objects
  * @namedParams
@@ -1076,75 +1071,16 @@ exports.ContentObjectVersions = async function({libraryId, objectId}) {
  * @returns {Promise<string>} - The latest version hash of the object
  */
 exports.LatestVersionHash = async function({objectId, versionHash}) {
-  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
-
-  ValidateObject(objectId);
-
-  let latestHash;
-  try {
-    latestHash = await this.CallContractMethod({
-      contractAddress: this.utils.HashToAddress(objectId),
-      methodName: "objectHash"
-    });
-  // eslint-disable-next-line no-empty
-  } catch(error) {}
-
-  if(!latestHash) {
-    let versionCount;
-    try {
-      versionCount = await this.CallContractMethod({
-        contractAddress: this.utils.HashToAddress(objectId),
-        methodName: "countVersionHashes"
-      });
-    // eslint-disable-next-line no-empty
-    } catch(error) {}
-
-    if(!versionCount || !versionCount.toNumber()) {
-      throw Error(`Unable to determine latest version hash for ${versionHash || objectId} - Item deleted?`);
-    }
-
-    latestHash = await this.CallContractMethod({
-      contractAddress: this.utils.HashToAddress(objectId),
-      methodName: "versionHashes",
-      methodArgs: [versionCount - 1]
-    });
+  if(versionHash) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   }
 
-  return latestHash;
-};
-
-/**
- * Retrieve the version hash of the latest version of the specified object via fabric API.
- * Requires authorization.
- *
- * @methodGroup Content Objects
- * @namedParams
- * @param {string=} objectId - ID of the object
- * @param {string=} versionHash - Version hash of the object
- *
- * @returns {Promise<string>} - The latest version hash of the object
- */
-exports.LatestVersionHashV2 = async function({objectId, versionHash}) {
-  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
-
-  ValidateObject(objectId);
-
-  let latestHash;
   try {
-    let path = UrlJoin("q", objectId);
-
-    let q = await this.HttpClient.RequestJsonBody({
-      headers: await this.authClient.AuthorizationHeader({objectId}),
-      method: "GET",
-      path: path
-    });
-    latestHash = q.hash;
-
+    return (await this.ContentObject({objectId, noCache: true})).hash;
   } catch(error) {
     error.message = `Unable to determine latest version hash for ${versionHash || objectId}`;
     throw error;
   }
-  return latestHash;
 };
 
 /* URL Methods */
@@ -1454,7 +1390,7 @@ exports.PlayoutOptions = async function({
 
   try {
     // If public/asset_metadata/sources/<offering> exists, use that instead of directly calling on object
-    if(!linkPath) {
+    if(!linkPath && handler === "playout") {
       const offeringPath = UrlJoin("public", "asset_metadata", "sources", offering);
       const link = await this.ContentObjectMetadata({
         libraryId,
@@ -1569,10 +1505,12 @@ exports.PlayoutOptions = async function({
       playoutMethods: {
         ...((playoutMap[protocol] || {}).playoutMethods || {}),
         [drm || "clear"]: {
+          properties: option.properties || {},
           playoutUrl:
             signedLink ?
               await this.LinkUrl({
                 versionHash,
+                writeToken,
                 linkPath: UrlJoin(linkPath, offering, playoutPath),
                 queryParams,
                 noAuth: true
@@ -1581,6 +1519,7 @@ exports.PlayoutOptions = async function({
                 libraryId: linkTarget.libraryId || libraryId,
                 objectId: linkTarget.objectId || objectId,
                 versionHash: linkTarget.versionHash || versionHash,
+                writeToken,
                 rep: UrlJoin(handler, offering, playoutPath),
                 noAuth: true,
                 queryParams
@@ -1938,14 +1877,12 @@ exports.MakeFileServiceRequest = async function({
     queryPath = UrlJoin("qlibs", libraryId, queryPath);
   }
 
-  let authorization = [
+  queryParams.authorization = [
     authorizationToken,
     await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, encryption, makeAccessRequest: encryption === "cgck"})
   ]
     .flat()
     .filter(token => token);
-
-  headers.Authorization = headers.Authorization || authorization.map(token => `Bearer ${token}`);
 
   return this.utils.ResponseToFormat(
     format,
@@ -1973,6 +1910,7 @@ exports.MakeFileServiceRequest = async function({
  * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
  * @param {string=} writeToken - Write token of an object draft - if calling bitcode of a draft object
  * @param {string} method - Bitcode method to call
+ * @param {string} verb - HTTP verb (GET, POST, PUT, DELETE, ...)
  * @param {Object=} queryParams - Query parameters to include in the request
  * @param {Object=} body - Request body to include, if calling a non-constant method
  * @param {Object=} headers - Request headers to include
@@ -1988,6 +1926,7 @@ exports.CallBitcodeMethod = async function({
   versionHash,
   writeToken,
   method,
+  verb,
   queryParams={},
   body={},
   headers={},
@@ -2016,9 +1955,10 @@ exports.CallBitcodeMethod = async function({
     ).Authorization;
   }
 
+  verb = verb ? verb : (constant ? "GET" : "POST");
   this.Log(
     `Calling bitcode method: ${libraryId || ""} ${objectId || versionHash} ${writeToken || ""}
-      ${constant ? "GET" : "POST"} ${path}
+      ${verb} ${path}
       Query Params:
       ${JSON.stringify(queryParams || "")}
       Body:
@@ -2032,7 +1972,7 @@ exports.CallBitcodeMethod = async function({
     await this.HttpClient.Request({
       body,
       headers,
-      method: constant ? "GET" : "POST",
+      method: verb,
       path,
       queryParams,
       allowFailover: false
@@ -2051,6 +1991,7 @@ exports.CallBitcodeMethod = async function({
  * @namedParams
  * @param {string=} libraryId - ID of the library
  * @param {string=} objectId - ID of the object
+ * @param {string=} writeToken - A write token for a draft of the object (requires libraryId)
  * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
  * @param {string} rep - Representation to use
  * @param {Object=} queryParams - Query params to add to the URL
@@ -2066,11 +2007,11 @@ exports.CallBitcodeMethod = async function({
  *
  * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
  */
-exports.Rep = async function({libraryId, objectId, versionHash, rep, queryParams={}, service="fabric", makeAccessRequest=false, channelAuth=false, noAuth=false, noCache=false}) {
+exports.Rep = async function({libraryId, objectId, versionHash, writeToken, rep, queryParams={}, service="fabric", makeAccessRequest=false, channelAuth=false, noAuth=false, noCache=false}) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(!rep) { throw "Rep not specified"; }
 
-  return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, service, makeAccessRequest, channelAuth, noAuth, noCache});
+  return this.FabricUrl({libraryId, objectId, versionHash, writeToken, rep, queryParams, service, makeAccessRequest, channelAuth, noAuth, noCache});
 };
 
 /**
@@ -2520,7 +2461,7 @@ exports.EmbedUrl = async function({
     embedUrl.searchParams.set("data", this.utils.B64(JSON.stringify({meta_tags: data})));
   }
 
-  if(["owner", "editable", "viewable"].includes(permission)) {
+  if(["owner", "editable", "viewable", "listable"].includes(permission)) {
     const token = await this.CreateSignedToken({
       objectId,
       versionHash,
