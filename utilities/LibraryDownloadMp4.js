@@ -200,7 +200,20 @@ class LibraryDownloadMp4 extends Utility {
             .substring(0, 180);
     }
 
-    async processObject(e, client, libraryId, format, offering, targetDir, failedDownloads) {
+    appendFailEntry(failLogPath, entry) {
+        let entries = [];
+        if (fs.existsSync(failLogPath)) {
+            try {
+                entries = JSON.parse(fs.readFileSync(failLogPath, "utf8"));
+            } catch {
+                // If the file is malformed just start fresh
+            }
+        }
+        entries.push(entry);
+        fs.writeFileSync(failLogPath, JSON.stringify(entries, null, 2));
+    }
+
+    async processObject(e, client, libraryId, format, offering, targetDir, failedDownloads, failLogPath) {
         const objectId = e.objectId;
         const objectName = R.path(["metadata", "public", "name"], e) || objectId;
 
@@ -238,6 +251,8 @@ class LibraryDownloadMp4 extends Utility {
             // Poll job
             let status;
             let lastProgress = -1;
+            const maxPolls = 300; // 10 minutes at 2s intervals
+            let pollCount = 0;
 
             do {
                 await this.sleep(2000);
@@ -248,6 +263,16 @@ class LibraryDownloadMp4 extends Utility {
                         path: `/call/media/files/${jobId}`,
                     })
                 );
+
+                const jobStatus = status?.status;
+                if (jobStatus === "failed" || jobStatus === "error") {
+                    throw new Error(`Job ${jobId} failed with status: ${jobStatus}`);
+                }
+
+                pollCount++;
+                if (pollCount >= maxPolls) {
+                    throw new Error(`Job ${jobId} timed out after ${maxPolls} polling attempts`);
+                }
 
                 const progress = status?.progress || 0;
                 if (progress !== lastProgress) {
@@ -278,6 +303,11 @@ class LibraryDownloadMp4 extends Utility {
 
             formattedObj.download_url = downloadUrl;
 
+            if (fs.existsSync(outputFile)) {
+                this.logger.log(`Skipping ${objectName}: already exists (${filename})`);
+                return formattedObj;
+            }
+
             // NOW using HTTPS downloader
             this.logger.log(`Downloading → ${outputFile}`);
             await this.downloadFile(downloadUrl, outputFile);
@@ -288,12 +318,22 @@ class LibraryDownloadMp4 extends Utility {
         } catch (err) {
             this.logger.error(`FAILED: ${objectId} - ${err.message}`);
 
-            failedDownloads.push({
+            const fileServiceUrl = client.FileServiceHttpClient?.uris?.[client.FileServiceHttpClient.uriIndex] || "unknown";
+
+            const failEntry = {
                 object_id: objectId,
                 name: objectName,
                 error: err.message,
+                file_service_url: fileServiceUrl,
                 timestamp: new Date().toISOString(),
-            });
+            };
+
+            failedDownloads.push(failEntry);
+
+            if (failLogPath) {
+                this.appendFailEntry(failLogPath, failEntry);
+                this.logger.warn(`Failure recorded → ${failLogPath}`);
+            }
 
             return formattedObj;
         }
@@ -328,6 +368,13 @@ class LibraryDownloadMp4 extends Utility {
         if (!fs.existsSync(targetDir))
             fs.mkdirSync(targetDir, { recursive: true });
 
+        // Initialize fail log file with empty array at the start of the run
+        const failLogPath = this.args.failLog ? path.resolve(this.args.failLog) : null;
+        if (failLogPath) {
+            fs.writeFileSync(failLogPath, JSON.stringify([], null, 2));
+            this.logger.log(`Fail log initialized: ${failLogPath}`);
+        }
+
         // Sequential downloads
         const results = [];
         for (const obj of objectList) {
@@ -338,7 +385,8 @@ class LibraryDownloadMp4 extends Utility {
                 format,
                 offering,
                 targetDir,
-                failedDownloads
+                failedDownloads,
+                failLogPath
             );
             results.push(r);
         }
@@ -353,10 +401,8 @@ class LibraryDownloadMp4 extends Utility {
             this.logger.warn("\n=== FAILED DOWNLOADS ===");
             this.logger.logTable({ list: failedDownloads });
 
-            if (this.args.failLog) {
-                const failPath = path.resolve(this.args.failLog);
-                fs.writeFileSync(failPath, JSON.stringify(failedDownloads, null, 2));
-                this.logger.warn(`Failures written to: ${failPath}`);
+            if (failLogPath) {
+                this.logger.warn(`Full failure log: ${failLogPath}`);
             }
         }
 
