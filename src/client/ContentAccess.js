@@ -1786,17 +1786,14 @@ exports.GlobalUrl = async function({
   );
 
   // Pull auth out of query params
-  if(
-    queryParams.authorization &&
-    (
-      typeof queryParams.authorization === "string" ||
-      (Array.isArray(queryParams.authorization) && queryParams.authorization.length === 1)
-    )
-  ) {
+  if(!queryParams.authorization) {
     queryParams = {...queryParams};
-    authorizationToken = typeof queryParams.authorization === "string" ?
-      queryParams.authorization :
-      queryParams.authorization[0];
+    queryParams.authorization = await this.authClient.AuthorizationToken({
+      libraryId,
+      objectId,
+      versionHash,
+      noAuth
+    });
   }
 
   if(writeToken) {
@@ -1807,19 +1804,8 @@ exports.GlobalUrl = async function({
     }
   }
 
+  console.log("Updated")
   let urlPath = UrlJoin("s", network);
-  if(!noAuth || authorizationToken) {
-    urlPath = UrlJoin(
-      "t",
-      authorizationToken || await this.authClient.AuthorizationToken({
-        libraryId,
-        objectId,
-        versionHash,
-        noAuth
-      })
-    );
-  }
-
   if(versionHash) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   } else {
