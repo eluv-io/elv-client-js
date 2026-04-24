@@ -597,19 +597,19 @@ exports.ContentObject = async function({objectId, versionHash, writeToken, noCac
   const id = writeToken || versionHash || objectId;
   if(noCache || !this.objectInfo[id] || Date.now() - this.objectInfo[id].retrievedAt > 30000) {
     let path = UrlJoin("q", id);
+    const info = await this.HttpClient.RequestJsonBody({
+      headers: await this.authClient.AuthorizationHeader({objectId, versionHash}),
+      method: "GET",
+      path: path,
+      queryParams: {
+        details: true,
+        profile: true
+      }
+    })
+
     this.objectInfo[id] = {
       retrievedAt: Date.now(),
-      info: (
-        await this.HttpClient.RequestJsonBody({
-          headers: await this.authClient.AuthorizationHeader({objectId, versionHash}),
-          method: "GET",
-          path: path,
-          queryParams: {
-            details: true,
-            profile: true
-          }
-        })
-      )
+      info
     };
   }
 
@@ -1505,6 +1505,7 @@ exports.PlayoutOptions = async function({
       playoutMethods: {
         ...((playoutMap[protocol] || {}).playoutMethods || {}),
         [drm || "clear"]: {
+          properties: option.properties || {},
           playoutUrl:
             signedLink ?
               await this.LinkUrl({
@@ -1785,17 +1786,14 @@ exports.GlobalUrl = async function({
   );
 
   // Pull auth out of query params
-  if(
-    queryParams.authorization &&
-    (
-      typeof queryParams.authorization === "string" ||
-      (Array.isArray(queryParams.authorization) && queryParams.authorization.length === 1)
-    )
-  ) {
+  if(!queryParams.authorization) {
     queryParams = {...queryParams};
-    authorizationToken = typeof queryParams.authorization === "string" ?
-      queryParams.authorization :
-      queryParams.authorization[0];
+    queryParams.authorization = await this.authClient.AuthorizationToken({
+      libraryId,
+      objectId,
+      versionHash,
+      noAuth
+    });
   }
 
   if(writeToken) {
@@ -1806,19 +1804,8 @@ exports.GlobalUrl = async function({
     }
   }
 
+  console.log("Updated")
   let urlPath = UrlJoin("s", network);
-  if(!noAuth || authorizationToken) {
-    urlPath = UrlJoin(
-      "t",
-      authorizationToken || await this.authClient.AuthorizationToken({
-        libraryId,
-        objectId,
-        versionHash,
-        noAuth
-      })
-    );
-  }
-
   if(versionHash) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   } else {

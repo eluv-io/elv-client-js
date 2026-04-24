@@ -1264,7 +1264,7 @@ class ElvWalletClient {
       return response
         .map(status => {
           let [op, address, id] = status.op.split(":");
-          address = address.startsWith("0x") ? Utils.FormatAddress(address) : address;
+          address = address && address.startsWith("0x") ? Utils.FormatAddress(address) : address;
 
           let confirmationId, tokenId, offerId, giftId;
           if(op === "nft-buy") {
