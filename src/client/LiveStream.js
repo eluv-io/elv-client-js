@@ -542,10 +542,11 @@ exports.StreamLinkToSite = async function({
  * @param {string=} slug - Slug of the object
  * @param {string=} siteObjectId - Object ID of the site (defaults to rootStore.dataStore.siteId)
  * @param {string=} siteLibraryId - Library ID of the site (defaults to rootStore.dataStore.siteLibraryId)
- *
+ * @param {string=} writeToken - Write token for the draft object. If not provided, a new edit will be opened and finalized.
+ * @param {boolean=} finalize - If enabled, the site object will be finalized after the removal (default: true)
  * @return {Promise<void>}
  */
-exports.StreamRemoveLinkToSite = async function({objectId, slug}) {
+exports.StreamRemoveLinkToSite = async function({objectId, slug, writeToken, finalize=true}) {
   try {
     if(!objectId && !slug) {
       throw new Error("Either objectId or slug must be provided.");
@@ -574,10 +575,12 @@ exports.StreamRemoveLinkToSite = async function({objectId, slug}) {
     if(slug) {
       delete streamMetadata[slug];
 
-      const {writeToken} = await this.EditContentObject({
-        libraryId: siteLibraryId,
-        objectId: siteObjectId
-      });
+      if(!writeToken) {
+        ({writeToken} = await this.EditContentObject({
+          libraryId: siteLibraryId,
+          objectId: siteObjectId
+        }));
+      }
 
       await this.DeleteMetadata({
         libraryId: siteLibraryId,
@@ -586,13 +589,15 @@ exports.StreamRemoveLinkToSite = async function({objectId, slug}) {
         metadataSubtree: `public/asset_metadata/live_streams/${slug}`
       });
 
-      await this.FinalizeContentObject({
-        libraryId: siteLibraryId,
-        objectId: siteObjectId,
-        writeToken,
-        commitMessage: "Remove live stream",
-        awaitCommitConfirmation: true
-      });
+      if(finalize) {
+        await this.FinalizeContentObject({
+          libraryId: siteLibraryId,
+          objectId: siteObjectId,
+          writeToken,
+          commitMessage: "Remove live stream",
+          awaitCommitConfirmation: true
+        });
+      }
     } else {
       throw new Error(`Provided objectId ${objectId} not found in site live_streams`);
     }
