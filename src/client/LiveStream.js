@@ -423,7 +423,7 @@ exports.StreamCreate = async function({
  *
  * @return {Promise<Object>}
  */
-exports.StreamGetSiteData = async function({
+exports.StreamSiteSettings = async function({
   resolveLinks=true,
   resolveIncludeSource=true,
   resolveIgnoreErrors=true
@@ -475,7 +475,7 @@ exports.StreamLinkToSite = async function({
   try {
     ValidateObject(objectId);
 
-    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData({resolveLinks: false, resolveIncludeSource: false, resolveIgnoreErrors: false});
+    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamSiteSettings({resolveLinks: false, resolveIncludeSource: false, resolveIgnoreErrors: false});
 
     const alreadyLinked = Object.values(streamMetadata || {}).some(entry => {
       const source = entry["."]?.source;
@@ -552,7 +552,7 @@ exports.StreamRemoveLinkToSite = async function({objectId, slug, writeToken, fin
       throw new Error("Either objectId or slug must be provided.");
     }
 
-    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamGetSiteData({resolveIncludeSource: false, resolveLinks: false});
+    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamSiteSettings({resolveIncludeSource: false, resolveLinks: false});
 
     if(objectId) {
       Object.keys(streamMetadata || {}).forEach(streamSlug => {
@@ -1924,7 +1924,7 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  * @returns {Promise<Object>} - Object containing all live recording config profiles
  */
 exports.StreamConfigProfiles = async function({resolveLinks=false}={}) {
-  const {siteObjectId, siteLibraryId} = await this.StreamGetSiteData();
+  const {siteObjectId, siteLibraryId} = await this.StreamSiteSettings();
 
   const profiles = await this.ContentObjectMetadata({
     libraryId: siteLibraryId,
@@ -1982,7 +1982,7 @@ exports.StreamConfigProfile = async function({profileName, profileSlug}) {
     profileSlug = slugify(profileName);
   }
 
-  const {siteObjectId, siteLibraryId} = await this.StreamGetSiteData();
+  const {siteObjectId, siteLibraryId} = await this.StreamSiteSettings();
 
   const profileData = await this.ContentObjectMetadata({
     libraryId: siteLibraryId,
@@ -2023,7 +2023,7 @@ exports.StreamSaveConfigProfile = async function({
   const {
     siteObjectId: objectId,
     siteLibraryId: libraryId
-  } = await this.StreamGetSiteData();
+  } = await this.StreamSiteSettings();
 
   if(!writeToken) {
     ({writeToken} = await this.EditContentObject({
@@ -2104,12 +2104,7 @@ exports.StreamAssignProfile = async function({
   finalize=true
 }) {
   try {
-    const {siteObjectId: objectId, siteLibraryId: libraryId} = await this.StreamGetSiteData({
-      streamOptions: {
-        resolveIncludeSource: false,
-        resolveLinks: false
-      }
-    });
+    const {siteObjectId: objectId, siteLibraryId: libraryId} = await this.StreamSiteSettings({resolveIncludeSource: false, resolveLinks: false});
 
     if(!objectId || !libraryId) {
       throw new Error("Site object must be configured first.")
@@ -2174,12 +2169,7 @@ exports.StreamUnassignProfile = async function({
   finalize=true
 }) {
   try {
-    const {siteObjectId: objectId, siteLibraryId: libraryId} = await this.StreamGetSiteData({
-      streamOptions: {
-        resolveIncludeSource: false,
-        resolveLinks: false
-      }
-    });
+    const {siteObjectId: objectId, siteLibraryId: libraryId} = await this.StreamSiteSettings({resolveIncludeSource: false, resolveLinks: false});
 
     if(!objectId || !libraryId) {
       throw new Error("Site object must be configured first.")
@@ -2302,7 +2292,7 @@ exports.StreamApplyProfile = async function({
     profileSlug = slugify(profile.name);
   }
 
-  const {siteObjectId, siteLibraryId} = await this.StreamGetSiteData({streamOptions: {resolveIncludeSource: false, resolveLinks: false}});
+  const {siteObjectId, siteLibraryId} = await this.StreamSiteSettings({resolveIncludeSource: false, resolveLinks: false});
 
   if(!siteWriteToken) {
     ({writeToken: siteWriteToken} = await this.EditContentObject({libraryId: siteLibraryId, objectId: siteObjectId}));
