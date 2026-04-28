@@ -1804,7 +1804,6 @@ exports.GlobalUrl = async function({
     }
   }
 
-  console.log("Updated")
   let urlPath = UrlJoin("s", network);
   if(versionHash) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;

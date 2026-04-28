@@ -428,35 +428,46 @@ exports.StreamSiteSettings = async function({
   resolveIncludeSource=true,
   resolveIgnoreErrors=true
 }={}) {
-  try {
-    let tenantId = await this.userProfileClient.TenantContractId();
+  const tenantId = await this.userProfileClient.TenantContractId();
 
-    const siteObjectId = await this.ContentObjectMetadata({
-      libraryId: tenantId.replace("iten", "ilib"),
-      objectId: tenantId.replace("iten", "iq__"),
-      metadataSubtree: "public/sites/live_streams",
-    });
-
-    const siteLibraryId = await this.ContentObjectLibraryId({objectId: siteObjectId});
-
-    const streamMetadata = await this.ContentObjectMetadata({
-      libraryId: siteLibraryId,
-      objectId: siteObjectId,
-      metadataSubtree: "public/asset_metadata/live_streams",
-      resolveIncludeSource,
-      resolveLinks,
-      resolveIgnoreErrors
-    });
-
-    return {
-      streamMetadata,
-      siteObjectId,
-      siteLibraryId
-    };
-  } catch(error) {
-    // eslint-disable-next-line no-console
-    console.error("Failed to load site data", error);
+  if(!tenantId) {
+    throw new Error("Tenant ID not found. Ensure the user profile has a tenant contract configured.");
   }
+
+  const tenantLibraryId = tenantId.replace("iten", "ilib");
+  const tenantObjectId = tenantId.replace("iten", "iq__");
+
+  const [siteObjectId, contentTypes] = await Promise.all([
+    this.ContentObjectMetadata({
+      libraryId: tenantLibraryId,
+      objectId: tenantObjectId,
+      metadataSubtree: "public/sites/live_streams",
+    }),
+    this.ContentObjectMetadata({
+      libraryId: tenantLibraryId,
+      objectId: tenantObjectId,
+      metadataSubtree: "public/content_types",
+      select: ["live_stream", "title"]
+    })
+  ]);
+
+  const siteLibraryId = await this.ContentObjectLibraryId({objectId: siteObjectId});
+
+  const streamMetadata = await this.ContentObjectMetadata({
+    libraryId: siteLibraryId,
+    objectId: siteObjectId,
+    metadataSubtree: "public/asset_metadata/live_streams",
+    resolveIncludeSource,
+    resolveLinks,
+    resolveIgnoreErrors
+  });
+
+  return {
+    streamMetadata,
+    siteObjectId,
+    siteLibraryId,
+    contentTypes
+  };
 };
 
 /**
