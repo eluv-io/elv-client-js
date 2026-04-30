@@ -3410,6 +3410,77 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
 };
 
 /**
+ * Get the configuration of a single live output by ID, optionally including live state.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output to retrieve
+ * @param {boolean=} includeState - If true, also retrieve live state from the output's egress node (default: true)
+ *
+ * @returns {Promise<LiveOutput>} - Output config, optionally with a `state` field containing client_stats and srt_stats
+ */
+exports.OutputsListItem = async function({libraryId, objectId, outputId, includeState=true}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputId", outputId);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  const {restore} = await RouteToLiveEgress({client: this});
+
+  let outputs;
+  try {
+    outputs = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: "live/outputs",
+      constant: true
+    });
+  } finally {
+    restore();
+  }
+
+  let value = outputs[outputId];
+
+  if(!value) {
+    throw new Error(`Output not found: ${outputId}`);
+  }
+
+  const streamId = value.input?.stream;
+
+  if(streamId) {
+    const streamMetadata = await this.ContentObjectMetadata({
+      libraryId: await this.ContentObjectLibraryId({objectId: streamId}),
+      objectId: streamId,
+      metadataSubtree: "/public/name",
+    });
+
+    const streamStatus = await this.StreamStatus({name: streamId});
+
+    value.input.name = streamMetadata;
+    value.input.status = streamStatus?.state;
+  }
+
+  value = await this.OutputsResolveSrtPullUrls({value});
+
+  if(includeState) {
+    try {
+      const nodeId = value.srt_pull?.node_ids?.[0];
+      const result = await this.OutputsState({outputId, objectId, libraryId, nodeId, includeState: true});
+      value.state = result.state;
+    } catch(error) {
+      this.Log(`Failed to retrieve state for output ${outputId}: ${error.message}`, true);
+      value.state = {};
+    }
+  }
+
+  return value;
+};
+
+/**
  * Get the configuration of a specific live output, optionally including live state.
  * Retrieves the output config from a live egress node. If includeState is true, also
  * queries the output's specific egress node for live client and SRT stats.
