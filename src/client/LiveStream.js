@@ -3701,7 +3701,7 @@ exports.OutputsCreate = async function({
 
   // Auto-generate passphrase if encryption is truthy
   if(srtConfig?.enforced_encryption && !passphrase) {
-    passphrase = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(16))).toString("base64url");
+    passphrase = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(16))).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
     srtConfig["pb_keylen"] = 16;
   }
 
@@ -3791,7 +3791,7 @@ exports.OutputsModify = async function({
     if(output.srt_pull?.connection?.enforced_encryption && !output.srt_pull?.passphrase) {
       output.srt_pull.passphrase = Buffer.from(
         globalThis.crypto.getRandomValues(new Uint8Array(16))
-      ).toString("base64url");
+      ).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
     }
 
     const outputs = await this.CallBitcodeMethod({
