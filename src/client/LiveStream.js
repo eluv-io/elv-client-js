@@ -3699,6 +3699,12 @@ exports.OutputsCreate = async function({
   // Route to any live egress node
   const {restore} = await RouteToLiveEgress({client: this});
 
+  // Auto-generate passphrase if encryption is truthy
+  if(srtConfig?.enforced_encryption && !passphrase) {
+    passphrase = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(16))).toString("base64");
+    srtConfig["pb_keylen"] = 16;
+  }
+
   try {
     const output = {
       enabled: streamObjectId ? enabled : false, // Output must be disabled if no stream specified
