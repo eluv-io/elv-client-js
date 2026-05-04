@@ -55,8 +55,8 @@ class BatchDownloadFromJson extends Utility {
         return new Promise((resolve) => {
             this.logger.log(`Starting: ${label}`);
 
-            // Spawn curl directly without a shell — avoids cmd.exe/PowerShell escaping issues
-            // stdout is piped to capture --write-out stats; stderr is ignored
+            // Spawn curl directly without a shell so %{...} in --write-out is
+            // passed to curl as-is and not expanded by cmd.exe on Windows
             const child = spawn(curlBin, curlArgs, {
                 stdio: ["ignore", "pipe", "ignore"],
             });
@@ -150,9 +150,9 @@ class BatchDownloadFromJson extends Utility {
         const jobs = valid.map(obj => ({
             objectId: obj.object_id,
             name: obj.name,
-            versionHash: obj.version_hash,
             filename: obj.filename,
             downloadUrl: obj.download_url,
+            curlTemplate: obj.curl,
         }));
 
         // Concurrency pool — always keeps exactly `concurrent` downloads running.
@@ -162,7 +162,7 @@ class BatchDownloadFromJson extends Utility {
         const runNext = async () => {
             if (jobIndex >= jobs.length) return;
             const job = jobs[jobIndex++];
-            const { objectId, name, versionHash, filename, downloadUrl } = job;
+            const { objectId, name, filename, downloadUrl, curlTemplate } = job;
 
             try {
                 // Generate a fresh token immediately before this curl runs
@@ -175,6 +175,12 @@ class BatchDownloadFromJson extends Utility {
 
                 const outputPath = path.join(downloadDir, filename);
                 const tmpPath = outputPath + ".tmp";
+
+                // Fill token into the JSON curl — used only for fail log logging
+                const curlCmd = curlTemplate.replace('Bearer "', `Bearer ${token}"`);
+
+                // Spawn curl directly (no shell) so paths and --write-out are
+                // passed as-is regardless of Windows cmd.exe or PowerShell
                 const curlBin = process.platform === "win32" ? "curl.exe" : "curl";
                 const curlArgs = [
                     "-L",
@@ -184,8 +190,6 @@ class BatchDownloadFromJson extends Utility {
                     downloadUrl,
                     "-H", `Authorization: Bearer ${token}`,
                 ];
-
-                const curlCmd = [curlBin, ...curlArgs].map(a => a.includes(" ") ? `"${a}"` : a).join(" ");
 
                 const result = await this.runCurl(curlBin, curlArgs, filename);
 
