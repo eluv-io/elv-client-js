@@ -56,14 +56,25 @@ class BatchDownloadFromJson extends Utility {
             this.logger.log(`Starting: ${label}`);
 
             // Spawn curl directly without a shell — avoids cmd.exe/PowerShell escaping issues
+            // stdout is piped to capture --write-out stats; stderr is ignored
             const child = spawn(curlBin, curlArgs, {
-                stdio: "ignore",
+                stdio: ["ignore", "pipe", "ignore"],
             });
+
+            let writeOut = "";
+            child.stdout.on("data", chunk => writeOut += chunk.toString());
 
             child.on("close", (code) => {
                 if (code === 0) {
-                    this.logger.log(`✔ Done: ${label}`);
-                    resolve({ label, success: true });
+                    const [sizeDownload, contentLength] = writeOut.trim().split("\n").map(Number);
+                    if (contentLength > 0 && sizeDownload !== contentLength) {
+                        const error = `Incomplete download: received ${sizeDownload} of ${contentLength} bytes`;
+                        this.logger.error(`✘ ${error}: ${label}`);
+                        resolve({ label, success: false, error });
+                    } else {
+                        this.logger.log(`✔ Done: ${label}`);
+                        resolve({ label, success: true });
+                    }
                 } else {
                     this.logger.error(`✘ Failed (exit ${code}): ${label}`);
                     resolve({ label, success: false, exitCode: code });
@@ -166,7 +177,10 @@ class BatchDownloadFromJson extends Utility {
                 const tmpPath = outputPath + ".tmp";
                 const curlBin = process.platform === "win32" ? "curl.exe" : "curl";
                 const curlArgs = [
+                    "-L",
+                    "--fail",
                     "-o", tmpPath,
+                    "--write-out", "%{size_download}\n%{content_length}",
                     downloadUrl,
                     "-H", `Authorization: Bearer ${token}`,
                 ];
