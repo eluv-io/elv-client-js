@@ -77,6 +77,30 @@ class BatchDownloadFromJson extends Utility {
         });
     }
 
+    finalize(tmpPath, finalPath, label) {
+        const stat = fs.existsSync(tmpPath) ? fs.statSync(tmpPath) : null;
+        if (!stat || stat.size === 0) {
+            this.logger.error(`✘ Empty or missing tmp file, leaving as-is: ${tmpPath}`);
+            return false;
+        }
+        fs.renameSync(tmpPath, finalPath);
+        this.logger.log(`✔ Saved: ${label}`);
+        return true;
+    }
+
+    appendFailEntry(failLogPath, entry) {
+        let entries = [];
+        if (fs.existsSync(failLogPath)) {
+            try {
+                entries = JSON.parse(fs.readFileSync(failLogPath, "utf8"));
+            } catch {
+                // malformed — start fresh
+            }
+        }
+        entries.push(entry);
+        fs.writeFileSync(failLogPath, JSON.stringify(entries, null, 2));
+    }
+
     async body() {
         const inputPath = path.resolve(this.args.input);
         const concurrent = Math.max(1, this.args.concurrent || 1);
@@ -105,6 +129,8 @@ class BatchDownloadFromJson extends Utility {
         }
 
         this.logger.log(`\nProcessing ${valid.length} object(s) with concurrency=${concurrent}\n`);
+
+        const failLogPath = this.args.failLog ? path.resolve(this.args.failLog) : null;
 
         const client = await this.concerns.Client.get();
         const results = [];
@@ -137,18 +163,45 @@ class BatchDownloadFromJson extends Utility {
                 });
 
                 const outputPath = path.join(downloadDir, filename);
+                const tmpPath = outputPath + ".tmp";
                 const curlBin = process.platform === "win32" ? "curl.exe" : "curl";
                 const curlArgs = [
-                    "-o", outputPath,
+                    "-o", tmpPath,
                     downloadUrl,
                     "-H", `Authorization: Bearer ${token}`,
                 ];
 
                 const result = await this.runCurl(curlBin, curlArgs, filename);
+
+                if (result.success) {
+                    result.success = this.finalize(tmpPath, outputPath, filename);
+                    if (!result.success) result.error = "incomplete download (empty tmp file)";
+                }
+
                 results.push({ ...result, object_id: objectId, name, label: filename });
+
+                if (!result.success && failLogPath) {
+                    this.appendFailEntry(failLogPath, {
+                        object_id: objectId,
+                        name,
+                        download_url: downloadUrl,
+                        error_type: "curl_failure",
+                        error: result.error || `curl exited with code ${result.exitCode}`,
+                    });
+                }
             } catch (err) {
                 this.logger.error(`Failed to generate token for ${objectId}: ${err.message}`);
                 results.push({ object_id: objectId, name, label: filename, success: false, error: err.message });
+
+                if (failLogPath) {
+                    this.appendFailEntry(failLogPath, {
+                        object_id: objectId,
+                        name,
+                        download_url: downloadUrl,
+                        error_type: "token_failure",
+                        error: err.message,
+                    });
+                }
             }
 
             // As soon as this slot is free, pull the next job
@@ -173,17 +226,8 @@ class BatchDownloadFromJson extends Utility {
             this.logger.log(`Downloaded log written to ${downloadedPath}`);
         }
 
-        // Write --failLog log
-        if (this.args.failLog) {
-            const failLogPath = path.resolve(this.args.failLog);
-            const failEntries = failed.map(r => ({
-                object_id: r.object_id,
-                name: r.name,
-                error: r.error || `curl exited with code ${r.exitCode}`,
-            }));
-            fs.writeFileSync(failLogPath, JSON.stringify(failEntries, null, 2));
+        if (failLogPath && failed.length > 0)
             this.logger.log(`Fail log written to ${failLogPath}`);
-        }
 
         // Summary
         this.logger.log("\n=== SUMMARY ===");
