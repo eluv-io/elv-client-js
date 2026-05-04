@@ -120,7 +120,7 @@ class LibraryGenerateCurlUrls extends Utility {
                 }
 
                 const { streamKey, repKey } = match;
-                const fullRepKey = `${streamKey}${repKey}`;
+                const fullRepKey = `${repKey}`;
                 const filename = this.sanitizeFilename(objectName, objectId) + ".mp4";
 
                 // Build a URL without an auth token — BatchDownloadFromJson injects a fresh
