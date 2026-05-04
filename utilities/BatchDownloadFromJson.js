@@ -185,6 +185,8 @@ class BatchDownloadFromJson extends Utility {
                     "-H", `Authorization: Bearer ${token}`,
                 ];
 
+                const curlCmd = [curlBin, ...curlArgs].map(a => a.includes(" ") ? `"${a}"` : a).join(" ");
+
                 const result = await this.runCurl(curlBin, curlArgs, filename);
 
                 if (result.success) {
@@ -199,6 +201,7 @@ class BatchDownloadFromJson extends Utility {
                         object_id: objectId,
                         name,
                         download_url: downloadUrl,
+                        curl_cmd: curlCmd,
                         error_type: "curl_failure",
                         error: result.error || `curl exited with code ${result.exitCode}`,
                     });
