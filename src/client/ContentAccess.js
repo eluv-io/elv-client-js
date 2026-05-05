@@ -1804,7 +1804,6 @@ exports.GlobalUrl = async function({
     }
   }
 
-  console.log("Updated")
   let urlPath = UrlJoin("s", network);
   if(versionHash) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
@@ -2824,7 +2823,7 @@ exports.EncryptionConk = async function({libraryId, objectId, versionHash, write
   const owner = await this.authClient.Owner({id: objectId});
 
   const ownerCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
-  const ownerCap = await this.ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree: ownerCapKey});
+  const ownerCap = await this.ContentObjectMetadata({libraryId, objectId, versionHash, writeToken, metadataSubtree: ownerCapKey});
 
   if(!this.utils.EqualAddress(owner, this.signer.address) && !ownerCap) {
     if(download) {
