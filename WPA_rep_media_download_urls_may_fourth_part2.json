@@ -1,32 +1,5 @@
 [
   {
-    "object_id": "iq__3mP1T1okrHyQqhqkSEaaDkHagh5f",
-    "name": "VOD - 2025-09-14 - JOY Heyball Masters - Camera 13",
-    "version_hash": "hq__2CP56BW1hzBTeSLMT7GR2fg78UDyw4e2tEERjzJoGJxQzUVhyt6GQyWYG7qciYpS88q8TVwSzQEq",
-    "representation": "videovideo_1920x1080_h264@9500000",
-    "filename": "VOD_-_2025-09-14_-_JOY_Heyball_Masters_-_Camera_13.mp4",
-    "download_url": "https://host-27-32-84-166.contentfabric.io/q/hq__2CP56BW1hzBTeSLMT7GR2fg78UDyw4e2tEERjzJoGJxQzUVhyt6GQyWYG7qciYpS88q8TVwSzQEq/rep/media_download/default/videovideo_1920x1080_h264@9500000",
-    "curl": "curl -o \"VOD_-_2025-09-14_-_JOY_Heyball_Masters_-_Camera_13.mp4\" \"https://host-27-32-84-166.contentfabric.io/q/hq__2CP56BW1hzBTeSLMT7GR2fg78UDyw4e2tEERjzJoGJxQzUVhyt6GQyWYG7qciYpS88q8TVwSzQEq/rep/media_download/default/videovideo_1920x1080_h264@9500000\" -H \"Authorization: Bearer \""
-  },
-  {
-    "object_id": "iq__3mUzL2Vajfv7jHqe7hGKkqScFLaF",
-    "name": "VOD - Heyball India Stop - Day 04 - Period 3",
-    "version_hash": "hq__VpjdeutQrEofACPdyQWoSYmgjrjYGNpNhTvnjTqnE3WQtRpzH92anJodSDaSAgCqSShdRmMTYoV",
-    "representation": "videovideo_1920x1080_h264@9500000",
-    "filename": "VOD_-_Heyball_India_Stop_-_Day_04_-_Period_3.mp4",
-    "download_url": "https://host-27-32-84-166.contentfabric.io/q/hq__VpjdeutQrEofACPdyQWoSYmgjrjYGNpNhTvnjTqnE3WQtRpzH92anJodSDaSAgCqSShdRmMTYoV/rep/media_download/default/videovideo_1920x1080_h264@9500000",
-    "curl": "curl -o \"VOD_-_Heyball_India_Stop_-_Day_04_-_Period_3.mp4\" \"https://host-27-32-84-166.contentfabric.io/q/hq__VpjdeutQrEofACPdyQWoSYmgjrjYGNpNhTvnjTqnE3WQtRpzH92anJodSDaSAgCqSShdRmMTYoV/rep/media_download/default/videovideo_1920x1080_h264@9500000\" -H \"Authorization: Bearer \""
-  },
-  {
-    "object_id": "iq__3maE8gyNotR8hhdxUYcKnLWxjhRj",
-    "name": "2026-01-17 - Heyball World Championship Brisbane - Day 1 - TABLE 2 - Period 01",
-    "version_hash": "hq__RYYBoXG7ybveQd6aP79TDQc761DXZs4D2ApvvJNVhSyAd3r84dUufS4oYBjQ6yWnyGUPFdY7AeM",
-    "representation": "videovideo_1920x1080_h264@9500000",
-    "filename": "2026-01-17_-_Heyball_World_Championship_Brisbane_-_Day_1_-_TABLE_2_-_Period_01.mp4",
-    "download_url": "https://host-27-32-84-166.contentfabric.io/q/hq__RYYBoXG7ybveQd6aP79TDQc761DXZs4D2ApvvJNVhSyAd3r84dUufS4oYBjQ6yWnyGUPFdY7AeM/rep/media_download/default/videovideo_1920x1080_h264@9500000",
-    "curl": "curl -o \"2026-01-17_-_Heyball_World_Championship_Brisbane_-_Day_1_-_TABLE_2_-_Period_01.mp4\" \"https://host-27-32-84-166.contentfabric.io/q/hq__RYYBoXG7ybveQd6aP79TDQc761DXZs4D2ApvvJNVhSyAd3r84dUufS4oYBjQ6yWnyGUPFdY7AeM/rep/media_download/default/videovideo_1920x1080_h264@9500000\" -H \"Authorization: Bearer \""
-  },
-  {
     "object_id": "iq__3maMNX7mN389p3RfrBUazSL5csx3",
     "name": "VOD - 2025-09-10 - JOY Heyball Masters - Camera 6 - Period 2",
     "version_hash": "hq__2HZKFSh9bFgfBjhNnpbAtf6xHjykYCHmR1jasti2sAQcatEZ2SFm4zVcvS7yrve36ibkB4emk7fD",
@@ -34,15 +7,6 @@
     "filename": "VOD_-_2025-09-10_-_JOY_Heyball_Masters_-_Camera_6_-_Period_2.mp4",
     "download_url": "https://host-27-32-84-166.contentfabric.io/q/hq__2HZKFSh9bFgfBjhNnpbAtf6xHjykYCHmR1jasti2sAQcatEZ2SFm4zVcvS7yrve36ibkB4emk7fD/rep/media_download/default/videovideo_1920x1080_h264@9500000",
     "curl": "curl -o \"VOD_-_2025-09-10_-_JOY_Heyball_Masters_-_Camera_6_-_Period_2.mp4\" \"https://host-27-32-84-166.contentfabric.io/q/hq__2HZKFSh9bFgfBjhNnpbAtf6xHjykYCHmR1jasti2sAQcatEZ2SFm4zVcvS7yrve36ibkB4emk7fD/rep/media_download/default/videovideo_1920x1080_h264@9500000\" -H \"Authorization: Bearer \""
-  },
-  {
-    "object_id": "iq__3mkhJ7tKNNFMtVLGFnLuAXPLBcHr",
-    "name": "VOD 01 - 2025-11-03 - HEYBALL WORLD CHAMPIONSHIP 2025 -  MAIN - Period 02",
-    "version_hash": "hq__26zQESLY6gjgnxQwF8WtisDkzNv3v9eoBgpphBhoxPK7pr7To8VR63AYpiUYTzcAuVHSjENz3Gx",
-    "representation": "videovideo_1920x1080_h264@9500000",
-    "filename": "VOD_01_-_2025-11-03_-_HEYBALL_WORLD_CHAMPIONSHIP_2025_-_MAIN_-_Period_02.mp4",
-    "download_url": "https://host-27-32-84-166.contentfabric.io/q/hq__26zQESLY6gjgnxQwF8WtisDkzNv3v9eoBgpphBhoxPK7pr7To8VR63AYpiUYTzcAuVHSjENz3Gx/rep/media_download/default/videovideo_1920x1080_h264@9500000",
-    "curl": "curl -o \"VOD_01_-_2025-11-03_-_HEYBALL_WORLD_CHAMPIONSHIP_2025_-_MAIN_-_Period_02.mp4\" \"https://host-27-32-84-166.contentfabric.io/q/hq__26zQESLY6gjgnxQwF8WtisDkzNv3v9eoBgpphBhoxPK7pr7To8VR63AYpiUYTzcAuVHSjENz3Gx/rep/media_download/default/videovideo_1920x1080_h264@9500000\" -H \"Authorization: Bearer \""
   },
   {
     "object_id": "iq__3mshN7u9uZgLPRLz2UHAJgekRNMv",
