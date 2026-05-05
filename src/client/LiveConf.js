@@ -467,7 +467,8 @@ class LiveConf {
         audioStreams[audioIdx] = {
           recordingBitrate: ladderProfile?.audio ? profileAudioForType.bit_rate : audio.recording_bitrate ?? 192000,
           recordingChannels: audio.recording_channels || 2,
-          lang: audio.lang
+          lang: audio.lang,
+          isDefault: audio.default
         };
         if(audio.playout) {
           audioStreams[audioIdx].playoutLabel = audio.playout_label || `Audio ${i + 1}`;
@@ -636,7 +637,7 @@ class LiveConf {
       audioLadderSpec.lang = audio.lang ?? "";
 
 
-      if(Object.keys(audioStreams).length === 1) {
+      if(Object.keys(audioStreams).length === 1 || audio.isDefault) {
         audioLadderSpec.default = true;
       }
 
