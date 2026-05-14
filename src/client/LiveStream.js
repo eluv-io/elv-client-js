@@ -2265,14 +2265,6 @@ exports.StreamApplyProfile = async function({
     }));
   }
 
-  // Load the base config profile and merge with overrides
-  const overrides = await this.ContentObjectMetadata({
-    libraryId,
-    objectId,
-    writeToken: streamWriteToken,
-    metadataSubtree: "live_recording_overrides"
-  }) || {};
-
   const currentConfig = await this.ContentObjectMetadata({
     libraryId,
     objectId,
@@ -2280,8 +2272,9 @@ exports.StreamApplyProfile = async function({
     metadataSubtree: "live_recording_config"
   }) || {};
 
-  // Preserve stream-specific fields (e.g. url) from the current config, then apply profile, then overrides
-  const config = R.mergeDeepRight(R.mergeDeepRight(currentConfig, profile), overrides);
+  // Only preserve stream-identity fields from the current config; all technical settings come from the new profile
+  const preservedConfig = R.pick(["url", "name"], currentConfig);
+  const config = R.mergeDeepRight(preservedConfig, profile);
 
   const currentProfileName = await this.ContentObjectMetadata({
     libraryId,
@@ -2298,6 +2291,35 @@ exports.StreamApplyProfile = async function({
     finalize: false,
     liveRecordingConfig: config
   });
+
+  // Clear live_recording and live_recording_overrides so stale settings from the previous profile don't persist.
+  // Otherwise the stream is left uninitialized until StreamConfig is called with probe data.
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken: streamWriteToken,
+    metadataSubtree: "live_recording",
+    metadata: {}
+  });
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken: streamWriteToken,
+    metadataSubtree: "live_recording_overrides",
+    metadata: {}
+  });
+
+  // If input_stream_info is available, regenerate live_recording from the new profile now.
+  if(config.input_stream_info) {
+    await this.StreamConfig({
+      name: objectId,
+      liveRecordingConfig: config,
+      inputStreamInfo: config.input_stream_info,
+      writeToken: streamWriteToken,
+      finalize: false
+    });
+  }
 
   if(!profileSlug) {
     profileSlug = slugify(profile.name);
@@ -3392,9 +3414,8 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
       value.input.status = streamStatus?.state;
     }
 
-    value = await this.OutputsResolveSrtPullUrls({value});
-
     if(includeState) {
+      await this.OutputsResolveSrtPullUrls({value});
       try {
         const nodeId = value.srt_pull?.node_ids?.[0];
         const result = await this.OutputsState({outputId: key, objectId, libraryId, nodeId, includeState: true});
@@ -3464,7 +3485,7 @@ exports.OutputsListItem = async function({libraryId, objectId, outputId, include
     value.input.status = streamStatus?.state;
   }
 
-  value = await this.OutputsResolveSrtPullUrls({value});
+  await this.OutputsResolveSrtPullUrls({value});
 
   if(includeState) {
     try {
@@ -3567,7 +3588,7 @@ const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}
     const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
     if(fabricUrl) {
       client.SetNodes({fabricURIs: [fabricUrl]});
-      if(config) { config = await client.OutputsResolveSrtPullUrls({value: config}); }
+      if(config) { await client.OutputsResolveSrtPullUrls({value: config}); }
     }
   }
 
