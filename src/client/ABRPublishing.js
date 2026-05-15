@@ -212,22 +212,28 @@ exports.CreateProductionMaster = async function({
     constant: false
   });
 
+  const mergeMetadata = {
+    ...(metadata || {}),
+    reference: access && !copy,
+    public: {
+      ...((metadata || {}).public || {})
+    },
+    elv_created_at: new Date().getTime(),
+  };
+  if(name !== undefined) {
+    mergeMetadata.name = name;
+    mergeMetadata.public.name = name;
+  }
+  if(description !== undefined) {
+    mergeMetadata.description = description;
+    mergeMetadata.public.description = description;
+  }
+
   await this.MergeMetadata({
     libraryId,
     objectId,
     writeToken,
-    metadata: {
-      ...(metadata || {}),
-      name,
-      description,
-      reference: access && !copy,
-      public: {
-        ...((metadata || {}).public || {}),
-        name: name || "",
-        description: description || ""
-      },
-      elv_created_at: new Date().getTime(),
-    }
+    metadata: mergeMetadata
   });
 
   let additionalReturnVals;
