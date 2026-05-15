@@ -2600,13 +2600,6 @@ exports.StreamConfig = async function({
     objectId: objectId,
   }
 
-  const liveRecordingMeta = await this.ContentObjectMetadata({
-    libraryId: libraryId,
-    objectId,
-    writeToken,
-    metadataSubtree: "/live_recording"
-  });
-
   let liveRecordingConfigProfile;
   if(liveRecordingConfig && Object.keys(liveRecordingConfig || {}).length > 0) {
     // Extract values that may have been saved during Create but aren't being repeated in the Config step
@@ -2670,7 +2663,6 @@ exports.StreamConfig = async function({
   const liveConf = new LiveConf({
     url: liveRecordingConfigProfile.url,
     probeData: probe,
-    liveRecordingMeta,
     nodeId,
     nodeUrl: endpoint,
     includeAVSegDurations: false,
