@@ -2627,6 +2627,15 @@ exports.StreamConfig = async function({
 
   status.userConfig = liveRecordingConfigProfile;
 
+  // If the stored probe is from a different protocol than the current URL, discard it and re-probe
+  if(probe && !inputStreamInfo) {
+    const urlProtocol = liveRecordingConfigProfile.url?.split(":")?.[0];
+    const probeProtocol = (probe.format?.filename || "").split(":")?.[0];
+    if(urlProtocol && probeProtocol && urlProtocol !== probeProtocol) {
+      probe = null;
+    }
+  }
+
   const streamData = {
     client: this
   };

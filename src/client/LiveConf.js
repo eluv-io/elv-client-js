@@ -540,6 +540,7 @@ class LiveConf {
         conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
         break;
       case "rtmp":
+      case "flv":
         sourceTimescale = 16000;
         conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
         break;
