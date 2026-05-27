@@ -2292,8 +2292,7 @@ exports.StreamApplyProfile = async function({
     liveRecordingConfig: config
   });
 
-  // Clear live_recording and live_recording_overrides so stale settings from the previous profile don't persist.
-  // Otherwise the stream is left uninitialized until StreamConfig is called with probe data.
+  // Clear live_recording and live_recording_overrides so stale settings from the previous profile don't persist
   await this.ReplaceMetadata({
     libraryId,
     objectId,
@@ -2310,7 +2309,7 @@ exports.StreamApplyProfile = async function({
     metadata: {}
   });
 
-  // If input_stream_info is available, regenerate live_recording from the new profile now.
+  // If input_stream_info is available, regenerate live_recording from the new profile now
   if(config.input_stream_info) {
     await this.StreamConfig({
       name: objectId,
