@@ -13,6 +13,11 @@ const HttpClient = require("../HttpClient");
 const Fraction = require("fraction.js");
 const {ValidateObject, ValidatePresence} = require("../Validation");
 const ContentObjectAudit = require("../ContentObjectAudit");
+const slugify = str => (str || "").toLowerCase().trim().replace(/ /g, "-").replace(/[^a-z0-9-]/g, "");
+const LRCProfile = require("../live_recording_config_profiles/live_recording_config_default");
+const R = require("ramda");
+const UrlJoin = require("url-join");
+const URI = require("urijs");
 
 const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   const tok = await client.authClient.AuthorizationToken({libraryId, objectId,
@@ -26,13 +31,124 @@ const Sleep = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
 
+const VALID_PLAYOUT_FORMATS = [
+  "hls-sample-aes",
+  "hls-aes128",
+  "hls-fairplay",
+  "hls-widevine-cenc",
+  "hls-playready-cenc",
+  "dash-widevine",
+  "hls-clear",
+  "dash-clear"
+];
+
+/**
+ * Converts a list of File objects into an array of file info objects suitable for upload.
+ *
+ * @param {string} path - The destination path prefix for the files
+ * @param {FileList|Array<File>} fileList - The list of File objects to process
+ *
+ * @returns {Promise<Array<Object>>} - Array of file info objects with path, type, size, mime_type, and data
+ */
+const FileInfo = async ({path, fileList}) => {
+  return await Promise.all(
+    Array.from(fileList).map(async file => {
+      const data = file;
+      const filePath = file.webkitRelativePath || file.name;
+      return {
+        path: UrlJoin(path, filePath).replace(/^\/+/g, ""),
+        type: "file",
+        size: file.size,
+        mime_type: file.type,
+        data,
+        name: file.name
+      };
+    })
+  );
+};
+
+const GetStreamProbe = async ({client, libraryId, objectId, streamHref, endpoint}) => {
+  client.SetNodes({fabricURIs: [endpoint]});
+
+  let probe = {};
+
+  try {
+    const probeUrl = await client.Rep({
+      libraryId,
+      objectId,
+      rep: "probe"
+    });
+
+    probe = await client.utils.ResponseToJson(
+      await HttpClient.Fetch(probeUrl, {
+        body: JSON.stringify({
+          "filename": streamHref,
+          "listen": true
+        }),
+        method: "POST"
+      })
+    );
+
+    if(probe.errors) {
+      throw probe.errors[0];
+    }
+  } catch(error) {
+    if(error.code === "ETIMEDOUT") {
+      throw "Stream probe timed out - make sure the stream source is available";
+    } else {
+      throw error;
+    }
+  }
+
+  probe.format.filename = streamHref;
+
+  return probe;
+};
+
+const GetNodeFromStreamData = async ({client, url, nodeId, nodeApi}) => {
+  let nodes;
+  if(url) {
+    const parsedName = url
+      .replace("udp://", "https://")
+      .replace("rtmp://", "https://")
+      .replace("rtp://", "https://")
+      .replace("srt://", "https://");
+
+    // Use regex for hostname extraction — new URL() rejects ports > 65535 (e.g. SRT streams)
+    const hostName = parsedName.match(/^https?:\/\/([^/:]+)/)?.[1];
+
+    client.Log(`Retrieving nodes - matching: ${hostName}`);
+
+    nodes = await client.SpaceNodes({matchEndpoint: hostName});
+  } else if(nodeId) {
+    nodes = await client.SpaceNodes({matchNodeId: nodeId});
+
+    url = nodes?.[0].services.fabric_api?.urls?.[0];
+  }
+
+  // Preserve the original stream URL (including any high port numbers) as a plain string
+  const streamHref = nodeApi ?? url;
+
+  if(nodes.length < 1) {
+    throw new Error(`No node found for stream URL: ${streamHref}. Wrong network?`);
+  }
+
+  const node = {
+    endpoints: nodes[0].services.fabric_api.urls,
+    id: nodes[0].id
+  };
+
+  const endpoint = node.endpoints[0];
+
+  return {node, endpoint, streamHref};
+};
+
 const CueInfo = async ({eventId, status}) => {
   let cues;
   try {
     const lroStatusResponse = await this.utils.ResponseToJson(
       await HttpClient.Fetch(status.lro_status_url)
     );
-    console.log("lroStatusResponse", lroStatusResponse);
     cues = lroStatusResponse.custom.cues;
   } catch(error) {
     console.log("LRO status failed", error);
@@ -62,6 +178,447 @@ const CueInfo = async ({eventId, status}) => {
 };
 
 /**
+ * Create a live stream object
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} libraryId - ID of the library for the new live stream object
+ * @param {string=} objectId - ID of the object
+ * @param {string} url - Source stream URL
+ * @param {boolean=} finalize - If enabled, object will be finalized after creation (default: true)
+ * @param {LiveRecordingConfig=} liveRecordingConfig - Configuration profile for the live stream including recording, playout, and transcoding settings
+ *
+ * @param {Object=} options - Additional options for customizing a live stream
+ * @param {string=} options.name - Name of the live stream
+ * @param {string=} options.displayTitle - Display title for the live stream
+ * @param {string=} options.description - Description for the live stream
+ * @param {Array<string>=} options.accessGroups - Access group addresses to receive 'manage' permissions
+ * @param {string=} options.permission - Permission level to set on the object
+ * @param {boolean=} options.linkToSite - If enabled, will create a link in the live stream site
+ * @param {boolean=} options.initializeDrm - If enabled, will initialize DRM for the object
+ * @param {string=} options.ingressNodeId - ID of the ingress node used for stream allocation (required for non-public nodes)
+ *
+ * @return {Promise<Object>} - Object containing objectId, libraryId, writeToken, and hash if finalized
+ */
+exports.StreamCreate = async function({
+  libraryId,
+  objectId,
+  url,
+  finalize=true,
+  liveRecordingConfig,
+  options={}
+}) {
+  const defaultName = `LIVE STREAM - ${new Date().toISOString().slice(0, 10)}`;
+  const existingObject = !!objectId;
+  let contentType;
+  let adminGroups = options.accessGroups ?? [];
+
+  // Retrieve live stream content type
+  try {
+    const tenantId = await this.userProfileClient.TenantContractId();
+
+    const tenantMeta = await this.ContentObjectMetadata({
+      libraryId: tenantId.replace("iten", "ilib"),
+      objectId: tenantId.replace("iten", "iq__"),
+      metadataSubtree: "public",
+      select: [
+        "content_types/live_stream"
+      ]
+    });
+
+    const tenantContentAdminGroup = await this.ContentAdminGroup({tenantContractId: tenantId});
+    adminGroups = adminGroups.concat(tenantContentAdminGroup ?? []);
+
+    contentType = tenantMeta.content_types?.live_stream;
+
+    if(!contentType) {
+      throw new Error(`No content type configured for tenant ${tenantId}`);
+    }
+  } catch(error) {
+    console.error("Unable to load tenant data", error);
+  }
+
+  let editResponse;
+  if(objectId) {
+     // Edit existing object
+     editResponse = await this.EditContentObject({
+      libraryId,
+      objectId
+    });
+
+     // If no new URL is provided, use value from saved config
+     if(!url) {
+       url = await this.ContentObjectMetadata({
+         libraryId,
+         objectId,
+         metadataSubtree: "live_recording_config/url"
+       });
+     }
+  } else {
+    // Create new object
+    editResponse = await this.CreateContentObject({
+      libraryId,
+      options: {
+        type: contentType
+      }
+    });
+    objectId = editResponse.objectId;
+  }
+
+  const {writeToken} = editResponse;
+  const {
+    accessGroup,
+    name=defaultName,
+    displayTitle,
+    description,
+    permission="editable",
+    ingressNodeId,
+    initializeDrm=true
+  } = options;
+
+  if(!liveRecordingConfig) {
+    liveRecordingConfig = {};
+  }
+
+  const playoutFormats = liveRecordingConfig?.playout_config?.playout_formats;
+  if(playoutFormats) {
+    const invalid = playoutFormats.filter(f => !VALID_PLAYOUT_FORMATS.includes(f));
+    if(invalid.length > 0) {
+      throw new Error(`Invalid playout_formats: ${invalid.join(", ")}. Valid values: ${VALID_PLAYOUT_FORMATS.join(", ")}`);
+    }
+  }
+
+  liveRecordingConfig.url = url;
+  liveRecordingConfig.ingress_node_id = ingressNodeId;
+
+  // Add access group permissions
+  await Promise.all(
+    adminGroups.filter(el => !!el).map(async(group) => {
+      if(!group) { return; }
+
+      await
+        this.AddContentObjectGroupPermission({
+          objectId,
+          groupAddress: group,
+          permission: "manage"
+        });
+    })
+  );
+
+  const metadata = {
+    public: {
+      name,
+      description,
+      asset_metadata: {
+        display_title: displayTitle || name,
+        title: name || displayTitle || defaultName,
+        title_type: "live_stream",
+        video_type: "live",
+        slug: slugify(name)
+      }
+    },
+    "live_recording_config": liveRecordingConfig
+  };
+
+  const oldProfile = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    metadataSubtree: "live_recording_config/name"
+  });
+
+  if(liveRecordingConfig?.name && liveRecordingConfig.name !== oldProfile) {
+    metadata.public.asset_metadata.profile_last_updated = new Date().toISOString();
+  }
+
+  await this.MergeMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadata
+  });
+
+  try {
+    await this.CreateLinks({
+      libraryId,
+      objectId,
+      writeToken,
+      links: [{
+        type: "rep",
+        path: "public/asset_metadata/sources/default",
+        target: "playout/default/options.json"
+      }]
+    });
+  } catch(error) {
+    console.log("Failed to create links", error);
+  }
+
+  await this.SetPermission({
+    objectId,
+    permission: permission,
+    writeToken
+  });
+
+  let returnResponse = {
+    objectId,
+    libraryId,
+    writeToken
+  };
+
+  // If stream info is provided, continue to configure
+  if(liveRecordingConfig?.input_stream_info) {
+    await this.StreamConfig({
+      name: objectId,
+      liveRecordingConfig,
+      inputStreamInfo: liveRecordingConfig.input_stream_info,
+      writeToken,
+      finalize: false
+    });
+  }
+
+  if(initializeDrm) {
+    const formats = liveRecordingConfig?.playout_config?.playout_formats;
+
+    await this.StreamInitialize({
+      name: objectId,
+      drm: (formats || []).some(el => !el.includes("clear")) ? true : false,
+      format: formats ? formats?.join(",") : "",
+      writeToken,
+      finalize: false
+    });
+  }
+
+  if(finalize) {
+    let finalizeResponse = await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: existingObject ? "Update live stream" : "Create live stream"
+    });
+
+    returnResponse = {...returnResponse, ...finalizeResponse};
+  }
+
+  if(finalize && liveRecordingConfig?.name) {
+    const slug = slugify(liveRecordingConfig?.name);
+    await this.StreamAssignProfile({profileSlug: slug, streamObjectId: objectId});
+  }
+
+  if(options.linkToSite) {
+    await this.StreamLinkToSite({
+      objectId
+    });
+  }
+
+  return returnResponse;
+};
+
+/**
+ * Load live stream data from site object
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {boolean=} resolveIncludeSource - If specified, resolved links will include the hash of the link at the root of the metadata
+ * @param {boolean=} resolveLinks - If specified, links in the metadata will be resolved
+ * @param {boolean=} resolveIgnoreErrors - If specified, link errors within the requested metadata will not cause the entire response to result in an error
+ *
+ * @return {Promise<Object>}
+ */
+exports.StreamSiteSettings = async function({
+  resolveLinks=true,
+  resolveIncludeSource=true,
+  resolveIgnoreErrors=true
+}={}) {
+  const tenantId = await this.userProfileClient.TenantContractId();
+
+  if(!tenantId) {
+    throw new Error("Tenant ID not found. Ensure the user profile has a tenant contract configured.");
+  }
+
+  const tenantLibraryId = tenantId.replace("iten", "ilib");
+  const tenantObjectId = tenantId.replace("iten", "iq__");
+
+  const [siteObjectId, contentTypes] = await Promise.all([
+    this.ContentObjectMetadata({
+      libraryId: tenantLibraryId,
+      objectId: tenantObjectId,
+      metadataSubtree: "public/sites/live_streams",
+    }),
+    this.ContentObjectMetadata({
+      libraryId: tenantLibraryId,
+      objectId: tenantObjectId,
+      metadataSubtree: "public/content_types",
+      select: ["live_stream", "title"]
+    })
+  ]);
+
+  const siteLibraryId = await this.ContentObjectLibraryId({objectId: siteObjectId});
+
+  const streamMetadata = await this.ContentObjectMetadata({
+    libraryId: siteLibraryId,
+    objectId: siteObjectId,
+    metadataSubtree: "public/asset_metadata/live_streams",
+    resolveIncludeSource,
+    resolveLinks,
+    resolveIgnoreErrors
+  });
+
+  return {
+    streamMetadata,
+    siteObjectId,
+    siteLibraryId,
+    contentTypes
+  };
+};
+
+/**
+ * Link a live stream object to a site by adding it to the site's live_streams metadata.
+ * Creates a fabric link to the stream object with proper ordering.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} objectId - Object ID of the live stream to link to the site
+ *
+ * @return {Promise<void>}
+ */
+exports.StreamLinkToSite = async function({
+  objectId
+}) {
+  try {
+    ValidateObject(objectId);
+
+    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamSiteSettings({resolveLinks: false, resolveIncludeSource: false, resolveIgnoreErrors: false});
+
+    const alreadyLinked = Object.values(streamMetadata || {}).some(entry => {
+      const source = entry["."]?.source;
+      return source && this.utils.DecodeVersionHash(source).objectId === objectId;
+    });
+
+    if(alreadyLinked) {
+      return;
+    }
+
+    const objectName = await this.ContentObjectMetadata({
+      libraryId: await this.ContentObjectLibraryId({objectId}),
+      objectId,
+      metadataSubtree: "public/name"
+    });
+
+    const streamKey = slugify(objectName);
+
+    const streamData = {
+      ".": {
+        container: await this.LatestVersionHash({objectId: siteObjectId}),
+        auto_update: {
+          tag: "latest"
+        }
+      },
+      "/": `/qfab/${await this.LatestVersionHash({objectId})}/meta/public/asset_metadata`,
+      order: Object.keys(streamMetadata).length + 1
+    };
+
+    const {writeToken} = await this.EditContentObject({
+      libraryId: siteLibraryId,
+      objectId: siteObjectId
+    });
+
+    streamMetadata[streamKey] = streamData;
+
+    await this.ReplaceMetadata({
+      libraryId: siteLibraryId,
+      objectId: siteObjectId,
+      writeToken,
+      metadataSubtree: "public/asset_metadata/live_streams",
+      metadata: streamMetadata
+    });
+
+    await this.FinalizeContentObject({
+      libraryId: siteLibraryId,
+      objectId: siteObjectId,
+      writeToken,
+      commitMessage: "Add live stream",
+      awaitCommitConfirmation: true
+    });
+  } catch(error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to link stream object to site", JSON.stringify(error, null, 2));
+  }
+};
+
+/**
+ * Unlink a live stream object from a site by removing it from the site's live_streams metadata.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} objectId - Object ID of the live stream to link to the site
+ * @param {string=} slug - Slug of the object
+ * @param {string=} siteObjectId - Object ID of the site (defaults to rootStore.dataStore.siteId)
+ * @param {string=} siteLibraryId - Library ID of the site (defaults to rootStore.dataStore.siteLibraryId)
+ * @param {string=} writeToken - Write token for the draft object. If not provided, a new edit will be opened and finalized.
+ * @param {boolean=} finalize - If enabled, the site object will be finalized after the removal (default: true)
+ * @return {Promise<void>}
+ */
+exports.StreamRemoveLinkToSite = async function({objectId, slug, writeToken, finalize=true}) {
+  try {
+    if(!objectId && !slug) {
+      throw new Error("Either objectId or slug must be provided.");
+    }
+
+    const {streamMetadata, siteObjectId, siteLibraryId} = await this.StreamSiteSettings({resolveIncludeSource: false, resolveLinks: false});
+
+    if(objectId) {
+      Object.keys(streamMetadata || {}).forEach(streamSlug => {
+        let source = streamMetadata[streamSlug]["."]?.source;
+
+        // If object has been deleted, resolving the link will not return a source, so check link hq__
+        if(!source) {
+        const match = streamMetadata[streamSlug]?.["/"].match(/(hq__[^/]+)/);
+          source = match ? match[1] : undefined;
+        }
+
+        const id = this.utils.DecodeVersionHash(source).objectId;
+
+        if(id === objectId) {
+          slug = streamSlug;
+        }
+      });
+    }
+
+    if(slug) {
+      delete streamMetadata[slug];
+
+      if(!writeToken) {
+        ({writeToken} = await this.EditContentObject({
+          libraryId: siteLibraryId,
+          objectId: siteObjectId
+        }));
+      }
+
+      await this.DeleteMetadata({
+        libraryId: siteLibraryId,
+        objectId: siteObjectId,
+        writeToken,
+        metadataSubtree: `public/asset_metadata/live_streams/${slug}`
+      });
+
+      if(finalize) {
+        await this.FinalizeContentObject({
+          libraryId: siteLibraryId,
+          objectId: siteObjectId,
+          writeToken,
+          commitMessage: "Remove live stream",
+          awaitCommitConfirmation: true
+        });
+      }
+    } else {
+      throw new Error(`Provided objectId ${objectId} not found in site live_streams`);
+    }
+  } catch(error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to remove stream object link from site", error);
+  }
+};
+
+/**
  * Set the offering for the live stream
  *
  * @methodGroup Live Stream
@@ -69,6 +626,7 @@ const CueInfo = async ({eventId, status}) => {
  * @param {Object} client - The client object
  * @param {string} libraryId - ID of the library for the new live stream object
  * @param {string} objectId - ID of the new live stream object
+ * @param {string=} writeToken - Write token of the draft
  * @param {string=} typeAbrMaster - Content type hash
  * @param {string=} typeLiveStream - Content type hash
  * @param {string} streamUrl - Live source URL
@@ -93,6 +651,7 @@ const StreamGenerateOffering = async({
   client,
   libraryId,
   objectId,
+  writeToken,
   typeAbrMaster,
   typeLiveStream,
   streamUrl,
@@ -109,7 +668,8 @@ const StreamGenerateOffering = async({
   vWidth,
   vDisplayAspectRatio,
   vFrameRate,
-  vTimeBase
+  vTimeBase,
+  finalize=true
 }) => {
   // compute duration_ts
   const DUMMY_DURATION = 1001; // should result in integer duration_ts values for both audio and video
@@ -232,27 +792,29 @@ const StreamGenerateOffering = async({
   // construct /production_master
   const production_master = {sources, variants};
 
+  const existingWriteToken = !!writeToken;
+
   // get existing metadata
   console.log("Retrieving current metadata...");
   let metadata = await client.ContentObjectMetadata({
     libraryId,
-    objectId
+    objectId,
+    writeToken
   });
 
   // add /production_master to metadata
   metadata.production_master = production_master;
 
   // write back to object
-  console.log("Getting write token...");
-  let editResponse = await client.EditContentObject({
-    libraryId,
-    objectId,
-    options: {
-      type: typeAbrMaster
-    }
-  });
-  let writeToken = editResponse.write_token;
-  console.log(`New write token: ${writeToken}`);
+  if(!writeToken) {
+    ({writeToken} = await client.EditContentObject({
+      libraryId,
+      objectId,
+      options: {
+        type: typeAbrMaster
+      }
+    }));
+  }
 
   console.log("Writing back metadata with /production_master added...");
   await client.ReplaceMetadata({
@@ -262,20 +824,23 @@ const StreamGenerateOffering = async({
     writeToken
   });
 
-  console.log("Finalizing...");
-  let finalizeResponse = await client.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken
-  });
-  let masterVersionHash = finalizeResponse.hash;
-  console.log(`Finalized, new version hash: ${masterVersionHash}`);
+  let finalizeResponse, masterVersionHash;
+  if(!existingWriteToken) {
+    finalizeResponse = await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken
+    });
+    masterVersionHash = finalizeResponse.hash;
+  }
 
   // Generate offering
   const createResponse = await client.CreateABRMezzanine({
     libraryId,
     objectId,
-    masterVersionHash,
+    masterVersionHash: existingWriteToken ? undefined : masterVersionHash,
+    masterWriteToken: existingWriteToken ? writeToken : undefined,
+    writeToken: existingWriteToken ? writeToken : undefined,
     variant: "default",
     offeringKey: "default",
     abrProfile
@@ -292,13 +857,14 @@ const StreamGenerateOffering = async({
   }
 
   let versionHash = createResponse.hash;
-  console.log(`New version hash: ${versionHash}`);
 
   // get new metadata
   console.log("Retrieving revised metadata with offering...");
   metadata = await client.ContentObjectMetadata({
     libraryId,
-    versionHash
+    objectId,
+    writeToken: existingWriteToken ? writeToken : undefined,
+    versionHash: existingWriteToken ? undefined : versionHash
   });
 
   console.log("Moving /abr_mezzanine/offerings to /offerings and removing /abr_mezzanine...");
@@ -308,18 +874,6 @@ const StreamGenerateOffering = async({
   // add items to media_struct needed to use options.json handler
   metadata.offerings.default.media_struct.duration_rat = `${DUMMY_DURATION}`;
 
-  // write back to object
-  console.log("Getting write token...");
-  editResponse = await client.EditContentObject({
-    libraryId,
-    objectId,
-    options: {
-      type: typeLiveStream
-    }
-  });
-  writeToken = editResponse.write_token;
-  console.log(`New write token: ${writeToken}`);
-
   console.log("Writing back metadata with /offerings...");
   await client.ReplaceMetadata({
     libraryId,
@@ -328,17 +882,19 @@ const StreamGenerateOffering = async({
     writeToken
   });
 
-  console.log("Finalizing...");
-  finalizeResponse = await client.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken
-  });
+  if(finalize) {
+    console.log("Finalizing...");
+    finalizeResponse = await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Update offering"
+    });
 
-  const finalHash = finalizeResponse.hash;
-  console.log(`Finalized, new version hash: ${finalHash}`);
-
-  return finalHash;
+    const finalHash = finalizeResponse.hash;
+    console.log(`Finalized, new version hash: ${finalHash}`);
+    return finalHash;
+  }
 };
 
 /**
@@ -347,7 +903,6 @@ const StreamGenerateOffering = async({
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} name - Object ID or name of the live stream object
- * @param {boolean=} stopLro - If specified, will stop LRO
  * @param {boolean=} showParams - If specified, will return recording_params with status
  * States:
  * unconfigured    - no live_recording_config
@@ -360,25 +915,27 @@ const StreamGenerateOffering = async({
  *
  * @return {Promise<Object>} - The status response for the object, as well as logs, warnings and errors from the master initialization
  */
-exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
+exports.StreamStatus = async function({name, showParams=false, writeToken}) {
   let objectId = name;
   let status = {name: name};
 
   try {
     let libraryId = await this.ContentObjectLibraryId({objectId});
-    status.library_id = libraryId;
-    status.object_id = objectId;
+    status.libraryId = libraryId;
+    status.objectId = objectId;
 
     let mainMeta = await this.ContentObjectMetadata({
       libraryId,
       objectId,
+      writeToken,
       select: [
         "live_recording_config",
         "live_recording"
       ]
     });
 
-    status.reference_url = mainMeta.live_recording_config.reference_url;
+    status.ingressNodeApi = mainMeta.live_recording_config?.ingress_node_api;
+    status.url = mainMeta.live_recording_config?.url;
 
     if(mainMeta.live_recording_config == undefined || mainMeta.live_recording_config.url == undefined) {
       status.state = "unconfigured";
@@ -404,8 +961,8 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       fabURI = "https://" + fabURI;
     }
 
-    status.fabric_api = fabURI;
-    status.url = mainMeta.live_recording.recording_config.recording_params.origin_url;
+    status.fabricApi = fabURI;
+
 
     let edgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
     if(!edgeWriteToken) {
@@ -415,36 +972,41 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
 
     this.RecordWriteToken({writeToken: edgeWriteToken, fabricNodeUrl: fabURI});
 
-    status.edge_write_token = edgeWriteToken;
-    status.stream_id = edgeWriteToken; // By convention the stream ID is its write token
+    status.edgeWriteToken = edgeWriteToken;
+    status.streamId = edgeWriteToken; // By convention the stream ID is its write token
     let edgeMeta;
     try {
-      edgeMeta = await this.ContentObjectMetadata({
+      edgeMeta = await this.CallBitcodeMethod({
         libraryId: libraryId,
         objectId: objectId,
-        writeToken: edgeWriteToken,
-        select: [
-          "live_recording"
-        ]
+        method: "/live/meta",
+        constant: true
       });
     } catch(error) {
-      console.error("Unable to read edge write token metadata. Has token been deleted?", error);
-      status.state = "inactive";
+      if(error.message && error.message.includes("ERR_TOO_MANY_REDIRECTS")) {
+        console.error("Redirect loop detected when trying to read metadata.");
+        status.state = "unavailable";
+      } else {
+        console.error("Unable to read edge write token metadata. Has token been deleted?", error);
+        status.state = "inactive";
+      }
+
       return status;
     }
 
-    status.edge_meta_size = JSON.stringify(edgeMeta || "").length;
+    status.edgeMetaSize = JSON.stringify(edgeMeta || "").length;
 
     // If a stream has never been started return state 'inactive'
     if(edgeMeta.live_recording === undefined ||
       edgeMeta.live_recording.recordings === undefined ||
       edgeMeta.live_recording.recordings.recording_sequence === undefined) {
+      // StreamStartOrStopOrReset relies on the state being 'stopped' before launching the LRO - and so this state cannot be changed to 'inactive'
       status.state = "stopped";
       return status;
     }
 
     let recordings = edgeMeta.live_recording.recordings;
-    status.recording_period_sequence = recordings.recording_sequence;
+    status.recordingPeriodSequence = recordings.recording_sequence;
 
     let sequence = recordings.recording_sequence;
     let period = recordings.live_offering[sequence - 1];
@@ -461,23 +1023,23 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       sinceLastFinalize = Math.floor(new Date().getTime() / 1000) - videoLastFinalizationTimeEpochSec;
     }
 
-    let recording_period = {
-      activation_time_epoch_sec: period.recording_start_time_epoch_sec,
-      start_time_epoch_sec: period.start_time_epoch_sec,
-      start_time_text: new Date(period.start_time_epoch_sec * 1000).toLocaleString(),
-      end_time_epoch_sec: period.end_time_epoch_sec,
-      end_time_text:  period.end_time_epoch_sec === 0 ? null : new Date(period.end_time_epoch_sec * 1000).toLocaleString(),
-      video_parts: videoFinalizedParts,
-      video_last_part_finalized_epoch_sec: videoLastFinalizationTimeEpochSec,
-      video_since_last_finalize_sec : sinceLastFinalize
+    const recordingPeriod = {
+      activationTimeEpochSec: period.recording_start_time_epoch_sec,
+      startTimeEpochSec: period.start_time_epoch_sec,
+      startTimeText: new Date(period.start_time_epoch_sec * 1000).toLocaleString(),
+      endTimeEpochSec: period.end_time_epoch_sec,
+      endTimeText: period.end_time_epoch_sec === 0 ? null : new Date(period.end_time_epoch_sec * 1000).toLocaleString(),
+      videoParts: videoFinalizedParts,
+      videoLastPartFinalizedEpochSec: videoLastFinalizationTimeEpochSec,
+      videoSinceLastFinalizeSec: sinceLastFinalize
     };
-    status.recording_period = recording_period;
+    status.recordingPeriod = recordingPeriod;
 
-    status.lro_status_url = await this.FabricUrl({
+    status.lroStatusUrl = await this.FabricUrl({
       libraryId: libraryId,
       objectId: objectId,
       writeToken: edgeWriteToken,
-      call: "live/status/" + tlro
+      call: "live/status"
     });
 
     status.insertions = [];
@@ -485,30 +1047,31 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       (edgeMeta.live_recording.playout_config.interleaves[sequence] != undefined)) {
       let insertions = edgeMeta.live_recording.playout_config.interleaves[sequence];
       for(let i = 0; i < insertions.length; i ++) {
-        let insertionTimeSinceEpoch = recording_period.start_time_epoch_sec + insertions[i].insertion_time;
+        let insertionTimeSinceEpoch = recordingPeriod.startTimeEpochSec + insertions[i].insertion_time;
         status.insertions[i] = {
-          insertion_time_since_start: insertions[i].insertion_time,
-          insertion_time: new Date(insertionTimeSinceEpoch * 1000).toISOString(),
-          insertion_time_local: new Date(insertionTimeSinceEpoch * 1000).toLocaleString(),
+          insertionTimeSinceStart: insertions[i].insertion_time,
+          insertionTime: new Date(insertionTimeSinceEpoch * 1000).toISOString(),
+          insertionTimeLocal: new Date(insertionTimeSinceEpoch * 1000).toLocaleString(),
           target: insertions[i].playout};
       }
     }
 
     if(showParams) {
-      status.recording_params = edgeMeta.live_recording.recording_config.recording_params;
+      status.recordingParams = edgeMeta.live_recording.recording_config.recording_params;
     }
 
     let state = "stopped";
     let lroStatus = "";
     try {
       lroStatus = await this.utils.ResponseToJson(
-        await HttpClient.Fetch(status.lro_status_url)
+        await HttpClient.Fetch(status.lroStatusUrl)
       );
       state = lroStatus.state;
       status.warnings = lroStatus.custom && lroStatus.custom.warnings;
       status.quality = lroStatus.custom && lroStatus.custom.quality;
+      status.input_stats = lroStatus.custom && lroStatus.custom.input_stats;
       if(lroStatus.custom && lroStatus.custom.status) {
-        status.recording_status = lroStatus.custom.status;
+        status.recordingStatus = lroStatus.custom.status;
       }
     } catch(error) {
       console.log("LRO Status (failed): ", error.response.statusCode);
@@ -517,46 +1080,25 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       return status;
     }
 
-    const segDurationMeta = edgeMeta.live_recording.recording_config.recording_params.xc_params.seg_duration;
-
     // Convert LRO 'state' to desired 'state'
     if(state === "running" && videoLastFinalizationTimeEpochSec <= 0) {
-      state = "starting";
-    } else if(state === "running" && segDurationMeta !== undefined && sinceLastFinalize > (parseInt(segDurationMeta) + 5)) {
-      state = "stalled";
+      state = "starting"; // The LRO returns 'running' even if the source hasn't connected
     } else if(state == "terminated") {
-      state = "stopped";
+      state = "stopped"; // The LRO reports 'terminated' which for the recording means 'stopped'
     }
     status.state = state;
 
-    if((state === "running" || state === "stalled" || state === "starting") && stopLro) {
-      lroStopUrl = await this.FabricUrl({
-        libraryId,
-        objectId,
-        writeToken: edgeWriteToken,
-        call: "live/stop/" + tlro
-      });
+    if(state === "running") {
+      let playoutUrls = {};
+      let playout_options;
 
       try {
-        await this.utils.ResponseToJson(
-          await HttpClient.Fetch(lroStopUrl)
-        );
-
-        console.log("LRO Stop: ", lroStatus.body);
+        playout_options = await this.PlayoutOptions({
+          objectId
+        });
       } catch(error) {
-        console.log("LRO Stop (failed): ", error.response.statusCode);
+        console.log("Failed to generate playout options based on 'default' offering:", error);
       }
-
-      state = "stopped";
-      status.state = state;
-    }
-
-    if(state === "running") {
-      let playout_urls = {};
-      let playout_options = await this.PlayoutOptions({
-        objectId,
-        linkPath: "public/asset_metadata/sources/default"
-      });
 
       let hls_clear_enabled = (
         playout_options &&
@@ -565,7 +1107,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
         playout_options.hls.playoutMethods.clear !== undefined
       );
       if(hls_clear_enabled) {
-        playout_urls.hls_clear = await this.FabricUrl({
+        playoutUrls.hlsClear = await this.FabricUrl({
           libraryId: libraryId,
           objectId: objectId,
           rep: "playout/default/hls-clear/playlist.m3u8",
@@ -579,7 +1121,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
         playout_options.hls.playoutMethods["aes-128"] !== undefined
       );
       if(hls_aes128_enabled) {
-        playout_urls.hls_aes128 = await this.FabricUrl({
+        playoutUrls.hlsAes128 = await this.FabricUrl({
           libraryId: libraryId,
           objectId: objectId,
           rep: "playout/default/hls-aes128/playlist.m3u8",
@@ -593,7 +1135,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
         playout_options.hls.playoutMethods["sample-aes"] !== undefined
       );
       if(hls_sample_aes_enabled) {
-        playout_urls.hls_sample_aes = await this.FabricUrl({
+        playoutUrls.hlsSampleAes = await this.FabricUrl({
           libraryId: libraryId,
           objectId: objectId,
           rep: "playout/default/hls-sample-aes/playlist.m3u8",
@@ -613,10 +1155,9 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
       if(networkInfo.name.includes("demo")) {
         embed_net = "demo";
       }
-      let embed_url = `https://embed.v3.contentfabric.io/?net=${embed_net}&p&ct=h&oid=${objectId}&mt=lv&ath=${token}`;
-      playout_urls.embed_url = embed_url;
+      playoutUrls.embedUrl = `https://embed.v3.contentfabric.io/?net=${embed_net}&p&ct=h&oid=${objectId}&mt=lv&ath=${token}`;
 
-      status.playout_urls = playout_urls;
+      status.playoutUrls = playoutUrls;
     }
   } catch(error) {
     console.error(error);
@@ -636,7 +1177,7 @@ exports.StreamStatus = async function({name, stopLro=false, showParams=false}) {
  * @return {Promise<Object>} - The status response for the object
  *
 */
-exports.StreamCreate = async function({name, start=false}) {
+exports.StreamStartRecording = async function({name, start=false}) {
   let status = await this.StreamStatus({name});
   if(status.state != "uninitialized" && status.state !== "inactive" && status.state !== "terminated" && status.state !== "stopped") {
     return {
@@ -645,7 +1186,7 @@ exports.StreamCreate = async function({name, start=false}) {
     };
   }
 
-  let objectId = status.object_id;
+  let objectId = status.objectId;
   console.log("START: ", name, "start", start);
 
   let libraryId = await this.ContentObjectLibraryId({objectId: objectId});
@@ -714,12 +1255,12 @@ exports.StreamCreate = async function({name, start=false}) {
   this.Log("Finalized object: ", objectHash);
 
   status = {
-    object_id: objectId,
+    objectId: objectId,
     hash: objectHash,
-    library_id: libraryId,
-    stream_id: edgeToken,
-    edge_write_token: edgeToken,
-    fabric_api: fabURI,
+    libraryId: libraryId,
+    streamId: edgeToken,
+    edgeWriteToken: edgeToken,
+    fabricApi: fabURI,
     state: "stopped"
   };
 
@@ -759,9 +1300,9 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
     if(status.state == "running" || status.state == "starting" || status.state == "stalled") {
       try {
         await this.CallBitcodeMethod({
-          libraryId: status.library_id,
-          objectId: status.object_id,
-          writeToken: status.edge_write_token,
+          libraryId: status.libraryId,
+          objectId: status.objectId,
+          writeToken: status.edgeWriteToken,
           method: "/live/stop/" + status.tlro,
           constant: false
         });
@@ -790,13 +1331,13 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
       return status;
     }
 
-    console.log("STARTING", "edge_write_token", status.edge_write_token);
+    console.log("STARTING", "edgeWriteToken", status.edgeWriteToken);
 
     try {
       await this.CallBitcodeMethod({
-        libraryId: status.library_id,
-        objectId: status.object_id,
-        writeToken: status.edge_write_token,
+        libraryId: status.libraryId,
+        objectId: status.objectId,
+        writeToken: status.edgeWriteToken,
         method: "/live/start",
         constant: false
       });
@@ -833,7 +1374,7 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
  *
  * @return {Promise<Object>} - The finalize response for the stream object
  */
-exports.StreamStopSession = async function({name}) {
+exports.StreamStopRecording = async function({name}) {
   try {
     this.Log(`Terminating stream session for: ${name}`);
     let objectId = name;
@@ -869,17 +1410,19 @@ exports.StreamStopSession = async function({name}) {
         writeToken: metaEdgeWriteToken
       });
 
-      const status = await this.StreamStatus({name});
+      let status = await this.StreamStatus({name});
 
       if(status.state !== "stopped") {
-        return {
-          state: status.state,
-          error: "The stream must be stopped before terminating"
-        };
+        status = await this.StreamStartOrStopOrReset({name, op: start});
+        if(status.state !== "stopped") {
+          return {
+            status,
+            error: "The stream is not stopped"
+          }
+        }
       }
 
       await this.DeleteWriteToken({
-        libraryId,
         writeToken: metaEdgeWriteToken
       });
     } catch(error) {
@@ -942,41 +1485,61 @@ exports.StreamStopSession = async function({name}) {
  * @param {string=} format - Specify the list of playout formats and DRM to support,
  comma-separated (hls-clear, hls-aes128, hls-sample-aes,
  hls-fairplay)
+ * @param {string=} writeToken - Write token of the draft
+ * @param {boolean=} finalize - If enabled, target object will be finalized after configuration
  *
  * @return {Promise<Object>} - The name, object ID, and state of the stream
  */
-exports.StreamInitialize = async function({name, drm=false, format}) {
-  let typeAbrMaster;
-  let typeLiveStream;
+exports.StreamInitialize = async function({
+  name,
+  drm=false,
+  format,
+  writeToken,
+  finalize=true
+}) {
+  try {
+    let typeAbrMaster;
+    let typeLiveStream;
 
-  // Fetch Title and Live Stream content types from tenant meta
-  const tenantContractId = await this.userProfileClient.TenantContractId();
-  const {live_stream, title} = await this.ContentObjectMetadata({
-    libraryId: tenantContractId.replace("iten", "ilib"),
-    objectId: tenantContractId.replace("iten", "iq__"),
-    metadataSubtree: "public/content_types",
-    select: [
-      "live_stream",
-      "title"
-    ]
-  });
+    // Fetch Title and Live Stream content types from tenant meta
+    const tenantContractId = await this.userProfileClient.TenantContractId();
+    const {live_stream, title} = await this.ContentObjectMetadata({
+      libraryId: tenantContractId.replace("iten", "ilib"),
+      objectId: tenantContractId.replace("iten", "iq__"),
+      metadataSubtree: "public/content_types",
+      select: [
+        "live_stream",
+        "title"
+      ]
+    });
 
-  if(live_stream) {
-    typeLiveStream = live_stream;
+    if(live_stream) {
+      typeLiveStream = live_stream;
+    }
+
+    if(title) {
+      typeAbrMaster = title;
+    }
+
+    if(typeAbrMaster === undefined || typeLiveStream === undefined) {
+      console.log("ERROR - unable to find content types", "ABR Master", typeAbrMaster, "Live Stream", typeLiveStream);
+      return {};
+    }
+
+    res = await this.StreamSetOfferingAndDRM({
+      name,
+      typeAbrMaster,
+      typeLiveStream,
+      drm,
+      format,
+      writeToken,
+      finalize
+    });
+
+    return res;
+  } catch(error) {
+    console.error("Unable to intitialize stream", error);
   }
-
-  if(title) {
-    typeAbrMaster = title;
-  }
-
-  if(typeAbrMaster === undefined || typeLiveStream === undefined) {
-    console.log("ERROR - unable to find content types", "ABR Master", typeAbrMaster, "Live Stream", typeLiveStream);
-    return {};
-  }
-
-  const res = await this.StreamSetOfferingAndDRM({name, typeAbrMaster, typeLiveStream, drm, format});
-
-  return res;
 };
 
 /**
@@ -991,19 +1554,30 @@ exports.StreamInitialize = async function({name, drm=false, format}) {
  * @param {string=} format - A list of playout formats and DRM to support, comma-separated
  * (hls-clear, hls-aes128, hls-sample-aes, hls-fairplay). If specified,
  * this will take precedence over the drm value
+ * @param {string=} writeToken - Write token of the draft
  *
  * @return {Promise<Object>} - The name, object ID, and state of the stream
  */
-exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveStream, drm=false, format}) {
+exports.StreamSetOfferingAndDRM = async function({
+  name,
+  typeAbrMaster,
+  typeLiveStream,
+  drm=false,
+  format,
+  writeToken,
+  finalize=true
+}) {
   let status = await this.StreamStatus({name});
-  if(status.state != "uninitialized" && status.state != "inactive" && status.state != "stopped") {
+  console.log('StreamSetOfferingAndDrm', status)
+  const validStates = ["uninitialized", "inactive", "stopped", "unconfigured", "initialized"];
+  if(!validStates.includes(status.state)) {
     return {
       state: status.state,
       error: "stream still active - must terminate first"
     };
   }
 
-  let objectId = status.object_id;
+  let objectId = status.objectId;
 
   console.log("INIT: ", name, objectId);
 
@@ -1030,8 +1604,8 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
     drm = true; // Override DRM parameter
     playoutFormats = {};
     let formats = format.split(",");
-    for(let i = 0; i < formats.length; i++) {
-      if(formats[i] === "hls-clear") {
+    for(let option of formats) {
+      if(option === "hls-clear") {
         abrProfile.drm_optional = true;
         playoutFormats["hls-clear"] = {
           "drm": null,
@@ -1041,7 +1615,7 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
         };
         continue;
       }
-      if(formats[i] === "dash-clear") {
+      if(option === "dash-clear") {
         abrProfile.drm_optional = true;
         playoutFormats["dash-clear"] = {
           "drm": null,
@@ -1053,7 +1627,7 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
         continue;
       }
 
-      playoutFormats[formats[i]] = abrProfile.playout_formats[formats[i]];
+      playoutFormats[option] = abrProfile.playout_formats[option];
     }
   } else if(!drm) {
     abrProfile.drm_optional = true;
@@ -1083,10 +1657,29 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
   try {
     let mainMeta = await this.ContentObjectMetadata({
       libraryId,
-      objectId
+      objectId,
+      writeToken
     });
 
-    let fabURI = mainMeta.live_recording.fabric_config.ingress_node_api;
+    const nodeId = mainMeta?.live_recording_config?.ingress_node_id;
+    let streamData;
+    if(nodeId) {
+      streamData = {client: this, nodeId, nodeApi: mainMeta?.live_recording_config?.url};
+    } else {
+      const url = mainMeta?.live_recording?.fabric_config?.ingress_node_api || mainMeta?.live_recording_config?.url;
+      streamData = {client: this, url};
+    }
+
+    let node, endpoint;
+    try {
+      ({node, endpoint} = await GetNodeFromStreamData(streamData));
+      status.node = node;
+    } catch(error) {
+      status.error = error.message;
+      return status;
+    }
+
+    let fabURI = endpoint;
     // Support both hostname and URL ingress_node_api
     if(!fabURI.startsWith("http")) {
       // Assume https
@@ -1095,7 +1688,7 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
 
     this.SetNodes({fabricURIs: [fabURI]});
 
-    let streamUrl = mainMeta.live_recording.recording_config.recording_params.origin_url;
+    let streamUrl = mainMeta?.live_recording?.recording_config?.recording_params?.origin_url || mainMeta?.live_recording_config?.url;
 
     await StreamGenerateOffering({
       client: this,
@@ -1117,14 +1710,16 @@ exports.StreamSetOfferingAndDRM = async function({name, typeAbrMaster, typeLiveS
       vWidth,
       vDisplayAspectRatio,
       vFrameRate,
-      vTimeBase
+      vTimeBase,
+      writeToken,
+      finalize
     });
 
     console.log("Finished generating offering");
 
     return {
       name,
-      object_id: objectId,
+      objectId: objectId,
       state: "initialized"
     };
   } catch(error) {
@@ -1332,32 +1927,645 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
 };
 
 /**
- * Configure the stream based on built-in logic and optional custom settings.
+ * Get all available live recording config profiles from the live stream site configuration.
+ * Ladder profiles define settings for configuring live streams including recording config, playout config, and recording params.
  *
- * Custom settings format:
- *    {
- *      "audio" {
- *        "1" : {  // This is the stream index
- *          "tags" : "language: english",
- *          "codec" : "aac",
- *          "bitrate": 204000,
- *          "record":  true,
- *          "recording_bitrate" : 192000,
- *          "recording_channels" : 2,
- *          "playout": bool
- *          "playout_label": "English (Stereo)"
- *        },
- *        "3": {
- *          ...
- *        }
- *      }
- *    }
+ * @methodGroup Live Stream
+ *
+ * @returns {Promise<Object>} - Object containing all live recording config profiles
+ */
+exports.StreamConfigProfiles = async function({resolveLinks=false}={}) {
+  const {siteObjectId, siteLibraryId} = await this.StreamSiteSettings();
+
+  const profiles = await this.ContentObjectMetadata({
+    libraryId: siteLibraryId,
+    objectId: siteObjectId,
+    metadataSubtree: "public/asset_metadata/profiles",
+    resolveLinks
+  });
+
+  if(!profiles || !resolveLinks) {
+    return profiles;
+  }
+
+  // The fabric's resolve=true only follows metadata links, not file links.
+  // Detect unresolved file links (e.g. { '/': './files/...' }) and fetch them individually.
+  const resolved = {};
+  await Promise.all(
+    Object.entries(profiles).map(async ([name, profile]) => {
+      if(profile && typeof profile["/"] === "string" && profile["/"].startsWith("./files/")) {
+        try {
+          resolved[name] = await this.LinkData({
+            libraryId: siteLibraryId,
+            objectId: siteObjectId,
+            linkPath: `public/asset_metadata/profiles/${name}`,
+            format: "json"
+          });
+        } catch(e) {
+          resolved[name] = profile;
+        }
+      }
+    })
+  );
+
+  return resolved;
+};
+
+/**
+ * Get a specific live recording config profile's specifications by name.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} profileName - Name of the profile to retrieve
+ * @param {string} profileSlug - Slug of the profile to retrieve
+ *
+ @returns {Promise<Object>} - The specifications for the requested profile
+ *
+ */
+
+exports.StreamConfigProfile = async function({profileName, profileSlug}) {
+  console.log({profileName, profileSlug})
+  if(!profileName && !profileSlug) {
+    throw new Error("Either profileName or profileSlug must be provided.");
+  }
+
+  if(!profileSlug) {
+    profileSlug = slugify(profileName);
+  }
+
+  const {siteObjectId, siteLibraryId} = await this.StreamSiteSettings();
+
+  const profileData = await this.ContentObjectMetadata({
+    libraryId: siteLibraryId,
+    objectId: siteObjectId,
+    metadataSubtree: `public/asset_metadata/profiles/${profileSlug}`,
+    resolveLinks: true
+  });
+
+  if(!profileData) {
+    console.warn(`Live Recording Config profile ${profileName} not found.`);
+  }
+
+  return profileData;
+};
+
+/**
+ * Save a live recording config profile to the live stream site object.
+ * Uploads any provided profile files or profile metadata and creates a metadata link to the profile. One must be specified. The argument profileMetadata takes precendence if both are provided.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {FileList|Array<File>=} files - Profile files to upload to the site object
+ * @param {Object=} profileMetadata - Metadata for the profile
+ *
+ * @returns {Promise<void>}
+ */
+exports.StreamSaveConfigProfile = async function({
+  files,
+  profileMetadata,
+  writeToken,
+  finalize=true
+}) {
+  if(!files && !profileMetadata) {
+    throw new Error("Missing required field: Please specify files or profileMetadata.")
+  }
+
+  const profiles = await this.StreamConfigProfiles({resolveLinks: true});
+  const {
+    siteObjectId: objectId,
+    siteLibraryId: libraryId
+  } = await this.StreamSiteSettings();
+
+  if(!writeToken) {
+    ({writeToken} = await this.EditContentObject({
+      libraryId,
+      objectId
+    }));
+  }
+
+  if(profileMetadata) {
+    const defaultName = `Profile-${new Date().toISOString().slice(0, 10)}`;
+    profileMetadata.last_updated = new Date().toISOString();
+
+    const metaFileName = slugify(profileMetadata.name || defaultName);
+    const blob = new Blob([JSON.stringify(profileMetadata, null, 2)], {type: "application/json"});
+    const metaFile = new File([blob], `${metaFileName}.json`, {type: "application/json"});
+    files = files ? [...Array.from(files), metaFile] : [metaFile];
+  }
+
+  let fileInfo;
+  if(files) {
+    fileInfo = await FileInfo({
+      path: "live_stream_profiles",
+      fileList: files
+    });
+
+    await this.UploadFiles({
+      libraryId,
+      objectId,
+      writeToken,
+      fileInfo
+    });
+  }
+
+  const links = fileInfo.map(file => {
+    const fileName = path.parse(file.name).name;
+
+    return {
+      type: "file",
+      path: `public/asset_metadata/profiles/${slugify(fileName)}`,
+      target: file.path
+    }
+  });
+
+  await this.CreateLinks({
+    libraryId,
+    objectId,
+    writeToken,
+    links
+  });
+
+  if(finalize) {
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Add live recording config profile"
+    });
+  }
+};
+
+/**
+ * Assign a live recording config profile to a stream by adding the stream to the
+ * profile's stream index on the site object. If the stream is already assigned, this is a no-op.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} profileSlug - Slug of the profile to assign
+ * @param {string} streamObjectId - Object ID of the stream to assign the profile to
+ * @param {string=} writeToken - Write token for the site object. If not provided, a new edit will be opened and finalized.
+ * @param {boolean=} finalize - If enabled, the site object will be finalized after the assignment (default: true)
+ *
+ * @returns {Promise<void>}
+ */
+exports.StreamAssignProfile = async function({
+  profileSlug,
+  streamObjectId,
+  writeToken,
+  finalize=true
+}) {
+  try {
+    const {siteObjectId: objectId, siteLibraryId: libraryId} = await this.StreamSiteSettings({resolveIncludeSource: false, resolveLinks: false});
+
+    if(!objectId || !libraryId) {
+      throw new Error("Site object must be configured first.")
+    }
+
+    const profileStreams = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: `public/asset_metadata/profile_streams/${profileSlug}`
+    }) || [];
+
+    if(!profileStreams.includes(streamObjectId)) {
+      profileStreams.push(streamObjectId);
+
+      if(!writeToken) {
+        ({writeToken} = await this.EditContentObject({
+          libraryId,
+          objectId
+        }))
+      }
+
+      await this.ReplaceMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadataSubtree: `public/asset_metadata/profile_streams/${profileSlug}`,
+        metadata: profileStreams
+      });
+
+      if(finalize) {
+        await this.FinalizeContentObject({
+          libraryId,
+          objectId,
+          writeToken,
+          commitMessage: "Assign profile to stream"
+        });
+      }
+    }
+  } catch(error) {
+    console.error("Unable to assign profile to stream", error);
+    throw error;
+  }
+};
+
+/**
+ * Unassign a live recording config profile from a stream by removing the stream from the
+ * profile's stream index on the site object.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} profileSlug - Slug of the profile to unassign
+ * @param {string} streamObjectId - Object ID of the stream to remove from the profile
+ * @param {string=} writeToken - Write token for the site object. If not provided, a new edit will be opened and finalized.
+ * @param {boolean=} finalize - If enabled, the site object will be finalized after the unassignment (default: true)
+ *
+ * @returns {Promise<void>}
+ */
+exports.StreamUnassignProfile = async function({
+  profileSlug,
+  streamObjectId,
+  writeToken,
+  finalize=true
+}) {
+  try {
+    const {siteObjectId: objectId, siteLibraryId: libraryId} = await this.StreamSiteSettings({resolveIncludeSource: false, resolveLinks: false});
+
+    if(!objectId || !libraryId) {
+      throw new Error("Site object must be configured first.")
+    }
+
+    let profileStreams = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: `public/asset_metadata/profile_streams/${profileSlug}`
+    }) || [];
+
+    profileStreams = profileStreams.filter(id => id !== streamObjectId);
+
+    if(!writeToken) {
+      ({writeToken} = await this.EditContentObject({
+        libraryId,
+        objectId
+      }));
+    }
+
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: `public/asset_metadata/profile_streams/${profileSlug}`,
+      metadata: profileStreams
+    });
+
+    if(finalize) {
+      await this.FinalizeContentObject({
+        libraryId,
+        objectId,
+        writeToken,
+        commitMessage: "Unassign profile to stream"
+      });
+    }
+  } catch(error) {
+    console.error("Unable to unassign profile to stream", error);
+    throw error;
+  }
+};
+
+/**
+ * Apply a live recording config profile to a stream, writing the merged configuration
+ * to the stream's live_recording_config and updating the profile's stream index on the site object.
+ * Handles switching profiles by unassigning the previous profile from the index.
+ * Use this for CLI workflows. For app workflows managing the config edit separately, use StreamAssignProfile directly.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} profileSlug - Slug of the profile to apply. Required if profile is not provided.
+ * @param {Object=} profile - Profile object to apply. Required if profileSlug is not provided. If both are provided, profile is used and profileSlug is derived from profile.name.
+ * @param {string} objectId - Object ID of the stream to apply the profile to
+ * @param {string=} streamWriteToken - Write token for the stream object. If not provided, a new edit will be opened.
+ * @param {string=} siteWriteToken - Write token for the site object. If not provided, a new edit will be opened.
+ * @param {boolean=} finalize - If enabled, both the stream and site objects will be finalized (default: true)
+ *
+ * @returns {Promise<{config: Object}|{streamWriteToken: string, siteWriteToken: string}>} - The merged config if finalized, otherwise the open write tokens
+ */
+exports.StreamApplyProfile = async function({
+  profileSlug,
+  profile,
+  objectId,
+  streamWriteToken,
+  siteWriteToken,
+  finalize=true
+}) {
+  if(!profile && !profileSlug) {
+    throw new Error("Either profile or profileSlug must be provided.");
+  }
+
+  if(!profile) {
+    profile = await this.StreamConfigProfile({profileSlug});
+  }
+
+  const libraryId = await this.ContentObjectLibraryId({objectId});
+
+  if(!streamWriteToken) {
+    ({writeToken: streamWriteToken} = await this.EditContentObject({
+      libraryId,
+      objectId
+    }));
+  }
+
+  const currentConfig = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    writeToken: streamWriteToken,
+    metadataSubtree: "live_recording_config"
+  }) || {};
+
+  // Only preserve stream-identity fields from the current config; all technical settings come from the new profile
+  const preservedConfig = R.pick(["url", "name"], currentConfig);
+  const config = R.mergeDeepRight(preservedConfig, profile);
+
+  const currentProfileName = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    writeToken: streamWriteToken,
+    metadataSubtree: "live_recording_config/name"
+  });
+  const currentProfileSlug = slugify(currentProfileName);
+
+  await this.StreamUpdateConfig({
+    libraryId,
+    objectId,
+    writeToken: streamWriteToken,
+    finalize: false,
+    liveRecordingConfig: config
+  });
+
+  // Clear live_recording and live_recording_overrides so stale settings from the previous profile don't persist
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken: streamWriteToken,
+    metadataSubtree: "live_recording",
+    metadata: {}
+  });
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken: streamWriteToken,
+    metadataSubtree: "live_recording_overrides",
+    metadata: {}
+  });
+
+  // If input_stream_info is available, regenerate live_recording from the new profile now
+  if(config.input_stream_info) {
+    await this.StreamConfig({
+      name: objectId,
+      liveRecordingConfig: config,
+      inputStreamInfo: config.input_stream_info,
+      writeToken: streamWriteToken,
+      finalize: false
+    });
+  }
+
+  if(!profileSlug) {
+    profileSlug = slugify(profile.name);
+  }
+
+  const {siteObjectId, siteLibraryId} = await this.StreamSiteSettings({resolveIncludeSource: false, resolveLinks: false});
+
+  if(!siteWriteToken) {
+    ({writeToken: siteWriteToken} = await this.EditContentObject({libraryId: siteLibraryId, objectId: siteObjectId}));
+  }
+
+  if(currentProfileSlug && currentProfileSlug !== profileSlug) {
+    await this.StreamUnassignProfile({
+      profileSlug: currentProfileSlug,
+      streamObjectId: objectId,
+      writeToken: siteWriteToken,
+      finalize: false
+    })
+  }
+
+  // Update profile update timestamp
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken: streamWriteToken,
+    metadataSubtree: "public/asset_metadata/profile_last_updated",
+    metadata: new Date().toISOString()
+  });
+
+  await this.StreamAssignProfile({
+    profileSlug,
+    streamObjectId: objectId,
+    writeToken: siteWriteToken,
+    finalize: false
+  });
+
+  if(finalize) {
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: streamWriteToken,
+      commitMessage: "Update profile"
+    });
+
+    await this.FinalizeContentObject({
+      libraryId: siteLibraryId,
+      objectId: siteObjectId,
+      writeToken: siteWriteToken,
+      commitMessage: "Update profile streams"
+    });
+  }
+
+  if(!finalize) {
+    return {streamWriteToken, siteWriteToken};
+  } else {
+    return {config};
+  }
+};
+
+/**
+ * Update the live recording configuration of a stream object.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} libraryId - Library ID of the stream object
+ * @param {string} objectId - Object ID of the stream
+ * @param {string} commitMessage - Message to include about this commit
+ * @param {string=} writeToken - Write token for the stream object. If not provided, a new edit will be opened.
+ * @param {LiveRecordingConfig} liveRecordingConfig - The live recording configuration to write
+ * @param {Object=} overrideSettings - Partial LiveRecordingConfig deep-merged over liveRecordingConfig
+ * @param {boolean=} finalize - If enabled, the stream object will be finalized after the update (default: true)
+ *
+ * @returns {Promise<{writeToken: string}|void>} - The write token if finalize is false, otherwise void
+ */
+exports.StreamUpdateConfig = async function({
+  libraryId,
+  objectId,
+  writeToken,
+  liveRecordingConfig,
+  overrideSettings,
+  commitMessage,
+  finalize=true
+}) {
+  if(!writeToken) {
+    ({writeToken} = await this.EditContentObject({
+      libraryId,
+      objectId
+    }));
+  }
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  if(overrideSettings) {
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "live_recording_overrides",
+      metadata: overrideSettings
+    });
+
+    liveRecordingConfig = R.mergeDeepRight(liveRecordingConfig, overrideSettings);
+  }
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "live_recording_config",
+    metadata: liveRecordingConfig
+  });
+
+  if(finalize) {
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: commitMessage ?? "Update stream config"
+    });
+  }
+
+  if(!finalize) {
+    return {writeToken};
+  }
+};
+
+/**
+ * @typedef {Object} InputStreamInfo
+ * @property {Object=} input_stream_info - Simplified probe information for the input stream
+ * @property {Object=} input_stream_info.format - Format information
+ * @property {string=} input_stream_info.format.format_name - Format name (e.g., "mpegts")
+ * @property {string=} input_stream_info.format.filename - Stream URL
+ * @property {Array<Object>=} input_stream_info.streams - Array of stream information
+ * @property {string=} input_stream_info.streams[].codec_name - Codec name (e.g., "h264", "aac")
+ * @property {string=} input_stream_info.streams[].codec_type - Codec type ("video" or "audio")
+ * @property {string=} input_stream_info.streams[].display_aspect_ratio - Display aspect ratio (e.g., "16/9")
+ * @property {string=} input_stream_info.streams[].field_order - Field order (e.g., "progressive")
+ * @property {string=} input_stream_info.streams[].frame_rate - Frame rate (e.g., "50")
+ * @property {number=} input_stream_info.streams[].height - Video height in pixels
+ * @property {number=} input_stream_info.streams[].width - Video width in pixels
+ * @property {number=} input_stream_info.streams[].level - Codec level
+ * @property {number=} input_stream_info.streams[].stream_id - Stream ID
+ * @property {number=} input_stream_info.streams[].stream_index - Stream index
+ * @property {number=} input_stream_info.streams[].channel_layout - Audio channel layout
+ * @property {number=} input_stream_info.streams[].channels - Number of audio channels
+ * @property {number=} input_stream_info.streams[].sample_rate - Audio sample rate
+ */
+
+/**
+ * @typedef {Object} LiveRecordingConfig
+ * @property {string=} name - Name of the profile
+ *
+ * @property {Object=} recording_config - Recording configuration settings
+ * @property {number=} recording_config.part_ttl - Time-to-live for stream parts in seconds
+ * @property {number=} recording_config.connection_timeout - Initial connection timeout when starting the stream, in seconds
+ * @property {number=} recording_config.reconnect_timeout - Duration to listen after disconnect detection, in seconds
+ * @property {boolean=} recording_config.copy_mpegts - Whether to copy MPEG-TS data
+ * @property {Object=} recording_config.input_cfg - Input configuration settings
+ * @property {boolean=} recording_config.input_cfg.bypass_libav_reader - Whether to bypass libav reader
+ * @property {string=} recording_config.input_cfg.copy_mode - Copy mode setting: "" (empty), "none", "raw", or "remuxed"
+ * @property {string=} recording_config.input_cfg.copy_packaging - Copy packaging mode: "raw_ts" or "rtp_ts"
+ * @property {boolean=} recording_config.input_cfg.custom_read_loop_enabled - Legacy reader
+ * @property {string=} recording_config.input_cfg.input_packaging - Input Packaging
+ *
+ * @property {Object=} playout_config - Playout configuration settings
+ * @property {Object=} playout_config.image_watermark - Image watermark configuration
+ * @property {string=} playout_config.image_watermark.align_h - Horizontal alignment (e.g., "left", "center", "right")
+ * @property {string=} playout_config.image_watermark.align_v - Vertical alignment (e.g., "top", "middle", "bottom")
+ * @property {string=} playout_config.image_watermark.image - Path to watermark image file
+ * @property {boolean=} playout_config.image_watermark.wm_enabled - Whether the image watermark is enabled
+ * @property {Object=} playout_config.simple_watermark - Simple text watermark configuration
+ * @property {string=} playout_config.simple_watermark.font_color - Font color (e.g., "white@0.5")
+ * @property {number=} playout_config.simple_watermark.font_relative_height - Font size relative to video height
+ * @property {boolean=} playout_config.simple_watermark.shadow - Whether to add shadow to text
+ * @property {string=} playout_config.simple_watermark.shadow_color - Shadow color (e.g., "black@0.5")
+ * @property {string=} playout_config.simple_watermark.template - Watermark text template
+ * @property {string=} playout_config.simple_watermark.x - Horizontal position expression
+ * @property {string=} playout_config.simple_watermark.y - Vertical position expression
+ * @property {boolean=} playout_config.dvr - Whether to enable DVR functionality
+ * TODO: update possible drm types
+ * TODO: update possible playout formats
+ * @property {Array<string>=} playout_config.playout_formats - List of playout format names (e.g., "dash-widevine", "hls-widevine")
+ * @property {Object=} playout_config.ladder_specs - Encoding ladder specifications
+ * @property {Array<Object>=} playout_config.ladder_specs.audio - Audio encoding ladder
+ * @property {number=} playout_config.ladder_specs.audio[].bit_rate - Audio bitrate
+ * @property {number=} playout_config.ladder_specs.audio[].channels - Number of audio channels
+ * @property {string=} playout_config.ladder_specs.audio[].codecs - Audio codec identifier
+ * @property {Array<Object>=} playout_config.ladder_specs.video - Video encoding ladder
+ * @property {number=} playout_config.ladder_specs.video[].bit_rate - Video bitrate
+ * @property {string=} playout_config.ladder_specs.video[].codecs - Video codec identifier
+ * @property {number=} playout_config.ladder_specs.video[].height - Video height in pixels
+ * @property {number=} playout_config.ladder_specs.video[].width - Video width in pixels
+ *
+ * @property {Object=} recording_stream_config - Stream recording configuration
+ * @property {Object=} recording_stream_config.audio - Audio stream recording configuration indexed by stream number
+ * @property {number=} recording_stream_config.audio[].bitrate - Stream bitrate
+ * @property {string=} recording_stream_config.audio[].codec - Audio codec (e.g., "aac")
+ * @property {boolean=} recording_stream_config.audio[].playout - Whether to include this stream in playout
+ * @property {string=} recording_stream_config.audio[].playout_label - Label for playout (e.g., "Audio 1")
+ * @property {boolean=} recording_stream_config.audio[].record - Whether to record this audio stream
+ * @property {number=} recording_stream_config.audio[].recording_bitrate - Recording bitrate
+ * @property {number=} recording_stream_config.audio[].recording_channels - Number of recording channels
+ *
+ * @property {InputStreamInfo=} input_stream_info - Simplified probe information for the input stream
+ *
+ * @property {Object=} recording_params - Advanced recording parameters
+ * @property {Object=} recording_params.xc_params - Transcoding parameters
+ * @property {number=} recording_params.xc_params.audio_bitrate - Audio bitrate for encoding
+ * @property {Object=} recording_params.xc_params.audio_index - Audio stream index mapping (indexed by output stream number)
+ * @property {number=} recording_params.xc_params.audio_seg_duration_ts - Audio segment duration in time scale units
+ * @property {number=} recording_params.xc_params.connection_timeout - Connection timeout in seconds
+ * @property {boolean=} recording_params.xc_params.copy_mpegts - Whether to copy MPEG-TS data
+ * @property {string=} recording_params.xc_params.ecodec2 - Audio encoder codec (e.g., "aac")
+ * @property {number=} recording_params.xc_params.enc_height - Encoding height in pixels
+ * @property {number=} recording_params.xc_params.enc_width - Encoding width in pixels
+ * @property {string=} recording_params.xc_params.filter_descriptor - FFmpeg filter descriptor string
+ * @property {number=} recording_params.xc_params.force_keyint - Force keyframe interval
+ * @property {string=} recording_params.xc_params.format - Output format (e.g., "fmp4-segment")
+ * @property {boolean=} recording_params.xc_params.listen - Whether to listen for incoming stream
+ * @property {number=} recording_params.xc_params.n_audio - Number of audio streams
+ * @property {string=} recording_params.xc_params.preset - Encoding preset (e.g., "faster", "medium", "slow")
+ * @property {number=} recording_params.xc_params.sample_rate - Audio sample rate in Hz
+ * @property {string=} recording_params.xc_params.seg_duration - Segment duration in seconds (as string)
+ * @property {boolean=} recording_params.xc_params.skip_decoding - Whether to skip decoding
+ * @property {string=} recording_params.xc_params.start_segment_str - Starting segment number (as string)
+ * @property {number=} recording_params.xc_params.stream_id - Stream ID (-1 for auto)
+ * @property {number=} recording_params.xc_params.sync_audio_to_stream_id - Stream ID to sync audio to
+ * @property {number=} recording_params.xc_params.video_bitrate - Video bitrate for encoding
+ * @property {number=} recording_params.xc_params.video_frame_duration_ts - Video frame duration in time scale units (null for auto)
+ * @property {number=} recording_params.xc_params.video_seg_duration_ts - Video segment duration in time scale units
+ * @property {string=} recording_params.xc_params.video_time_base - Video time base (null for auto)
+ * @property {number=} recording_params.xc_params.xc_type - Transcoding type identifier
+ *
+ * @property {Object=} probe_info - Full probe information (stored for historical/debugging purposes, only in live_recording_config)
+ *
+ */
+
+/**
+ * Configure the stream based on built-in logic and optional custom settings.
  *
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} name - Object ID or name of the live stream object
- * @param {Object=} customSettings - Additional options to customize configuration settings
- * @param {Object=} probeMetadata - Metadata for the probe. If not specified, a new probe will be configured
+ * @param {LiveRecordingConfig=} liveRecordingConfig - Configuration profile for the live stream including recording, playout, and transcoding settings
+ * @param {InputStreamInfo=} inputStreamInfo - Simplified probe metadata
  * @param {string=} writeToken - Write token of the draft
  * @param {boolean=} finalize - If enabled, target object will be finalized after configuring
  *
@@ -1366,90 +2574,114 @@ exports.StreamInsertion = async function({name, insertionTime, sinceStart=false,
  */
 exports.StreamConfig = async function({
   name,
-  customSettings={},
-  probeMetadata,
+  liveRecordingConfig,
+  inputStreamInfo,
   writeToken,
   finalize=true
 }) {
-  let objectId = name;
-  let status = {name};
+  const objectId = name;
+  let probe = inputStreamInfo || liveRecordingConfig?.input_stream_info;
 
-  let libraryId = await this.ContentObjectLibraryId({objectId});
-  status.library_id = libraryId;
-  status.object_id = objectId;
+  const currentStatus = await this.StreamStatus({name, writeToken});
 
-  let probe = probeMetadata;
+  if(!["uninitialized", "inactive", "unconfigured"].includes(currentStatus.state)) {
+    return {
+      state: currentStatus.state,
+      error: "Stream still active - must deactivate first"
+    };
+  }
 
-  let mainMeta = await this.ContentObjectMetadata({
+  const libraryId = await this.ContentObjectLibraryId({objectId});
+
+  const status = {
+    name,
     libraryId: libraryId,
-    objectId: objectId
-  });
+    objectId: objectId,
+  }
 
-  let userConfig = mainMeta.live_recording_config;
-  status.user_config = userConfig;
+  let liveRecordingConfigProfile;
+  if(liveRecordingConfig && Object.keys(liveRecordingConfig || {}).length > 0) {
+    // Extract values that may have been saved during Create but aren't being repeated in the Config step
+    const savedConfigData = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "/live_recording_config"
+    });
+
+    liveRecordingConfigProfile = R.mergeDeepRight(savedConfigData ?? {}, liveRecordingConfig);
+  } else {
+    const lrcMeta = await this.ContentObjectMetadata({
+      libraryId: libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "/live_recording_config",
+    });
+
+    // Save liveRecordingConfig as saved profile or default
+    liveRecordingConfigProfile = lrcMeta ?? LRCProfile;
+  }
+
+  let nodeId = liveRecordingConfigProfile?.ingress_node_id;
+
+  status.userConfig = liveRecordingConfigProfile;
+
+  // If the stored probe is from a different protocol than the current URL, discard it and re-probe
+  if(probe && !inputStreamInfo) {
+    const urlProtocol = liveRecordingConfigProfile.url?.split(":")?.[0];
+    const probeProtocol = (probe.format?.filename || "").split(":")?.[0];
+    if(urlProtocol && probeProtocol && urlProtocol !== probeProtocol) {
+      probe = null;
+    }
+  }
+
+  const streamData = {
+    client: this
+  };
+
+  if(nodeId) {
+    streamData.nodeId = nodeId;
+    streamData.nodeApi = liveRecordingConfigProfile?.url;
+  } else {
+    streamData.url = liveRecordingConfigProfile.url;
+  }
 
   // Get node URI from user config
-  const parsedName = userConfig.url
-    .replace("udp://", "https://")
-    .replace("rtmp://", "https://")
-    .replace("srt://", "https://");
-  const hostName = new URL(parsedName).hostname;
-  const streamUrl = new URL(userConfig.url);
-
-  this.Log(`Retrieving nodes - matching: ${hostName}`);
-  let nodes = await this.SpaceNodes({matchEndpoint: hostName});
-  if(nodes.length < 1) {
-    status.error = "No node matching stream URL " + streamUrl.href;
-    return status;
+  let node, endpoint, streamHref;
+  try {
+    ({node, endpoint, streamHref} = await GetNodeFromStreamData(streamData));
+    status.node = node;
+    nodeId = node.id;
+  } catch(error) {
+    throw error;
   }
-  const node = {
-    endpoints: nodes[0].services.fabric_api.urls,
-    id: nodes[0].id
-  };
-  status.node = node;
-  let endpoint = node.endpoints[0];
 
+  // No stream data provided ; probe the stream for info
   if(!probe) {
-    this.SetNodes({fabricURIs: [endpoint]});
-
-    // Probe the stream
-    probe = {};
-    try {
-      let probeUrl = await this.Rep({
-        libraryId,
-        objectId,
-        rep: "probe"
-      });
-
-      probe = await this.utils.ResponseToJson(
-        await HttpClient.Fetch(probeUrl, {
-          body: JSON.stringify({
-            "filename": streamUrl.href,
-            "listen": true
-          }),
-          method: "POST"
-        })
-      );
-
-      if(probe.errors) {
-        throw probe.errors[0];
-      }
-    } catch(error) {
-      if(error.code === "ETIMEDOUT") {
-        throw "Stream probe time out - make sure the stream source is available";
-      } else {
-        throw error;
-      }
-    }
-
-    probe.format.filename = streamUrl.href;
+    probe = await GetStreamProbe({
+      client: this,
+      libraryId,
+      objectId,
+      streamHref,
+      endpoint
+    });
   }
 
   // Create live recording config
-  let lc = new LiveConf(probe, node.id, endpoint, false, false, true);
+  const liveConf = new LiveConf({
+    url: liveRecordingConfigProfile.url,
+    probeData: probe,
+    nodeId,
+    nodeUrl: endpoint,
+    includeAVSegDurations: false,
+    overwriteOriginUrl: false,
+    syncAudioToVideo: true
+  });
 
-  const liveRecordingConfig = lc.generateLiveConf({
-    customSettings
+  const liveRecordingConfigMeta = liveConf.generateLiveConf({
+    customSettings: {
+      liveRecordingConfigProfile
+    }
   });
 
   // Store live recording config into the stream object
@@ -1461,12 +2693,29 @@ exports.StreamConfig = async function({
     writeToken = e.write_token;
   }
 
+  if(["uninitialized", "unconfigured"].includes(currentStatus.state)) {
+    const formats = liveRecordingConfigMeta?.live_recording.playout_config?.playout_formats;
+
+    await this.StreamInitialize({
+      name: objectId,
+      drm: (formats || []).some(el => !el.includes("clear")) ? true : false,
+      format: formats ? formats?.join(",") : "",
+      writeToken,
+      finalize: false
+    });
+  }
+
+  const allowList = ["fabric_config", "playout_config", "recording_config", "url"];
+  const filteredMeta = Object.fromEntries(
+    Object.entries(liveRecordingConfigMeta.live_recording || {}).filter(([key]) => allowList.includes(key))
+  );
+
   await this.ReplaceMetadata({
     libraryId,
     objectId,
     writeToken,
     metadataSubtree: "live_recording",
-    metadata: liveRecordingConfig.live_recording
+    metadata: filteredMeta
   });
 
   await this.ReplaceMetadata({
@@ -1557,13 +2806,15 @@ exports.StreamListUrls = async function({siteId}={}) {
             objectId,
             libraryId,
             select: [
+              // live_recording_config/reference_url is an old path
               "live_recording_config/reference_url",
+              "live_recording_config/ingress_node_api",
               // live_recording_config/url is the old path
               "live_recording_config/url"
             ]
-          });
+          }) || {};
 
-          const url = streamMeta.live_recording_config.reference_url || streamMeta.live_recording_config.url;
+          const url = streamMeta.live_recording_config?.ingress_node_api || streamMeta.live_recording_config?.reference_url || streamMeta.live_recording_config?.url;
           const isActive = [STATUS_MAP.STARTING, STATUS_MAP.RUNNING, STATUS_MAP.STALLED, STATUS_MAP.STOPPED].includes(status.state);
 
           if(url && isActive) {
@@ -1671,7 +2922,7 @@ exports.StreamCopyToVod = async function({
   const abrProfile = require("../abr_profiles/abr_profile_live_to_vod.js");
 
   const status = await this.StreamStatus({name});
-  const libraryId = status.library_id;
+  const libraryId = status.libraryId;
 
   this.Log(`Copying stream ${name} to target ${targetObjectId}`);
 
@@ -1693,10 +2944,10 @@ exports.StreamCopyToVod = async function({
   }
 
   try {
-    status.live_object_id = objectId;
+    status.liveObjectId = objectId;
 
     const liveHash = await this.LatestVersionHash({objectId, libraryId});
-    status.live_hash = liveHash;
+    status.liveHash = liveHash;
 
     if(eventId) {
       // Retrieve start and end times for the event
@@ -1712,9 +2963,9 @@ exports.StreamCopyToVod = async function({
       libraryId: targetLibraryId
     });
 
-    status.target_object_id = targetObjectId;
-    status.target_library_id = targetLibraryId;
-    status.target_write_token = writeToken;
+    status.targetObjectId = targetObjectId;
+    status.targetLibraryId = targetLibraryId;
+    status.targetWriteToken = writeToken;
 
     this.Log("Process live source (takes around 20 sec per hour of content)");
 
@@ -1786,15 +3037,15 @@ exports.StreamCopyToVod = async function({
         commitMessage: "Live Stream to VoD"
       });
 
-      status.target_hash = finalizeResponse.hash;
+      status.targetHash = finalizeResponse.hash;
     }
 
     // Clean up unnecessary status items
-    delete status.playout_urls;
-    delete status.lro_status_url;
-    delete status.recording_period;
-    delete status.recording_period_sequence;
-    delete status.edge_meta_size;
+    delete status.playoutUrls;
+    delete status.lroStatusUrl;
+    delete status.recordingPeriod;
+    delete status.recordingPeriodSequence;
+    delete status.edgeMetaSize;
     delete status.insertions;
 
     return status;
@@ -2075,4 +3326,716 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
     live: true,
     authorizationToken
   });
+};
+
+/**
+ * @typedef {Object} LiveOutput
+ * @property {boolean=} enabled - Whether the output is enabled
+ * @property {string=} name - Display name for the output
+ * @property {string=} description - Description of the output
+ * @property {string=} external_id - External identifier for the output
+ * @property {boolean=} reset - Whether to reset the output
+ * @property {Object=} input - Input stream configuration
+ * @property {string=} input.stream - Object ID of the input stream (null to disconnect)
+ * @property {Object=} srt_pull - SRT pull delivery configuration
+ * @property {Array<string>=} srt_pull.node_ids - Egress node IDs for SRT delivery (max 1)
+ * @property {string=} srt_pull.passphrase - SRT passphrase for encrypted delivery
+ * @property {boolean=} srt_pull.strip_rtp - Whether to strip RTP headers
+ * @property {Object=} srt_pull.connection - Additional SRT connection configuration
+ * @property {Array<string>=} srt_pull.urls - SRT URLs (returned by server, not set by caller)
+ */
+
+// Resolve egress node and replace SRT URL with the egress endpoint hostname.
+// Necessary because the backend API doesn't return the proper SRT URLs currently.
+exports.OutputsResolveSrtPullUrls = async function({value}) {
+  const nodeId = value.srt_pull?.node_ids?.[0];
+  if(!nodeId) { return value; }
+
+  const nodes = await this.SpaceNodes({matchNodeId: nodeId});
+  const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+  if(fabricUrl) {
+    const egressHost = new URL(fabricUrl).hostname;
+    if(value.srt_pull?.urls) {
+      value.srt_pull.urls = value.srt_pull.urls.map(url =>
+        url.replace(/^srt:\/\/[^:/?]+/, `srt://${egressHost}`)
+      );
+    }
+  }
+
+  return value;
+};
+
+/**
+ * List all live outputs for a stream object, optionally including live state.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {boolean=} includeState - If true, also retrieve live state from each output's egress node (default: true)
+ *
+ * @returns {Promise<Object<string, LiveOutput>>} - Map of output IDs to LiveOutput objects, each optionally with a `state` field
+ */
+exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
+  ValidateObject(objectId);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  // Route to any live egress node for the initial list call (only necessary until the API is globally available)
+  const {restore} = await RouteToLiveEgress({client: this});
+
+  let outputs;
+  try {
+    outputs = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: "live/outputs",
+      constant:  true
+    });
+  } finally {
+    restore();
+  }
+
+  for(let [key, value] of Object.entries(outputs)) {
+    const streamId = value.input?.stream;
+
+    if(streamId) {
+      const streamMetadata = await this.ContentObjectMetadata({
+        libraryId: await this.ContentObjectLibraryId({objectId: streamId}),
+        objectId: streamId,
+        metadataSubtree: "/public/name",
+      });
+
+      const streamStatus = await this.StreamStatus({name: streamId});
+
+      value.input.name = streamMetadata;
+      value.input.status = streamStatus?.state;
+    }
+
+    if(includeState) {
+      await this.OutputsResolveSrtPullUrls({value});
+      try {
+        const nodeId = value.srt_pull?.node_ids?.[0];
+        const result = await this.OutputsState({outputId: key, objectId, libraryId, nodeId, includeState: true});
+        value.state = result.state;
+      } catch(error) {
+        this.Log(`Failed to retrieve state for output ${key}: ${error.message}`, true);
+        value.state = {};
+      }
+    }
+  }
+
+  return outputs;
+};
+
+/**
+ * Get the configuration of a single live output by ID, optionally including live state.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output to retrieve
+ * @param {boolean=} includeState - If true, also retrieve live state from the output's egress node (default: true)
+ *
+ * @returns {Promise<LiveOutput>} - Output config, optionally with a `state` field containing client_stats and srt_stats
+ */
+exports.OutputsListItem = async function({libraryId, objectId, outputId, includeState=true}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputId", outputId);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  const {restore} = await RouteToLiveEgress({client: this});
+
+  let outputs;
+  try {
+    outputs = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: "live/outputs",
+      constant: true
+    });
+  } finally {
+    restore();
+  }
+
+  let value = outputs[outputId];
+
+  if(!value) {
+    throw new Error(`Output not found: ${outputId}`);
+  }
+
+  const streamId = value.input?.stream;
+
+  if(streamId) {
+    const streamMetadata = await this.ContentObjectMetadata({
+      libraryId: await this.ContentObjectLibraryId({objectId: streamId}),
+      objectId: streamId,
+      metadataSubtree: "/public/name",
+    });
+
+    const streamStatus = await this.StreamStatus({name: streamId});
+
+    value.input.name = streamMetadata;
+    value.input.status = streamStatus?.state;
+  }
+
+  await this.OutputsResolveSrtPullUrls({value});
+
+  if(includeState) {
+    try {
+      const nodeId = value.srt_pull?.node_ids?.[0];
+      const result = await this.OutputsState({outputId, objectId, libraryId, nodeId, includeState: true});
+      value.state = result.state;
+    } catch(error) {
+      this.Log(`Failed to retrieve state for output ${outputId}: ${error.message}`, true);
+      value.state = {};
+    }
+  }
+
+  return value;
+};
+
+/**
+ * Get the configuration of a specific live output, optionally including live state.
+ * Retrieves the output config from a live egress node. If includeState is true, also
+ * queries the output's specific egress node for live client and SRT stats.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output to retrieve state for
+ * @param {string=} nodeId - Node ID to query for state. If not provided, it will be retrieved from the output's config.
+ * @param {boolean=} includeState - If true, also retrieve live state from the output's egress node (default: true)
+ *
+ * @returns {Promise<LiveOutput>} - Output config, optionally with a `state` field containing client_stats and srt_stats
+ */
+exports.OutputsState = async function({libraryId, objectId, outputId, nodeId, includeState=true}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputId", outputId);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  // Route to a live egress node first so the output config fetch below succeeds
+  const {restore} = await RouteToLiveEgress({client: this});
+
+  try {
+    const {config} = await RouteToOutputNode({client: this, libraryId, objectId, outputId, nodeId});
+
+    if(!includeState) {
+      return config;
+    }
+
+    const state = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: UrlJoin("live", "outputs", outputId, "state"),
+      queryParams: {
+        "client_stats": 1,
+        "srt_stats": 1
+      },
+      constant: true
+    });
+
+    return {
+      ...config,
+      state
+    };
+  } finally {
+    restore();
+  }
+};
+
+/**
+ * Pin (route) the client to the egress node for a specific output. Fetches the output config
+ * to determine the node ID then sets the client fabric URIs.
+ * Currently node ID is retrieved from srt_pull.node_ids (only srt_pull outputs are supported).
+ * Assumes the client is already routed to an eligible egress node (via RouteToLiveEgress).
+ * Returns a function that restores the original fabric URIs.
+ *
+ * @param {Object} client - ElvClient instance
+ * @param {string} libraryId - Library ID of the output settings object
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output
+ * @param {string=} nodeId - Node ID if already known (skips config fetch)
+ * @returns {Promise<{restore: Function, config: Object}>} - restore function and output config
+ */
+const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}) => {
+  const savedURIs = [...client.fabricURIs];
+  const restore = () => client.SetNodes({fabricURIs: savedURIs});
+
+  let config;
+  if(!nodeId) {
+    config = await client.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: UrlJoin("live", "outputs", outputId),
+      constant: true
+    });
+    nodeId = config?.srt_pull?.node_ids?.[0];
+  }
+
+  if(nodeId) {
+    const nodes = await client.SpaceNodes({matchNodeId: nodeId});
+    const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+    if(fabricUrl) {
+      client.SetNodes({fabricURIs: [fabricUrl]});
+      if(config) { await client.OutputsResolveSrtPullUrls({value: config}); }
+    }
+  }
+
+  return {restore, config};
+};
+
+/**
+ * Pin (route) the client to any eligible live egress node from the /config API.
+ * Returns a function that restores the original fabric URIs.
+ *
+ * @param {Object} client - ElvClient instance
+ * @returns {Promise<{restore: Function}>} - restore function
+ */
+const RouteToLiveEgress = async ({client}) => {
+  const savedURIs = [...client.fabricURIs];
+  const restore = () => client.SetNodes({fabricURIs: savedURIs});
+
+  const nodeId = await RetrieveOutputNodeId({client});
+
+  if(nodeId) {
+    const nodes = await client.SpaceNodes({matchNodeId: nodeId});
+    const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+    if(fabricUrl) {
+      client.SetNodes({fabricURIs: [fabricUrl]});
+    }
+  }
+
+  return {restore};
+};
+
+/**
+ * Resolve a node ID for live egress output. If nodeIds is provided, uses the first element directly.
+ * Otherwise, calls the /config API (optionally filtered by geo) to get live_egress endpoints,
+ * then resolves the first endpoint to a node ID via SpaceNodes.
+ *
+ * @param {Object} client - ElvClient instance
+ * @param {Array<string>=} nodeIds - Explicit node IDs to use
+ * @param {Array<string>=} geos - Geo regions to filter config API results (max 1)
+ * @returns {Promise<string>} - A node ID for the output
+ */
+const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
+  if(nodeIds) {
+    return nodeIds[0];
+  }
+
+  const uri = new URI(client.ConfigUrl());
+  uri.pathname("/config");
+  if(geos && geos.length > 0) {
+    uri.addSearch("elvgeo", geos[0]);
+  }
+
+  const fabricInfo = await client.utils.ResponseToJson(
+    HttpClient.Fetch(uri.toString())
+  );
+
+  const liveEgressUrls = fabricInfo.network.services.live_egress;
+  if(!liveEgressUrls || liveEgressUrls.length === 0) {
+    throw new Error("No live_egress endpoints found in fabric config");
+  }
+
+  // Extract hostname from the first live_egress URL and resolve to a node ID
+  const hostname = new URL(liveEgressUrls[0]).hostname;
+  const nodes = await client.SpaceNodes({matchEndpoint: hostname});
+  if(!nodes || nodes.length === 0) {
+    throw new Error(`No node found matching live_egress endpoint: ${hostname}`);
+  }
+
+  return nodes[0].id;
+};
+
+/**
+ * Create a new live output.
+ *
+ * At the current version of the live outputs API an output will be pinned to a node, by either:
+ * - specifying the node directly in 'nodeIds'
+ * - specifying an 'elvgeo' and use fabric config 'live_egress' services to pick a node ID
+ *
+ * Note: Output creation and modification is transactional. To create multiple outputs in a single
+ * transaction, use EditContentObject to open a write token, call CallBitcodeMethod for each output,
+ * then finalize with FinalizeContentObject. This method handles a single output end-to-end.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the outputs settings object
+ * @param {string=} streamObjectId - Object ID of the input stream to use as the output source
+ * @param {string=} name - Display name for the output
+ * @param {string=} description - Description of the output
+ * @param {Array<string>=} nodeIds - Explicit node ID(s) for SRT delivery (max 1)
+ * @param {Array<string>=} geos - Geo regions for SRT delivery (max 1) — used to resolve a node from live_egress endpoints
+ * @param {string=} passphrase - SRT passphrase for encrypted delivery
+ * @param {boolean=} stripRtp - Whether to strip RTP headers (default: false)
+ * @param {Object=} srtConfig - Additional SRT connection configuration (see openapi-bitcode.html#tocssrtconnectionconfig)
+ *
+ * @returns {Promise<Object>} - The created output
+ */
+exports.OutputsCreate = async function({
+  libraryId,
+  objectId,
+  streamObjectId,
+  enabled,
+  name,
+  description,
+  externalId,
+  nodeIds,
+  geos=[],
+  passphrase,
+  stripRtp=false,
+  srtConfig
+}) {
+  ValidateObject(objectId);
+
+  if(nodeIds && geos.length > 0) {
+    throw new Error("Specify either nodeIds or geos, not both");
+  }
+  if(nodeIds && nodeIds.length > 1) {
+    throw new Error("Only one node ID is supported — nodeIds must have at most 1 element");
+  }
+  if(geos.length > 1) {
+    throw new Error("Only one geo is supported — geos must have at most 1 element");
+  }
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  const resolvedNodeId = await RetrieveOutputNodeId({client: this, nodeIds, geos});
+
+  // Route to any live egress node
+  const {restore} = await RouteToLiveEgress({client: this});
+
+  // Auto-generate passphrase if encryption is truthy
+  if(srtConfig?.enforced_encryption && !passphrase) {
+    passphrase = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(16))).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+    srtConfig["pb_keylen"] = 16;
+  }
+
+  try {
+    const output = {
+      enabled: streamObjectId ? enabled : false, // Output must be disabled if no stream specified
+      name,
+      description,
+      external_id: externalId,
+      input: streamObjectId ? {stream: streamObjectId} : undefined,
+      srt_pull: {
+        connection: srtConfig ?? undefined,
+        node_ids: [resolvedNodeId],
+        passphrase,
+        strip_rtp: stripRtp
+      }
+    };
+
+    const {writeToken} = await this.EditContentObject({libraryId, objectId});
+
+    // Note - you may create multiple outputs here, then finalize the transaction below
+    const outputs = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      writeToken,
+      method: "live/outputs",
+      constant: false,
+      body: output
+    });
+
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Create output"
+    });
+
+    return outputs;
+  } finally {
+    restore();
+  }
+};
+
+/**
+ * Modify an existing live output.
+ *
+ * Note: Supply all fields when modifying an output — read the current output first, then apply changes.
+ *
+ * Note: Output modification is transactional. To modify multiple outputs in a single
+ * transaction, use EditContentObject to open a write token, call CallBitcodeMethod for each output,
+ * then finalize with FinalizeContentObject. This method handles a single output end-to-end.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output to modify
+ * @param {LiveOutput} output - Full output object to PUT (read the current output first, apply changes, then pass the result)
+ * @param {string=} writeToken - Write token to use. If not provided, a new edit will be opened.
+ * @param {boolean=} finalize - If true, finalize after modifying (default: true)
+ *
+ * @returns {Promise<Object>} - The modified output
+ */
+exports.OutputsModify = async function({
+  libraryId,
+  objectId,
+  outputId,
+  output,
+  writeToken,
+  finalize=true
+}) {
+  ValidateObject(objectId);
+  ValidatePresence("output", output);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  // Route to any live egress node
+  const {restore} = await RouteToLiveEgress({client: this});
+
+  try {
+    if(!writeToken) {
+      ({writeToken} = await this.EditContentObject({libraryId, objectId}));
+    }
+
+    if(output.srt_pull?.connection?.enforced_encryption && !output.srt_pull?.passphrase) {
+      output.srt_pull.passphrase = Buffer.from(
+        globalThis.crypto.getRandomValues(new Uint8Array(16))
+      ).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+    }
+
+    const outputs = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      writeToken,
+      method: UrlJoin("live", "outputs", outputId),
+      verb: "PUT",
+      constant: false,
+      body: output
+    });
+
+    if(finalize) {
+      await this.FinalizeContentObject({
+        libraryId,
+        objectId,
+        writeToken,
+        commitMessage: "Modify output"
+      });
+    }
+
+    return outputs;
+  } finally {
+    restore();
+  }
+};
+
+/**
+ * Modify multiple live outputs in a single transaction.
+ *
+ * Takes a map of output IDs to partial output configurations. Routes to any eligible live
+ * egress node, opens a write token, posts the map to live/outputs, then finalizes.
+ *
+ * Example:
+ *   {
+ *     "out001": { "enabled": false, "input": { "stream": "iq__..." }, "name": "A03" },
+ *     "out002": { "enabled": true }
+ *   }
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {Object<string, LiveOutput>} outputs - Map of output IDs to output configurations
+ *
+ * @returns {Promise<Object>} - The response from the bitcode call
+ */
+exports.OutputsModifyBatch = async function({libraryId, objectId, outputs}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputs", outputs);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  const {restore} = await RouteToLiveEgress({client: this});
+
+  try {
+    // Read all current outputs and merge changes on top
+    const current = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: "live/outputs",
+      constant: true
+    });
+
+    const merged = {...current};
+    for(const [id, changes] of Object.entries(outputs)) {
+      merged[id] = {...(current[id] || {}), ...changes};
+    }
+
+    const {writeToken} = await this.EditContentObject({libraryId, objectId});
+
+    const result = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      writeToken,
+      method: "live/outputs",
+      verb: "PUT",
+      constant: false,
+      body: merged
+    });
+
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Modify outputs (batch)"
+    });
+
+    return result;
+  } finally {
+    restore();
+  }
+};
+
+/**
+ * Stop a live output.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output to stop
+ *
+ * @returns {Promise<Object>} - Response from the stop call
+ */
+exports.OutputsStop = async function({libraryId, objectId, outputId}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputId", outputId);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  // Route to a live egress node, then to the specific output's node
+  const {restore} = await RouteToLiveEgress({client: this});
+  await RouteToOutputNode({client: this, libraryId, objectId, outputId});
+
+  try {
+    const {writeToken} = await this.EditContentObject({libraryId, objectId});
+
+    return await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      writeToken,
+      method: UrlJoin("live", "outputs", outputId, "ctrl", "stop"),
+      constant: false
+    });
+  } finally {
+    restore();
+  }
+};
+
+/**
+ * Delete a live output.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output to delete
+ *
+ * @returns {Promise<Object>} - Response from the delete call
+ */
+exports.OutputsDelete = async function({libraryId, objectId, outputId}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputId", outputId);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  // Route to any live egress node
+  const {restore} = await RouteToLiveEgress({client: this});
+
+  try {
+    const {writeToken} = await this.EditContentObject({libraryId, objectId});
+
+    const result = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      writeToken,
+      method: UrlJoin("live", "outputs", outputId),
+      verb: "DELETE",
+      constant: false,
+    });
+
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Remove output"
+    });
+
+    return result;
+  } finally {
+    restore();
+  }
+};
+
+/**
+ * Delete multiple live outputs in a single operation.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {Array<string>} outputs - List of output IDs to delete
+ *
+ * @returns {Promise<Object>} - Response from the delete call
+ */
+exports.OutputsDeleteBatch = async function({libraryId, objectId, outputs}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputs", outputs);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  const {restore} = await RouteToLiveEgress({client: this});
+
+  try {
+    const {writeToken} = await this.EditContentObject({libraryId, objectId});
+
+    const result = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      writeToken,
+      method: UrlJoin("live", "outputs", outputId),
+      verb: "DELETE",
+      constant: false,
+    });
+
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Remove outputs (batch)"
+    });
+
+    return result;
+  } finally {
+    restore();
+  }
 };

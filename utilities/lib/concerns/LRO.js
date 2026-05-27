@@ -73,9 +73,9 @@ const New = context => {
     statusEntry.run_state = state;
   };
 
-  const status = async ({libraryId, objectId}) => {
+  const status = async ({libraryId, objectId, writeToken}) => {
     const client = await context.concerns.Client.get();
-    const statusMap = await client.LROStatus({libraryId, objectId}); // TODO: check how offering key is used, if at all
+    const statusMap = await client.LROStatus({libraryId, objectId, writeToken}); // TODO: check how offering key is used, if at all
 
     if(kindOf(statusMap)==="undefined") throw Error("Received no job status information from server - object already finalized?");
     return statusMapProcess(statusMap);

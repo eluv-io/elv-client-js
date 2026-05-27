@@ -127,6 +127,7 @@ class AuthorizationClient {
     const isWalletRequest =
       objectId &&
       this.client.signer &&
+      !this.client.signer.anonymous &&
       this.client.utils.EqualAddress(
         await this.client.userProfileClient.WalletAddress(false),
         this.client.utils.HashToAddress(objectId)
@@ -147,9 +148,15 @@ class AuthorizationClient {
         this.noCache = true;
       }
 
-      if(channelAuth && this.client.signer && this.client.signer.remoteSigner) {
-        // Channel auth not supported for remote signer, use a self-signed no-auth token instead
-        return this.client.CreateFabricToken({context});
+      if(channelAuth && this.client.signer) {
+        const balance = Utils.ToBigNumber(
+          await this.client.GetBalance({address: this.client.CurrentAccountAddress()})
+        ).toFixed(3);
+
+        if(balance < 0.02) {
+          // Channel auth not supported for remote signer, use a self-signed no-auth token instead
+          return this.client.CreateFabricToken({context});
+        }
       }
 
       let authorizationToken;
@@ -963,7 +970,7 @@ class AuthorizationClient {
 
         const kmsUrl = KMSUrls[i];
         if(!this.providers[kmsUrl]) {
-          this.providers[kmsUrl] = new Ethers.providers.JsonRpcProvider(kmsUrl, this.client.networkId);
+          this.providers[kmsUrl] = new Ethers.providers.StaticJsonRpcProvider(kmsUrl, this.client.networkId);
         }
 
         return await this.providers[kmsUrl].send(methodName, params);
@@ -1011,7 +1018,8 @@ class AuthorizationClient {
     }
 
     const kmsHttpClient = new HttpClient({
-      uris: kmsUrls
+      uris: kmsUrls,
+      networkName: this.client.networkName
     });
 
     return await kmsHttpClient.Request({

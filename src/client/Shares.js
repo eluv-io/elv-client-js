@@ -10,30 +10,42 @@ const UrlJoin = require("url-join");
  * Create a share
  *
  * @namedParams
- * @param {string} objectId - The object to create a share for
+ * @param {string} objectId - The ID of the object to share
+ * @param {Array<string>} objectIds - Additional object IDs to authorize
  * @param {Date} expiresAt - The expiration time of the share
  * @param {Object=} params - Additional parameters
  *
  * @returns {Promise<Object>} - Info about the created share
  */
-exports.CreateShare = async function({objectId, expiresAt, params={}}) {
+exports.CreateShare = async function({objectId, objectIds=[], expiresAt, params={}}) {
   const tenantId = await this.userProfileClient.TenantContractId();
+  const token = await this.CreateFabricToken({});
 
-  params.object_id = objectId;
+  if(objectId) {
+    objectIds = [objectId, ...objectIds]
+      .filter((x, i, a) => x && a.indexOf(x) == i);
+  }
+
+  params.object_ids = objectIds;
 
   if(expiresAt) {
     params.end_time = Math.floor(new Date(expiresAt).getTime() / 1000);
   }
 
-  return await this.MakeAuthServiceRequest({
+  const share = await this.MakeAuthServiceRequest({
     path: UrlJoin("as", "sharing", tenantId, "share"),
     method: "POST",
     format: "JSON",
     body: params,
     headers: {
-      Authorization: `Bearer ${this.signedToken}`
+      Authorization: `Bearer ${token}`
     }
   });
+
+  share.start_time = share.start_time ? new Date(share.start_time * 1000).toISOString() : undefined;
+  share.end_time = share.end_time ? new Date(share.end_time * 1000).toISOString() : undefined;
+
+  return share;
 };
 
 /**
@@ -49,6 +61,7 @@ exports.CreateShare = async function({objectId, expiresAt, params={}}) {
  */
 exports.Shares = async function({objectId, limit=100, offset=0, params={}}={}) {
   const tenantId = await this.userProfileClient.TenantContractId();
+  const token = await this.CreateFabricToken({});
 
   const response = await this.MakeAuthServiceRequest({
     path: UrlJoin("as", "sharing", tenantId, "shares"),
@@ -57,7 +70,7 @@ exports.Shares = async function({objectId, limit=100, offset=0, params={}}={}) {
     body: objectId ? {object_id: objectId, ...params} : undefined,
     format: "JSON",
     headers: {
-      Authorization: `Bearer ${this.signedToken}`
+      Authorization: `Bearer ${token}`
     }
   });
 
@@ -85,6 +98,7 @@ exports.Shares = async function({objectId, limit=100, offset=0, params={}}={}) {
  */
 exports.UpdateShare = async function({shareId, expiresAt, params={}}) {
   const tenantId = await this.userProfileClient.TenantContractId();
+  const token = await this.CreateFabricToken({});
 
   if(expiresAt) {
     params.end_time = Math.floor(new Date(expiresAt).getTime() / 1000);
@@ -96,7 +110,7 @@ exports.UpdateShare = async function({shareId, expiresAt, params={}}) {
     format: "JSON",
     body: params,
     headers: {
-      Authorization: `Bearer ${this.signedToken}`
+      Authorization: `Bearer ${token}`
     }
   });
 };
@@ -109,13 +123,14 @@ exports.UpdateShare = async function({shareId, expiresAt, params={}}) {
  */
 exports.RevokeShare = async function({shareId}) {
   const tenantId = await this.userProfileClient.TenantContractId();
+  const token = await this.CreateFabricToken({});
 
   return await this.MakeAuthServiceRequest({
     path: UrlJoin("as", "sharing", tenantId, "share", shareId, "revoke"),
     method: "PUT",
     format: "JSON",
     headers: {
-      Authorization: `Bearer ${this.signedToken}`
+      Authorization: `Bearer ${token}`
     }
   });
 };
