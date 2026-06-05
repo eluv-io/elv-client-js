@@ -261,9 +261,19 @@ exports.DeleteNTPInstance = async function({tenantId, ntpId}) {
  * @param {string} tenantId - The ID of the tenant in which this NTP instance was created
  * @param {string} ntpId - The ID of the NTP instance
  */
-exports.ReportNTPInstance = async function({tenantId, ntpId}) {
+exports.ReportNTPInstance = async function({tenantId, ntpId, password, email}) {
   ValidatePresence("tenantId", tenantId);
   ValidatePresence("ntpId", ntpId);
+
+  let paramsJSON = [];
+
+  if (password) {
+    paramsJSON.push(`pwd:${password}`);
+  }
+
+  if (email) {
+    paramsJSON.push(`eml:${email}`);
+  }
 
   const res = await this.authClient.MakeKMSCall({
     tenantId,
@@ -272,7 +282,7 @@ exports.ReportNTPInstance = async function({tenantId, ntpId}) {
       tenantId,
       ntpId,
       "report",
-      "[]",
+      JSON.stringify(paramsJSON),
       Date.now()
     ],
     paramTypes: [
@@ -420,6 +430,45 @@ exports.IssueSignedNTPCode = async function({tenantId, ntpId, email, maxRedempti
   }
 
   return result;
+};
+
+/**
+ * Check the status of the specified ticket/code without redeeming it.
+ *
+ * @methodGroup Tickets
+ * @namedParams
+ * @param {string} tenantId - The ID of the tenant from which the ticket was issued
+ * @param {string} ntpId - The ID of the NTP instance from which the ticket was issued
+ * @param {string} code - Access code
+ * @param {string=} email - Email address associated with the code
+ *
+ * @return {Promise<Object>} - Status information for the ticket
+ */
+exports.NTPStatus = async function({tenantId, ntpId, code, email}) {
+  ValidatePresence("tenantId", tenantId);
+  ValidatePresence("ntpId", ntpId);
+  ValidatePresence("code", code);
+
+  let kmsAddress;
+  try {
+    kmsAddress = await this.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(tenantId),
+      methodName: "addressKMS"
+    });
+
+    if(!kmsAddress) { throw ""; }
+  } catch(error) {
+    kmsAddress = await this.DefaultKMSAddress();
+  }
+
+  const response = await this.authClient.MakeKMSRequest({
+    kmsId: "ikms" + this.utils.AddressToHash(kmsAddress),
+    method: "POST",
+    path: UrlJoin("ks", "otp", "ntp", tenantId, ntpId, "status"),
+    body: {"_PASSWORD": code, "_EMAIL": email}
+  });
+
+  return await response.json();
 };
 
 /**
