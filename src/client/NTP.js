@@ -254,6 +254,39 @@ exports.DeleteNTPInstance = async function({tenantId, ntpId}) {
 };
 
 /**
+ * Generate a report for the specified NTP instance.
+ *
+ * @methodGroup NTP Instances
+ * @namedParams
+ * @param {string} tenantId - The ID of the tenant in which this NTP instance was created
+ * @param {string} ntpId - The ID of the NTP instance
+ */
+exports.ReportNTPInstance = async function({tenantId, ntpId}) {
+  ValidatePresence("tenantId", tenantId);
+  ValidatePresence("ntpId", ntpId);
+
+  const res = await this.authClient.MakeKMSCall({
+    tenantId,
+    methodName: "elv_updateOTPInstance",
+    params: [
+      tenantId,
+      ntpId,
+      "report",
+      "[]",
+      Date.now()
+    ],
+    paramTypes: [
+      "string",
+      "string",
+      "string",
+      "string",
+      "int"
+    ]
+  });
+  return res || {};
+};
+
+/**
  * Retrieve info for NTP instances in the specified tenant
  *
  * @methodGroup NTP Instances

@@ -1,0 +1,143 @@
+{
+  "name": "Reference Full Profile",
+  "drm_type": "clear",
+
+  "recording_config": {
+    "part_ttl": 86400,
+    "reconnect_timeout": 3600,
+    "connection_timeout": 3600,
+    "copy_mpegts": false,
+    "input_cfg": {
+      "bypass_libav_reader": false,
+      "copy_mode": "",
+      "copy_packaging": "",
+      "custom_read_loop_enabled": false,
+      "input_packaging": ""
+    }
+  },
+
+  "playout_config": {
+    "dvr_enabled": true,
+    "dvr_max_duration": 14400,
+    "rebroadcast_start_time_sec_epoch": 0,
+    "playout_sharding_level": 2,
+    "vod_enabled": false,
+    "playout_formats": [
+      "hls-clear"
+    ],
+    "ladder_specs": {
+      "audio": [
+        {
+          "bit_rate": 192000,
+          "channels": 2,
+          "codecs": "mp4a.40.2"
+        },
+        {
+          "bit_rate": 384000,
+          "channels": 6,
+          "codecs": "mp4a.40.2"
+        }
+      ],
+      "video": [
+        {
+          "bit_rate": 14000000,
+          "codecs": "avc1.640028,mp4a.40.2",
+          "height": 2160,
+          "width": 3840
+        },
+        {
+          "bit_rate": 9500000,
+          "codecs": "avc1.640028,mp4a.40.2",
+          "height": 1080,
+          "width": 1920
+        },
+        {
+          "bit_rate": 4500000,
+          "codecs": "avc1.640028,mp4a.40.2",
+          "height": 720,
+          "width": 1280
+        },
+        {
+          "bit_rate": 2000000,
+          "codecs": "avc1.640028,mp4a.40.2",
+          "height": 540,
+          "width": 960
+        },
+        {
+          "bit_rate": 900000,
+          "codecs": "avc1.640028,mp4a.40.2",
+          "height": 540,
+          "width": 960
+        }
+      ]
+    },
+    "simple_watermark": {
+      "font_color": "white@0.5",
+      "font_relative_height": 0.05,
+      "shadow": true,
+      "shadow_color": "black@0.5",
+      "template": "",
+      "x": "(w-tw)/2",
+      "y": "h-(4*lh)"
+    },
+    "image_watermark": {
+      "align_h": "right",
+      "align_v": "bottom",
+      "image": "",
+      "margin_h": "1/20",
+      "margin_v": "1/10",
+      "target_video_height": 1080,
+      "wm_enabled": false
+    }
+  },
+
+  "recording_stream_config": {
+    "audio": {
+      "0": {
+        "bitrate": 192000,
+        "codec": "aac",
+        "playout": true,
+        "playout_label": "Audio 1",
+        "record": true,
+        "recording_bitrate": 192000,
+        "recording_channels": 2,
+        "lang": ""
+      }
+    }
+  },
+
+  "recording_params": {
+    "description": "",
+    "listen": true,
+    "live_delay_nano": 6000000000,
+    "max_duration_sec": -1,
+    "playout_type": "live",
+    "source_timescale": null,
+    "xc_params": {
+      "audio_bitrate": 384000,
+      "audio_index": [0, 0, 0, 0, 0, 0, 0, 0],
+      "audio_seg_duration_ts": null,
+      "connection_timeout": 600,
+      "ecodec2": "aac",
+      "enc_height": null,
+      "enc_width": null,
+      "filter_descriptor": "",
+      "force_keyint": null,
+      "format": "fmp4-segment",
+      "listen": true,
+      "n_audio": 1,
+      "preset": "faster",
+      "sample_rate": 48000,
+      "seg_duration": null,
+      "skip_decoding": false,
+      "start_segment_str": "1",
+      "stream_id": -1,
+      "sync_audio_to_stream_id": -1,
+      "video_bitrate": null,
+      "video_seg_duration_ts": null,
+      "video_time_base": null,
+      "video_frame_duration_ts": null,
+      "xc_type": 3
+    }
+  }
+}

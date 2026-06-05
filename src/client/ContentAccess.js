@@ -1787,17 +1787,14 @@ exports.GlobalUrl = async function({
   );
 
   // Pull auth out of query params
-  if(
-    queryParams.authorization &&
-    (
-      typeof queryParams.authorization === "string" ||
-      (Array.isArray(queryParams.authorization) && queryParams.authorization.length === 1)
-    )
-  ) {
+  if(!queryParams.authorization) {
     queryParams = {...queryParams};
-    authorizationToken = typeof queryParams.authorization === "string" ?
-      queryParams.authorization :
-      queryParams.authorization[0];
+    queryParams.authorization = await this.authClient.AuthorizationToken({
+      libraryId,
+      objectId,
+      versionHash,
+      noAuth
+    });
   }
 
   if(writeToken) {
@@ -1809,18 +1806,6 @@ exports.GlobalUrl = async function({
   }
 
   let urlPath = UrlJoin("s", network);
-  if(!noAuth || authorizationToken) {
-    urlPath = UrlJoin(
-      "t",
-      authorizationToken || await this.authClient.AuthorizationToken({
-        libraryId,
-        objectId,
-        versionHash,
-        noAuth
-      })
-    );
-  }
-
   if(versionHash) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   } else {
@@ -2908,7 +2893,7 @@ exports.EncryptionConk = async function({libraryId, objectId, versionHash, write
   const owner = await this.authClient.Owner({id: objectId});
 
   const ownerCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
-  const ownerCap = await this.ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree: ownerCapKey});
+  const ownerCap = await this.ContentObjectMetadata({libraryId, objectId, versionHash, writeToken, metadataSubtree: ownerCapKey});
 
   if(!this.utils.EqualAddress(owner, this.signer.address) && !ownerCap) {
     if(download) {
