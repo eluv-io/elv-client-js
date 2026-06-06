@@ -449,20 +449,7 @@ exports.NTPStatus = async function({tenantId, ntpId, code, email}) {
   ValidatePresence("ntpId", ntpId);
   ValidatePresence("code", code);
 
-  let kmsAddress;
-  try {
-    kmsAddress = await this.CallContractMethod({
-      contractAddress: this.utils.HashToAddress(tenantId),
-      methodName: "addressKMS"
-    });
-
-    if(!kmsAddress) { throw ""; }
-  } catch(error) {
-    kmsAddress = await this.DefaultKMSAddress();
-  }
-
-  const response = await this.authClient.MakeKMSRequest({
-    kmsId: "ikms" + this.utils.AddressToHash(kmsAddress),
+  const response = await this.HttpClient.Request({
     method: "POST",
     path: UrlJoin("ks", "otp", "ntp", tenantId, ntpId, "status"),
     body: {"_PASSWORD": code, "_EMAIL": email}
