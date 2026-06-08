@@ -374,8 +374,8 @@ exports.NTPInstance = async function({tenantId, ntpId}) {
  *
  * @methodGroup Tickets
  * @namedParams
- * @param {string} tenantId - The ID of the tenant in the NTP instance was created.
- * @param {string} ntpId - The ID of the NTP instance from which to issue a ticket.
+ * @param {string} tenantId - The ID of the tenant in the NTP instance was created
+ * @param {string} ntpId - The ID of the NTP instance from which to issue a ticket
  * @param {string=} email - The email address associated with this ticket. If specified, the email address will have to
  * be provided along with the ticket code in order to redeem the ticket.
  * @param {number=} maxRedemptions - Maximum number of times this ticket may be redeemed. If less than the max redemptions
@@ -413,8 +413,8 @@ exports.IssueNTPCode = async function({tenantId, ntpId, email, maxRedemptions}) 
  *
  * @methodGroup Tickets
  * @namedParams
- * @param {string} tenantId - The ID of the tenant in the NTP instance was created.
- * @param {string} ntpId - The ID of the NTP instance from which to issue a ticket.
+ * @param {string} tenantId - The ID of the tenant in the NTP instance was created
+ * @param {string} ntpId - The ID of the NTP instance from which to issue a ticket
  * @param {string=} email - The email address associated with this ticket. If specified, the email address will have to
  * be provided along with the ticket code in order to redeem the ticket.
  * @param {number=} maxRedemptions - Maximum number of times this ticket may be redeemed. If less than the max redemptions
