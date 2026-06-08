@@ -260,6 +260,8 @@ exports.DeleteNTPInstance = async function({tenantId, ntpId}) {
  * @namedParams
  * @param {string} tenantId - The ID of the tenant in which this NTP instance was created
  * @param {string} ntpId - The ID of the NTP instance
+ * @param {string} password - The code associated with the NTP instance
+ * @param {string=} email - Email address associated with the code
  */
 exports.ReportNTPInstance = async function({tenantId, ntpId, password, email}) {
   ValidatePresence("tenantId", tenantId);
