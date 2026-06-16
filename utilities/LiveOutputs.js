@@ -54,10 +54,15 @@ const Create = async ({streamId, nodeId, geo, passphrase, name}) => {
     streamObjectId: streamId,
     enabled: true,
     name,
-    nodeIds: nodeId ? [nodeId] : undefined,
-    geos: geo ? [geo] : [],
-    passphrase,
-    stripRtp: true
+    delivery: {
+      type: "srt_pull",
+      settings: {
+        node_id: nodeId,
+        elvgeo: geo,
+        passphrase,
+        strip_rtp: true
+      }
+    }
   });
   console.log(JSON.stringify(result, null, 2));
 };
