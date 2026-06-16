@@ -3343,46 +3343,80 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  */
 
 /**
- * SRT push delivery: the fabric initiates an outbound SRT connection to a caller-supplied URL.
+ * Configuration options for an SRT connection. Durations are strings with time units
+ * (e.g. "200ms", "1s500ms") or a floating-point number of seconds (e.g. 0.2, 1.5).
+ *
+ * @typedef {Object} SrtConnectionConfig
+ * @property {string=} connection_timeout - Connection timeout (SRTO_CONNTIMEO)
+ * @property {boolean=} enforced_encryption - Reject connection if parties set different passphrase (SRTO_ENFORCEDENCRYPTION)
+ * @property {number=} fc - Flow control window size in packets (SRTO_FC)
+ * @property {number=} input_bw - Input bandwidth in bytes per second (SRTO_INPUTBW)
+ * @property {number=} iptos - IP socket "type of service" (SRTO_IPTOS)
+ * @property {number=} ipttl - IP socket "time to live" option (SRTO_IPTTL)
+ * @property {number=} km_pre_announce - Duration of stream encryption key switchover in packets (SRTO_KMPREANNOUNCE)
+ * @property {number=} km_refresh_rate - Stream encryption key refresh rate in packets (SRTO_KMREFRESHRATE)
+ * @property {string=} latency - Maximum accepted transmission latency (SRTO_LATENCY)
+ * @property {number=} loss_max_ttl - Packet reorder tolerance (SRTO_LOSSMAXTTL)
+ * @property {number=} max_bw - Bandwidth limit in bytes per second (SRTO_MAXBW)
+ * @property {boolean=} message_api - Enable SRT message mode (SRTO_MESSAGEAPI)
+ * @property {number=} min_input_bw - Minimum input bandwidth (SRTO_MININPUTBW)
+ * @property {number=} min_version - Minimum SRT library version of a peer, encoded (major<<16)|(minor<<8)|patch (SRTO_MINVERSION)
+ * @property {number=} mss - MTU size (SRTO_MSS)
+ * @property {number=} overhead_bw - Limit bandwidth overhead in percent (SRTO_OHEADBW)
+ * @property {number=} payload_size - Maximum payload size in bytes (SRTO_PAYLOADSIZE)
+ * @property {number=} pb_keylen - Length of encryption key in bytes (SRTO_PBKEYLEN): 0=disabled, 16=AES-128, 24=AES-192, 32=AES-256
+ * @property {string=} peer_idle_timeout - Peer idle timeout (SRTO_PEERIDLETIMEO)
+ * @property {string=} peer_latency - Minimum receiver latency to be requested by sender (SRTO_PEERLATENCY)
+ * @property {number=} receiver_buffer_size - Receiver buffer size in bytes (SRTO_RCVBUF)
+ * @property {string=} receiver_latency - Receiver-side latency (SRTO_RCVLATENCY)
+ * @property {number=} send_buffer_size - Sender buffer size in bytes (SRTO_SNDBUF)
+ * @property {string=} send_drop_delay - Sender's delay before dropping packets (SRTO_SNDDROPDELAY)
+ * @property {boolean=} allow_peer_ip_change - Allow a new IP address to start sending data on an existing socket id
+ */
+
+/**
+ * SRT push delivery: the fabric node designated by node_id connects to the given SRT URL in caller
+ * mode and pushes the live stream to it.
  *
  * @typedef {Object} OutputSrtPush
- * @property {string} url - Destination SRT URL the egress node pushes to, e.g. "srt://example.com:1234"
- * @property {("global"|"elvgeo"|"datacenter"|"nid")=} location - Node selection strategy for egress
- * @property {string=} elvgeo - Geo region used to select node(s); resolved to a node_id on create
- * @property {string=} node_id - Egress node ID, e.g. "inodAAA" (resolved from elvgeo if omitted)
- * @property {string=} passphrase - SRT passphrase for encrypted delivery
- * @property {boolean=} strip_rtp - Whether to strip RTP headers
- * @property {Object=} connection - Additional SRT connection configuration (see openapi-bitcode.html#tocssrtconnectionconfig)
+ * @property {string} url - Destination SRT URL (e.g. "srt://192.0.2.10:9000")
+ * @property {string=} node_id - ID of the fabric node that pushes to the destination URL, e.g. "inodAAA" (resolved from elvgeo if omitted)
+ * @property {string=} elvgeo - Geo region used to select a node; resolved to node_id on create
+ * @property {string=} passphrase - Optional passphrase for SRT encryption. Must be at least 10 characters if specified.
+ * @property {boolean=} strip_rtp - If true, strip RTP encapsulation from the source stream before pushing
+ * @property {SrtConnectionConfig=} connection - Configuration options for an SRT connection
  */
 
 /**
  * SRT pull delivery: an external client pulls from a synthetic SRT URL exposed by the fabric.
  *
  * @typedef {Object} OutputSrtPull
- * @property {string=} elvgeo - Geo region used to select node(s); resolved to a node_id on create
- * @property {string=} node_id - Egress node ID, e.g. "inodAAA" (resolved from elvgeo if omitted)
+ * @property {string=} elvgeos - Geo region used to select a node; resolved to node_ids on create
+ * @property {string=} node_ids - Egress node ID, e.g. "inodAAA" (resolved from elvgeos if omitted)
  * @property {string=} passphrase - SRT passphrase for encrypted delivery
  * @property {boolean=} strip_rtp - Whether to strip RTP headers
- * @property {string=} url - Synthetic SRT pull URL (generated by the server on PUT; not set by caller)
- * @property {Object=} connection - Additional SRT connection configuration (see openapi-bitcode.html#tocssrtconnectionconfig)
+ * @property {string=} urls - Synthetic SRT pull URL (generated by the server on PUT; not set by caller)
+ * @property {SrtConnectionConfig=} connection - Configuration options for an SRT connection
  */
 
 /**
- * RTP delivery: the egress node sends RTP to a caller-supplied URL.
+ * RTP delivery: the fabric node designated by node_id pushes the live stream as MPEG-TS over RTP
+ * to the specified URL.
  *
  * @typedef {Object} OutputRtp
- * @property {string} url - Destination RTP URL
- * @property {string=} elvgeo - Geo region used to select node(s); resolved to a node_id on create
- * @property {string=} node_id - Egress node ID, e.g. "inodAAA" (resolved from elvgeo if omitted)
+ * @property {string} url - Destination RTP URL (e.g. "rtp://239.0.0.1:5004")
+ * @property {string=} node_id - ID of the fabric node that pushes to the destination URL, e.g. "inodAAA" (resolved from elvgeo if omitted)
+ * @property {string=} elvgeo - Geo region used to select a node; resolved to node_id on create
  */
 
 /**
- * UDP delivery: the egress node sends an MPEG-TS over UDP to a caller-supplied URL.
+ * UDP delivery: the fabric node designated by node_id pushes the live stream as raw MPEG-TS over UDP
+ * to the specified URL.
  *
  * @typedef {Object} OutputUdp
- * @property {string} url - Destination UDP URL
- * @property {string=} elvgeo - Geo region used to select node(s); resolved to a node_id on create
- * @property {string=} node_id - Egress node ID, e.g. "inodAAA" (resolved from elvgeo if omitted)
+ * @property {string} url - Destination UDP URL (e.g. "udp://239.0.0.1:1234")
+ * @property {string=} node_id - ID of the fabric node that pushes to the destination URL, e.g. "inodAAA" (resolved from elvgeo if omitted)
+ * @property {string=} elvgeo - Geo region used to select a node; resolved to node_id on create
  */
 
 /**
@@ -3418,17 +3452,23 @@ const OutputDeliverySettings = (value) => {
   return type ? value[type] : undefined;
 };
 
+// Egress node ID, normalizing srt_pull's plural node_ids and the singular node_id of other protocols.
+const OutputDeliveryNodeId = (value) => {
+  const settings = OutputDeliverySettings(value);
+  return settings?.node_id ?? settings?.node_ids;
+};
+
 // Resolve egress node and replace SRT URL with the egress endpoint hostname.
 // Necessary because the backend API doesn't return the proper SRT URLs currently.
 exports.OutputsResolveSrtPullUrls = async function({value}) {
-  const nodeId = value.srt_pull?.node_id;
+  const nodeId = value.srt_pull?.node_ids;
   if(!nodeId) { return value; }
 
   const nodes = await this.SpaceNodes({matchNodeId: nodeId});
   const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
-  if(fabricUrl && value.srt_pull?.url) {
+  if(fabricUrl && value.srt_pull?.urls) {
     const egressHost = new URL(fabricUrl).hostname;
-    value.srt_pull.url = value.srt_pull.url.replace(/^srt:\/\/[^:/?]+/, `srt://${egressHost}`);
+    value.srt_pull.urls = value.srt_pull.urls.replace(/^srt:\/\/[^:/?]+/, `srt://${egressHost}`);
   }
 
   return value;
@@ -3486,7 +3526,7 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
     if(includeState) {
       await this.OutputsResolveSrtPullUrls({value});
       try {
-        const nodeId = OutputDeliverySettings(value)?.node_id;
+        const nodeId = OutputDeliveryNodeId(value);
         const result = await this.OutputsState({outputId: key, objectId, libraryId, nodeId, includeState: true});
         value.state = result.state;
       } catch(error) {
@@ -3558,7 +3598,7 @@ exports.OutputsListItem = async function({libraryId, objectId, outputId, include
 
   if(includeState) {
     try {
-      const nodeId = OutputDeliverySettings(value)?.node_id;
+      const nodeId = OutputDeliveryNodeId(value);
       const result = await this.OutputsState({outputId, objectId, libraryId, nodeId, includeState: true});
       value.state = result.state;
     } catch(error) {
@@ -3649,7 +3689,7 @@ const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}
       method: UrlJoin("live", "outputs", outputId),
       constant: true
     });
-    nodeId = OutputDeliverySettings(config)?.node_id;
+    nodeId = OutputDeliveryNodeId(config);
   }
 
   if(nodeId) {
@@ -3733,9 +3773,10 @@ const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
  *
  * The delivery protocol is selected with `delivery.type` and configured with `delivery.settings`,
  * whose fields match the corresponding delivery block (see {@link OutputSrtPush}, {@link OutputSrtPull},
- * {@link OutputRtp}, {@link OutputUdp}). The output is pinned to an egress node, resolved in order:
- * - `settings.node_id`, if provided directly
- * - `settings.elvgeo`, resolved against the fabric config `live_egress` services
+ * {@link OutputRtp}, {@link OutputUdp}). The output is pinned to an egress node, resolved in order
+ * (node_ids/elvgeos for srt_pull, node_id/elvgeo for srt_push/rtp/udp):
+ * - the node ID, if provided directly
+ * - the geo, resolved against the fabric config `live_egress` services
  * - otherwise, the first available `live_egress` node
  *
  * Note: Output creation and modification is transactional. To create multiple outputs in a single
@@ -3774,6 +3815,12 @@ exports.OutputsCreate = async function({
   if(!DELIVERY_PROTOCOLS.includes(type)) {
     throw new Error(`delivery.type must be one of ${DELIVERY_PROTOCOLS.join(", ")}`);
   }
+
+  // srt_pull uses plural node_ids/elvgeos; srt_push/rtp/udp use singular node_id/elvgeo/url
+  const isPull = type === "srt_pull";
+  const nodeKey = isPull ? "node_ids" : "node_id";
+  const geoKey = isPull ? "elvgeos" : "elvgeo";
+
   if(["srt_push", "rtp", "udp"].includes(type) && !settings.url) {
     throw new Error(`delivery.settings.url is required for ${type} outputs`);
   }
@@ -3782,10 +3829,10 @@ exports.OutputsCreate = async function({
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  if(!settings.node_id) {
-    settings.node_id = await RetrieveOutputNodeId({
+  if(!settings[nodeKey]) {
+    settings[nodeKey] = await RetrieveOutputNodeId({
       client: this,
-      geos: settings.elvgeo ? [settings.elvgeo] : undefined
+      geos: settings[geoKey] ? [settings[geoKey]] : undefined
     });
   }
 
