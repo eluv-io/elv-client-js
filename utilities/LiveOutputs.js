@@ -57,8 +57,8 @@ const Create = async ({streamId, nodeId, geo, passphrase, name}) => {
     delivery: {
       type: "srt_pull",
       settings: {
-        node_ids: nodeId,
-        elvgeos: geo,
+        node_ids: nodeId ? [nodeId] : undefined,
+        elvgeos: geo ? [geo] : undefined,
         passphrase,
         strip_rtp: true
       }
