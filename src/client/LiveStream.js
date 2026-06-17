@@ -3821,6 +3821,9 @@ exports.OutputsCreate = async function({
   // srt_pull uses array node_ids/elvgeos; srt_push/rtp/udp use singular node_id/elvgeo/url
   const isPull = type === "srt_pull";
 
+  if(isPull && settings.node_ids?.length && settings.elvgeos?.length) {
+    throw new Error("delivery.settings may specify either node_ids or elvgeos, not both");
+  }
   if(["srt_push", "rtp", "udp"].includes(type) && !settings.url) {
     throw new Error(`delivery.settings.url is required for ${type} outputs`);
   }
@@ -3829,18 +3832,20 @@ exports.OutputsCreate = async function({
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  const hasNode = isPull ? settings.node_ids?.length : settings.node_id;
-  if(!hasNode) {
-    const nodeId = await RetrieveOutputNodeId({
-      client: this,
-      geos: isPull ? settings.elvgeos : (settings.elvgeo ? [settings.elvgeo] : undefined)
-    });
-
-    if(isPull) {
-      settings.node_ids = [nodeId];
-    } else {
-      settings.node_id = nodeId;
+  if(isPull) {
+    // Leave elvgeos for the server to resolve; only pick a default node when neither is given
+    if(!settings.node_ids?.length && !settings.elvgeos?.length) {
+      settings.node_ids = [await RetrieveOutputNodeId({client: this})];
     }
+  } else {
+    // Resolve a concrete node_id (from elvgeo, or a default), then replace elvgeo with it
+    if(!settings.node_id) {
+      settings.node_id = await RetrieveOutputNodeId({
+        client: this,
+        geos: settings.elvgeo ? [settings.elvgeo] : undefined
+      });
+    }
+    delete settings.elvgeo;
   }
 
   const {restore} = await RouteToLiveEgress({client: this});
