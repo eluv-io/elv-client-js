@@ -3509,34 +3509,39 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
     restore();
   }
 
-  for(let [key, value] of Object.entries(outputs)) {
-    const streamId = value.input?.stream;
+  await this.utils.LimitedMap(
+    10,
+    Object.entries(outputs),
+    async([key, value]) => {
+      const streamId = value.input?.stream;
 
-    if(streamId) {
-      const streamMetadata = await this.ContentObjectMetadata({
-        libraryId: await this.ContentObjectLibraryId({objectId: streamId}),
-        objectId: streamId,
-        metadataSubtree: "/public/name",
-      });
+      if(streamId) {
+        const [streamLibraryId, streamStatus] = await Promise.all([
+          this.ContentObjectLibraryId({objectId: streamId}),
+          this.StreamStatus({name: streamId})
+        ]);
 
-      const streamStatus = await this.StreamStatus({name: streamId});
+        value.input.name = await this.ContentObjectMetadata({
+          libraryId: streamLibraryId,
+          objectId: streamId,
+          metadataSubtree: "/public/name",
+        });
+        value.input.status = streamStatus?.state;
+      }
 
-      value.input.name = streamMetadata;
-      value.input.status = streamStatus?.state;
-    }
-
-    if(includeState) {
-      await this.OutputsResolveSrtPullUrls({value});
-      try {
-        const nodeId = OutputDeliveryNodeId(value);
-        const result = await this.OutputsState({outputId: key, objectId, libraryId, nodeId, includeState: true});
-        value.state = result.state;
-      } catch(error) {
-        this.Log(`Failed to retrieve state for output ${key}: ${error.message}`, true);
-        value.state = {};
+      if(includeState) {
+        await this.OutputsResolveSrtPullUrls({value});
+        try {
+          const nodeId = OutputDeliveryNodeId(value);
+          const result = await this.OutputsState({outputId: key, objectId, libraryId, nodeId, includeState: true});
+          value.state = result.state;
+        } catch(error) {
+          this.Log(`Failed to retrieve state for output ${key}: ${error.message}`, true);
+          value.state = {};
+        }
       }
     }
-  }
+  );
 
   return outputs;
 };
