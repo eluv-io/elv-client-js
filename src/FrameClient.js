@@ -449,6 +449,7 @@ class FrameClient {
       "ObjectCleanup",
       "OutputsCreate",
       "OutputsDelete",
+      "OutputsDeleteBatch",
       "OutputsList",
       "OutputsListItem",
       "OutputsModify",
