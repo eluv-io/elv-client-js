@@ -4132,7 +4132,7 @@ exports.OutputsDelete = async function({libraryId, objectId, outputId}) {
  * @param {string} objectId - Object ID of the output settings object
  * @param {Array<string>} outputs - List of output IDs to delete
  *
- * @returns {Promise<Object>} - Response from the delete call
+ * @returns {Promise<Array<Object>>} - Responses from each delete call, in input order
  */
 exports.OutputsDeleteBatch = async function({libraryId, objectId, outputs}) {
   ValidateObject(objectId);
@@ -4147,14 +4147,17 @@ exports.OutputsDeleteBatch = async function({libraryId, objectId, outputs}) {
   try {
     const {writeToken} = await this.EditContentObject({libraryId, objectId});
 
-    const result = await this.CallBitcodeMethod({
-      libraryId,
-      objectId,
-      writeToken,
-      method: UrlJoin("live", "outputs", outputId),
-      verb: "DELETE",
-      constant: false,
-    });
+    const results = [];
+    for(let outputId of outputs) {
+      results.push(await this.CallBitcodeMethod({
+        libraryId,
+        objectId,
+        writeToken,
+        method: UrlJoin("live", "outputs", outputId),
+        verb: "DELETE",
+        constant: false,
+      }));
+    }
 
     await this.FinalizeContentObject({
       libraryId,
@@ -4163,7 +4166,7 @@ exports.OutputsDeleteBatch = async function({libraryId, objectId, outputs}) {
       commitMessage: "Remove outputs (batch)"
     });
 
-    return result;
+    return results;
   } finally {
     restore();
   }
