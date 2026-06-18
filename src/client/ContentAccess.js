@@ -3373,13 +3373,14 @@ exports.TenantContent = async function({
   start,
   limit,
   profile,
-  refresh
+  refresh,
+  authorizationToken
 }) {
   const tenantId = await this.userProfileClient.TenantContractId();
 
   const path = UrlJoin("tenants", tenantId, "q", "query");
 
-  let token = await this.MetadataAuth({
+  let token = authorizationToken || await this.MetadataAuth({
     libraryId: tenantId.replace("iten", "ilib"),
     objectId: tenantId.replace("iten", "iq__")
   });
