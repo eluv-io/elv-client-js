@@ -454,6 +454,7 @@ class FrameClient {
       "OutputsListItem",
       "OutputsModify",
       "OutputsModifyBatch",
+      "OutputsReset",
       "OutputsResolveSrtPullUrls",
       "OutputsState",
       "OutputsStop",

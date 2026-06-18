@@ -4134,6 +4134,44 @@ exports.OutputsStop = async function({libraryId, objectId, outputId}) {
 };
 
 /**
+ * Reset a live output.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output to reset
+ *
+ * @returns {Promise<Object>} - Response from the reset call
+ */
+exports.OutputsReset = async function({libraryId, objectId, outputId}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputId", outputId);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  // Route to a live egress node, then to the specific output's node
+  const {restore} = await RouteToLiveEgress({client: this});
+  await RouteToOutputNode({client: this, libraryId, objectId, outputId});
+
+  try {
+    const {writeToken} = await this.EditContentObject({libraryId, objectId});
+
+    return await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      writeToken,
+      method: UrlJoin("live", "outputs", outputId, "ctrl", "reset"),
+      constant: false
+    });
+  } finally {
+    restore();
+  }
+};
+
+/**
  * Delete a live output.
  *
  * @methodGroup Live Stream
