@@ -3344,22 +3344,36 @@ exports.ContentObjectFolders = async function({libraryId, objectId, versionHash,
  * Get tenant content
  *
  * @methodGroup Tenants
- * @param {Object<field: string, desc: boolean>=} sortOptions - Options to sort by where
- *  - 'field' (string): The field to sort by
- *  - 'desc' (boolean): Determines whether the order is descending
- * @param {Array<string>=} filter - Filter options
+ * @param {Array<string>=} sortBy - Metadata paths to sort by. Multiple values allowed for multi-level sorting (e.g. ["/public/name", "/public/type"])
+ * @param {boolean=} sortDescending - Sort in descending order. Default: false (ascending)
+ * @param {boolean=} sortCaseSensitive - Enable case-sensitive sorting. Default: false
+ * @param {Array<string>=} filter - Filter options. Each entry is a metadata path + comparator + value
+ *   (e.g. "/public/name:co:season 1"). Comparators: ::/:co: contains, :nc: not contains, :eq: equals,
+ *   :ne: not equals, :lt: less than, :le: less than or equal, :gt: greater than, :ge: greater than or equal
+ * @param {boolean=} filterByUser - Suppress content not accessible to the requesting user. Default: true
+ * @param {boolean=} latestVersionOnly - Return only the latest version per content ID. Default: true
  * @param {Array<string>=} select - List of metadata subtree paths to return
+ * @param {Array<string>=} remove - List of metadata subtree paths to remove from results
  * @param {number=} start - Index of the first content object to retrieve. Defaults to the first content
  * @param {number=} limit - Integer specifying the number of contents to return. Defaults to 100
+ * @param {boolean=} profile - Retrieve profile information (visibility, kms-id, auth-v3, status code)
+ * @param {boolean=} refresh - When true, profile information is not retrieved from cache
  *
  * @returns {Promise<Object>} - Response containing the tenant content
  */
 exports.TenantContent = async function({
-  sortOptions,
+  sortBy=[],
+  sortDescending,
+  sortCaseSensitive,
   filter=[],
+  filterByUser,
+  latestVersionOnly,
   select=[],
+  remove=[],
   start,
-  limit
+  limit,
+  profile,
+  refresh
 }) {
   const tenantId = await this.userProfileClient.TenantContractId();
 
@@ -3373,23 +3387,37 @@ exports.TenantContent = async function({
   const queryParams = {
     filter,
     select,
+    remove,
     start,
     limit
   };
 
-  // Filter comparators
-  //   ::, :co: contains
-  //   :nc: not contains
-  //   :eq: equals
-  //   :ne: not equals
-  //   :lt: less than
-  //   :le: less than or equal
-  //   :gt: greater than
-  //   :ge: greater than or equal
+  if(sortBy.length > 0) {
+    queryParams["sort_by"] = sortBy;
+  }
 
-  if(sortOptions && sortOptions.field) {
-    queryParams["sort_by"] = sortOptions.field;
-    queryParams["sort_descending"] = sortOptions.desc;
+  if(sortDescending !== undefined) {
+    queryParams["sort_descending"] = sortDescending;
+  }
+
+  if(sortCaseSensitive !== undefined) {
+    queryParams["sort_case_sensitive"] = sortCaseSensitive;
+  }
+
+  if(filterByUser !== undefined) {
+    queryParams["filter_by_user"] = filterByUser;
+  }
+
+  if(latestVersionOnly !== undefined) {
+    queryParams["latest_version_only"] = latestVersionOnly;
+  }
+
+  if(profile !== undefined) {
+    queryParams["profile"] = profile;
+  }
+
+  if(refresh !== undefined) {
+    queryParams["refresh"] = refresh;
   }
 
   return this.utils.ResponseToJson(
