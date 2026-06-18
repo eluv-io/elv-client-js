@@ -4157,12 +4157,9 @@ exports.OutputsReset = async function({libraryId, objectId, outputId}) {
   await RouteToOutputNode({client: this, libraryId, objectId, outputId});
 
   try {
-    const {writeToken} = await this.EditContentObject({libraryId, objectId});
-
     return await this.CallBitcodeMethod({
       libraryId,
       objectId,
-      writeToken,
       method: UrlJoin("live", "outputs", outputId, "ctrl", "reset"),
       constant: false
     });
