@@ -3890,10 +3890,15 @@ exports.OutputsCreate = async function({
   }
 
   if(isPull) {
-    // Leave elvgeos for the server to resolve; only pick a default node when neither is given
-    if(!settings.node_ids?.length && !settings.elvgeos?.length) {
-      settings.node_ids = [await RetrieveOutputNodeId({client: this})];
+    // srt_pull delivers by node_ids only — resolve them (from elvgeos, or a default) then drop elvgeos
+    if(!settings.node_ids?.length) {
+      settings.node_ids = settings.elvgeos?.length
+        ? await Promise.all(
+          settings.elvgeos.map(geo => RetrieveOutputNodeId({client: this, geos: [geo]}))
+        )
+        : [await RetrieveOutputNodeId({client: this})];
     }
+    delete settings.elvgeos;
   } else {
     // Resolve a concrete node_id (from elvgeo, or a default), then replace elvgeo with it
     if(!settings.node_id) {
@@ -4127,6 +4132,10 @@ exports.OutputsStop = async function({libraryId, objectId, outputId}) {
       writeToken,
       method: UrlJoin("live", "outputs", outputId, "ctrl", "stop"),
       constant: false
+    });
+
+    await this.DeleteWriteToken({
+      writeToken
     });
   } finally {
     restore();
