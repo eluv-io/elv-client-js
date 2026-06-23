@@ -3427,7 +3427,6 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  * @property {string=} name - Display name for the output
  * @property {string=} description - Description of the output
  * @property {string=} external_id - External identifier for the output
- * @property {boolean=} reset - Whether to reset the output
  * @property {OutputInput=} input - Input stream configuration
  * @property {OutputSrtPush=} srt_push - SRT push delivery configuration
  * @property {OutputSrtPull=} srt_pull - SRT pull delivery configuration
