@@ -1081,14 +1081,13 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
     }
 
     // Convert LRO 'state' to desired 'state'
-    if(state === "running" && videoLastFinalizationTimeEpochSec <= 0) {
-      state = "starting"; // The LRO returns 'running' even if the source hasn't connected
-    } else if(state == "terminated") {
+    if(state == "terminated") {
       state = "stopped"; // The LRO reports 'terminated' which for the recording means 'stopped'
     }
     status.state = state;
 
-    if(state === "running") {
+    const retrievePlayoutOptions = false; // PENDING(SS) make this a function argument if useful for the API
+    if(retrievePlayoutOptions && state === "running") {
       let playoutUrls = {};
       let playout_options;
 
