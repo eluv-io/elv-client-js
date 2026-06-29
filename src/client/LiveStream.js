@@ -226,7 +226,13 @@ exports.StreamCreate = async function({
       ]
     });
 
-    const tenantContentAdminGroup = await this.ContentAdminGroup({tenantContractId: tenantId});
+    let tenantContentAdminGroup;
+    try {
+      tenantContentAdminGroup = await this.ContentAdminGroup({tenantContractId: tenantId}) || [];
+    } catch(error) {
+      console.error("Unable to load content admin group", error);
+    }
+
     adminGroups = adminGroups.concat(tenantContentAdminGroup ?? []);
 
     contentType = tenantMeta.content_types?.live_stream;
