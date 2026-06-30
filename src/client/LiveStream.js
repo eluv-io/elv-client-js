@@ -4130,7 +4130,7 @@ exports.OutputsStop = async function({libraryId, objectId, outputId}) {
   try {
     const {writeToken} = await this.EditContentObject({libraryId, objectId});
 
-    return await this.CallBitcodeMethod({
+    const response = await this.CallBitcodeMethod({
       libraryId,
       objectId,
       writeToken,
@@ -4138,9 +4138,9 @@ exports.OutputsStop = async function({libraryId, objectId, outputId}) {
       constant: false
     });
 
-    await this.DeleteWriteToken({
-      writeToken
-    });
+    await this.DeleteWriteToken({writeToken});
+
+    return response;
   } finally {
     restore();
   }
