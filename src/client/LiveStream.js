@@ -2672,6 +2672,13 @@ exports.StreamConfig = async function({
     });
   }
 
+  const currentLiveRecordingMeta = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "/live_recording"
+  });
+
   // Create live recording config
   const liveConf = new LiveConf({
     url: liveRecordingConfigProfile.url,
@@ -2680,7 +2687,8 @@ exports.StreamConfig = async function({
     nodeUrl: endpoint,
     includeAVSegDurations: false,
     overwriteOriginUrl: false,
-    syncAudioToVideo: true
+    syncAudioToVideo: true,
+    liveRecordingMeta: currentLiveRecordingMeta
   });
 
   const liveRecordingConfigMeta = liveConf.generateLiveConf({
