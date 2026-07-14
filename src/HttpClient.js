@@ -96,6 +96,13 @@ class HttpClient {
         // Save current URI for all future requests involving this write token
         this.draftURIs[writeToken] = baseURI;
       }
+
+      // If write token is present in headers, we may get redirected even if we try and use the right node.
+      // When a network request is redirected, the authorization header is dropped, which will cause issues.
+      // Ensure it is present in query params as well
+      if((headers.Authorization || headers.authorization) && !queryParams.authorization) {
+        queryParams.authorization = headers.Authorization || headers.authorization;
+      }
     }
 
     let uri = baseURI
