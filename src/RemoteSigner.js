@@ -187,13 +187,14 @@ class RemoteSigner extends Ethers.Signer {
       throw Error("RemoteSigner: public key not available - call Initialize() first");
     }
 
-    return this.publicKey;
+    const with0x = this.publicKey.startsWith("0x") ? this.publicKey : `0x${this.publicKey}`;
+    return with0x.length === 2 + 128 ? `0x04${with0x.slice(2)}` : with0x;
   }
 
   /** so remote signers can be used interchangeably with local signers */
   _signingKey() {
     if(!this.publicKey) {
-      throw Error("RemoteSigner: public key not available - call PublicKey() first");
+      throw Error("RemoteSigner: public key not available - call Initialize() first");
     }
 
     const publicKey = this.publicKey;
