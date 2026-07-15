@@ -82,9 +82,7 @@ const Crypto = {
     return Utils.B64(cap);
   },
 
-  // Accepts either a raw private key string (legacy usage) or a signer, so remote/custodial
-  // signers - which don't have a private key locally - can be routed to their own DecryptCap,
-  // which calls out to the service that custodies the key.
+  // accepts either a raw private key string (legacy usage) or a signer
   async DecryptCap(encryptedCap, signerOrPrivateKey) {
     let privateKey;
     if(typeof signerOrPrivateKey === "string") {
