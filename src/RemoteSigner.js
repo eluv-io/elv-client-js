@@ -197,9 +197,7 @@ class RemoteSigner extends Ethers.Signer {
     return this.publicKey;
   }
 
-  /**
-   * Mimics Ethers Wallet._signingKey() so remote signers can be used interchangeably with local signers
-   */
+  /** so remote signers can be used interchangeably with local signers */
   _signingKey() {
     if(!this.publicKey) {
       throw Error("RemoteSigner: public key not available - call PublicKey() first");
