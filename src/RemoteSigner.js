@@ -178,8 +178,8 @@ class RemoteSigner extends Ethers.Signer {
   }
 
   /**
-   * This signer's public key, as provided directly by the wallet service (it's already
-   * derived server-side for every custodial user - no client-side recovery needed).
+   * This signer's public key, as provided by the wallet service
+   *
    * @return {Promise<string>} - The public key, in uncompressed hex like SigningKey.publicKey
    */
   async PublicKey() {
@@ -207,8 +207,7 @@ class RemoteSigner extends Ethers.Signer {
 
   /**
    * Decrypt a secp256k1 ECIES-encrypted blob (e.g. a fabric encryption conk) that was wrapped
-   * for this signer's public key, via the wallet service's generic decrypt endpoint. The
-   * private key never leaves the service.
+   * for this signer's public key, via the wallet service's generic decrypt endpoint.
    *
    * @param {string} encryptedData - Base64-encoded ECIES-encrypted blob
    * @return {Promise<Object>} - The decrypted, JSON-parsed contents
