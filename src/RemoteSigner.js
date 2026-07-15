@@ -172,15 +172,7 @@ class RemoteSigner extends Ethers.Signer {
 
   /**
    * Recover this signer's public key.
-   *
-   * Remote/custodial signers never hold private key material locally, and the wallet
-   * service only ever returns the derived address (a one-way hash of the public key),
-   * so the public key can't be fetched directly. Instead, sign a canonical digest via
-   * the existing remote signing endpoint and recover the public key from the resulting
-   * ECDSA signature - this requires no additional server support.
-   *
-   * @return {Promise<string>} - The recovered public key, in the same uncompressed hex
-   * format as Ethers' SigningKey.publicKey
+   * @return {Promise<string>} - The recovered public key, in uncompressed hex like SigningKey.publicKey
    */
   async PublicKey() {
     if(this.publicKey) {
@@ -206,9 +198,7 @@ class RemoteSigner extends Ethers.Signer {
   }
 
   /**
-   * Mimics Ethers Wallet._signingKey() so remote signers can be used interchangeably
-   * with local signers in code that only needs the public key (e.g. conk creation).
-   * Accessing privateKey throws, since remote signers never have one available.
+   * Mimics Ethers Wallet._signingKey() so remote signers can be used interchangeably with local signers
    */
   _signingKey() {
     if(!this.publicKey) {
