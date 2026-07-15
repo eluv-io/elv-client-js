@@ -2734,29 +2734,31 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash,
 
   const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
 
-  const existingUserCap =
-    await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      writeToken,
-      metadataSubtree: capKey
-    });
+  if(!this.encryptionConks[objectId]) {
+    const existingUserCap =
+      await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadataSubtree: capKey
+      });
 
-  if(existingUserCap) {
-    this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
-  } else {
-    this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk({
-      spaceId: this.contentSpaceId,
-      objectId
-    });
+    if(existingUserCap) {
+      this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
+    } else {
+      this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk({
+        spaceId: this.contentSpaceId,
+        objectId
+      });
 
-    await this.ReplaceMetadata({
-      libraryId,
-      objectId,
-      writeToken,
-      metadataSubtree: capKey,
-      metadata: await this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer._signingKey().publicKey)
-    });
+      await this.ReplaceMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadataSubtree: capKey,
+        metadata: await this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer._signingKey().publicKey)
+      });
+    }
   }
 
   if(createKMSConk) {
