@@ -2718,7 +2718,7 @@ exports.LinkData = async function({libraryId, objectId, versionHash, writeToken,
 
 exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash, writeToken, createKMSConk=true}) {
   if(this.signer.remoteSigner) {
-    return;
+    await this.signer.PublicKey();
   }
 
   ValidateParameters({libraryId, objectId, versionHash});
@@ -2743,7 +2743,9 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash,
     });
 
   if(existingUserCap) {
-    this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
+    this.encryptionConks[objectId] = this.signer.remoteSigner ?
+      await this.signer.DecryptCap(existingUserCap) :
+      await this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
   } else {
     this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk({
       spaceId: this.contentSpaceId,
@@ -2846,7 +2848,9 @@ exports.EncryptionConk = async function({libraryId, objectId, versionHash, write
       });
 
     if(existingUserCap) {
-      this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
+      this.encryptionConks[objectId] = this.signer.remoteSigner ?
+        await this.signer.DecryptCap(existingUserCap) :
+        await this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
     } else if(writeToken) {
       await this.CreateEncryptionConk({libraryId, objectId, versionHash, writeToken, createKMSConk: false});
     } else {

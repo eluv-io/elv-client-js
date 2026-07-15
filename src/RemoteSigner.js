@@ -47,7 +47,7 @@ class RemoteSigner extends Ethers.Signer {
         body.code = this.userIdCode;
       }
 
-      const {addr, eth, token} = await Utils.ResponseToJson(
+      const {addr, eth, token, pubkey} = await Utils.ResponseToJson(
         this.HttpClient.Request({
           path: UrlJoin("as", "wlt", "login", this.userIdCode ? "code" : "jwt"),
           method: "POST",
@@ -61,9 +61,10 @@ class RemoteSigner extends Ethers.Signer {
       this.authToken = token;
       this.address = Utils.FormatAddress(addr);
       this.id = eth;
+      this.publicKey = pubkey;
     }
 
-    if(!this.address) {
+    if(!this.address || !this.publicKey) {
       const keys = await Utils.ResponseToJson(
         this.HttpClient.Request({
           method: "GET",
@@ -74,12 +75,18 @@ class RemoteSigner extends Ethers.Signer {
         })
       );
 
-      const address = keys.eth[0];
+      if(!this.address) {
+        const address = keys.eth[0];
 
-      if(address && address.startsWith("0x")) {
-        this.address = address;
-      } else {
-        this.address = Utils.HashToAddress(keys.eth[0]);
+        if(address && address.startsWith("0x")) {
+          this.address = address;
+        } else {
+          this.address = Utils.HashToAddress(keys.eth[0]);
+        }
+      }
+
+      if(!this.publicKey) {
+        this.publicKey = keys.pubkey && keys.pubkey[0];
       }
     }
 
@@ -168,6 +175,59 @@ class RemoteSigner extends Ethers.Signer {
 
   getAddress() {
     return this.address;
+  }
+
+  /**
+   * This signer's public key, as provided directly by the wallet service (it's already
+   * derived server-side for every custodial user - no client-side recovery needed).
+   * @return {Promise<string>} - The public key, in uncompressed hex like SigningKey.publicKey
+   */
+  async PublicKey() {
+    if(!this.publicKey) {
+      throw Error("RemoteSigner: public key not available - call Initialize() first");
+    }
+
+    return this.publicKey;
+  }
+
+  /** so remote signers can be used interchangeably with local signers */
+  _signingKey() {
+    if(!this.publicKey) {
+      throw Error("RemoteSigner: public key not available - call PublicKey() first");
+    }
+
+    const publicKey = this.publicKey;
+    return {
+      publicKey,
+      get privateKey() {
+        throw Error("RemoteSigner: remote signer does not have direct access to a private key");
+      }
+    };
+  }
+
+  /**
+   * Decrypt a secp256k1 ECIES-encrypted blob (e.g. a fabric encryption conk) that was wrapped
+   * for this signer's public key, via the wallet service's generic decrypt endpoint. The
+   * private key never leaves the service.
+   *
+   * @param {string} encryptedData - Base64-encoded ECIES-encrypted blob
+   * @return {Promise<Object>} - The decrypted, JSON-parsed contents
+   */
+  async DecryptCap(encryptedData) {
+    const {data} = await Utils.ResponseToJson(
+      this.HttpClient.Request({
+        method: "POST",
+        path: UrlJoin("as", "wlt", "decrypt", "eth", this.id),
+        headers: {
+          Authorization: `Bearer ${this.authToken}`
+        },
+        body: {
+          data: encryptedData
+        }
+      })
+    );
+
+    return JSON.parse(Buffer.from(data, "base64").toString());
   }
 
   async signDigest(digest) {
