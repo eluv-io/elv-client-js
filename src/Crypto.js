@@ -82,15 +82,23 @@ const Crypto = {
     return Utils.B64(cap);
   },
 
-  // Remote/custodial signers don't hold a private key locally - decryption has to happen
-  // via the signer's own DecryptCap, which calls out to the service that custodies the key.
-  async DecryptCap(encryptedCap, signer) {
-    if(signer.remoteSigner) {
-      return await signer.DecryptCap(encryptedCap);
+  // Accepts either a raw private key string (legacy usage) or a signer, so remote/custodial
+  // signers - which don't have a private key locally - can be routed to their own DecryptCap,
+  // which calls out to the service that custodies the key.
+  async DecryptCap(encryptedCap, signerOrPrivateKey) {
+    let privateKey;
+    if(typeof signerOrPrivateKey === "string") {
+      privateKey = signerOrPrivateKey;
+    } else if(signerOrPrivateKey && signerOrPrivateKey.remoteSigner) {
+      return await signerOrPrivateKey.DecryptCap(encryptedCap);
+    } else if(signerOrPrivateKey && typeof signerOrPrivateKey._signingKey === "function") {
+      privateKey = signerOrPrivateKey._signingKey().privateKey;
+    } else {
+      throw Error("Crypto.DecryptCap: second argument must be a signer or a private key string");
     }
 
     const elvCrypto = await Crypto.ElvCrypto();
-    const privateKey = new Uint8Array(Buffer.from(signer._signingKey().privateKey.replace("0x", ""), "hex"));
+    privateKey = new Uint8Array(Buffer.from(privateKey.replace("0x", ""), "hex"));
 
     encryptedCap = Buffer.from(encryptedCap, "base64");
     const ephemeralKey = encryptedCap.slice(0, 65);
