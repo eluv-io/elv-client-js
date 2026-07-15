@@ -177,6 +177,11 @@ class RemoteSigner extends Ethers.Signer {
     return this.address;
   }
 
+  _normalizePublicKey(key) {
+    const with0x = key.startsWith("0x") ? key : `0x${key}`;
+    return with0x.length === 2 + 128 ? `0x04${with0x.slice(2)}` : with0x;
+  }
+
   /**
    * This signer's public key, as provided by the authd service
    *
@@ -187,8 +192,7 @@ class RemoteSigner extends Ethers.Signer {
       throw Error("RemoteSigner: public key not available - call Initialize() first");
     }
 
-    const with0x = this.publicKey.startsWith("0x") ? this.publicKey : `0x${this.publicKey}`;
-    return with0x.length === 2 + 128 ? `0x04${with0x.slice(2)}` : with0x;
+    return this._normalizePublicKey(this.publicKey);
   }
 
   /** so remote signers can be used interchangeably with local signers */
@@ -197,7 +201,7 @@ class RemoteSigner extends Ethers.Signer {
       throw Error("RemoteSigner: public key not available - call Initialize() first");
     }
 
-    const publicKey = this.publicKey;
+    const publicKey = this._normalizePublicKey(this.publicKey);
     return {
       publicKey,
       get privateKey() {
