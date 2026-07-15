@@ -1348,9 +1348,7 @@ class ElvClient {
 
     ValidatePresence("message", message);
 
-    return this.signer.remoteSigner ?
-      await this.signer.DecryptCap(message) :
-      await this.Crypto.DecryptCap(message, this.signer._signingKey().privateKey);
+    return await this.Crypto.DecryptCap(message, this.signer);
   }
 
   /**
