@@ -170,6 +170,60 @@ class RemoteSigner extends Ethers.Signer {
     return this.address;
   }
 
+  /**
+   * Recover this signer's public key.
+   *
+   * Remote/custodial signers never hold private key material locally, and the wallet
+   * service only ever returns the derived address (a one-way hash of the public key),
+   * so the public key can't be fetched directly. Instead, sign a canonical digest via
+   * the existing remote signing endpoint and recover the public key from the resulting
+   * ECDSA signature - this requires no additional server support.
+   *
+   * @return {Promise<string>} - The recovered public key, in the same uncompressed hex
+   * format as Ethers' SigningKey.publicKey
+   */
+  async PublicKey() {
+    if(this.publicKey) {
+      return this.publicKey;
+    }
+
+    const digest = Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(`Eluvio Recover Public Key: ${this.address}`));
+    const signature = await this.signDigest(digest);
+
+    const publicKey = Ethers.utils.recoverPublicKey(digest, {
+      r: signature.r,
+      s: signature.s,
+      recoveryParam: signature.recoveryParam
+    });
+
+    if(Ethers.utils.computeAddress(publicKey).toLowerCase() !== this.address.toLowerCase()) {
+      throw Error("RemoteSigner: recovered public key does not match signer address");
+    }
+
+    this.publicKey = publicKey;
+
+    return this.publicKey;
+  }
+
+  /**
+   * Mimics Ethers Wallet._signingKey() so remote signers can be used interchangeably
+   * with local signers in code that only needs the public key (e.g. conk creation).
+   * Accessing privateKey throws, since remote signers never have one available.
+   */
+  _signingKey() {
+    if(!this.publicKey) {
+      throw Error("RemoteSigner: public key not available - call PublicKey() first");
+    }
+
+    const publicKey = this.publicKey;
+    return {
+      publicKey,
+      get privateKey() {
+        throw Error("RemoteSigner: remote signer does not have direct access to a private key");
+      }
+    };
+  }
+
   async signDigest(digest) {
     if(!this.signatureCache[digest]) {
       this.signatureCache[digest] = new Promise(async (resolve, reject) => {

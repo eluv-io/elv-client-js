@@ -2718,7 +2718,9 @@ exports.LinkData = async function({libraryId, objectId, versionHash, writeToken,
 
 exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash, writeToken, createKMSConk=true}) {
   if(this.signer.remoteSigner) {
-    return;
+    // Remote signers don't hold a private key locally - recover the public key from
+    // a signature so a conk can still be generated and encrypted for this user
+    await this.signer.PublicKey();
   }
 
   ValidateParameters({libraryId, objectId, versionHash});
