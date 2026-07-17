@@ -82,7 +82,19 @@ const Crypto = {
     return Utils.B64(cap);
   },
 
-  async DecryptCap(encryptedCap, privateKey) {
+  // accepts either a raw private key string (legacy usage) or a signer
+  async DecryptCap(encryptedCap, signerOrPrivateKey) {
+    let privateKey;
+    if(typeof signerOrPrivateKey === "string") {
+      privateKey = signerOrPrivateKey;
+    } else if(signerOrPrivateKey && signerOrPrivateKey.remoteSigner) {
+      return await signerOrPrivateKey.DecryptCap(encryptedCap);
+    } else if(signerOrPrivateKey && typeof signerOrPrivateKey._signingKey === "function") {
+      privateKey = signerOrPrivateKey._signingKey().privateKey;
+    } else {
+      throw Error("Crypto.DecryptCap: second argument must be a signer or a private key string");
+    }
+
     const elvCrypto = await Crypto.ElvCrypto();
     privateKey = new Uint8Array(Buffer.from(privateKey.replace("0x", ""), "hex"));
 
