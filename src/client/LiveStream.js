@@ -226,7 +226,13 @@ exports.StreamCreate = async function({
       ]
     });
 
-    const tenantContentAdminGroup = await this.ContentAdminGroup({tenantContractId: tenantId});
+    let tenantContentAdminGroup;
+    try {
+      tenantContentAdminGroup = await this.ContentAdminGroup({tenantContractId: tenantId}) || [];
+    } catch(error) {
+      console.error("Unable to load content admin group", error);
+    }
+
     adminGroups = adminGroups.concat(tenantContentAdminGroup ?? []);
 
     contentType = tenantMeta.content_types?.live_stream;
@@ -1081,14 +1087,13 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
     }
 
     // Convert LRO 'state' to desired 'state'
-    if(state === "running" && videoLastFinalizationTimeEpochSec <= 0) {
-      state = "starting"; // The LRO returns 'running' even if the source hasn't connected
-    } else if(state == "terminated") {
+    if(state == "terminated") {
       state = "stopped"; // The LRO reports 'terminated' which for the recording means 'stopped'
     }
     status.state = state;
 
-    if(state === "running") {
+    const retrievePlayoutOptions = false; // PENDING(SS) make this a function argument if useful for the API
+    if(retrievePlayoutOptions && state === "running") {
       let playoutUrls = {};
       let playout_options;
 
@@ -2667,6 +2672,13 @@ exports.StreamConfig = async function({
     });
   }
 
+  const currentLiveRecordingMeta = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "/live_recording"
+  });
+
   // Create live recording config
   const liveConf = new LiveConf({
     url: liveRecordingConfigProfile.url,
@@ -2675,7 +2687,8 @@ exports.StreamConfig = async function({
     nodeUrl: endpoint,
     includeAVSegDurations: false,
     overwriteOriginUrl: false,
-    syncAudioToVideo: true
+    syncAudioToVideo: true,
+    liveRecordingMeta: currentLiveRecordingMeta
   });
 
   const liveRecordingConfigMeta = liveConf.generateLiveConf({
@@ -3329,38 +3342,153 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
 };
 
 /**
+ * Live output delivery protocols. Exactly one delivery block is present on a LiveOutput.
+ *
+ * @typedef {("srt_pull"|"srt_push"|"rtp"|"udp")} OutputDeliveryType
+ */
+
+/**
+ * Input stream configuration for a live output.
+ *
+ * @typedef {Object} OutputInput
+ * @property {string=} stream - Object ID of the input stream, e.g. "iq__AAA" (null to disconnect)
+ * @property {string=} offering - Offering key of the input stream to use (optional; defaults to the stream's default offering)
+ */
+
+/**
+ * Configuration options for an SRT connection. Durations are strings with time units
+ * (e.g. "200ms", "1s500ms") or a floating-point number of seconds (e.g. 0.2, 1.5).
+ *
+ * @typedef {Object} SrtConnectionConfig
+ * @property {string=} connection_timeout - Connection timeout (SRTO_CONNTIMEO)
+ * @property {boolean=} enforced_encryption - Reject connection if parties set different passphrase (SRTO_ENFORCEDENCRYPTION)
+ * @property {number=} fc - Flow control window size in packets (SRTO_FC)
+ * @property {number=} input_bw - Input bandwidth in bytes per second (SRTO_INPUTBW)
+ * @property {number=} iptos - IP socket "type of service" (SRTO_IPTOS)
+ * @property {number=} ipttl - IP socket "time to live" option (SRTO_IPTTL)
+ * @property {number=} km_pre_announce - Duration of stream encryption key switchover in packets (SRTO_KMPREANNOUNCE)
+ * @property {number=} km_refresh_rate - Stream encryption key refresh rate in packets (SRTO_KMREFRESHRATE)
+ * @property {string=} latency - Maximum accepted transmission latency (SRTO_LATENCY)
+ * @property {number=} loss_max_ttl - Packet reorder tolerance (SRTO_LOSSMAXTTL)
+ * @property {number=} max_bw - Bandwidth limit in bytes per second (SRTO_MAXBW)
+ * @property {boolean=} message_api - Enable SRT message mode (SRTO_MESSAGEAPI)
+ * @property {number=} min_input_bw - Minimum input bandwidth (SRTO_MININPUTBW)
+ * @property {number=} min_version - Minimum SRT library version of a peer, encoded (major<<16)|(minor<<8)|patch (SRTO_MINVERSION)
+ * @property {number=} mss - MTU size (SRTO_MSS)
+ * @property {number=} overhead_bw - Limit bandwidth overhead in percent (SRTO_OHEADBW)
+ * @property {number=} payload_size - Maximum payload size in bytes (SRTO_PAYLOADSIZE)
+ * @property {number=} pb_keylen - Length of encryption key in bytes (SRTO_PBKEYLEN): 0=disabled, 16=AES-128, 24=AES-192, 32=AES-256
+ * @property {string=} peer_idle_timeout - Peer idle timeout (SRTO_PEERIDLETIMEO)
+ * @property {string=} peer_latency - Minimum receiver latency to be requested by sender (SRTO_PEERLATENCY)
+ * @property {number=} receiver_buffer_size - Receiver buffer size in bytes (SRTO_RCVBUF)
+ * @property {string=} receiver_latency - Receiver-side latency (SRTO_RCVLATENCY)
+ * @property {number=} send_buffer_size - Sender buffer size in bytes (SRTO_SNDBUF)
+ * @property {string=} send_drop_delay - Sender's delay before dropping packets (SRTO_SNDDROPDELAY)
+ * @property {boolean=} allow_peer_ip_change - Allow a new IP address to start sending data on an existing socket id
+ */
+
+/**
+ * SRT push delivery: the fabric node designated by node_id connects to the given SRT URL in caller
+ * mode and pushes the live stream to it.
+ *
+ * @typedef {Object} OutputSrtPush
+ * @property {string} url - Destination SRT URL (e.g. "srt://192.0.2.10:9000")
+ * @property {string=} node_id - ID of the fabric node that pushes to the destination URL, e.g. "inodAAA" (resolved from elvgeo if omitted)
+ * @property {string=} elvgeo - Geo region used to select a node; resolved to node_id on create
+ * @property {string=} passphrase - Optional passphrase for SRT encryption. Must be at least 10 characters if specified.
+ * @property {boolean=} strip_rtp - If true, strip RTP encapsulation from the source stream before pushing
+ * @property {SrtConnectionConfig=} connection - Configuration options for an SRT connection
+ */
+
+/**
+ * SRT pull delivery: an external client pulls from a synthetic SRT URL exposed by the fabric.
+ *
+ * @typedef {Object} OutputSrtPull
+ * @property {Array<string>=} elvgeos - Geo region(s) used to select node(s); resolved to node_ids on create
+ * @property {Array<string>=} node_ids - Egress node ID(s), e.g. ["inodAAA"] (resolved from elvgeos if omitted)
+ * @property {string=} passphrase - SRT passphrase for encrypted delivery
+ * @property {boolean=} strip_rtp - Whether to strip RTP headers
+ * @property {Array<string>=} urls - Fabric-generated SRT pull URL(s) (generated by the server on PUT; not set by caller)
+ * @property {SrtConnectionConfig=} connection - Configuration options for an SRT connection
+ */
+
+/**
+ * RTP delivery: the fabric node designated by node_id pushes the live stream as MPEG-TS over RTP
+ * to the specified URL.
+ *
+ * @typedef {Object} OutputRtp
+ * @property {string} url - Destination RTP URL (e.g. "rtp://239.0.0.1:5004")
+ * @property {string=} node_id - ID of the fabric node that pushes to the destination URL, e.g. "inodAAA" (resolved from elvgeo if omitted)
+ * @property {string=} elvgeo - Geo region used to select a node; resolved to node_id on create
+ */
+
+/**
+ * UDP delivery: the fabric node designated by node_id pushes the live stream as raw MPEG-TS over UDP
+ * to the specified URL.
+ *
+ * @typedef {Object} OutputUdp
+ * @property {string} url - Destination UDP URL (e.g. "udp://239.0.0.1:1234")
+ * @property {string=} node_id - ID of the fabric node that pushes to the destination URL, e.g. "inodAAA" (resolved from elvgeo if omitted)
+ * @property {string=} elvgeo - Geo region used to select a node; resolved to node_id on create
+ */
+
+/**
+ * A single live output. Keyed by output ID in the outputs map. Exactly one of
+ * srt_push / srt_pull / rtp / udp is present and selects the delivery protocol.
+ *
  * @typedef {Object} LiveOutput
  * @property {boolean=} enabled - Whether the output is enabled
  * @property {string=} name - Display name for the output
  * @property {string=} description - Description of the output
  * @property {string=} external_id - External identifier for the output
- * @property {boolean=} reset - Whether to reset the output
- * @property {Object=} input - Input stream configuration
- * @property {string=} input.stream - Object ID of the input stream (null to disconnect)
- * @property {Object=} srt_pull - SRT pull delivery configuration
- * @property {Array<string>=} srt_pull.node_ids - Egress node IDs for SRT delivery (max 1)
- * @property {string=} srt_pull.passphrase - SRT passphrase for encrypted delivery
- * @property {boolean=} srt_pull.strip_rtp - Whether to strip RTP headers
- * @property {Object=} srt_pull.connection - Additional SRT connection configuration
- * @property {Array<string>=} srt_pull.urls - SRT URLs (returned by server, not set by caller)
+ * @property {OutputInput=} input - Input stream configuration
+ * @property {OutputSrtPush=} srt_push - SRT push delivery configuration
+ * @property {OutputSrtPull=} srt_pull - SRT pull delivery configuration
+ * @property {OutputRtp=} rtp - RTP delivery configuration
+ * @property {OutputUdp=} udp - UDP delivery configuration
  */
 
-// Resolve egress node and replace SRT URL with the egress endpoint hostname.
+/**
+ * Delivery envelope accepted by OutputsCreate. The `type` selects the protocol and `settings`
+ * carries the matching delivery block (OutputSrtPush / OutputSrtPull / OutputRtp / OutputUdp).
+ *
+ * @typedef {Object} OutputDelivery
+ * @property {OutputDeliveryType} type - Delivery protocol
+ * @property {(OutputSrtPush|OutputSrtPull|OutputRtp|OutputUdp)} settings - Protocol-specific delivery settings
+ */
+
+const DELIVERY_PROTOCOLS = ["srt_pull", "srt_push", "rtp", "udp"];
+
+const OutputDeliverySettings = (value) => {
+  const type = DELIVERY_PROTOCOLS.find(protocol => value && value[protocol]);
+  return type ? value[type] : undefined;
+};
+
+// Egress node ID, normalizing srt_pull's node_ids array and the singular node_id of other protocols.
+const OutputDeliveryNodeId = (value) => {
+  const settings = OutputDeliverySettings(value);
+  return settings?.node_id ?? settings?.node_ids?.[0];
+};
+
+// Rewrite the host of fabric-generated srt_pull URLs to the egress node's fabric hostname.
 // Necessary because the backend API doesn't return the proper SRT URLs currently.
+const RewriteSrtPullUrls = (value, fabricUrl) => {
+  if(!fabricUrl || !value.srt_pull?.urls) { return; }
+
+  const egressHost = new URL(fabricUrl).hostname;
+  value.srt_pull.urls = value.srt_pull.urls.map(url =>
+    url.replace(/^srt:\/\/[^:/?]+/, `srt://${egressHost}`)
+  );
+};
+
+// Resolve egress node and replace SRT URL with the egress endpoint hostname.
 exports.OutputsResolveSrtPullUrls = async function({value}) {
   const nodeId = value.srt_pull?.node_ids?.[0];
   if(!nodeId) { return value; }
 
   const nodes = await this.SpaceNodes({matchNodeId: nodeId});
   const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
-  if(fabricUrl) {
-    const egressHost = new URL(fabricUrl).hostname;
-    if(value.srt_pull?.urls) {
-      value.srt_pull.urls = value.srt_pull.urls.map(url =>
-        url.replace(/^srt:\/\/[^:/?]+/, `srt://${egressHost}`)
-      );
-    }
-  }
+  RewriteSrtPullUrls(value, fabricUrl);
 
   return value;
 };
@@ -3398,33 +3526,85 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
     restore();
   }
 
-  for(let [key, value] of Object.entries(outputs)) {
-    const streamId = value.input?.stream;
+  // Enrich each output's input stream name/status concurrently (read-only, no routing changes)
+  await this.utils.LimitedMap(
+    10,
+    Object.values(outputs),
+    async value => {
+      const streamId = value.input?.stream;
+      if(!streamId) { return; }
 
-    if(streamId) {
-      const streamMetadata = await this.ContentObjectMetadata({
-        libraryId: await this.ContentObjectLibraryId({objectId: streamId}),
+      const [streamLibraryId, streamStatus] = await Promise.all([
+        this.ContentObjectLibraryId({objectId: streamId}),
+        this.StreamStatus({name: streamId})
+      ]);
+
+      value.input.name = await this.ContentObjectMetadata({
+        libraryId: streamLibraryId,
         objectId: streamId,
         metadataSubtree: "/public/name",
       });
-
-      const streamStatus = await this.StreamStatus({name: streamId});
-
-      value.input.name = streamMetadata;
       value.input.status = streamStatus?.state;
     }
+  );
 
-    if(includeState) {
-      await this.OutputsResolveSrtPullUrls({value});
-      try {
-        const nodeId = value.srt_pull?.node_ids?.[0];
-        const result = await this.OutputsState({outputId: key, objectId, libraryId, nodeId, includeState: true});
-        value.state = result.state;
-      } catch(error) {
-        this.Log(`Failed to retrieve state for output ${key}: ${error.message}`, true);
-        value.state = {};
-      }
+  if(!includeState) {
+    return outputs;
+  }
+
+  // Resolve each distinct egress node's fabric URL once (concurrent, read-only)
+  const nodeIds = [...new Set(
+    Object.values(outputs).map(value => OutputDeliveryNodeId(value)).filter(Boolean)
+  )];
+
+  const nodeUrls = {};
+  await this.utils.LimitedMap(10, nodeIds, async nodeId => {
+    const nodes = await this.SpaceNodes({matchNodeId: nodeId});
+    const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+    if(fabricUrl) { nodeUrls[nodeId] = fabricUrl; }
+  });
+
+  // Rewrite fabric-generated srt_pull URLs to the egress host, and group outputs by node
+  const outputsByNode = {};
+  for(const [key, value] of Object.entries(outputs)) {
+    const nodeId = OutputDeliveryNodeId(value);
+    const fabricUrl = nodeId && nodeUrls[nodeId];
+
+    RewriteSrtPullUrls(value, fabricUrl);
+
+    if(!fabricUrl) {
+      value.state = {};
+      continue;
     }
+    (outputsByNode[nodeId] = outputsByNode[nodeId] || []).push(key);
+  }
+
+  // Fetch state per node: route to the node once, fetch its outputs concurrently, then restore
+  const savedURIs = [...this.fabricURIs];
+  try {
+    for(const [nodeId, outputIds] of Object.entries(outputsByNode)) {
+      this.SetNodes({fabricURIs: [nodeUrls[nodeId]]});
+
+      await this.utils.LimitedMap(10, outputIds, async outputId => {
+        try {
+          outputs[outputId].state = await this.CallBitcodeMethod({
+            libraryId,
+            objectId,
+            method: UrlJoin("live", "outputs", outputId, "state"),
+            queryParams: {
+              "client_stats": 1,
+              "srt_stats": 1
+            },
+            constant: true
+          });
+        } catch(error) {
+          this.Log(`Failed to retrieve state for output ${outputId}: ${error.message}`, true);
+          outputs[outputId].state = {};
+        }
+      });
+    }
+  } finally {
+    this.SetNodes({fabricURIs: savedURIs});
   }
 
   return outputs;
@@ -3489,7 +3669,7 @@ exports.OutputsListItem = async function({libraryId, objectId, outputId, include
 
   if(includeState) {
     try {
-      const nodeId = value.srt_pull?.node_ids?.[0];
+      const nodeId = OutputDeliveryNodeId(value);
       const result = await this.OutputsState({outputId, objectId, libraryId, nodeId, includeState: true});
       value.state = result.state;
     } catch(error) {
@@ -3557,7 +3737,7 @@ exports.OutputsState = async function({libraryId, objectId, outputId, nodeId, in
 /**
  * Pin (route) the client to the egress node for a specific output. Fetches the output config
  * to determine the node ID then sets the client fabric URIs.
- * Currently node ID is retrieved from srt_pull.node_ids (only srt_pull outputs are supported).
+ * Node ID is retrieved from the output's delivery block (srt_push / srt_pull / rtp / udp).
  * Assumes the client is already routed to an eligible egress node (via RouteToLiveEgress).
  * Returns a function that restores the original fabric URIs.
  *
@@ -3580,7 +3760,7 @@ const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}
       method: UrlJoin("live", "outputs", outputId),
       constant: true
     });
-    nodeId = config?.srt_pull?.node_ids?.[0];
+    nodeId = OutputDeliveryNodeId(config);
   }
 
   if(nodeId) {
@@ -3662,9 +3842,13 @@ const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
 /**
  * Create a new live output.
  *
- * At the current version of the live outputs API an output will be pinned to a node, by either:
- * - specifying the node directly in 'nodeIds'
- * - specifying an 'elvgeo' and use fabric config 'live_egress' services to pick a node ID
+ * The delivery protocol is selected with `delivery.type` and configured with `delivery.settings`,
+ * whose fields match the corresponding delivery block (see {@link OutputSrtPush}, {@link OutputSrtPull},
+ * {@link OutputRtp}, {@link OutputUdp}). The output is pinned to an egress node, resolved in order
+ * (node_ids/elvgeos for srt_pull, node_id/elvgeo for srt_push/rtp/udp):
+ * - the node ID, if provided directly
+ * - the geo, resolved against the fabric config `live_egress` services
+ * - otherwise, the first available `live_egress` node
  *
  * Note: Output creation and modification is transactional. To create multiple outputs in a single
  * transaction, use EditContentObject to open a write token, call CallBitcodeMethod for each output,
@@ -3675,13 +3859,12 @@ const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
  * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
  * @param {string} objectId - Object ID of the outputs settings object
  * @param {string=} streamObjectId - Object ID of the input stream to use as the output source
+ * @param {string=} offering - Offering key of the input stream to use
+ * @param {boolean=} enabled - Whether the output is enabled (forced to false when no stream is specified)
  * @param {string=} name - Display name for the output
  * @param {string=} description - Description of the output
- * @param {Array<string>=} nodeIds - Explicit node ID(s) for SRT delivery (max 1)
- * @param {Array<string>=} geos - Geo regions for SRT delivery (max 1) — used to resolve a node from live_egress endpoints
- * @param {string=} passphrase - SRT passphrase for encrypted delivery
- * @param {boolean=} stripRtp - Whether to strip RTP headers (default: false)
- * @param {Object=} srtConfig - Additional SRT connection configuration (see openapi-bitcode.html#tocssrtconnectionconfig)
+ * @param {string=} externalId - External identifier for the output
+ * @param {OutputDelivery} delivery - Delivery configuration: `{type, settings}`
  *
  * @returns {Promise<Object>} - The created output
  */
@@ -3689,61 +3872,80 @@ exports.OutputsCreate = async function({
   libraryId,
   objectId,
   streamObjectId,
+  offering,
   enabled,
   name,
   description,
   externalId,
-  nodeIds,
-  geos=[],
-  passphrase,
-  stripRtp=false,
-  srtConfig
+  delivery
 }) {
   ValidateObject(objectId);
 
-  if(nodeIds && geos.length > 0) {
-    throw new Error("Specify either nodeIds or geos, not both");
+  const {type, settings = {}} = delivery || {};
+
+  if(!DELIVERY_PROTOCOLS.includes(type)) {
+    throw new Error(`delivery.type must be one of ${DELIVERY_PROTOCOLS.join(", ")}`);
   }
-  if(nodeIds && nodeIds.length > 1) {
-    throw new Error("Only one node ID is supported — nodeIds must have at most 1 element");
+
+  // srt_pull uses array node_ids/elvgeos; srt_push/rtp/udp use singular node_id/elvgeo/url
+  const isPull = type === "srt_pull";
+
+  if(isPull && settings.node_ids?.length && settings.elvgeos?.length) {
+    throw new Error("delivery.settings may specify either node_ids or elvgeos, not both");
   }
-  if(geos.length > 1) {
-    throw new Error("Only one geo is supported — geos must have at most 1 element");
+  if(["srt_push", "rtp", "udp"].includes(type) && !settings.url) {
+    throw new Error(`delivery.settings.url is required for ${type} outputs`);
   }
 
   if(!libraryId) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  const resolvedNodeId = await RetrieveOutputNodeId({client: this, nodeIds, geos});
+  if(isPull) {
+    // srt_pull delivers by node_ids only — resolve them (from elvgeos, or a default) then drop elvgeos
+    if(!settings.node_ids?.length) {
+      settings.node_ids = settings.elvgeos?.length
+        ? await Promise.all(
+          settings.elvgeos.map(geo => RetrieveOutputNodeId({client: this, geos: [geo]}))
+        )
+        : [await RetrieveOutputNodeId({client: this})];
+    }
+    delete settings.elvgeos;
+  } else {
+    // Resolve a concrete node_id (from elvgeo, or a default), then replace elvgeo with it
+    if(!settings.node_id) {
+      settings.node_id = await RetrieveOutputNodeId({
+        client: this,
+        geos: settings.elvgeo ? [settings.elvgeo] : undefined
+      });
+    }
+    delete settings.elvgeo;
+  }
 
-  // Route to any live egress node
   const {restore} = await RouteToLiveEgress({client: this});
 
-  // Auto-generate passphrase if encryption is truthy
-  if(srtConfig?.enforced_encryption && !passphrase) {
-    passphrase = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(16))).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
-    srtConfig["pb_keylen"] = 16;
+  if(
+    (type === "srt_pull" || type === "srt_push") &&
+    settings.connection?.enforced_encryption &&
+    !settings.passphrase
+  ) {
+    settings.passphrase = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(16)))
+      .toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+    settings.connection.pb_keylen = 16;
   }
 
   try {
     const output = {
-      enabled: streamObjectId ? enabled : false, // Output must be disabled if no stream specified
+      enabled: streamObjectId ? enabled : false,
       name,
       description,
       external_id: externalId,
-      input: streamObjectId ? {stream: streamObjectId} : undefined,
-      srt_pull: {
-        connection: srtConfig ?? undefined,
-        node_ids: [resolvedNodeId],
-        passphrase,
-        strip_rtp: stripRtp
-      }
+      input: streamObjectId ? {stream: streamObjectId, offering} : undefined,
+      [type]: settings
     };
 
     const {writeToken} = await this.EditContentObject({libraryId, objectId});
 
-    // Note - you may create multiple outputs here, then finalize the transaction below
     const outputs = await this.CallBitcodeMethod({
       libraryId,
       objectId,
@@ -3809,8 +4011,9 @@ exports.OutputsModify = async function({
       ({writeToken} = await this.EditContentObject({libraryId, objectId}));
     }
 
-    if(output.srt_pull?.connection?.enforced_encryption && !output.srt_pull?.passphrase) {
-      output.srt_pull.passphrase = Buffer.from(
+    const deliverySettings = OutputDeliverySettings(output);
+    if(deliverySettings?.connection?.enforced_encryption && !deliverySettings.passphrase) {
+      deliverySettings.passphrase = Buffer.from(
         globalThis.crypto.getRandomValues(new Uint8Array(16))
       ).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
     }
@@ -3935,11 +4138,50 @@ exports.OutputsStop = async function({libraryId, objectId, outputId}) {
   try {
     const {writeToken} = await this.EditContentObject({libraryId, objectId});
 
-    return await this.CallBitcodeMethod({
+    const response = await this.CallBitcodeMethod({
       libraryId,
       objectId,
       writeToken,
       method: UrlJoin("live", "outputs", outputId, "ctrl", "stop"),
+      constant: false
+    });
+
+    await this.DeleteWriteToken({writeToken});
+
+    return response;
+  } finally {
+    restore();
+  }
+};
+
+/**
+ * Reset a live output.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output to reset
+ *
+ * @returns {Promise<Object>} - Response from the reset call
+ */
+exports.OutputsReset = async function({libraryId, objectId, outputId}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputId", outputId);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  // Route to a live egress node, then to the specific output's node
+  const {restore} = await RouteToLiveEgress({client: this});
+  await RouteToOutputNode({client: this, libraryId, objectId, outputId});
+
+  try {
+    return await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: UrlJoin("live", "outputs", outputId, "ctrl", "reset"),
       constant: false
     });
   } finally {
@@ -4003,7 +4245,7 @@ exports.OutputsDelete = async function({libraryId, objectId, outputId}) {
  * @param {string} objectId - Object ID of the output settings object
  * @param {Array<string>} outputs - List of output IDs to delete
  *
- * @returns {Promise<Object>} - Response from the delete call
+ * @returns {Promise<Array<Object>>} - Responses from each delete call, in input order
  */
 exports.OutputsDeleteBatch = async function({libraryId, objectId, outputs}) {
   ValidateObject(objectId);
@@ -4018,14 +4260,17 @@ exports.OutputsDeleteBatch = async function({libraryId, objectId, outputs}) {
   try {
     const {writeToken} = await this.EditContentObject({libraryId, objectId});
 
-    const result = await this.CallBitcodeMethod({
-      libraryId,
-      objectId,
-      writeToken,
-      method: UrlJoin("live", "outputs", outputId),
-      verb: "DELETE",
-      constant: false,
-    });
+    const results = [];
+    for(let outputId of outputs) {
+      results.push(await this.CallBitcodeMethod({
+        libraryId,
+        objectId,
+        writeToken,
+        method: UrlJoin("live", "outputs", outputId),
+        verb: "DELETE",
+        constant: false,
+      }));
+    }
 
     await this.FinalizeContentObject({
       libraryId,
@@ -4034,7 +4279,7 @@ exports.OutputsDeleteBatch = async function({libraryId, objectId, outputs}) {
       commitMessage: "Remove outputs (batch)"
     });
 
-    return result;
+    return results;
   } finally {
     restore();
   }
