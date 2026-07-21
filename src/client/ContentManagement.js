@@ -680,7 +680,7 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
   const userCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
 
   if(metadata[userCapKey]) {
-    const userConkKey = await this.Crypto.DecryptCap(metadata[userCapKey], this.signer._signingKey().privateKey);
+    const userConkKey = await this.Crypto.DecryptCap(metadata[userCapKey], this.signer);
     userConkKey.qid = objectId;
 
     await this.ReplaceMetadata({
@@ -733,7 +733,7 @@ exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, writ
     throw Error("No user cap found for current user");
   }
 
-  const userConk = await this.Crypto.DecryptCap(userCapValue, this.signer._signingKey().privateKey);
+  const userConk = await this.Crypto.DecryptCap(userCapValue, this.signer);
 
   const publicAddress = this.utils.PublicKeyToAddress(publicKey);
 
