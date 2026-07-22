@@ -412,7 +412,9 @@ exports.SetContentObjectImage = async function({libraryId, objectId, writeToken,
 };
 
 /**
- * NOT YET SUPPORTED - Delete the specified content library
+ * Delete the specified content library
+ *
+ * Only the owner of the content library can perform this operation.
  *
  * @methodGroup Content Libraries
  *
@@ -420,25 +422,59 @@ exports.SetContentObjectImage = async function({libraryId, objectId, writeToken,
  * @param {string} libraryId - ID of the library to delete
  */
 exports.DeleteContentLibrary = async function({libraryId}) {
-  throw Error(`Delete library not supported. (${libraryId})`);
 
-  // ValidateLibrary(libraryId);
-  //
-  // let path = UrlJoin("qlibs", libraryId);
-  //
-  // const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, update: true});
-  //
-  // await this.CallContractMethodAndWait({
-  //   contractAddress: this.utils.HashToAddress(libraryId),
-  //   methodName: "kill",
-  //   methodArgs: []
-  // });
-  //
-  // await this.HttpClient.Request({
-  //   headers: authorizationHeader,
-  //   method: "DELETE",
-  //   path: path
-  // });
+  ValidateLibrary(libraryId);
+
+  // check if the signer is library owner
+  const owner = await this.ContentLibraryOwner({ libraryId });
+  if(this.utils.FormatAddress(owner) !== this.utils.FormatAddress(this.signer.address)) {
+    throw new Error(`Current user does not have permission to delete library ${libraryId}`);
+  }
+
+  const contentsInfo = await this.ContentObjects({ libraryId,filterOptions:{limit: 2}});
+
+  // Since the library itself counts as an object, the minimum is 1.
+  // Therefore, we check for > 1 instead of > 0.
+  if(contentsInfo.contents.length > 1){
+    throw Error(`library ${libraryId} has content objects, Please delete them before deleting library`);
+  }
+
+  await this.CallContractMethodAndWait({
+    contractAddress: this.utils.HashToAddress(libraryId),
+    methodName: "kill",
+    methodArgs: []
+  });
+};
+
+/**
+ * Delete the specified content type
+ *
+ * Only the user with edit access can perform this operation.
+ *
+ * @methodGroup Content Libraries
+ *
+ * @namedParams
+ * @param {string} typeId - ID of the content type to delete
+ */
+exports.DeleteContentType = async function({ typeId }){
+
+  ValidateObject(typeId);
+
+  this.Log(`Deleting content type: ${typeId}`);
+
+  const canEdit = await this.CallContractMethod({
+    contractAddress: this.utils.HashToAddress(typeId),
+    methodName: "canEdit"
+  });
+  if(!canEdit) {
+    throw Error(`Current user does not have permission to delete content type ${typeId}`);
+  }
+
+  await this.CallContractMethodAndWait({
+    contractAddress: this.utils.HashToAddress(typeId),
+    methodName: "kill",
+    methodArgs: []
+  });
 };
 
 /* Library Content Type Management */
@@ -1154,6 +1190,15 @@ exports.DeleteContentObject = async function({libraryId, objectId}) {
 
   this.Log(`Deleting content version: ${libraryId} ${objectId}`);
 
+  const canEdit = await this.CallContractMethod({
+    contractAddress: this.utils.HashToAddress(objectId),
+    methodName: "canEdit"
+  });
+  if(!canEdit) {
+    throw Error(`Current user does not have permission to delete content object ${objectId}`);
+  }
+
+  // content can be deleted only from library
   await this.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(libraryId),
     methodName: "deleteContent",
