@@ -2172,6 +2172,28 @@ describe("Test ElvClient", () => {
       };
     });
 
+    test("Playout Options Protocol Filter", async () => {
+      const hlsOnly = await accessClient.PlayoutOptions({
+        objectId: mezzanineId,
+        protocols: ["hls"],
+        drms: []
+      });
+
+      expect(hlsOnly.hls).toBeDefined();
+      expect(hlsOnly.hls.playoutUrl).toBeDefined();
+      expect(hlsOnly.dash).toBeUndefined();
+
+      const dashOnly = await accessClient.PlayoutOptions({
+        objectId: mezzanineId,
+        protocols: ["dash"],
+        drms: []
+      });
+
+      expect(dashOnly.dash).toBeDefined();
+      expect(dashOnly.dash.playoutUrl).toBeDefined();
+      expect(dashOnly.hls).toBeUndefined();
+    });
+
     test("Playout Options From Self Link", async () => {
       try {
         // Create a link to default playout
