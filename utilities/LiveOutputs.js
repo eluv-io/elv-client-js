@@ -11,6 +11,7 @@
  *           [--passphrase <pass>] [--name <name>]
  *   modify  <output_id> [--stream <id>] [--enable true|false]  Modify an existing output
  *           [--passphrase <pass>] [--name <name>]
+ *   modify-batch <json_file>                               Modify multiple outputs from a JSON file
  *   delete  <output_id>                                    Delete an output
  *
  * Examples:
@@ -91,6 +92,13 @@ const Modify = async (outputId, {streamId, enable, passphrase, name}) => {
   console.log(JSON.stringify(result, null, 2));
 };
 
+const ModifyBatch = async (jsonFile) => {
+  const client = await Init();
+  const outputs = JSON.parse(require("fs").readFileSync(jsonFile, "utf8"));
+  const result = await client.OutputsModifyBatch({objectId: OBJECT_ID, outputs});
+  console.log(JSON.stringify(result, null, 2));
+};
+
 const Delete = async (outputId) => {
   const client = await Init();
   const result = await client.OutputsDelete({objectId: OBJECT_ID, outputId});
@@ -141,6 +149,9 @@ switch(cmd) {
       name: getArg(args, "--name")
     }));
     break;
+  case "modify-batch":
+    Run(() => ModifyBatch(args[0]));
+    break;
   case "delete":
     Run(() => Delete(args[0]));
     break;
@@ -150,5 +161,6 @@ switch(cmd) {
     console.log("  status   <output_id>");
     console.log("  create   --stream <stream_object_id> [--node <node_id> | --geo <geo>] [--passphrase <pass>] [--name <name>]");
     console.log("  modify   <output_id> [--stream <stream_object_id>] [--enable true|false] [--passphrase <pass>] [--name <name>]");
+    console.log("  modify-batch <json_file>");
     console.log("  delete   <output_id>");
 }

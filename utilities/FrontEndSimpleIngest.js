@@ -62,7 +62,7 @@ const MediaUpload = async () => {
 
   // Generate auth token
   const authToken = await backendClient.authClient.AuthorizationToken({libraryId, objectId, update: true});
-  const node = await backendClient.WriteTokenNodeUrl({writeToken});
+  const node = await backendClient.WriteTokenNodeUrlNetwork({writeToken});
   console.log("Send to front end", "writeToken", writeToken, "authToken", authToken, "node", node);
 
 
