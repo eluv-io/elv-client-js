@@ -16,6 +16,20 @@ const ArgTenant = require("./lib/concerns/ArgTenant");
 const {seconds} = require("./lib/helpers");
 
 const AbrProfile = require("./lib/abr_profiles/abr_profile_clear.json");
+const STATUS_FILE = "./ingest-status.json";
+
+// Status object - used for reporting and resume.
+const status = {
+  state: "",
+  object_id: "",
+  write_token: "",
+  master_created: false
+};
+
+const SetStatus = statusUpdate => {
+  Object.assign(status, statusUpdate);
+  fs.writeFileSync(STATUS_FILE, `${JSON.stringify(status, null, 2)}\n`);
+};
 
 class SampleIngest extends Utility {
   blueprint() {
@@ -47,6 +61,16 @@ class SampleIngest extends Utility {
           descTemplate: "Finalize the content object write token after ingest. Use --no-finalize to leave the draft open.",
           type: "boolean"
         }),
+        NewOpt("offeringKey", {
+          default: "default",
+          descTemplate: "Offering key (default: 'default')",
+          type: "string"
+        }),
+        NewOpt("variantKey", {
+          default: "default",
+          descTemplate: "Master variant key (default: 'default')",
+          type: "string"
+        }),
         ModOpt("files", {forX: "for new media object"})
       ]
     };
@@ -54,17 +78,6 @@ class SampleIngest extends Utility {
 
   async body() {
     const logger = this.logger;
-
-    // Status object - used for reporting and resume.
-    // To resume an interrupted run, set object_id / write_token / step flags
-    // below to values from the previous run, then re-run with the same args.
-    // TODO: this will be replaced with a status file
-    const status = {
-      state: "",
-      object_id: "",
-      write_token: "",
-      master_created: false
-    };
 
     let fileHandles = [];
     const fileInfo = this.concerns.LocalFile.fileInfo(fileHandles);
@@ -80,7 +93,7 @@ class SampleIngest extends Utility {
 
     if(R.isNil(type)) throw Error("Library does not specify content type for sample ingests");
 
-    let {drm, finalize, hdrInfoFile, libraryId, objectId, title} = this.args;
+    let {drm, finalize, hdrInfoFile, libraryId, objectId, offeringKey, title, variantKey} = this.args;
     const noFinalize = !finalize;
     const encrypt = true;
 
@@ -137,7 +150,8 @@ class SampleIngest extends Utility {
       status.object_id = id;
       status.write_token = writeToken;
     }
-    status.state = "object_ready";
+
+    SetStatus({state: "object_created"});
 
     if(!nodeUrl) {
       nodeUrl = client.WriteTokenNodeUrlLocal({writeToken});
@@ -182,7 +196,8 @@ class SampleIngest extends Utility {
       this.concerns.LocalFile.closeFileHandles(fileHandles);
       logger.log(`Skipping upload + master creation (resume), write token ${writeToken}`);
     }
-    status.state = "master_created";
+
+    SetStatus({state: "master_created", master_created: true});
 
     // get production master metadata
     const masterMetadata = (await client.ContentObjectMetadata({
@@ -193,12 +208,14 @@ class SampleIngest extends Utility {
     }));
 
     const sources = R.prop("sources", masterMetadata);
-    const variant = R.path(["variants", "default"], masterMetadata);
+    const variant = R.path(["variants", variantKey], masterMetadata);
+    if(R.isNil(variant)) throw Error(`Variant '${variantKey}' not found in production master metadata`);
 
     // add info on source files and variant to data if --json selected
     if(this.args.json) {
       logger.data("media_files", sources);
-      logger.data("variant_default", variant);
+      logger.data("variant_key", variantKey);
+      logger.data("variant", variant);
     }
 
     // HDR: inject HDR info into first video stream's sources metadata
@@ -250,8 +267,8 @@ class SampleIngest extends Utility {
       writeToken,
       type,
       masterWriteToken: writeToken,
-      variant: "default",
-      offeringKey: "default",
+      variant: variantKey,
+      offeringKey,
       abrProfile: filterProfileRetVal.result
     });
 
@@ -264,7 +281,7 @@ class SampleIngest extends Utility {
     const startJobsResponse = await client.StartABRMezzanineJobs({
       libraryId,
       objectId: id,
-      offeringKey: "default",
+      offeringKey,
       writeToken
     });
 
@@ -280,7 +297,7 @@ class SampleIngest extends Utility {
 
     logger.data("library_id", libraryId);
     logger.data("object_id", id);
-    logger.data("offering_key", "default");
+    logger.data("offering_key", offeringKey);
     logger.data("write_token", lroWriteToken);
     logger.data("write_node", lroNode);
     logger.data("node_endpoint", lroNode);
@@ -289,7 +306,8 @@ class SampleIngest extends Utility {
       "",
       `Library ID: ${libraryId}`,
       `Object ID: ${id}`,
-      "Offering: default",
+      `Variant: ${variantKey}`,
+      `Offering: ${offeringKey}`,
       `Write Token: ${lroWriteToken}`,
       `Write Node: ${lroNode}`,
       ""
@@ -315,7 +333,7 @@ class SampleIngest extends Utility {
       libraryId,
       objectId: id,
       writeToken,
-      offeringKey: "default"
+      offeringKey
     });
 
     logger.errorsAndWarnings(finalizeAbrResponse);
