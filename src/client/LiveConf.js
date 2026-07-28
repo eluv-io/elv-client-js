@@ -514,6 +514,10 @@ class LiveConf {
     const videoStream = this.getStreamDataForCodecType("video");
     let sourceTimescale;
 
+    // Custom profile values take precedence over computed defaults
+    const customRecordingParams = customSettings.liveRecordingConfigProfile?.recording_params;
+    const customXcParams = customRecordingParams?.xc_params;
+
     // Fill in liveconf all formats have in common
     conf.live_recording.fabric_config.ingress_node_api = this.nodeUrl || null;
     conf.live_recording.fabric_config.ingress_node_id = this.nodeId || null;
@@ -536,12 +540,12 @@ class LiveConf {
     // Fill in specifics for protocol
     switch(this.getFormat()) {
       case "mpegts":
-        sourceTimescale = 90000;
+        sourceTimescale = customRecordingParams?.source_timescale ?? 90000;
         conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
         break;
       case "rtmp":
       case "flv":
-        sourceTimescale = 16000;
+        sourceTimescale = customRecordingParams?.source_timescale ?? 16000;
         conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
         break;
       case "hls":
@@ -565,17 +569,20 @@ class LiveConf {
     // Segment conditioning parameters
     conf.live_recording.recording_config.recording_params.xc_params.seg_duration = segDurations.duration;
     conf.live_recording.recording_config.recording_params.xc_params.audio_seg_duration_ts = segDurations.audio;
-    conf.live_recording.recording_config.recording_params.xc_params.video_seg_duration_ts = segDurations.video;
+    conf.live_recording.recording_config.recording_params.xc_params.video_seg_duration_ts =
+      customXcParams?.video_seg_duration_ts ?? segDurations.video;
     conf.live_recording.recording_config.recording_params.xc_params.force_keyint = segDurations.keyint;
 
     // Optional override output timebase and frame duration (ts)
-    if(segDurations.videoTimeBase) {
+    if(segDurations.videoTimeBase && R.isNil(customXcParams?.video_time_base)) {
       conf.live_recording.recording_config.recording_params.xc_params.video_time_base = segDurations.videoTimeBase;
 
       // Note 'source_timescale' needs to be set to the output timebase and is used by playout
-      conf.live_recording.recording_config.recording_params.source_timescale = this.calcOutputTimebase(segDurations.videoTimeBase);
+      if(R.isNil(customRecordingParams?.source_timescale)) {
+        conf.live_recording.recording_config.recording_params.source_timescale = this.calcOutputTimebase(segDurations.videoTimeBase);
+      }
     }
-    if(segDurations.videoFrameDurationTs) {
+    if(segDurations.videoFrameDurationTs && R.isNil(customXcParams?.video_frame_duration_ts)) {
       conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs;
     }
 
