@@ -333,7 +333,7 @@ class LiveConf {
     return seg;
   }
 
-  calcSegDurationRtmp({sourceTimescale}) {
+  calcSegDurationRtmp() {
     let videoStream = this.getStreamDataForCodecType("video");
     let frameRate = videoStream.frame_rate;
     let seg = {};
@@ -347,7 +347,9 @@ class LiveConf {
         seg.duration = "30";
         break;
       case "25":
-        seg.video = sourceTimescale * 30;
+        seg.videoTimeBase = 25000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 50;
         seg.duration = "30";
         break;
@@ -366,9 +368,9 @@ class LiveConf {
         seg.duration = "30.03";
         break;
       case "48":
-        seg.videoTimeBase = 1536; // Output timebase: 12288
-        seg.videoFrameDurationTs = 256;
-        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
+        seg.videoTimeBase = 48000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 96;
         seg.duration = "30";
         break;
