@@ -340,9 +340,9 @@ class LiveConf {
 
     switch(frameRate) {
       case "24":
-        seg.videoTimeBase = 768; // Note 1536 produces low output bitrate
-        seg.videoFrameDurationTs = 512;
-        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
+        seg.videoTimeBase = 24000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 48;
         seg.duration = "30";
         break;
@@ -352,14 +352,16 @@ class LiveConf {
         seg.duration = "30";
         break;
       case "30":
-        seg.videoTimeBase = 960; // Output timebase: 15360
-        seg.videoFrameDurationTs = 512;
-        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
+        seg.videoTimeBase = 30000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 60;
         seg.duration = "30";
         break;
       case "30000/1001":
-        seg.video = sourceTimescale * 30.03;
+        seg.videoTimeBase = 30000;
+        seg.videoFrameDurationTs = 1001;
+        seg.video = seg.videoTimeBase * 30.03;
         seg.keyint = 60;
         seg.duration = "30.03";
         break;
@@ -371,19 +373,23 @@ class LiveConf {
         seg.duration = "30";
         break;
       case "50":
-        seg.video = sourceTimescale * 30;
+        seg.videoTimeBase = 50000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 100;
         seg.duration = "30";
         break;
       case "60":
-        seg.videoTimeBase = 960; // Output timebase: 15360
-        seg.videoFrameDurationTs = 256;
-        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
+        seg.videoTimeBase = 60000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 120;
         seg.duration = "30";
         break;
       case "60000/1001":
-        seg.video = sourceTimescale * 30.03;
+        seg.videoTimeBase = 60000;
+        seg.videoFrameDurationTs = 1001;
+        seg.video = seg.videoTimeBase * 30.03;
         seg.keyint = 120;
         seg.duration = "30.03";
         break;
