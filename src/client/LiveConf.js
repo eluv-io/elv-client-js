@@ -218,7 +218,8 @@ class LiveConf {
    *
    * Live input formats have fixed timebase:
    * - MPEG-TS/SRT input stream timebase is 90000
-   * - RTMP input stream timebase is 1000 and gets translated to 16000 if not otherwise specified
+   * - RTMP input stream timebase is 1000 and gets translated to match the frame rate
+   *   (eg. 24000 @24fps, 30000 @30fps/29.97fps, 60000 @60fps/59.94fps)
    *
    * This causes frame duration irregularities for certain frame rates.
    * For example RTMP 60fps has frames of durations 16 and 17.  MPEG-TS 59.94fps has frames of
@@ -229,10 +230,13 @@ class LiveConf {
    * to make the math possible.  This adjustment is also required for live-to-vod conversion.
    *
    * For example for MPEG-TS 59.94fps, the mez segment timebase needs to be 60000
-   * (and resulting frame duration is 1001) and for RTMP 60fps the timebase needs to be 15360 (resulting frame
-   * duration is 256).
+   * (and resulting frame duration is 1001) and for RTMP 60fps the timebase is set to 60000
+   * (resulting frame duration is 1000). For every supported RTMP frame rate, the video timebase is
+   * set equal to the source timescale, with a frame duration of 1000 (1001 for the *000/1001
+   * fractional rates).
    *
-   * @sourceTimescale - adjusted source video stream timescale (eg. MPEGTS 90000, RTMP 16000 )
+   * @sourceTimescale - adjusted source video stream timescale (eg. MPEGTS 90000; ignored for RTMP,
+   *   which derives its own timebase per frame rate in calcSegDurationRtmp)
    * @sampleRate - audio sample rate (commonly 48000 but can be different)
    * @audioCodec - audio codec as a string (eg. "aac")
    * @return - segment encoding parameters
