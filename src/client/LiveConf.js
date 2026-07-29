@@ -218,7 +218,8 @@ class LiveConf {
    *
    * Live input formats have fixed timebase:
    * - MPEG-TS/SRT input stream timebase is 90000
-   * - RTMP input stream timebase is 1000 and gets translated to 16000 if not otherwise specified
+   * - RTMP input stream timebase is 1000 and gets translated to match the frame rate
+   *   (eg. 24000 @24fps, 30000 @30fps/29.97fps, 60000 @60fps/59.94fps)
    *
    * This causes frame duration irregularities for certain frame rates.
    * For example RTMP 60fps has frames of durations 16 and 17.  MPEG-TS 59.94fps has frames of
@@ -229,10 +230,13 @@ class LiveConf {
    * to make the math possible.  This adjustment is also required for live-to-vod conversion.
    *
    * For example for MPEG-TS 59.94fps, the mez segment timebase needs to be 60000
-   * (and resulting frame duration is 1001) and for RTMP 60fps the timebase needs to be 15360 (resulting frame
-   * duration is 256).
+   * (and resulting frame duration is 1001) and for RTMP 60fps the timebase is set to 60000
+   * (resulting frame duration is 1000). For every supported RTMP frame rate, the video timebase is
+   * set equal to the source timescale, with a frame duration of 1000 (1001 for the *000/1001
+   * fractional rates).
    *
-   * @sourceTimescale - adjusted source video stream timescale (eg. MPEGTS 90000, RTMP 16000 )
+   * @sourceTimescale - adjusted source video stream timescale (eg. MPEGTS 90000; ignored for RTMP,
+   *   which derives its own timebase per frame rate in calcSegDurationRtmp)
    * @sampleRate - audio sample rate (commonly 48000 but can be different)
    * @audioCodec - audio codec as a string (eg. "aac")
    * @return - segment encoding parameters
@@ -333,57 +337,65 @@ class LiveConf {
     return seg;
   }
 
-  calcSegDurationRtmp({sourceTimescale}) {
+  calcSegDurationRtmp() {
     let videoStream = this.getStreamDataForCodecType("video");
     let frameRate = videoStream.frame_rate;
     let seg = {};
 
     switch(frameRate) {
       case "24":
-        seg.videoTimeBase = 768; // Note 1536 produces low output bitrate
-        seg.videoFrameDurationTs = 512;
-        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
+        seg.videoTimeBase = 24000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 48;
         seg.duration = "30";
         break;
       case "25":
-        seg.video = sourceTimescale * 30;
+        seg.videoTimeBase = 25000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 50;
         seg.duration = "30";
         break;
       case "30":
-        seg.videoTimeBase = 960; // Output timebase: 15360
-        seg.videoFrameDurationTs = 512;
-        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
+        seg.videoTimeBase = 30000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 60;
         seg.duration = "30";
         break;
       case "30000/1001":
-        seg.video = sourceTimescale * 30.03;
+        seg.videoTimeBase = 30000;
+        seg.videoFrameDurationTs = 1001;
+        seg.video = seg.videoTimeBase * 30.03;
         seg.keyint = 60;
         seg.duration = "30.03";
         break;
       case "48":
-        seg.videoTimeBase = 1536; // Output timebase: 12288
-        seg.videoFrameDurationTs = 256;
-        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
+        seg.videoTimeBase = 48000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 96;
         seg.duration = "30";
         break;
       case "50":
-        seg.video = sourceTimescale * 30;
+        seg.videoTimeBase = 50000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 100;
         seg.duration = "30";
         break;
       case "60":
-        seg.videoTimeBase = 960; // Output timebase: 15360
-        seg.videoFrameDurationTs = 256;
-        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
+        seg.videoTimeBase = 60000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 120;
         seg.duration = "30";
         break;
       case "60000/1001":
-        seg.video = sourceTimescale * 30.03;
+        seg.videoTimeBase = 60000;
+        seg.videoFrameDurationTs = 1001;
+        seg.video = seg.videoTimeBase * 30.03;
         seg.keyint = 120;
         seg.duration = "30.03";
         break;
@@ -514,6 +526,10 @@ class LiveConf {
     const videoStream = this.getStreamDataForCodecType("video");
     let sourceTimescale;
 
+    // Custom profile values take precedence over computed defaults
+    const customRecordingParams = customSettings.liveRecordingConfigProfile?.recording_params;
+    const customXcParams = customRecordingParams?.xc_params;
+
     // Fill in liveconf all formats have in common
     conf.live_recording.fabric_config.ingress_node_api = this.nodeUrl || null;
     conf.live_recording.fabric_config.ingress_node_id = this.nodeId || null;
@@ -536,12 +552,12 @@ class LiveConf {
     // Fill in specifics for protocol
     switch(this.getFormat()) {
       case "mpegts":
-        sourceTimescale = 90000;
+        sourceTimescale = customRecordingParams?.source_timescale ?? 90000;
         conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
         break;
       case "rtmp":
       case "flv":
-        sourceTimescale = 16000;
+        sourceTimescale = customRecordingParams?.source_timescale ?? 16000;
         conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
         break;
       case "hls":
@@ -565,17 +581,20 @@ class LiveConf {
     // Segment conditioning parameters
     conf.live_recording.recording_config.recording_params.xc_params.seg_duration = segDurations.duration;
     conf.live_recording.recording_config.recording_params.xc_params.audio_seg_duration_ts = segDurations.audio;
-    conf.live_recording.recording_config.recording_params.xc_params.video_seg_duration_ts = segDurations.video;
+    conf.live_recording.recording_config.recording_params.xc_params.video_seg_duration_ts =
+      customXcParams?.video_seg_duration_ts ?? segDurations.video;
     conf.live_recording.recording_config.recording_params.xc_params.force_keyint = segDurations.keyint;
 
     // Optional override output timebase and frame duration (ts)
-    if(segDurations.videoTimeBase) {
+    if(segDurations.videoTimeBase && R.isNil(customXcParams?.video_time_base)) {
       conf.live_recording.recording_config.recording_params.xc_params.video_time_base = segDurations.videoTimeBase;
 
       // Note 'source_timescale' needs to be set to the output timebase and is used by playout
-      conf.live_recording.recording_config.recording_params.source_timescale = this.calcOutputTimebase(segDurations.videoTimeBase);
+      if(R.isNil(customRecordingParams?.source_timescale)) {
+        conf.live_recording.recording_config.recording_params.source_timescale = this.calcOutputTimebase(segDurations.videoTimeBase);
+      }
     }
-    if(segDurations.videoFrameDurationTs) {
+    if(segDurations.videoFrameDurationTs && R.isNil(customXcParams?.video_frame_duration_ts)) {
       conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs;
     }
 
