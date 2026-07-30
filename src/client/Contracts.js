@@ -955,7 +955,7 @@ async function GetTenantGroupAddress({ctx, tenantContractId, groupName}) {
 
     return groupAddress;
   } catch (err) {
-    this.Log(err);
+    ctx.Log(err);
     throw new Error(`Failed to retrieve ${groupName} group address.`);
   }
 
