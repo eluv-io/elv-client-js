@@ -1,4 +1,4 @@
-// Create new production master from specified file(s)
+// Create or update a playable media object from specified file(s)
 const R = require("ramda");
 const fs = require("fs");
 
@@ -16,7 +16,7 @@ const ArgLibraryId = require("./lib/concerns/ArgLibraryId");
 const ArgTenant = require("./lib/concerns/ArgTenant");
 const {seconds} = require("./lib/helpers");
 
-const AbrProfile = require("./lib/abr_profiles/abr_profile_clear.json");
+const AbrProfile = require("./lib/abr_profiles/abr_profile_4k_all.json");
 const STATUS_FILE = "./ingest-status.json";
 
 // Status object - used for reporting and resume.
@@ -32,7 +32,7 @@ const SetStatus = statusUpdate => {
   fs.writeFileSync(STATUS_FILE, `${JSON.stringify(status, null, 2)}\n`);
 };
 
-class SampleIngest extends Utility {
+class MediaIngest extends Utility {
   blueprint() {
     return {
       concerns: [Client, CloudFile, Finalize, LocalFile, ArgLibraryId, ArgTenant, LRO],
@@ -103,7 +103,7 @@ class SampleIngest extends Utility {
 
     const type = tenantInfo.typeTitle;
 
-    if(R.isNil(type)) throw Error("Library does not specify content type for sample ingests");
+    if(R.isNil(type)) throw Error("Library does not specify content type for media ingests");
 
     let {drm, finalize, hdrInfoFile, libraryId, objectId, offeringKey, title, variantKey} = this.args;
     const noFinalize = !finalize;
@@ -409,12 +409,12 @@ class SampleIngest extends Utility {
   }
 
   header() {
-    return "Create playable media object via sample ingest";
+    return "Create playable media object via media ingest";
   }
 }
 
 if(require.main === module) {
-  Utility.cmdLineInvoke(SampleIngest);
+  Utility.cmdLineInvoke(MediaIngest);
 } else {
-  module.exports = SampleIngest;
+  module.exports = MediaIngest;
 }
