@@ -35,6 +35,10 @@
   "browser": {
     "fs": false
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eluvio/elv-client-js.git"
+  },
   "files": [
     "/build",
     "/dist",
