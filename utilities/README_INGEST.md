@@ -46,14 +46,16 @@ node utilities/MediaIngest.js \
 
 ## S3 reference with a presigned URL
 
-The value passed to `--files` is the S3 object key, not the URL. The signed URL is specified in the credentials JSON. Its `path_matchers` entry is a regular expression matched against the object key.
+The signed URL is specified in the credentials JSON. The value passed to `--files` is the just the filename (no path). Fabric derives the bucket and parent directory from the signed URL.
+
+Each `path_matchers` entry is a regular expression matched against the exact relative path passed to `--files`.
 
 `credentials-reference-signed.json`:
 
 ```json
 [
   {
-    "path_matchers": ["^media/source\\.mxf$"],
+    "path_matchers": ["^source\\.mxf$"],
     "remote_access": {
       "protocol": "s3",
       "platform": "aws",
@@ -71,7 +73,7 @@ node utilities/MediaIngest.js \
   --title "S3 reference, signed URL" \
   --s3-reference \
   --credentials ./credentials-reference-signed.json \
-  --files media/source.mxf
+  --files source.mxf
 ```
 
 For signed URLs, `remote_access.path` (bucket) and `storage_endpoint.region` are optional. The URL must authorize `GET` access and remain valid long enough for source inspection and transcoding.
@@ -113,12 +115,14 @@ The bucket in a full `s3://` source must match `remote_access.path`. A bare key 
 
 ## S3 copy with a presigned URL
 
+Credentials and file arguments are the same as signed-URL reference. For the example URL below, that file is `source.mxf`.
+
 `credentials-copy-signed.json`:
 
 ```json
 [
   {
-    "path_matchers": ["^media/source\\.mxf$"],
+    "path_matchers": ["^source\\.mxf$"],
     "remote_access": {
       "protocol": "s3",
       "platform": "aws",
@@ -136,7 +140,7 @@ node utilities/MediaIngest.js \
   --title "S3 copy, signed URL" \
   --s3-copy \
   --credentials ./credentials-copy-signed.json \
-  --files media/source.mxf
+  --files source.mxf
 ```
 
 The server copies the object from S3 into the Fabric and then deletes the Fabric copy after the ABR mezzanine is finalized.
@@ -193,14 +197,14 @@ node utilities/MediaIngest.js \
 
 ## S3 credential matching and security
 
-Each entry in a credentials file applies to source paths matching one of its `path_matchers` regular expressions. Every S3 source must match an entry.
+Each entry in a credentials file applies to the `--files` values matching one of its `path_matchers` regular expressions. Every S3 source must match an entry. For access-key credentials these values may be full `s3://` paths or object keys; for signed URLs they are paths relative to the signed URL's containing directory.
 
 A normal S3 presigned URL authorizes one object. For multiple signed sources, use one credential entry and exact matcher per object:
 
 ```json
 [
   {
-    "path_matchers": ["^media/video\\.mxf$"],
+    "path_matchers": ["^video\\.mxf$"],
     "remote_access": {
       "protocol": "s3",
       "platform": "aws",
@@ -210,7 +214,7 @@ A normal S3 presigned URL authorizes one object. For multiple signed sources, us
     }
   },
   {
-    "path_matchers": ["^media/audio\\.wav$"],
+    "path_matchers": ["^audio\\.wav$"],
     "remote_access": {
       "protocol": "s3",
       "platform": "aws",
@@ -221,6 +225,8 @@ A normal S3 presigned URL authorizes one object. For multiple signed sources, us
   }
 ]
 ```
+
+The corresponding argument is `--files video.mxf audio.wav`.
 
 The access key, secret key, and presigned URL are sent for the S3 operation but are not stored by the client or in Fabric metadata.
 
