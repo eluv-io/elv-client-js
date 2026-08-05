@@ -78,6 +78,11 @@ const MezJobMainOfferingKey = function(abrMezOfferings) {
  * -           ...
  * -         ]
  * -
+ * - For a presigned URL, `path` and `storage_endpoint` are not required and `cloud_credentials` should be:
+ * -         {
+ * -           signed_url: "YOUR_PRESIGNED_S3_URL"
+ * -         }
+ * -
  * - The simplest case is a one element array with .path_matchers == [".*"], in which case the same credentials will be used for all items in fileInfo
  *
  * @throws {Object} error - If the initialization of the master fails, error details can be found in error.body
@@ -127,8 +132,11 @@ exports.CreateProductionMaster = async function({
         let matched = false;
         for(let j = 0; !matched && j < access.length; j++) {
           let credentialSet = access[j];
+          const remoteAccess = credentialSet.remote_access;
           // strip trailing slash to get bucket name for credential set
-          const credentialSetBucket = credentialSet.remote_access.path.replace(/\/$/, "");
+          const credentialSetBucket = remoteAccess.path
+            ? remoteAccess.path.replace(/\/$/, "")
+            : undefined;
           const matchers = credentialSet.path_matchers;
           for(let k = 0; !matched && k < matchers.length; k++) {
             const matcher = new RegExp(matchers[k]);
@@ -139,7 +147,7 @@ exports.CreateProductionMaster = async function({
               const s3prefixMatch = (s3prefixRegex.exec(fileSourcePath));
               if(s3prefixMatch) {
                 const bucketName = s3prefixMatch[1];
-                if(bucketName !== credentialSetBucket) {
+                if(credentialSetBucket && bucketName !== credentialSetBucket) {
                   throw Error("Full S3 file path \"" + fileSourcePath + "\" matched to credential set with different bucket name '" + credentialSetBucket + "'");
                 }
               }
@@ -154,7 +162,7 @@ exports.CreateProductionMaster = async function({
           }
         }
         if(!matched) {
-          throw Error("no credential set found for file path: \"" + filePath + "\"");
+          throw Error("no credential set found for file path: \"" + oneFileInfo.source + "\"");
         }
       }
 
@@ -162,10 +170,13 @@ exports.CreateProductionMaster = async function({
       for(let i = 0; i < access.length; i++) {
         const credentialSet = access[i];
         if(credentialSet.hasOwnProperty("matched") && credentialSet.matched.length > 0) {
-          const region = credentialSet.remote_access.storage_endpoint.region;
-          const bucket = credentialSet.remote_access.path.replace(/\/$/, "");
-          const accessKey = credentialSet.remote_access.cloud_credentials.access_key_id;
-          const secret = credentialSet.remote_access.cloud_credentials.secret_access_key;
+          const remoteAccess = credentialSet.remote_access;
+          const cloudCredentials = remoteAccess.cloud_credentials;
+          const region = remoteAccess.storage_endpoint && remoteAccess.storage_endpoint.region;
+          const bucket = remoteAccess.path && remoteAccess.path.replace(/\/$/, "");
+          const accessKey = cloudCredentials.access_key_id;
+          const secret = cloudCredentials.secret_access_key;
+          const signedUrl = cloudCredentials.signed_url;
 
           await this.UploadFilesFromS3({
             libraryId,
@@ -176,6 +187,7 @@ exports.CreateProductionMaster = async function({
             bucket,
             accessKey,
             secret,
+            signedUrl,
             copy,
             callback,
             encryption: encrypt ? "cgck" : "none"
@@ -212,22 +224,28 @@ exports.CreateProductionMaster = async function({
     constant: false
   });
 
+  const mergeMetadata = {
+    ...(metadata || {}),
+    reference: access && !copy,
+    public: {
+      ...((metadata || {}).public || {})
+    },
+    elv_created_at: new Date().getTime(),
+  };
+  if(name !== undefined) {
+    mergeMetadata.name = name;
+    mergeMetadata.public.name = name;
+  }
+  if(description !== undefined) {
+    mergeMetadata.description = description;
+    mergeMetadata.public.description = description;
+  }
+
   await this.MergeMetadata({
     libraryId,
     objectId,
     writeToken,
-    metadata: {
-      ...(metadata || {}),
-      name,
-      description,
-      reference: access && !copy,
-      public: {
-        ...((metadata || {}).public || {}),
-        name: name || "",
-        description: description || ""
-      },
-      elv_created_at: new Date().getTime(),
-    }
+    metadata: mergeMetadata
   });
 
   let additionalReturnVals;
