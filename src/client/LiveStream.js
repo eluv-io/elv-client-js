@@ -322,15 +322,16 @@ exports.StreamCreate = async function({
         video_type: "live",
         slug: slugify(name)
       }
-    },
-    "live_recording_config": liveRecordingConfig
+    }
   };
 
-  const oldProfile = await this.ContentObjectMetadata({
+  const currentLiveRecordingConfig = await this.ContentObjectMetadata({
     libraryId,
     objectId,
-    metadataSubtree: "live_recording_config/name"
-  });
+    metadataSubtree: "live_recording_config"
+  }) || {};
+
+  const oldProfile = currentLiveRecordingConfig.name;
 
   if(liveRecordingConfig?.name && liveRecordingConfig.name !== oldProfile) {
     metadata.public.asset_metadata.profile_last_updated = new Date().toISOString();
@@ -341,6 +342,15 @@ exports.StreamCreate = async function({
     objectId,
     writeToken,
     metadata
+  });
+
+  // Full overwrite avoids the server-side merge mixing streams from the old and new profile
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "live_recording_config",
+    metadata: R.mergeDeepRight(currentLiveRecordingConfig, liveRecordingConfig)
   });
 
   try {
