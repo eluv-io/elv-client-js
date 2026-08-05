@@ -290,6 +290,8 @@ class MediaIngest extends Utility {
     const createMezErrors = createMezResponse.errors;
     if(!R.isNil(createMezErrors) && !R.isEmpty(createMezErrors)) throw Error(`Error(s) encountered while setting up media file conversion: ${createMezErrors.join("\n")}`);
 
+    SetStatus({state: "mez_created", mez_created: true});
+
     logger.log("Starting conversion to streaming format...");
 
     const startJobsResponse = await client.StartABRMezzanineJobs({
@@ -326,6 +328,8 @@ class MediaIngest extends Utility {
       `Write Node: ${lroNode}`,
       ""
     );
+
+    SetStatus({state: "mez_started", mez_started: true, mez_job: startJobsResponse});
 
     logger.log("Progress:");
 
