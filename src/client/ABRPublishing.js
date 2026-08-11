@@ -226,20 +226,16 @@ exports.CreateProductionMaster = async function({
 
   const mergeMetadata = {
     ...(metadata || {}),
+    name: name !== undefined ? name : (metadata || {}).name,
+    description: description !== undefined ? description : (metadata || {}).description,
     reference: access && !copy,
     public: {
-      ...((metadata || {}).public || {})
+      ...((metadata || {}).public || {}),
+      name: name !== undefined ? name : ((metadata || {}).public || {}).name,
+      description: description !== undefined ? description : ((metadata || {}).public || {}).description
     },
     elv_created_at: new Date().getTime(),
   };
-  if(name !== undefined) {
-    mergeMetadata.name = name;
-    mergeMetadata.public.name = name;
-  }
-  if(description !== undefined) {
-    mergeMetadata.description = description;
-    mergeMetadata.public.description = description;
-  }
 
   await this.MergeMetadata({
     libraryId,
