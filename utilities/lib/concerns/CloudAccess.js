@@ -8,7 +8,7 @@ const blueprint = {
   concerns: [JSON],
   options: [
     NewOpt("credentials", {
-      descTemplate: "Path to JSON file containing credential sets for files stored in cloud",
+      descTemplate: "Path to JSON file containing access key or signed URL credential sets for files stored in cloud",
       group: "Cloud",
       normalize: true,
       type: "string"

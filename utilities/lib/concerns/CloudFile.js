@@ -34,7 +34,10 @@ const accessMatchIndex = R.curry(
 const groupByPathMatch = (access, fileList) => R.groupBy(accessMatchIndex(access), fileList);
 
 const validateBucketMatch = R.curry((credentialSet, sourceFilePath) => {
-  const credentialSetBucket = removeTrailingSlash(credentialSet.remote_access.path);
+  const remotePath = credentialSet.remote_access.path;
+  if(!remotePath) return;
+
+  const credentialSetBucket = removeTrailingSlash(remotePath);
   // if full s3 path supplied, check bucket name
   const s3prefixMatch = s3BucketRegex.exec(sourceFilePath);
   if(s3prefixMatch) {
@@ -96,17 +99,20 @@ const New = context => {
     if(kindOf(copy) === "undefined") copy = isCopy();
     files = files || context.args.files;
     const groupedFiles = groupByPathMatch(access, files);
-    validatePathMatchGroups(groupedFiles);
+    validatePathMatchGroups(access, groupedFiles);
 
     const client = await context.concerns.Client.get();
 
     // iterate over file groups, add to fabric object using credential set for group
     for(const [index, fileList] of R.toPairs(groupedFiles)) {
       const credentialSet = access[index];
-      const region = credentialSet.remote_access.storage_endpoint.region;
-      const bucket = removeTrailingSlash(credentialSet.remote_access.path);
-      const accessKey = credentialSet.remote_access.cloud_credentials.access_key_id;
-      const secret = credentialSet.remote_access.cloud_credentials.secret_access_key;
+      const remoteAccess = credentialSet.remote_access;
+      const cloudCredentials = remoteAccess.cloud_credentials;
+      const region = remoteAccess.storage_endpoint && remoteAccess.storage_endpoint.region;
+      const bucket = remoteAccess.path && removeTrailingSlash(remoteAccess.path);
+      const accessKey = cloudCredentials.access_key_id;
+      const secret = cloudCredentials.secret_access_key;
+      const signedUrl = cloudCredentials.signed_url;
 
       await client.UploadFilesFromS3({
         libraryId,
@@ -117,6 +123,7 @@ const New = context => {
         bucket,
         accessKey,
         secret,
+        signedUrl,
         copy,
         callback,
         encryption: encrypt ? "cgck" : "none"
