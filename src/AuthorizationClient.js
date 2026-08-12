@@ -570,18 +570,13 @@ class AuthorizationClient {
       const stateChannelApi = "elv_channelContentRequestContext";
       const additionalParams = [JSON.stringify(audienceData)];
 
-      const payload = await this.MakeKMSCall({
+      token = await this.MakeKMSCall({
         objectId,
         methodName: stateChannelApi,
         paramTypes: ["address", "address", "uint", "uint"],
         params: [this.client.signer.address, Utils.HashToAddress(objectId), value, Date.now()],
         additionalParams
       });
-
-      const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
-      const multiSig = Utils.FormatSignature(signature);
-
-      token = `${payload}.${Utils.B64(multiSig)}`;
     }
 
     if(!this.noCache) {
