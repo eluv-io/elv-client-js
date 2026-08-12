@@ -11,6 +11,7 @@ const HttpClient = require("./HttpClient");
 const RemoteSigner = require("./RemoteSigner");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
+const NetworkUrls = require("./NetworkUrls");
 const {LogMessage} = require("./LogMessage");
 
 const Pako = require("pako");
@@ -20,14 +21,6 @@ const {
   ValidateWriteToken
 } = require("./Validation");
 const UrlJoin = require("url-join");
-
-const networks = {
-  "main": "https://main.net955305.contentfabric.io",
-  "demo": "https://demov3.net955210.contentfabric.io",
-  "demov3": "https://demov3.net955210.contentfabric.io",
-  "local": "http://127.0.0.1:8008/config?qspace=dev&self",
-  "test": "https://test.net955203.contentfabric.io"
-};
 
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
@@ -202,6 +195,10 @@ class ElvClient {
 
     this.debug = false;
 
+    // Use a default key when client is unauthed. This key should not be used for any other purpose.
+    // Break it up to avoid automatic private key detection warnings
+    this.defaultKey = "0x" + "5d52d808f10f64f0dffff8c73edff" + "3f7b467411216e2350940f869e6ac5a7db6";
+
     this.InitializeClients({staticToken});
   }
 
@@ -298,7 +295,7 @@ class ElvClient {
    * @return {Object} - An object using network names as keys and configuration URLs as values.
    */
   static Networks() {
-    return Object.assign({}, networks);
+    return Object.assign({}, NetworkUrls);
   }
 
   /**
@@ -328,7 +325,7 @@ class ElvClient {
     noAuth=false,
     assumeV3
   }) {
-    const configUrl = networks[networkName];
+    const configUrl = this.Networks()[networkName];
 
     if(!configUrl) { throw Error("Invalid network name: " + networkName); }
 
@@ -418,6 +415,7 @@ class ElvClient {
     this.contentTypes = {};
     this.encryptionConks = {};
     this.stateChannelAccess = {};
+    this.objectInfo = {};
     this.objectTenantIds = {};
     this.objectLibraryIds = {};
     this.objectImageUrls = {};
@@ -425,15 +423,16 @@ class ElvClient {
     this.inaccessibleLibraries = {};
 
     const uris = this.service === "search" ? this.searchURIs : this.fabricURIs;
-    this.HttpClient = new HttpClient({uris, debug: this.debug});
-    this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, debug: this.debug});
-    this.FileServiceHttpClient = new HttpClient({uris: this.fileServiceURIs, debug: this.debug});
-    this.SearchHttpClient = new HttpClient({uris: this.searchURIs || [], debug: this.debug});
+    this.HttpClient = new HttpClient({uris, networkName: this.networkName, debug: this.debug});
+    this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, networkName: this.networkName, debug: this.debug});
+    this.FileServiceHttpClient = new HttpClient({uris: this.fileServiceURIs, networkName: this.networkName, debug: this.debug});
+    this.SearchHttpClient = new HttpClient({uris: this.searchURIs || [], networkName: this.networkName, debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, networkId: this.networkId, debug: this.debug, timeout: this.ethereumContractTimeout});
 
     if(!this.signer) {
       const wallet = this.GenerateWallet();
-      const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
+      const signer = wallet.AddAccount({privateKey: this.defaultKey});
+      signer.anonymous = true;
 
       this.SetSigner({signer, reset: false});
       this.SetStaticToken({token: staticToken});
@@ -739,6 +738,7 @@ class ElvClient {
     );
 
     if(!nodeUrl) {
+      // eslint-disable-next-line no-console
       console.error(`No node url found for write token: ${writeToken}`);
 
       return "";
@@ -754,7 +754,7 @@ class ElvClient {
    * @namedParams
    * @param {string} writeToken - The write token to match to a node
    *
-   * @returns {<string>} - The node url for a write token
+   * @returns {string} - The node url for a write token
    */
   WriteTokenNodeUrlLocal({writeToken}) {
     ValidateWriteToken(writeToken);
@@ -831,10 +831,11 @@ class ElvClient {
    * @param {Array<string>=} signerURIs - (Only if using custom OAuth) - URIs corresponding to the key server(s) to use
    * @param {boolean=} unsignedPublicAuth=false - If specified, the client will use an unsigned static token for calls that don't require authorization (reduces remote signature calls)
    */
-  async SetRemoteSigner({idToken, authToken, tenantId, extraData, signerURIs, unsignedPublicAuth}) {
+  async SetRemoteSigner({idToken, userIdCode, authToken, tenantId, extraData, signerURIs, unsignedPublicAuth}) {
     const signer = new RemoteSigner({
       signerURIs: signerURIs || this.authServiceURIs,
       idToken,
+      userIdCode,
       authToken,
       tenantId,
       provider: await this.ethClient.Provider(),
@@ -1199,7 +1200,7 @@ class ElvClient {
         // Make dummy client with dummy account to allow calling of contracts
         const client = await ElvClient.FromConfigurationUrl({configUrl: this.configUrl});
         client.SetSigner({
-          signer: wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()})
+          signer: wallet.AddAccount({privateKey: this.defaultKey})
         });
 
         const {urls} = await client.authClient.KMSInfo({
@@ -1216,7 +1217,7 @@ class ElvClient {
       this.oauthToken = token;
 
       const path = "/ks/jwt/wlt";
-      const httpClient = new HttpClient({uris: this.kmsURIs, debug: this.debug});
+      const httpClient = new HttpClient({uris: this.kmsURIs, networkName: this.networkName, debug: this.debug});
 
       const response = await this.utils.ResponseToJson(
         httpClient.Request({
@@ -1253,7 +1254,7 @@ class ElvClient {
    * @return {string} - The created static token
    */
   CreateStaticToken({libraryId}) {
-    let token = { qspace_id: this.client.contentSpaceId };
+    let token = { qspace_id: this.contentSpaceId };
 
     if(libraryId) {
       token.qlib_id = libraryId;
@@ -1347,7 +1348,7 @@ class ElvClient {
 
     ValidatePresence("message", message);
 
-    return await this.Crypto.DecryptCap(message, this.signer._signingKey().privateKey);
+    return await this.Crypto.DecryptCap(message, this.signer);
   }
 
   /**

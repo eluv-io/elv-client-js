@@ -15,42 +15,39 @@ let plugins = [
   new webpack.optimize.LimitChunkCountPlugin({
     maxChunks: 1,
   }),
-  new webpack.IgnorePlugin(/unorm/),
   new BundleAnalyzerPlugin({
     analyzerMode: "static",
     reportFilename: path.resolve(path.join(__dirname, "test", "bundle-analysis", "index.html")),
     openAnalyzer: false
-  })
+  }),
+  new webpack.IgnorePlugin({resourceRegExp: /window/})
 ];
 
-plugins.push(new webpack.IgnorePlugin(/window/));
-
-// Exclude node-fetch for web build
 if(cmdOpts["target"] !== "node") {
-  plugins.push(new webpack.IgnorePlugin(/node-fetch-polyfill/));
-  plugins.push(new webpack.IgnorePlugin(/@eluvio\/crypto\/dist\/elv-crypto.bundle.node/));
+  plugins.push(new webpack.IgnorePlugin({resourceRegExp: /@eluvio\/crypto\/dist\/elv-crypto.bundle.node/}));
 } else {
-  plugins.push(new webpack.IgnorePlugin(/@eluvio\/crypto\/dist\/elv-crypto.bundle.js/));
+  plugins.push(new webpack.IgnorePlugin({resourceRegExp: /@eluvio\/crypto\/dist\/elv-crypto.bundle.js/}));
 }
 
 module.exports = {
-  entry: "./dist/src/ElvClient.js",
+  entry: "./src/ElvClient.js",
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "ElvClient-min-dev.js",
     libraryTarget: "umd"
   },
-  node: {
-    fs: "empty"
-  },
   resolve: {
     alias: {
       // Force webpack to use *one* copy of bn.js instead of 8
       "bn.js": path.resolve(path.join(__dirname, "node_modules", "bn.js"))
+    },
+    fallback: {
+      "crypto": require.resolve("crypto-browserify"),
+      "stream": require.resolve("stream-browserify"),
+      "vm": require.resolve("vm-browserify")
     }
   },
   mode: "development",
-  devtool: cmdOpts["mode"] === "production" ? "" : "source-map",
   plugins: plugins,
   module: {
     noParse: [

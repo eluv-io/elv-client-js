@@ -612,7 +612,8 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
     path: path,
     body: {      // filter out options not recognized by server (noEncryptionConk, createKMSConk)
       type: options.type,
-      meta: options.meta
+      meta: options.meta,
+      copy_from: options.copy_from
     }
   });
 
@@ -679,7 +680,7 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
   const userCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
 
   if(metadata[userCapKey]) {
-    const userConkKey = await this.Crypto.DecryptCap(metadata[userCapKey], this.signer._signingKey().privateKey);
+    const userConkKey = await this.Crypto.DecryptCap(metadata[userCapKey], this.signer);
     userConkKey.qid = objectId;
 
     await this.ReplaceMetadata({
@@ -732,7 +733,7 @@ exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, writ
     throw Error("No user cap found for current user");
   }
 
-  const userConk = await this.Crypto.DecryptCap(userCapValue, this.signer._signingKey().privateKey);
+  const userConk = await this.Crypto.DecryptCap(userCapValue, this.signer);
 
   const publicAddress = this.utils.PublicKeyToAddress(publicKey);
 
@@ -1098,7 +1099,7 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
       let h;
 
       try {
-        h = await this.LatestVersionHashV2({objectId});
+        h = await this.LatestVersionHash({objectId});
 
         if(h === versionHash) {
           this.Log(`Commit confirmed on fabric node: ${versionHash}`);

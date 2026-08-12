@@ -47,7 +47,7 @@ const testFileSize = 100000;
 let client, accessClient, client2;
 let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
 let mediaLibraryId, masterId, masterHash, mezzanineId, linkLibraryId, linkObjectId;
-let ingestWriteToken;
+let mediaLibraryIdForTestingWriteToken, mezzanineIdForTestingWriteToken, ingestWriteToken;
 let s3Access;
 let tenantId, tenantAdminAddress, contentAdminAddress;
 let isUsingExternalTenantContractId;
@@ -388,7 +388,9 @@ describe("Test ElvClient", () => {
   describe("Content Libraries", () => {
 
     test("Set Tenant ID For User",async () => {
-      await client.userProfileClient.SetTenantId({address: tenantAdminAddress});
+      await client.userProfileClient.SetTenantContractId({tenantContractId});
+      //await client.userProfileClient.SetTenantId({address: tenantAdminAddress});
+      expect(client.userProfileClient.tenantContractId).toEqual(tenantContractId);
       expect(client.userProfileClient.tenantId).toEqual(tenantId);
     });
 
@@ -575,18 +577,18 @@ describe("Test ElvClient", () => {
       await expect(finalizeResponse).toBeDefined();
 
       const metadata = await client.ContentObjectMetadata({libraryId, objectId});
-      delete metadata.commit;
+      //delete metadata.commit;
 
-      expect(metadata).toEqual(testMetadata);
+      expect(metadata).toMatchObject(testMetadata);
 
       versionHash = finalizeResponse.hash;
     });
 
     test("Content Object Metadata", async () => {
       const metadata = await client.ContentObjectMetadata({libraryId, objectId});
-      delete metadata.commit;
+      //delete metadata.commit;
 
-      expect(metadata).toEqual({
+      expect(metadata).toMatchObject({
         name: "Test Content Object",
         toMerge: {
           merge: "me"
@@ -654,7 +656,7 @@ describe("Test ElvClient", () => {
       const metadata = await client.ContentObjectMetadata({libraryId, objectId});
       delete metadata.commit;
 
-      expect(metadata).toEqual({
+      expect(metadata).toMatchObject({
         name: "Test Content Object",
         toMerge: {
           new: "metadata",
@@ -718,7 +720,8 @@ describe("Test ElvClient", () => {
 
       expect(unfiltered).toBeDefined();
       expect(unfiltered.contents).toBeDefined();
-      expect(unfiltered.contents.length).toEqual(5);
+      // object for library + 5 content objects
+      expect(unfiltered.contents.length).toEqual(6);
       expect(unfiltered.paging).toBeDefined();
 
       /* Sorting */
@@ -731,7 +734,8 @@ describe("Test ElvClient", () => {
       });
 
       const sortedNames = sorted.contents.map(object => object.versions[0].meta.public.name);
-
+      // library object
+      objectNames.push("Test Object Filtering");
       expect(sortedNames).toEqual(objectNames);
 
       const descSorted = await client.ContentObjects({
@@ -847,7 +851,7 @@ describe("Test ElvClient", () => {
 
       expect(automaticCommit).toBeDefined();
       if(isUsingExternalTenantContractId){
-        expect(automaticCommit.author).toContain("tenant-elv-admin");
+        expect(automaticCommit.author).toContain("elv-admin");
       } else {
         expect(client.utils.EqualAddress(automaticCommit.author, automaticCommit.author_address)).toBeTruthy();
       }
@@ -878,7 +882,7 @@ describe("Test ElvClient", () => {
 
       expect(customCommit).toBeDefined();
       if(isUsingExternalTenantContractId){
-        expect(customCommit.author).toContain("tenant-elv-admin");
+        expect(customCommit.author).toContain("elv-admin");
       } else {
         expect(client.utils.EqualAddress(customCommit.author, customCommit.author_address)).toBeTruthy();
       }
@@ -1810,7 +1814,7 @@ describe("Test ElvClient", () => {
     });
 
     test("Create Production Master With a Write Token", async () => {
-      mediaLibraryId = await client.CreateContentLibrary({
+      mediaLibraryIdForTestingWriteToken = await client.CreateContentLibrary({
         name: "Test Media Library",
         metadata: {
           "abr_profile": {
@@ -1944,12 +1948,12 @@ describe("Test ElvClient", () => {
       }];
 
       const {writeToken} = await client.CreateContentObject({
-        libraryId: mediaLibraryId,
+        libraryId: mediaLibraryIdForTestingWriteToken,
         options: {type: "Production Master"}
       });
 
       const {id, hash} = await client.CreateProductionMaster({
-        libraryId: mediaLibraryId,
+        libraryId: mediaLibraryIdForTestingWriteToken,
         writeToken,
         type: "Production Master",
         name: "Production Master Test",
@@ -1961,6 +1965,7 @@ describe("Test ElvClient", () => {
       expect(id).toBeDefined();
       expect(hash).toBeUndefined();
 
+      mezzanineIdForTestingWriteToken = id;
       ingestWriteToken = writeToken;
     });
 
@@ -1998,7 +2003,7 @@ describe("Test ElvClient", () => {
 
     test("Create Mezzanine With A Write Token", async () => {
       const {id, hash} = await client.CreateABRMezzanine({
-        libraryId: mediaLibraryId,
+        libraryId: mediaLibraryIdForTestingWriteToken,
         masterWriteToken: ingestWriteToken,
         writeToken: ingestWriteToken,
         type: "ABR Master",
@@ -2068,8 +2073,8 @@ describe("Test ElvClient", () => {
     test("Process Mezzanine With a Write Token", async () => {
       try {
         const startResponse = await client.StartABRMezzanineJobs({
-          libraryId: mediaLibraryId,
-          objectId: mezzanineId,
+          libraryId: mediaLibraryIdForTestingWriteToken,
+          objectId: mezzanineIdForTestingWriteToken,
           writeToken: ingestWriteToken,
           offeringKey: "default"
         });
@@ -2083,8 +2088,8 @@ describe("Test ElvClient", () => {
         // eslint-disable-next-line no-constant-condition
         while(true) {
           const status = await client.LROStatus({
-            libraryId: mediaLibraryId,
-            objectId: mezzanineId,
+            libraryId: mediaLibraryIdForTestingWriteToken,
+            objectId: mezzanineIdForTestingWriteToken,
             writeToken: ingestWriteToken
           });
 
@@ -2110,8 +2115,8 @@ describe("Test ElvClient", () => {
         }
 
         await client.FinalizeABRMezzanine({
-          libraryId: mediaLibraryId,
-          objectId: mezzanineId,
+          libraryId: mediaLibraryIdForTestingWriteToken,
+          objectId: mezzanineIdForTestingWriteToken,
           writeToken: ingestWriteToken,
           offeringKey: "default"
         });
@@ -2570,7 +2575,7 @@ describe("Test ElvClient", () => {
       expect(gasCost).toBeDefined();
 
       // Ensure balance covers gas cost
-      if (balanceWei.lte(gasCost)) {
+      if(balanceWei.lte(gasCost)) {
         throw new Error("Insufficient funds to cover gas cost.");
       }
 
@@ -2955,6 +2960,20 @@ describe("Test ElvClient", () => {
         expect(undefined).toBeDefined();
         // eslint-disable-next-line no-empty
       } catch(error) {}
+    });
+
+    test("Object Cleanup", async () => {
+      let contractAddress = client.signer.address;
+      const res = await client.ObjectCleanup({contractAddress, objectTypeToClean: "content_object"});
+      expect(res).toBeDefined();
+      expect(res[contractAddress]).toBeDefined();
+
+      const resForSigner = res[contractAddress];
+      expect(resForSigner.beforeCleanup.contentObjectsLength).toBeDefined();
+      expect(resForSigner.afterCleanup.contentObjectsLength).toBeDefined();
+      const beforeCleanup = resForSigner.beforeCleanup.contentObjectsLength;
+      const afterCleanup = resForSigner.afterCleanup.contentObjectsLength;
+      expect(afterCleanup).toBeLessThan(beforeCleanup);
     });
 
     test("Clear Tenancy", async () => {

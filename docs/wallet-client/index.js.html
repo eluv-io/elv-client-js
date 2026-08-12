@@ -240,7 +240,7 @@ class ElvWalletClient {
     }
 
     if(!skipMarketplaceLoad) {
-      await walletClient.LoadAvailableMarketplaces();
+      walletClient.LoadAvailableMarketplaces();
     }
 
     return walletClient;
@@ -450,7 +450,11 @@ class ElvWalletClient {
    * @methodGroup Login
    */
   async LogOut() {
+<<<<<<< HEAD
     if(this.__authorization &amp;&amp; this.__authorization.nonce) {
+=======
+    if(this.__authorization &amp;&amp; (this.__authorization.nonce || this.__authorization.installId)) {
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
       try {
         await this.client.signer.ReleaseCSAT({accessToken: this.AuthToken()});
       } catch(error) {
@@ -473,7 +477,11 @@ class ElvWalletClient {
   }
 
   async TokenStatus() {
+<<<<<<< HEAD
     if(!this.__authorization || !this.__authorization.nonce) {
+=======
+    if(!this.__authorization || !(this.__authorization.nonce || this.__authorization.installId)) {
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
       return true;
     }
 
@@ -518,6 +526,7 @@ class ElvWalletClient {
    * @param {string=} email - Email address of the user. If not specified, this method will attempt to extract the email from the ID token.
    * @param {Array&lt;string>=} signerURIs - (Only if using custom OAuth) - URIs corresponding to the key server(s) to use
    * @param {boolean=} shareEmail=false - Whether or not the user consents to sharing their email
+   * @param {number=} tokenDuration=24 - Token expiration duration, in hours
    *
    * @returns {Promise&lt;Object>} - Returns an authorization tokens that can be used to initialize the client using &lt;a href="#Authenticate">Authenticate&lt;/a>.
    * Save this token to avoid having to reauthenticate with OAuth. This token expires after 24 hours.
@@ -527,9 +536,23 @@ class ElvWalletClient {
    * - signingToken - Identical to `authToken`, but also includes the ability to perform arbitrary signatures with the custodial wallet. This token should be protected and should not be
    * shared with third parties.
    */
-  async AuthenticateOAuth({idToken, tenantId, email, signerURIs, shareEmail=false, extraData={}, nonce, createRemoteToken=true, force=false}) {
-    let tokenDuration = 24;
-
+  async AuthenticateOAuth({
+    idToken,
+    tenantId,
+    email,
+    signerURIs,
+    shareEmail=false,
+    extraData={},
+    nonce,
+<<<<<<< HEAD
+=======
+    installId,
+    appName,
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
+    createRemoteToken=true,
+    force=false,
+    tokenDuration=24
+  }) {
     if(!tenantId &amp;&amp; this.selectedMarketplaceInfo) {
       // Load tenant ID automatically from selected marketplace
       await this.AvailableMarketplaces();
@@ -538,16 +561,27 @@ class ElvWalletClient {
 
     await this.client.SetRemoteSigner({idToken, tenantId, signerURIs, extraData: { ...extraData, share_email: shareEmail }, unsignedPublicAuth: true});
 
+<<<<<<< HEAD
     let fabricToken, expiresAt;
     if(createRemoteToken &amp;&amp; this.client.signer.remoteSigner) {
-      expiresAt = Date.now() + 24 * 60 * 60 * 1000;
-      const tokenResponse = await this.client.signer.RetrieveCSAT({email, nonce, force});
+      expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
+      const tokenResponse = await this.client.signer.RetrieveCSAT({email, nonce, tenantId, force, duration: tokenDuration});
       fabricToken = tokenResponse.token;
       nonce = tokenResponse.nonce;
+=======
+    let fabricToken, refreshToken, expiresAt;
+    if(createRemoteToken &amp;&amp; this.client.signer.remoteSigner) {
+      expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
+      const tokenResponse = await this.client.signer.RetrieveCSAT({email, nonce, installId, appName, tenantId, force, duration: tokenDuration});
+      fabricToken = tokenResponse.token;
+      nonce = tokenResponse.nonce || nonce;
+      installId = tokenResponse.installId || installId;
+      refreshToken = tokenResponse.refresh_token;
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
     } else {
       expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
       fabricToken = await this.client.CreateFabricToken({
-        duration: tokenDuration * 60 * 60 * 1000,
+        duration: parseInt(tokenDuration * 60 * 60 * 1000),
         context: email ? {usr: {email}} : {}
       });
     }
@@ -567,6 +601,10 @@ class ElvWalletClient {
     return {
       authToken: this.SetAuthorization({
         fabricToken,
+<<<<<<< HEAD
+=======
+        refreshToken,
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
         tenantId,
         address,
         email,
@@ -575,11 +613,20 @@ class ElvWalletClient {
         walletType: "Custodial",
         walletName: "Eluvio",
         register: true,
+<<<<<<< HEAD
         nonce
+=======
+        nonce,
+        installId
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
       }),
       signingToken: this.SetAuthorization({
         clusterToken: this.client.signer.authToken,
         fabricToken,
+<<<<<<< HEAD
+=======
+        refreshToken,
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
         tenantId,
         address,
         email,
@@ -587,7 +634,12 @@ class ElvWalletClient {
         signerURIs,
         walletType: "Custodial",
         walletName: "Eluvio",
+<<<<<<< HEAD
         nonce
+=======
+        nonce,
+        installId
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
       })
     };
   }
@@ -648,18 +700,31 @@ class ElvWalletClient {
     return this.__authorization.fabricToken;
   }
 
+<<<<<<< HEAD
   SetAuthorization({clusterToken, fabricToken, tenantId, address, email, expiresAt, signerURIs, walletType, walletName, nonce, register=false}) {
+=======
+  SetAuthorization({clusterToken, fabricToken, refreshToken, tenantId, address, email, expiresAt, signerURIs, walletType, walletName, nonce, installId, register=false}) {
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
     address = this.client.utils.FormatAddress(address);
 
     this.__authorization = {
       fabricToken,
+<<<<<<< HEAD
+=======
+      refreshToken,
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
       tenantId,
       address,
       email,
       expiresAt,
       walletType,
       walletName,
+<<<<<<< HEAD
       nonce
+=======
+      nonce,
+      installId
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
     };
 
     if(clusterToken) {
@@ -756,7 +821,7 @@ class ElvWalletClient {
     return response;
   }
 
-  async SetCodeAuth({code, address, type, authToken}) {
+  async SetCodeAuth({code, address, type, authToken, expiresAt, ...additionalPayload}) {
     await Utils.ResponseToJson(
       this.client.authClient.MakeAuthServiceRequest({
         path: UrlJoin("as", "wlt", "login", "session", code),
@@ -772,7 +837,9 @@ class ElvWalletClient {
             addr: Utils.FormatAddress(address),
             eth: address ? `ikms${Utils.AddressToHash(address)}` : "",
             type,
-            token: authToken
+            token: authToken,
+            expiresAt,
+            ...additionalPayload
           })
         }
       })
@@ -796,149 +863,57 @@ class ElvWalletClient {
 
   // Internal loading methods
 
-  async LoadAvailableMarketplaces(forceReload=false) {
-    if(!forceReload &amp;&amp; Object.keys(this.availableMarketplaces) > 0) {
-      return;
-    }
-
-    let metadata = await this.client.ContentObjectMetadata({
-      libraryId: this.mainSiteLibraryId,
-      objectId: this.mainSiteId,
-      metadataSubtree: "public/asset_metadata",
-      resolveLinks: true,
-      linkDepthLimit: 2,
-      resolveIncludeSource: true,
-      resolveIgnoreErrors: true,
-      produceLinkUrls: true,
-      authorizationToken: this.publicStaticToken,
-      noAuth: true,
-      select: [
-        "info/marketplace_order",
-        "tenants/*/.",
-        "tenants/*/info/branding",
-        "tenants/*/marketplaces/*/.",
-        "tenants/*/marketplaces/*/info/tenant_id",
-        "tenants/*/marketplaces/*/info/tenant_name",
-        "tenants/*/marketplaces/*/info/branding",
-        "tenants/*/marketplaces/*/info/storefront/background",
-        "tenants/*/marketplaces/*/info/storefront/background_mobile"
-      ],
-      remove: [
-        "tenants/*/info/branding/wallet_css",
-        "tenants/*/marketplaces/*/info/branding/custom_css"
-      ]
-    });
-
-    const marketplaceOrder = ((metadata || {}).info || {}).marketplace_order || [];
-    metadata = (metadata || {}).tenants || {};
-
-    // If preview marketplace is specified, load it appropriately
-    if(this.previewMarketplaceId) {
-      let previewTenantSlug = "PREVIEW";
-      let previewMarketplaceSlug, previewMarketplaceMetadata;
-      Object.keys(metadata || {}).forEach(tenantSlug =>
-        Object.keys(metadata[tenantSlug].marketplaces || {}).forEach(marketplaceSlug => {
-          const versionHash = metadata[tenantSlug].marketplaces[marketplaceSlug]["."].source;
-          const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-
-          if(objectId === this.previewMarketplaceId) {
-            // Marketplace exists in site meta
-            previewTenantSlug = tenantSlug;
-            previewMarketplaceSlug = marketplaceSlug;
-
-            // Deployed marketplace is same as preview marketplace
-            if(versionHash === this.previewMarketplaceHash) {
-              previewMarketplaceMetadata = metadata[tenantSlug].marketplaces[marketplaceSlug];
-            }
-          }
+  async TopLevelInfo(forceReload=false) {
+    if(!this.topLevelInfoPromise || forceReload) {
+      this.topLevelInfoPromise = this.client.utils.ResponseToJson(
+        this.client.MakeAuthServiceRequest({
+          path: "/as/mw/toplevel",
+          queryParams: {env: this.mode}
         })
       );
-
-      // Marketplace not present in branch, or preview version is different - Load metadata directly
-      if(!previewMarketplaceMetadata) {
-        previewMarketplaceMetadata = await this.client.ContentObjectMetadata({
-          versionHash: this.previewMarketplaceHash,
-          metadataSubtree: "public/asset_metadata",
-          produceLinkUrls: true,
-          authorizationToken: this.publicStaticToken,
-          noAuth: true,
-          select: [
-            "slug",
-            "info/tenant_id",
-            "info/tenant_name",
-            "info/branding",
-          ],
-          remove: [
-            "info/branding/custom_css"
-          ]
-        });
-
-        if(!previewMarketplaceSlug) {
-          previewMarketplaceSlug = previewMarketplaceMetadata.slug;
-        }
-      }
-
-      previewMarketplaceMetadata["."] = {
-        source: this.previewMarketplaceHash
-      };
-
-      previewMarketplaceMetadata.info["."] = {
-        source: this.previewMarketplaceHash
-      };
-
-      previewMarketplaceMetadata.info.branding.preview = true;
-      previewMarketplaceMetadata.info.branding.show = true;
-
-      metadata[previewTenantSlug] = metadata[previewTenantSlug] || {};
-      metadata[previewTenantSlug].marketplaces = metadata[previewTenantSlug].marketplaces || {};
-      metadata[previewTenantSlug].marketplaces[previewMarketplaceSlug] = previewMarketplaceMetadata;
     }
 
-    let availableMarketplaces = { ...(this.availableMarketplaces || {}) };
-    let availableMarketplacesById = { ...(this.availableMarketplacesById || {}) };
-    Object.keys(metadata || {}).forEach(tenantSlug => {
-      try {
-        availableMarketplaces[tenantSlug] = metadata[tenantSlug]["."] ?
-          { versionHash: metadata[tenantSlug]["."].source } : { };
+    return await this.topLevelInfoPromise;
+  }
 
-        Object.keys(metadata[tenantSlug].marketplaces || {}).forEach(marketplaceSlug => {
-          try {
-            const versionHash = metadata[tenantSlug].marketplaces[marketplaceSlug]["."].source;
-            const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  async LoadAvailableMarketplaces(forceReload=false) {
+    if(!this.availableMarketplacesPromise || forceReload) {
+      this.availableMarketplacesPromise = new Promise(async resolve => {
+        const topLevelInfo = await this.TopLevelInfo();
+        const marketplaces = topLevelInfo.marketplaces;
 
-            availableMarketplaces[tenantSlug][marketplaceSlug] = {
-              ...(metadata[tenantSlug].marketplaces[marketplaceSlug].info || {}),
-              tenantName: metadata[tenantSlug].marketplaces[marketplaceSlug].info.tenant_name,
-              tenantId: metadata[tenantSlug].marketplaces[marketplaceSlug].info.tenant_id,
-              tenantSlug,
-              marketplaceSlug,
-              marketplaceId: objectId,
-              marketplaceHash: versionHash,
-              tenantBranding: (metadata[tenantSlug].info || {}).branding || {},
-              order: marketplaceOrder.findIndex(slug => slug === marketplaceSlug)
-            };
+        let availableMarketplaces = {...(this.availableMarketplaces || {})};
+        let availableMarketplacesById = {...(this.availableMarketplacesById || {})};
 
-            availableMarketplacesById[objectId] = availableMarketplaces[tenantSlug][marketplaceSlug];
+        marketplaces.map(marketplaceInfo => {
+          const marketplaceId = Utils.DecodeVersionHash(marketplaceInfo.source_hash).objectId;
+          const marketplaceSlug = marketplaceInfo.slug || marketplaceInfo.name;
 
-            this.marketplaceHashes[objectId] = versionHash;
+          availableMarketplaces[marketplaceInfo.tenant_slug] = availableMarketplaces[marketplaceInfo.tenant_slug] || {};
 
-            // Fill out selected marketplace info
-            if(this.selectedMarketplaceInfo) {
-              if((this.selectedMarketplaceInfo.tenantSlug === tenantSlug &amp;&amp; this.selectedMarketplaceInfo.marketplaceSlug === marketplaceSlug) || this.selectedMarketplaceInfo.marketplaceId === objectId) {
-                this.selectedMarketplaceInfo = availableMarketplaces[tenantSlug][marketplaceSlug];
-              }
-            }
-          } catch(error) {
-            this.Log(`Eluvio Wallet Client: Unable to load info for marketplace ${tenantSlug}/${marketplaceSlug}`, true);
-          }
+          availableMarketplaces[marketplaceInfo.tenant_slug][marketplaceSlug] = {
+            ...marketplaceInfo,
+            tenantName: marketplaceInfo.tenant_slug,
+            tenantSlug: marketplaceInfo.tenant_slug,
+            tenantId: marketplaceInfo.tenant_id,
+            marketplaceSlug: marketplaceSlug,
+            marketplaceId,
+            marketplaceHash: marketplaceInfo.source_hash
+          };
+
+          availableMarketplacesById[marketplaceId] = availableMarketplaces[marketplaceInfo.tenant_slug][marketplaceSlug];
+
+          this.marketplaceHashes[marketplaceId] = marketplaceInfo.source_hash;
         });
-      } catch(error) {
-        this.Log(`Eluvio Wallet Client: Failed to load tenant info ${tenantSlug}`, true, error);
-      }
-    });
 
-    this.availableMarketplaces = availableMarketplaces;
-    this.availableMarketplacesById = availableMarketplacesById;
+        this.availableMarketplaces = availableMarketplaces;
+        this.availableMarketplacesById = availableMarketplacesById;
+
+        resolve();
+      });
+    }
+
+    await this.availableMarketplacesPromise;
   }
 
   // Get the hash of the currently linked marketplace
@@ -961,6 +936,8 @@ class ElvWalletClient {
   }
 
   async LoadMarketplace(marketplaceParams) {
+    await this.LoadAvailableMarketplaces();
+
     const marketplaceInfo = this.MarketplaceInfo({marketplaceParams});
 
     const marketplaceId = marketplaceInfo.marketplaceId;
@@ -1408,6 +1385,7 @@ class ElvWalletClient {
           }
 
           if(op === "nft-claim-entitlement") {
+            // eslint-disable-next-line no-unused-vars
             let [op, marketplace, sku, purchaseId ] = status.op.split(":");
             confirmationId = purchaseId;
             if(status.extra &amp;&amp; status.extra["0"]) {
@@ -1475,6 +1453,19 @@ class ElvWalletClient {
       }
     });
   }
+
+  async PurgeUrl({tenantId, url}) {
+    const body = { url };
+    const token = await this.client.CreateFabricToken({});
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "tnt", tenantId, "purge"),
+      method: "POST",
+      body,
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+  }
 }
 
 Object.assign(ElvWalletClient.prototype, require("./ClientMethods"));
@@ -1490,7 +1481,11 @@ exports.ElvWalletClient = ElvWalletClient;
 
 
         <footer class="footer">
+<<<<<<< HEAD
+          Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.4</a>
+=======
           Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a>
+>>>>>>> b0b1957ca860a5467bc021c066ebc6149c16c480
         </footer>
       </div>
     </div>

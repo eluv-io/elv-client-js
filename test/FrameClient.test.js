@@ -9,6 +9,25 @@ const {
   test
 } = Initialize();
 
+const { JSDOM, ResourceLoader } = require("jsdom");
+
+// Fake window class for testing
+// Accepts a jsdom config object.
+class Window {
+  constructor(jsdomConfig = {}) {
+    const { proxy, strictSSL, userAgent } = jsdomConfig;
+    const resources = new ResourceLoader({
+      proxy,
+      strictSSL,
+      userAgent
+    });
+    return (new JSDOM("", Object.assign(jsdomConfig, {
+      resources
+    }))).window;
+  }
+}
+
+
 const {FrameClient} = require("../src/FrameClient");
 const OutputLogger = require("./utils/OutputLogger");
 const {RandomBytes, CreateClient, ReturnBalance} = require("./utils/Utils");
@@ -16,16 +35,20 @@ const {RandomBytes, CreateClient, ReturnBalance} = require("./utils/Utils");
 let frameClient, client, libraryId, objectId, partHash;
 
 const CompareMethods = (frameClientMethods, elvClientMethods) => {
-  const differentKeys = frameClientMethods
-    .filter(x => !elvClientMethods.includes(x))
-    .concat(elvClientMethods.filter(x => !frameClientMethods.includes(x)));
+  const missingFrameClientKeys = frameClientMethods.filter(x => !elvClientMethods.includes(x));
+  const missingElvClientKeys = elvClientMethods.filter(x => !frameClientMethods.includes(x));
 
-  if(differentKeys.length > 0) {
-    console.error("DIFFERING KEYS: ");
-    console.error(differentKeys);
 
-    console.error("EXPECTED");
-    console.error(JSON.stringify(elvClientMethods.sort(), null, 2));
+  if(missingFrameClientKeys.length > 0 || missingElvClientKeys.length > 0) {
+    if(missingElvClientKeys.length > 0) {
+      console.error("\n\nMethods missing from ElvClient: ");
+      missingElvClientKeys.sort().forEach(method => console.log(method));
+    }
+
+    if(missingFrameClientKeys.length > 0) {
+      console.error("\nMethods missing from FrameClient: ");
+      missingFrameClientKeys.sort().forEach(method => console.log(method));
+    }
 
     throw Error("MISMATCHED ALLOWED METHODS BETWEEN ELV CLIENT AND FRAME CLIENT");
   }
@@ -34,7 +57,7 @@ const CompareMethods = (frameClientMethods, elvClientMethods) => {
 describe("Test FrameClient", () => {
   beforeAll(async () => {
     // Initialize fake window object to test the frame client
-    globalThis.window = new (require("window"))();
+    globalThis.window = new Window();
     globalThis.document = globalThis.window.document;
 
     frameClient = OutputLogger(

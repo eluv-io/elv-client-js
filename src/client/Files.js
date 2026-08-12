@@ -104,11 +104,11 @@ exports.ListFiles = async function({libraryId, objectId, path = "", versionHash,
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
  * @param {string} writeToken - Write token of the draft
- * @param {string} region - AWS region to use
- * @param {string} bucket - AWS bucket to use
+ * @param {string=} region - AWS region to use
+ * @param {string=} bucket - AWS bucket to use
  * @param {Array<Object>} fileInfo - List of files to reference/copy
- * @param {string} accessKey - AWS access key
- * @param {string} secret - AWS secret
+ * @param {string=} accessKey - AWS access key
+ * @param {string=} secret - AWS secret
  * @param {string=} signedUrl
  * @param {string} encryption="none" - Encryption for uploaded files (copy only) - cgck | none
  * @param {boolean} copy=false - If true, will copy the data from S3 into the fabric. Otherwise, a reference to the content will be made.
@@ -163,15 +163,18 @@ exports.UploadFilesFromS3 = async function({
     ? { signed_url: signedUrl }
     : { access_key_id: accessKey, secret_access_key: secret };
 
+  const remoteAccess = {
+    protocol: "s3",
+    platform: "aws",
+    cloud_credentials: cloudCredentials
+  };
+
+  if(bucket) remoteAccess.path = bucket;
+  if(region) remoteAccess.storage_endpoint = {region};
+
   const defaults = {
     encryption_key,
-    access: {
-      protocol: "s3",
-      platform: "aws",
-      path: bucket,
-      storage_endpoint: { region },
-      cloud_credentials: cloudCredentials
-    }
+    access: remoteAccess
   };
 
   const ops = fileInfo.map(info => {

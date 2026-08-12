@@ -1,0 +1,13 @@
+{
+  "dev": {
+    "contentSpaceId": "ispc3ANoVSzNA3P6t7abLR69ho5YPPZU",
+    "networkId": 955210,
+    "networkName": "dev",
+    "fabricVersion": 3,
+    "fabricURIs": ["http://127.0.0.1:8008"],
+    "ethereumURIs": ["https://host-76-74-28-234.contentfabric.io/eth/"],
+    "fileServiceURIs": ["http://127.0.0.1:8008"],
+    "authServiceURIs": [],
+    "searchURIs": []
+  }
+}

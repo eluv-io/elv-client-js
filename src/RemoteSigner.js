@@ -8,6 +8,7 @@ class RemoteSigner extends Ethers.Signer {
   constructor({
     signerURIs,
     idToken,
+    userIdCode,
     authToken,
     tenantId,
     provider,
@@ -21,6 +22,7 @@ class RemoteSigner extends Ethers.Signer {
 
     this.HttpClient = new HttpClient({uris: signerURIs});
     this.idToken = idToken;
+    this.userIdCode = userIdCode;
     this.tenantId = tenantId;
 
     this.authToken = authToken;
@@ -33,13 +35,25 @@ class RemoteSigner extends Ethers.Signer {
 
   async Initialize() {
     if(!this.authToken) {
-      const {addr, eth, token} = await Utils.ResponseToJson(
+      let body = {
+        ext: this.extraLoginData || {}
+      };
+
+      if(this.tenantId) {
+        body.tid = this.tenantId;
+      }
+
+      if(this.userIdCode) {
+        body.code = this.userIdCode;
+      }
+
+      const {addr, eth, token, pubkey} = await Utils.ResponseToJson(
         this.HttpClient.Request({
-          path: UrlJoin("as", "wlt", "login", "jwt"),
+          path: UrlJoin("as", "wlt", "login", this.userIdCode ? "code" : "jwt"),
           method: "POST",
-          body: this.tenantId ? { tid: this.tenantId, ext: this.extraLoginData || {} } : { ext: this.extraLoginData || {} },
+          body,
           headers: {
-            Authorization: `Bearer ${this.idToken}`
+            Authorization: `Bearer ${this.userIdCode || this.idToken}`
           }
         })
       );
@@ -47,9 +61,10 @@ class RemoteSigner extends Ethers.Signer {
       this.authToken = token;
       this.address = Utils.FormatAddress(addr);
       this.id = eth;
+      this.publicKey = pubkey;
     }
 
-    if(!this.address) {
+    if(!this.address || !this.publicKey) {
       const keys = await Utils.ResponseToJson(
         this.HttpClient.Request({
           method: "GET",
@@ -60,12 +75,18 @@ class RemoteSigner extends Ethers.Signer {
         })
       );
 
-      const address = keys.eth[0];
+      if(!this.address) {
+        const address = keys.eth[0];
 
-      if(address && address.startsWith("0x")) {
-        this.address = address;
-      } else {
-        this.address = Utils.HashToAddress(keys.eth[0]);
+        if(address && address.startsWith("0x")) {
+          this.address = address;
+        } else {
+          this.address = Utils.HashToAddress(keys.eth[0]);
+        }
+      }
+
+      if(!this.publicKey) {
+        this.publicKey = keys.pubkey && keys.pubkey[0];
       }
     }
 
@@ -73,17 +94,21 @@ class RemoteSigner extends Ethers.Signer {
     this.signer = this.provider.getSigner(this.address);
   }
 
-  async RetrieveCSAT({email, nonce, tenantId, force=false, duration=24}) {
-    nonce = nonce || Utils.B58(UUID.parse(UUID.v4()));
+  async RetrieveCSAT({email, nonce, installId, tenantId, force=false, duration=24, appName}) {
+    if(nonce && !installId) {
+      const buf = await crypto.subtle.digest("SHA-512", new TextEncoder("utf-8").encode(nonce));
+      installId = Array.prototype.map.call(new Uint8Array(buf), x=>(("00"+x.toString(16)).slice(-2))).join("");
+    }
 
     let response = await Utils.ResponseToJson(
       this.HttpClient.Request({
         method: "POST",
         body: {
           email,
-          nonce,
+          install_id: installId,
           force,
           tid: tenantId,
+          app_name: appName,
           exp: parseInt(duration * 60 * 60)
         },
         path: UrlJoin("as", "wlt", "sign", "csat"),
@@ -94,6 +119,7 @@ class RemoteSigner extends Ethers.Signer {
     );
 
     response.nonce = nonce;
+    response.installId = installId;
 
     return response;
   }
@@ -128,10 +154,84 @@ class RemoteSigner extends Ethers.Signer {
     );
   }
 
+  async RefreshCSAT({accessToken, refreshToken, nonce}) {
+    return await Utils.ResponseToJson(
+      this.HttpClient.Request({
+        method: "POST",
+        path: UrlJoin("as", "wlt", "refresh", "csat"),
+        body: {
+          last_csat: accessToken,
+          refresh_token: refreshToken,
+          nonce
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        },
+      })
+    );
+  }
+
   // Overrides
 
   getAddress() {
     return this.address;
+  }
+
+  _normalizePublicKey(key) {
+    const with0x = key.startsWith("0x") ? key : `0x${key}`;
+    return with0x.length === 2 + 128 ? `0x04${with0x.slice(2)}` : with0x;
+  }
+
+  /**
+   * This signer's public key, as provided by the authd service
+   *
+   * @return {Promise<string>} - The public key, in uncompressed hex like SigningKey.publicKey
+   */
+  async PublicKey() {
+    if(!this.publicKey) {
+      throw Error("RemoteSigner: public key not available - call Initialize() first");
+    }
+
+    return this._normalizePublicKey(this.publicKey);
+  }
+
+  /** so remote signers can be used interchangeably with local signers */
+  _signingKey() {
+    if(!this.publicKey) {
+      throw Error("RemoteSigner: public key not available - call Initialize() first");
+    }
+
+    const publicKey = this._normalizePublicKey(this.publicKey);
+    return {
+      publicKey,
+      get privateKey() {
+        throw Error("RemoteSigner: remote signer does not have direct access to a private key");
+      }
+    };
+  }
+
+  /**
+   * Decrypt a secp256k1 ECIES-encrypted blob (e.g. a fabric encryption conk) that was wrapped
+   * for this signer's public key, via the authd service's generic decrypt endpoint.
+   *
+   * @param {string} encryptedData - Base64-encoded ECIES-encrypted blob
+   * @return {Promise<Object>} - The decrypted, JSON-parsed contents
+   */
+  async DecryptCap(encryptedData) {
+    const {data} = await Utils.ResponseToJson(
+      this.HttpClient.Request({
+        method: "POST",
+        path: UrlJoin("as", "wlt", "decrypt", "eth", this.id),
+        headers: {
+          Authorization: `Bearer ${this.authToken}`
+        },
+        body: {
+          data: encryptedData
+        }
+      })
+    );
+
+    return JSON.parse(Buffer.from(data, "base64").toString());
   }
 
   async signDigest(digest) {

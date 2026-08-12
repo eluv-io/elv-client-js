@@ -1,7 +1,8 @@
 /* eslint no-console: 0 */
+const R = require("ramda");
 
 const DefaultABRLadder = {
-  "video" : [
+  "video": [
     {
       bit_rate: 14000000,
       codecs: "avc1.640028,mp4a.40.2",
@@ -33,7 +34,7 @@ const DefaultABRLadder = {
       width: 960
     }
   ],
-  "audio" : [
+  "audio": [
     {
       bit_rate: 192000,
       channels: 2,
@@ -55,8 +56,9 @@ const LiveconfTemplate = {
     },
     playout_config: {
       dvr_enabled: true,
-      dvr_max_duration: 0,
+      dvr_max_duration: 14400,
       rebroadcast_start_time_sec_epoch: 0,
+      playout_sharding_level: 2,
       vod_enabled: false
     },
     recording_config: {
@@ -64,11 +66,11 @@ const LiveconfTemplate = {
         description: "",
         ladder_specs: [],
         listen: true,
-        live_delay_nano: 2000000000,
+        live_delay_nano: 6000000000,
         max_duration_sec: -1,
         name: "",
         origin_url: "",
-        part_ttl: 3600,
+        part_ttl: 86400,
         playout_type: "live",
         source_timescale: null,
         reconnect_timeout: 600,
@@ -113,18 +115,49 @@ const LiveconfTemplate = {
 };
 
 class LiveConf {
-  constructor(probeData, nodeId, nodeUrl, includeAVSegDurations, overwriteOriginUrl, syncAudioToVideo) {
+  constructor({
+    url,
+    probeData,
+    nodeId,
+    nodeUrl,
+    includeAVSegDurations,
+    overwriteOriginUrl,
+    syncAudioToVideo,
+    liveRecordingMeta
+  }) {
+    this.url = url;
     this.probeData = probeData;
     this.nodeId = nodeId;
     this.nodeUrl = nodeUrl;
     this.includeAVSegDurations = includeAVSegDurations;
     this.overwriteOriginUrl = overwriteOriginUrl;
     this.syncAudioToVideo = syncAudioToVideo;
+    this.currentLiveRecordingMeta = liveRecordingMeta;
   }
 
-  probeKind() {
-    let fileNameSplit = this.probeData.format.filename.split(":");
-    return fileNameSplit[0];
+  getFormat() {
+    if (this.probeData.format.format_name) {
+      return this.probeData.format.format_name;
+    }
+    const fileNameSplit = this.probeData.format?.filename?.split(":");
+    if (fileNameSplit.length > 1) {
+      const protoScheme = fileNameSplit[0];
+      switch(protoScheme) {
+        case "rtmp":
+          return "flv";
+        case "udp":
+        case "rtp":
+        case "srt":
+          return "mpegts";
+        default:
+          return "format_unknown";
+      }
+    }
+  }
+
+  getProtocol() {
+    const protoScheme = this.url.split(":")[0];
+    return protoScheme;
   }
 
   getStreamDataForCodecType(codecType) {
@@ -139,17 +172,23 @@ class LiveConf {
 
   // Return all audio streams found in the probe
   // Used by generateAudioStreamsConfig()
-  getAudioStreamsFromProbe() {
-    let audioStreams = {};
-    for(let index = 0; index < this.probeData.streams.length; index++) {
-      if(this.probeData.streams[index].codec_type == "audio") {
-        audioStreams[index] = {
-          recordingBitrate: Math.max(this.probeData.streams[index].bit_rate, 128000),
-          recordingChannels: this.probeData.streams[index].channels,
-          playoutLabel: `Audio ${index}`
-        };
-      }
+  getAudioStreamsFromProbe({ladderProfile}) {
+    const audioStreams = {};
+    const audioStreamData = this.probeData.streams.filter((value) => value.codec_type === "audio");
+
+    for(let index = 0; index < audioStreamData.length; index++) {
+      const currentStreamIndex = audioStreamData[index].stream_index;
+      const currentStreamData = audioStreamData[index];
+
+      const profileAudioForType = ladderProfile?.audio?.find(a => a.channels === currentStreamData.channels);
+
+      audioStreams[currentStreamIndex] = {
+        recordingBitrate: profileAudioForType?.bit_rate ?? Math.max(currentStreamData.bit_rate ?? 0, 12800),
+        recordingChannels: currentStreamData.channels,
+        playoutLabel: `Audio ${index + 1}`
+      };
     }
+
     return audioStreams;
   }
 
@@ -179,7 +218,8 @@ class LiveConf {
    *
    * Live input formats have fixed timebase:
    * - MPEG-TS/SRT input stream timebase is 90000
-   * - RTMP input stream timebase is 1000 and gets translated to 16000 if not otherwise specified
+   * - RTMP input stream timebase is 1000 and gets translated to match the frame rate
+   *   (eg. 24000 @24fps, 30000 @30fps/29.97fps, 60000 @60fps/59.94fps)
    *
    * This causes frame duration irregularities for certain frame rates.
    * For example RTMP 60fps has frames of durations 16 and 17.  MPEG-TS 59.94fps has frames of
@@ -190,10 +230,13 @@ class LiveConf {
    * to make the math possible.  This adjustment is also required for live-to-vod conversion.
    *
    * For example for MPEG-TS 59.94fps, the mez segment timebase needs to be 60000
-   * (and resulting frame duration is 1001) and for RTMP 60fps the timebase needs to be 15360 (resulting frame
-   * duration is 256).
+   * (and resulting frame duration is 1001) and for RTMP 60fps the timebase is set to 60000
+   * (resulting frame duration is 1000). For every supported RTMP frame rate, the video timebase is
+   * set equal to the source timescale, with a frame duration of 1000 (1001 for the *000/1001
+   * fractional rates).
    *
-   * @sourceTimescale - adjusted source video stream timescale (eg. MPEGTS 90000, RTMP 16000 )
+   * @sourceTimescale - adjusted source video stream timescale (eg. MPEGTS 90000; ignored for RTMP,
+   *   which derives its own timebase per frame rate in calcSegDurationRtmp)
    * @sampleRate - audio sample rate (commonly 48000 but can be different)
    * @audioCodec - audio codec as a string (eg. "aac")
    * @return - segment encoding parameters
@@ -201,16 +244,15 @@ class LiveConf {
   calcSegDuration({sourceTimescale, sampleRate, audioCodec}) {
     let seg = {};
 
-    switch(this.probeKind()) {
-      case "rtmp":
+    switch(this.getFormat()) {
+      case "flv":
         seg = this.calcSegDurationRtmp({sourceTimescale, sampleRate, audioCodec});
         break;
-      case "udp":
-      case "srt":
+      case "mpegts":
         seg = this.calcSegDurationMpegts({sourceTimescale, sampleRate, audioCodec});
         break;
       default:
-        throw "protocol not supported - " + this.probeKind();
+        throw "protocol not supported - " + this.getFormat();
     }
 
     if(audioCodec == "aac") {
@@ -295,57 +337,65 @@ class LiveConf {
     return seg;
   }
 
-  calcSegDurationRtmp({sourceTimescale}) {
+  calcSegDurationRtmp() {
     let videoStream = this.getStreamDataForCodecType("video");
     let frameRate = videoStream.frame_rate;
     let seg = {};
 
     switch(frameRate) {
       case "24":
-        seg.videoTimeBase = 768; // Note 1536 produces low output bitrate
-        seg.videoFrameDurationTs = 512;
-        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
+        seg.videoTimeBase = 24000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 48;
         seg.duration = "30";
         break;
       case "25":
-        seg.video = sourceTimescale * 30;
+        seg.videoTimeBase = 25000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 50;
         seg.duration = "30";
         break;
       case "30":
-        seg.videoTimeBase = 960; // Output timebase: 15360
-        seg.videoFrameDurationTs = 512;
-        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
+        seg.videoTimeBase = 30000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 60;
         seg.duration = "30";
         break;
       case "30000/1001":
-        seg.video = sourceTimescale * 30.03;
+        seg.videoTimeBase = 30000;
+        seg.videoFrameDurationTs = 1001;
+        seg.video = seg.videoTimeBase * 30.03;
         seg.keyint = 60;
         seg.duration = "30.03";
         break;
       case "48":
-        seg.videoTimeBase = 1536; // Output timebase: 12288
-        seg.videoFrameDurationTs = 256;
-        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
+        seg.videoTimeBase = 48000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 96;
         seg.duration = "30";
         break;
       case "50":
-        seg.video = sourceTimescale * 30;
+        seg.videoTimeBase = 50000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 100;
         seg.duration = "30";
         break;
       case "60":
-        seg.videoTimeBase = 960; // Output timebase: 15360
-        seg.videoFrameDurationTs = 256;
-        seg.video = this.calcOutputTimebase(seg.videoTimeBase) * 30;
+        seg.videoTimeBase = 60000;
+        seg.videoFrameDurationTs = 1000;
+        seg.video = seg.videoTimeBase * 30;
         seg.keyint = 120;
         seg.duration = "30";
         break;
       case "60000/1001":
-        seg.video = sourceTimescale * 30.03;
+        seg.videoTimeBase = 60000;
+        seg.videoFrameDurationTs = 1001;
+        seg.video = seg.videoTimeBase * 30.03;
         seg.keyint = 120;
         seg.duration = "30.03";
         break;
@@ -358,55 +408,115 @@ class LiveConf {
   syncAudioToStreamIdValue() {
     let sync_id = -1;
     let videoStream = this.getStreamDataForCodecType("video");
-    switch(this.probeKind()) {
-      case "udp":
-      case "srt":
+    switch(this.getFormat()) {
+      case "mpegts":
         sync_id = videoStream.stream_id;
         break;
-      case "rtmp":
+      case "flv":
         sync_id = videoStream.stream_index;
         break;
     }
     return sync_id;
   }
 
+  /**
+   * Map custom live recording profile to the expected config structure
+   * @param {Object} customProfile - User's custom recording profile
+   * @return {Object} - Mapped config in live_recording format
+   */
+  MapCustomProfileToLiveConfig({customProfile}) {
+    if(!customProfile) return {};
+
+    const CompactDeep = (obj) => {
+      if(obj === null || typeof obj !== "object" || Array.isArray(obj)) {
+        return obj;
+      }
+
+      return R.pipe(
+        R.reject(R.isNil),
+        R.map(val => typeof val === "object" ? CompactDeep(val) : val)
+      )(obj);
+    };
+
+    const {recording_config, recording_params, ...rest} = customProfile;
+
+    return CompactDeep({
+      live_recording: {
+        ...rest,
+        recording_config: {
+          recording_params: {
+            ...recording_params,
+            part_ttl: recording_config?.part_ttl,
+            reconnect_timeout: recording_config?.reconnect_timeout,
+            xc_params: {
+              ...(recording_params?.xc_params || {}),
+              connection_timeout: recording_config?.connection_timeout,
+              copy_mpegts: recording_config?.copy_mpegts,
+              input_cfg: recording_config?.input_cfg
+            }
+          }
+        }
+      }
+    });
+  }
+
   /*
   * Generate audio streams recording configuration based on the optional custom settings.
   * If no custom "audio" section is present, record all the acceptable audio streams found in the probe
   */
-  generateAudioStreamsConfig({customSettings}) {
+  generateAudioStreamsConfig({liveRecordingConfigProfile}) {
+    const ladderProfile = liveRecordingConfigProfile?.playout_config?.ladder_specs || DefaultABRLadder;
+    const audioSettings = liveRecordingConfigProfile?.recording_stream_config?.audio;
 
     let audioStreams = {};
-    if(customSettings && customSettings.audio && Object.keys(customSettings.audio).length > 0) {
-      for(let i = 0; i < Object.keys(customSettings.audio).length; i ++) {
-        let audioIdx = Object.keys(customSettings.audio)[i];
-        let audio = customSettings.audio[audioIdx];
+
+    if(audioSettings && Object.keys(audioSettings).length > 0) {
+      for(let i = 0; i < Object.keys(audioSettings).length; i ++) {
+        const audioIdx = Object.keys(audioSettings)[i];
+        const audio = audioSettings[audioIdx];
+        const profileAudioForType = ladderProfile?.audio.find(a => a.channels === (audio.channels ?? 2));
+
         audioStreams[audioIdx] = {
-          recordingBitrate: audio.recording_bitrate || 192000,
+          recordingBitrate: ladderProfile?.audio ? profileAudioForType.bit_rate : audio.recording_bitrate ?? 192000,
           recordingChannels: audio.recording_channels || 2,
+          lang: audio.lang,
+          isDefault: audio.default
         };
         if(audio.playout) {
-          audioStreams[audioIdx].playoutLabel = audio.playout_label || `Audio ${audioIdx}`;
+          audioStreams[audioIdx].playoutLabel = audio.playout_label || `Audio ${i + 1}`;
         }
       }
     }
 
     // If no audio streams specified in custom config, set up all the suitable audio streams in the probe
-    if(!customSettings.audio || Object.keys(customSettings.audio).length == 0) {
-      audioStreams = this.getAudioStreamsFromProbe();
+    if(!audioSettings || Object.keys(audioSettings).length === 0) {
+      audioStreams = this.getAudioStreamsFromProbe({ladderProfile});
     }
 
     return audioStreams;
   }
 
   /*
-  * Generate the live recording config as required by QFAB, based on defaults and optional custom settings.
+  * Generate the live recording config as required by QFAB, based on defaults, existing settings and optional custom settings.
   */
   generateLiveConf({customSettings}) {
-    // gather required data
-    const conf = JSON.parse(JSON.stringify(LiveconfTemplate));
-    const fileName = this.overwriteOriginUrl || this.probeData.format.filename;
-    const audioStreams = this.generateAudioStreamsConfig({customSettings});
+    // Saved config overrides defaults and is preserved on reconfiguration
+    let conf = R.clone(LiveconfTemplate);
+
+    if(this.currentLiveRecordingMeta) {
+      conf = R.mergeDeepRight(conf,
+        {live_recording: this.currentLiveRecordingMeta});
+    }
+
+    if(customSettings.liveRecordingConfigProfile) {
+      conf = R.mergeDeepRight(conf,
+        this.MapCustomProfileToLiveConfig({
+          customProfile: customSettings.liveRecordingConfigProfile
+        }));
+    }
+
+    const fileName = this.url;
+    const audioStreams = this.generateAudioStreamsConfig({liveRecordingConfigProfile: customSettings.liveRecordingConfigProfile});
 
     // Retrieve one audio stream from the probe to read the sample rate and codec name
     const audioStream = this.getStreamDataForCodecType("audio");
@@ -415,6 +525,10 @@ class LiveConf {
 
     const videoStream = this.getStreamDataForCodecType("video");
     let sourceTimescale;
+
+    // Custom profile values take precedence over computed defaults
+    const customRecordingParams = customSettings.liveRecordingConfigProfile?.recording_params;
+    const customXcParams = customRecordingParams?.xc_params;
 
     // Fill in liveconf all formats have in common
     conf.live_recording.fabric_config.ingress_node_api = this.nodeUrl || null;
@@ -436,25 +550,29 @@ class LiveConf {
     }
 
     // Fill in specifics for protocol
-    switch(this.probeKind()) {
-      case "udp":
-        sourceTimescale = 90000;
+    switch(this.getFormat()) {
+      case "mpegts":
+        sourceTimescale = customRecordingParams?.source_timescale ?? 90000;
         conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
-        break;
-      case "srt":
-        sourceTimescale = 90000;
-        conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
-        conf.live_recording.recording_config.recording_params.live_delay_nano = 4000000000;
         break;
       case "rtmp":
-        sourceTimescale = 16000;
+      case "flv":
+        sourceTimescale = customRecordingParams?.source_timescale ?? 16000;
         conf.live_recording.recording_config.recording_params.source_timescale = sourceTimescale;
         break;
       case "hls":
         console.log("HLS detected. Not yet implemented");
         break;
       default:
-        console.log("Unsupported media", this.probeKind());
+        console.log("Unsupported media", this.getFormat());
+        break;
+    }
+
+    switch(this.getProtocol()) {
+      case "srt":
+        if(!customSettings.liveRecordingConfigProfile?.recording_params?.live_delay_nano) {
+          conf.live_recording.recording_config.recording_params.live_delay_nano = 6000000000;
+        }
         break;
     }
 
@@ -463,24 +581,31 @@ class LiveConf {
     // Segment conditioning parameters
     conf.live_recording.recording_config.recording_params.xc_params.seg_duration = segDurations.duration;
     conf.live_recording.recording_config.recording_params.xc_params.audio_seg_duration_ts = segDurations.audio;
-    conf.live_recording.recording_config.recording_params.xc_params.video_seg_duration_ts = segDurations.video;
+    conf.live_recording.recording_config.recording_params.xc_params.video_seg_duration_ts =
+      customXcParams?.video_seg_duration_ts ?? segDurations.video;
     conf.live_recording.recording_config.recording_params.xc_params.force_keyint = segDurations.keyint;
 
     // Optional override output timebase and frame duration (ts)
-    if(segDurations.videoTimeBase) {
+    if(segDurations.videoTimeBase && R.isNil(customXcParams?.video_time_base)) {
       conf.live_recording.recording_config.recording_params.xc_params.video_time_base = segDurations.videoTimeBase;
 
       // Note 'source_timescale' needs to be set to the output timebase and is used by playout
-      conf.live_recording.recording_config.recording_params.source_timescale = this.calcOutputTimebase(segDurations.videoTimeBase);
+      if(R.isNil(customRecordingParams?.source_timescale)) {
+        conf.live_recording.recording_config.recording_params.source_timescale = this.calcOutputTimebase(segDurations.videoTimeBase);
+      }
     }
-    if(segDurations.videoFrameDurationTs) {
+    if(segDurations.videoFrameDurationTs && R.isNil(customXcParams?.video_frame_duration_ts)) {
       conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs;
     }
 
-    const ladderProfile = customSettings.ladder_profile || DefaultABRLadder;
+    const ladder_specs = customSettings.liveRecordingConfigProfile?.playout_config?.ladder_specs;
+    const ladderProfile = ladder_specs?.video?.length > 0 ? ladder_specs : DefaultABRLadder;
 
     conf.live_recording.recording_config.recording_params.xc_params.enc_height = videoStream.height;
     conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;
+
+    // Reset ladder specs (updating existing stream will carry over old specs
+    conf.live_recording.recording_config.recording_params.ladder_specs = [];
 
     // Determine video recording bitrate and ABR ladder
     let topLadderRate = 0;
@@ -504,7 +629,7 @@ class LiveConf {
     let globalAudioBitrate = 0;
     let nAudio = 0;
 
-    for(let i = 0; i < Object.keys(audioStreams).length; i ++ ) {
+    for(let i = 0; i < Object.keys(audioStreams).length; i++) {
       let audioLadderSpec = {};
       const audioIndex = Object.keys(audioStreams)[i];
       const audio = audioStreams[audioIndex];
@@ -517,6 +642,7 @@ class LiveConf {
           break;
         }
       }
+
       if(Object.keys(audioLadderSpec).length === 0) {
         // If no channels layout match, just use the first element in the ladder
         audioLadderSpec = {...ladderProfile.audio[0]};
@@ -528,37 +654,23 @@ class LiveConf {
       audioLadderSpec.stream_name = `audio_${audioIndex}`;
       audioLadderSpec.stream_label = audio.playoutLabel ? audio.playoutLabel : null;
       audioLadderSpec.media_type = 2;
+      audioLadderSpec.lang = audio.lang ?? "";
+
+
+      if(Object.keys(audioStreams).length === 1 || audio.isDefault) {
+        audioLadderSpec.default = true;
+      }
 
       conf.live_recording.recording_config.recording_params.ladder_specs.push(audioLadderSpec);
       if(audio.recordingBitrate > globalAudioBitrate) {
         globalAudioBitrate = audio.recordingBitrate;
       }
-      nAudio ++;
+      nAudio++;
     }
 
     // Global recording bitrate for all audio streams
     conf.live_recording.recording_config.recording_params.xc_params.audio_bitrate = globalAudioBitrate;
     conf.live_recording.recording_config.recording_params.xc_params.n_audio = nAudio;
-
-    // Iterate through custom settings (which will override any existing setting)
-    function SetByPath({obj, path, value}) {
-      const keys = path.split(".");
-      let temp = obj;
-      for(let i = 0; i < keys.length - 1; i++) {
-        if(!temp[keys[i]]) {
-          temp[keys[i]] = {};
-        }
-        temp = temp[keys[i]];
-      }
-
-      temp[keys[keys.length - 1]] = value;
-    }
-
-    const {metaPathValues} = customSettings;
-
-    for(let [path, value] of Object.entries(metaPathValues || {})) {
-      SetByPath({obj: conf, path, value});
-    }
 
     return conf;
   }
