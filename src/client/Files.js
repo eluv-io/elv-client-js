@@ -363,7 +363,10 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
 
   this.Log(fileInfo);
 
-  if(callback) {
+  // On a fresh upload nothing has happened yet, so 0% is accurate. On resume, the real starting
+  // point isn't known until job status is fetched below, so skip this to avoid a misleading
+  // initial 0% line ahead of the actual (possibly much higher) baseline.
+  if(callback && !resume) {
     callback(progress);
   }
 
@@ -416,6 +419,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
       });
       idJobMap.set(uploadId, result.jobs);
     }
+    
   } else {
     const jobResponse = await this.CreateFileUploadJob({
       libraryId,
@@ -439,6 +443,36 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
     let prepared = 0;
     let uploaded = 0;
     let jobSpecs = [];
+
+    // `${jobId}:${path}` pairs already reflected in progress by the resume baseline scan below,
+    // so the normal per-chunk completion credit further down doesn't double-count them
+    // It stores the jobId whose remaining bytes = 0
+    let alreadyCreditedKeys = new Set();
+
+    if(resume && callback) {
+      // Establish the true resume baseline across ALL chunks up front, before showing any
+      // progress. Crediting chunks one at a time as PrepareJobs reaches them (sequentially, each
+      // with its own round trip) would make an already-mostly-done file look like it's slowly
+      // re-climbing from scratch instead of immediately reflecting what's already been received.
+      await this.utils.LimitedMap(5, jobs, async jobId => {
+        const job = await this.UploadJobStatus({ libraryId, objectId, writeToken, uploadId, jobId });
+
+        for(const fileInfo of job.files) {
+          // When encrypted, the top-level rem/skip are sentinel (-1) - the real, already-received
+          // byte counts for this chunk are under `encrypted` (same lookup UploadFileData uses)
+          const fileStatus = (encryption && encryption !== "none") ? fileInfo.encrypted : fileInfo;
+          if(fileStatus.rem === 0) {
+            alreadyCreditedKeys.add(`${jobId}:${fileInfo.path}`);
+            progress[fileInfo.path] = {
+              ...progress[fileInfo.path],
+              uploaded: progress[fileInfo.path].uploaded + fileInfo.len
+            };
+          }
+        }
+      });
+
+      callback(progress);
+    }
 
     // Insert the data to upload into the job spec, encrypting if necessary
     const PrepareJobs = async () => {
@@ -533,7 +567,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
         delete jobSpecs[j].files[f].data;
         uploaded += fileInfo.len;
 
-        if(callback) {
+        if(callback && !alreadyCreditedKeys.has(`${jobId}:${fileInfo.path}`)) {
           progress[fileInfo.path] = {
             ...progress[fileInfo.path],
             uploaded: progress[fileInfo.path].uploaded + fileInfo.len
@@ -642,7 +676,7 @@ exports.ResumeFileUploadJob = async function({libraryId, objectId, writeToken, o
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
-  if(stoppedOrFailedJobIds.size === 0) {
+  if(stoppedOrFailedJobIds.length === 0) {
     this.Log("No stopped/failed jobs found");
     throw new Error("No STOPPED/FAILED jobs found");
   }
