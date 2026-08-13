@@ -786,7 +786,7 @@ exports.UploadFileData = async function({libraryId, objectId, writeToken, encryp
 
   let path = UrlJoin("q", writeToken, "file_jobs", uploadId, jobId);
 
-  return await this.utils.ResponseToJson(
+  const response = await this.utils.ResponseToJson(
     this.HttpClient.Request({
       method: "POST",
       path: path,
@@ -800,6 +800,17 @@ exports.UploadFileData = async function({libraryId, objectId, writeToken, encryp
       allowRetry: false
     })
   );
+
+  if(response && response.part && !response.part.hash) {
+    // The request succeeded but the server received fewer bytes than the part needed to seal
+    // (e.g. a dropped/truncated connection) - part.hash is only populated once finalized, so an
+    // empty hash here means this chunk isn't actually done despite the 200. Throw so the caller's
+    // retry loop re-reads the job status (updated skip/rem) and resends the missing remainder,
+    // instead of the chunk silently being counted as complete.
+    throw new Error(`Upload did not finalize part for ${filePath} (job ${jobId})`);
+  }
+
+  return response;
 };
 
 exports.FinalizeUploadJob = async function({libraryId, objectId, writeToken}) {
