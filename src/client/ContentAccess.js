@@ -18,6 +18,7 @@ const {
   ValidatePartHash,
   ValidateWriteToken,
   ValidateParameters,
+  ValidatePresence,
 } = require("../Validation");
 
 const MergeWith = require("lodash/mergeWith");
@@ -2813,12 +2814,10 @@ exports.MigrateEncryptionConkForUserProvided = async function({libraryId, object
   ValidateWriteToken(writeToken);
 
   if(!objectId) {
-    objectId = this.client.utils.DecodeVersionHash(versionHash).objectId;
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   }
 
-  if(!newEncodedUserPublicKey){
-    throw "require public key for new user to be provided";
-  }
+  ValidatePresence("newEncodedUserPublicKey", newEncodedUserPublicKey);
 
   let publicKey;
   if(!newEncodedUserPublicKey.startsWith("kupk")){

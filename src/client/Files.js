@@ -61,28 +61,6 @@ exports.ListFiles = async function({libraryId, objectId, path = "", versionHash,
 
 
 /**
- * Upload or resume upload/reference of files from S3 to a content object.
- *
- * S3 authentication is done by either providing an access key and secret or a presigned URL. The credentials will not be stored.
- *
- * @memberof module:ElvClient/Files+Parts
- * @methodGroup Files
- * @namedParams
- * @param {string} libraryId
- * @param {string} objectId
- * @param {string} writeToken
- * @param {string} region
- * @param {string} bucket
- * @param {Array<Object>} fileInfo
- * @param {string} accessKey
- * @param {string} secret
- * @param {string=} signedUrl
- * @param {string} encryption="none"
- * @param {boolean} copy=false
- * @param {boolean} resume=false
- * @param {function=} callback
- */
-/**
  * Upload or resume copy/reference files from S3 to a content object
  *
  * S3 authentication is done by either providing an access key and secret or a presigned URL. The credentials will not be stored (neither in the client nor in the Fabric)
@@ -208,7 +186,7 @@ exports.UploadFilesFromS3 = async function({
       await new Promise(resolve => setTimeout(resolve, 1000));
       const status = await this.UploadStatus({ libraryId, objectId, writeToken, uploadId });
 
-      if(status.errors && status.errors.length > 1) {
+      if(status.errors && status.errors.length >= 1) {
         throw new Error(status.errors.join("\n"));
       } else if(status.error) {
         this.Log(`S3 file upload failed:\n${JSON.stringify(status, null, 2)}`);
@@ -267,10 +245,10 @@ exports.UploadFilesFromS3 = async function({
         encryption,
         stoppedOrFailedJobIds: jobIds
       });
-      for(const res of responses) {
+      await this.utils.LimitedMap(5, responses, async res => {
         this.Log(`Tracking resumed job id: ${res.id}`);
         await trackUploadStatus({ uploadId: res.id });
-      }
+      });
     };
 
     for(const status of [JobStatus.STOPPED, JobStatus.FAILED]) {
@@ -279,14 +257,14 @@ exports.UploadFilesFromS3 = async function({
       }
     }
 
-    for(const [status, jobs] of Object.entries(jobsByStatus)) {
-      if([JobStatus.IN_PROGRESS, JobStatus.COMPLETED].includes(status)) {
-        for(const [jobId] of jobs) {
-          this.Log(`Tracking ${status.toLowerCase()} job id: ${jobId}`);
-          await trackUploadStatus({ uploadId: jobId });
-        }
-      }
-    }
+    const trackOnlyEntries = Object.entries(jobsByStatus)
+      .filter(([status]) => [JobStatus.IN_PROGRESS, JobStatus.COMPLETED].includes(status))
+      .flatMap(([status, jobs]) => [...jobs.keys()].map(jobId => ({ status, jobId })));
+
+    await this.utils.LimitedMap(5, trackOnlyEntries, async ({ status, jobId }) => {
+      this.Log(`Tracking ${status.toLowerCase()} job id: ${jobId}`);
+      await trackUploadStatus({ uploadId: jobId });
+    });
   } else {
     const { id: uploadId } = await this.CreateFileUploadJob({ libraryId, objectId, writeToken, ops, defaults });
     await trackUploadStatus({ uploadId });
@@ -409,7 +387,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
     }
 
     // for each uploadId, make a map containing jobIds
-    for(const uploadId of resumeJobIds) {
+    const uploadJobsResults = await this.utils.LimitedMap(5, resumeJobIds, async uploadId => {
       const result = await this.ListFilesUploadJobs({
         libraryId,
         objectId,
@@ -417,8 +395,9 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
         jobId: uploadId,
         encryption
       });
-      idJobMap.set(uploadId, result.jobs);
-    }
+      return result.jobs;
+    });
+    resumeJobIds.forEach((uploadId, i) => idJobMap.set(uploadId, uploadJobsResults[i]));
     
   } else {
     const jobResponse = await this.CreateFileUploadJob({
