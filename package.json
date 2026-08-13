@@ -35,6 +35,10 @@
   "browser": {
     "fs": false
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eluv-io/elv-client-js.git"
+  },
   "files": [
     "/build",
     "/dist",
