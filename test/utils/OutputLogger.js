@@ -4,7 +4,7 @@ const isEqual = require("lodash.isequal");
 
 const Replacer = (name, value) => {
   // Filter sensitive parameters
-  const filteredParameters = ["privatekey", "accesskey", "secret", "secret_access_key", "access_key_id"];
+  const filteredParameters = ["privatekey", "accesskey", "secret", "secret_access_key", "access_key_id", "signedurl", "signed_url"];
   if(filteredParameters.includes(name.toLowerCase())) {
     return "<filtered>";
   }
