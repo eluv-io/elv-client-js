@@ -9,6 +9,7 @@ const objectPath = require("object-path");
 
 const HttpClient = require("../HttpClient");
 const ContentObjectAudit = require("../ContentObjectAudit");
+const bs58 = require("bs58");
 
 const {
   ValidateLibrary,
@@ -17,6 +18,7 @@ const {
   ValidatePartHash,
   ValidateWriteToken,
   ValidateParameters,
+  ValidatePresence,
 } = require("../Validation");
 
 const MergeWith = require("lodash/mergeWith");
@@ -2713,7 +2715,6 @@ exports.LinkData = async function({libraryId, objectId, versionHash, writeToken,
   );
 };
 
-
 /* Encryption */
 
 exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash, writeToken, createKMSConk=true}) {
@@ -2789,6 +2790,74 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash,
       console.error(error);
     }
   }
+
+  return this.encryptionConks[objectId];
+};
+
+/**
+ * Encrypt the owner encryption key using the new user details provided
+ *
+ * @methodGroup Encryption
+ * @namedParams
+ * @param {string=} libraryId - ID of a library
+ * @param {string=} objectId - ID of an object
+ * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - The write token for the object
+ * @param {Object=} newEncodedUserPublicKey - raw public key or base-58 encoded publicKey of the new user prefixed 'kupk'
+ */
+exports.MigrateEncryptionConkForUserProvided = async function({libraryId, objectId, versionHash, writeToken, newEncodedUserPublicKey}) {
+  if(this.signer.remoteSigner) {
+    return;
+  }
+
+  ValidateParameters({libraryId, objectId, versionHash});
+  ValidateWriteToken(writeToken);
+
+  if(!objectId) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  }
+
+  ValidatePresence("newEncodedUserPublicKey", newEncodedUserPublicKey);
+
+  let publicKey;
+  if(!newEncodedUserPublicKey.startsWith("kupk")){
+    publicKey = newEncodedUserPublicKey;
+  } else {
+    const publicKeyBytes = bs58.decode(newEncodedUserPublicKey.slice(4));
+    if(publicKeyBytes.length !== 65) {
+      publicKey = "0x" + Buffer.concat([Buffer.from([0x04]), publicKeyBytes]).toString("hex");
+    } else {
+      publicKey = "0x" + publicKeyBytes.toString("hex");
+    }
+  }
+
+  // Decrypt using existing user key
+  const existingCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
+  const existingUserCap =
+    await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: existingCapKey
+    });
+
+  if(!existingUserCap) {
+    throw (`No encryption conk present for ${objectId} for user ${this.signer.address}`);
+  }
+
+  this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer._signingKey().privateKey);
+
+  // Encrypt with the new key
+  const encryptedConk = await this.Crypto.EncryptConk(this.encryptionConks[objectId], publicKey);
+  const newUserCap = `eluv.caps.iusr${this.utils.AddressToHash(this.utils.PublicKeyToAddress(publicKey))}`;
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: newUserCap,
+    metadata: encryptedConk
+  });
 
   return this.encryptionConks[objectId];
 };
