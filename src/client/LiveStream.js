@@ -3532,6 +3532,13 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
       method: "live/outputs",
       constant:  true
     });
+  } catch(error) {
+    if(error.status === 404) {
+      // Stream object may have been deleted
+      return {};
+    }
+
+    throw error;
   } finally {
     restore();
   }
@@ -3544,17 +3551,22 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
       const streamId = value.input?.stream;
       if(!streamId) { return; }
 
-      const [streamLibraryId, streamStatus] = await Promise.all([
-        this.ContentObjectLibraryId({objectId: streamId}),
-        this.StreamStatus({name: streamId})
-      ]);
+      try {
+        const [streamLibraryId, streamStatus] = await Promise.all([
+          this.ContentObjectLibraryId({objectId: streamId}),
+          this.StreamStatus({name: streamId})
+        ]);
 
-      value.input.name = await this.ContentObjectMetadata({
-        libraryId: streamLibraryId,
-        objectId: streamId,
-        metadataSubtree: "/public/name",
-      });
-      value.input.status = streamStatus?.state;
+        value.input.name = await this.ContentObjectMetadata({
+          libraryId: streamLibraryId,
+          objectId: streamId,
+          metadataSubtree: "/public/name",
+        });
+        value.input.status = streamStatus?.state;
+      } catch(error) {
+        // Stream object may have been deleted
+        value.input.status = "unavailable";
+      }
     }
   );
 
