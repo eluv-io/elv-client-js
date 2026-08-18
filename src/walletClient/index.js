@@ -913,9 +913,8 @@ class ElvWalletClient {
               path: UrlJoin("as", "mw", "permission_check"),
               method: "POST",
               headers: {
-                // If not logged in, generated a dummy signed token
-                // Authorization may be based on geo-restriction, which doesn't require login
-                // (AuthToken() now handles the logged-in/not-logged-in branch internally)
+                // Authorization may be based on geo-restriction, which doesn't require login;
+                // AuthToken() returns publicStaticToken when not logged in, the real fabric token when logged in
                 Authorization: `Bearer ${this.AuthToken()}`
               },
               body: {
