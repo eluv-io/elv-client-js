@@ -925,8 +925,7 @@ class ElvWalletClient {
 
           permissions = response.permissions || {};
         } catch(error) {
-          // leave permissions empty - every item below falls through to authorized = false,
-          // matching the previous per-item catch(error) => authorized = false behavior
+          // leave permissions empty, matching the previous per-item catch(error) => authorized = false behavior
         }
       }
 
