@@ -907,15 +907,17 @@ class ElvWalletClient {
       let permissions = {};
       if(itemsRequiringPermissionCheck.length > 0) {
         try {
+          // If not logged in, generate a dummy signed token
+          // Authorization may be based on geo-restriction, which doesn't require login
+          const authorizationToken = this.loggedIn ? this.AuthToken() : await this.client.CreateFabricToken({});
+
           // resolve every item's permission check in one batched call
           const response = await Utils.ResponseToJson(
             this.client.authClient.MakeAuthServiceRequest({
               path: UrlJoin("as", "mw", "permission_check"),
               method: "POST",
               headers: {
-                // Authorization may be based on geo-restriction, which doesn't require login;
-                // AuthToken() returns publicStaticToken when not logged in, the real fabric token when logged in
-                Authorization: `Bearer ${this.AuthToken()}`
+                Authorization: `Bearer ${authorizationToken}`
               },
               body: {
                 hashes: itemsRequiringPermissionCheck.map(item => LinkTargetHash(item.nft_template)).filter(hash => hash)
