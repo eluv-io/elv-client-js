@@ -918,7 +918,8 @@ class ElvWalletClient {
                 Authorization: `Bearer ${this.AuthToken()}`
               },
               body: {
-                hashes: itemsRequiringPermissionCheck.map(item => LinkTargetHash(item.nft_template))
+                // LinkTargetHash can return undefined for missing nft_template link - filter those out
+                hashes: itemsRequiringPermissionCheck.map(item => LinkTargetHash(item.nft_template)).filter(hash => hash)
               }
             })
           );
