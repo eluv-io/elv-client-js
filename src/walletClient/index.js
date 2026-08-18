@@ -902,36 +902,47 @@ class ElvWalletClient {
         })) || {};
       }
 
-      marketplace.items = await Promise.all(
-        marketplace.items.map(async (item, index) => {
-          if(item.requires_permissions) {
-            let authorizationToken;
-            if(!this.loggedIn) {
-              // If not logged in, generated a dummy signed token
-              // Authorization may be based on geo-restriction, which doesn't require login
-              authorizationToken = await this.client.CreateFabricToken({});
-            }
+      const itemsRequiringPermissionCheck = marketplace.items.filter(item => item.requires_permissions);
 
-            try {
-              await this.client.ContentObjectMetadata({
-                versionHash: LinkTargetHash(item.nft_template),
-                metadataSubtree: "permissioned",
-                authorizationToken
-              });
+      let permissions = {};
+      if(itemsRequiringPermissionCheck.length > 0) {
+        try {
+          // resolve every item's permission check in one batched call
+          const response = await Utils.ResponseToJson(
+            this.client.authClient.MakeAuthServiceRequest({
+              path: UrlJoin("as", "mw", "permission_check"),
+              method: "POST",
+              headers: {
+                // If not logged in, generated a dummy signed token
+                // Authorization may be based on geo-restriction, which doesn't require login
+                // (AuthToken() now handles the logged-in/not-logged-in branch internally)
+                Authorization: `Bearer ${this.AuthToken()}`
+              },
+              body: {
+                hashes: itemsRequiringPermissionCheck.map(item => LinkTargetHash(item.nft_template))
+              }
+            })
+          );
 
-              item.authorized = true;
-            } catch(error) {
-              item.authorized = false;
-            }
-          }
+          permissions = response.permissions || {};
+        } catch(error) {
+          // leave permissions empty - every item below falls through to authorized = false,
+          // matching the previous per-item catch(error) => authorized = false behavior
+        }
+      }
 
-          item.nftTemplateMetadata = ((item.nft_template || {}).nft || {});
-          item.nftTemplateHash = ((item.nft_template || {})["."] || {}).source;
-          item.itemIndex = index;
+      marketplace.items = marketplace.items.map((item, index) => {
+        if(item.requires_permissions) {
+          const hash = LinkTargetHash(item.nft_template);
+          item.authorized = !!(permissions[hash] && permissions[hash].allowed);
+        }
 
-          return item;
-        })
-      );
+        item.nftTemplateMetadata = ((item.nft_template || {}).nft || {});
+        item.nftTemplateHash = ((item.nft_template || {})["."] || {}).source;
+        item.itemIndex = index;
+
+        return item;
+      });
 
       marketplace.collections = (marketplace.collections || []).map((collection, collectionIndex) => ({
         ...collection,
