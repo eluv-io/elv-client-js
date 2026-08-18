@@ -1090,9 +1090,9 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
         status.recordingStatus = lroStatus.custom.status;
       }
     } catch(error) {
-      console.log("LRO Status (failed): ", error.response.statusCode);
+      console.log("LRO Status (failed): ", error.response?.statusCode);
       status.state = "stopped";
-      status.error = error.response;
+      status.error = error.response || error.message;
       return status;
     }
 
@@ -3581,9 +3581,13 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
 
   const nodeUrls = {};
   await this.utils.LimitedMap(10, nodeIds, async nodeId => {
-    const nodes = await this.SpaceNodes({matchNodeId: nodeId});
-    const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
-    if(fabricUrl) { nodeUrls[nodeId] = fabricUrl; }
+    try {
+      const nodes = await this.SpaceNodes({matchNodeId: nodeId});
+      const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+      if(fabricUrl) { nodeUrls[nodeId] = fabricUrl; }
+    } catch(error) {
+      this.Log(`Failed to resolve node ${nodeId}: ${error.message}`, true);
+    }
   });
 
   // Rewrite fabric-generated srt_pull URLs to the egress host, and group outputs by node
