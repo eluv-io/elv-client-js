@@ -197,6 +197,10 @@ const CueInfo = async ({eventId, status}) => {
  * @param {boolean=} options.linkToSite - If enabled, will create a link in the live stream site
  * @param {boolean=} options.initializeDrm - If enabled, will initialize DRM for the object
  * @param {string=} options.ingressNodeId - ID of the ingress node used for stream allocation (required for non-public nodes)
+ * @param {Object=} options.metadata - Additional metadata to deep-merge into the live stream object metadata
+ * @param {Array<string>=} options.tags - Fabric tags to associate with the live stream
+ * @param {Array<string>=} options.groups - Fabric group object IDs to associate with the live stream. These are distinct from access groups.
+ * @param {Object<string, string>=} options.queryFields - Unencrypted, indexed Fabric query fields to associate with the live stream
  *
  * @return {Promise<Object>} - Object containing objectId, libraryId, writeToken, and hash if finalized
  */
@@ -212,6 +216,20 @@ exports.StreamCreate = async function({
   const existingObject = !!objectId;
   let contentType;
   let adminGroups = options.accessGroups ?? [];
+  const customMetadata = options.metadata === undefined ? {} : options.metadata;
+  const {tags, groups, queryFields} = options;
+
+  if(typeof customMetadata !== "object" || Array.isArray(customMetadata)) {
+    throw Error("Stream metadata must be an object");
+  }
+
+  if(customMetadata.public !== undefined && (customMetadata.public === null || typeof customMetadata.public !== "object" || Array.isArray(customMetadata.public))) {
+    throw Error("Stream public metadata must be an object");
+  }
+
+  if(customMetadata.public?.asset_metadata !== undefined && (customMetadata.public.asset_metadata === null || typeof customMetadata.public.asset_metadata !== "object" || Array.isArray(customMetadata.public.asset_metadata))) {
+    throw Error("Stream public asset metadata must be an object");
+  }
 
   // Retrieve live stream content type
   try {
@@ -265,7 +283,10 @@ exports.StreamCreate = async function({
     editResponse = await this.CreateContentObject({
       libraryId,
       options: {
-        type: contentType
+        type: contentType,
+        tags,
+        groups,
+        queryFields
       }
     });
     objectId = editResponse.objectId;
@@ -273,14 +294,27 @@ exports.StreamCreate = async function({
 
   const {writeToken} = editResponse;
   const {
-    accessGroup,
-    name=defaultName,
     displayTitle,
     description,
     permission="editable",
     ingressNodeId,
     initializeDrm=true
   } = options;
+  const name = options.name ?? customMetadata.public?.name ?? defaultName;
+
+  if(existingObject) {
+    if(tags !== undefined) {
+      await this.SetContentObjectTags({libraryId, objectId, writeToken, tags});
+    }
+
+    if(groups !== undefined) {
+      await this.SetContentObjectGroups({libraryId, objectId, writeToken, groups});
+    }
+
+    if(queryFields !== undefined) {
+      await this.SetContentObjectQueryFields({libraryId, objectId, writeToken, queryFields});
+    }
+  }
 
   if(!liveRecordingConfig) {
     liveRecordingConfig = {};
@@ -311,10 +345,9 @@ exports.StreamCreate = async function({
     })
   );
 
-  const metadata = {
+  const generatedMetadata = {
     public: {
       name,
-      description,
       asset_metadata: {
         display_title: displayTitle || name,
         title: name || displayTitle || defaultName,
@@ -324,6 +357,22 @@ exports.StreamCreate = async function({
       }
     }
   };
+  const metadata = R.mergeDeepRight(generatedMetadata, customMetadata);
+
+  // Explicit options take precedence over custom metadata
+  metadata.public.name = name;
+  if(options.name !== undefined) {
+    metadata.public.asset_metadata.title = name;
+    metadata.public.asset_metadata.slug = slugify(name);
+  }
+
+  if(displayTitle !== undefined) {
+    metadata.public.asset_metadata.display_title = displayTitle;
+  }
+
+  if(description !== undefined) {
+    metadata.public.description = description;
+  }
 
   const currentLiveRecordingConfig = await this.ContentObjectMetadata({
     libraryId,

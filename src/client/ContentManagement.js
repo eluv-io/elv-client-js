@@ -25,6 +25,36 @@ const {
   ValidatePresence,
 } = require("../Validation");
 
+const ValidateStringArray = ({name, values, objectIds=false}) => {
+  if(!Array.isArray(values)) {
+    throw Error(`${name} must be an array`);
+  }
+
+  values.forEach(value => {
+    if(typeof value !== "string" || !value.trim()) {
+      throw Error(`${name} must contain only non-empty strings`);
+    }
+
+    if(objectIds && !value.startsWith("iq__")) {
+      throw Error(`${name} must contain only content object IDs`);
+    }
+  });
+
+  return [...new Set(values)];
+};
+
+const ValidateQueryFields = queryFields => {
+  if(queryFields === null || typeof queryFields !== "object" || Array.isArray(queryFields)) {
+    throw Error("Query fields must be an object");
+  }
+
+  if(Object.values(queryFields).some(value => typeof value !== "string")) {
+    throw Error("Query field values must be strings");
+  }
+
+  return queryFields;
+};
+
 exports.SetVisibility = async function({id, visibility}) {
   this.Log(`Setting visibility ${visibility} on ${id}`);
 
@@ -536,14 +566,15 @@ exports.RemoveLibraryContentType = async function({libraryId, typeId, typeName, 
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {string=} objectId - ID of the object (if contract already exists)
- * @param {Object=} options -
- * type: Version hash of the content type to associate with the object
- *
- * meta: Metadata to use for the new object
- *
- * noEncryptionConk: Set to true to prevent creation of an encryption conk for the object
- *
- * createKMSConk: Set to true to create a KMS conk for object (usually for sharing a playable object) (incompatible with noEncryptionConk: true)
+ * @param {Object=} options - Additional object creation options
+ * @param {string=} options.type - Version hash, object ID or name of the content type to associate with the object
+ * @param {Object=} options.meta - Metadata to use for the new object
+ * @param {string=} options.copy_from - Version hash of an existing object version to copy
+ * @param {Array<string>=} options.tags - Fabric tags to associate with the new object
+ * @param {Array<string>=} options.groups - Fabric group object IDs to associate with the new object
+ * @param {Object<string, string>=} options.queryFields - Unencrypted, indexed string key/value pairs to associate with the new object
+ * @param {boolean=} options.noEncryptionConk - Set to true to prevent creation of an encryption conk for the object
+ * @param {boolean=} options.createKMSConk - Set to true to create a KMS conk for object (usually for sharing a playable object) (incompatible with noEncryptionConk: true)
  *
  * @returns {Promise<Object>} - Response containing the object ID and write token of the draft, as well as the url of the node that created the write token.
  */
@@ -554,6 +585,16 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
   this.Log(`Creating content object: ${libraryId} ${objectId || ""}`);
 
   if(options.noEncryptionConk && options.createKMSConk) throw new Error("Incompatible options: noEncryptionConk and createKMSConk both set to true");
+
+  const tags = options.tags === undefined
+    ? undefined
+    : ValidateStringArray({name: "Tags", values: options.tags});
+  const groups = options.groups === undefined
+    ? undefined
+    : ValidateStringArray({name: "Groups", values: options.groups, objectIds: true});
+  const queryFields = options.queryFields === undefined
+    ? undefined
+    : ValidateQueryFields(options.queryFields);
 
   // Look up content type, if specified
   let typeId;
@@ -613,7 +654,9 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
     body: {      // filter out options not recognized by server (noEncryptionConk, createKMSConk)
       type: options.type,
       meta: options.meta,
-      copy_from: options.copy_from
+      copy_from: options.copy_from,
+      tags,
+      query_fields: queryFields
     }
   });
 
@@ -643,6 +686,15 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
   createResponse.writeToken = createResponse.write_token;
   createResponse.objectId = createResponse.id;
   createResponse.nodeUrl = nodeUrl;
+
+  if(groups !== undefined) {
+    await this.SetContentObjectGroups({
+      libraryId,
+      objectId,
+      writeToken: createResponse.writeToken,
+      groups
+    });
+  }
 
   return createResponse;
 };
@@ -1158,6 +1210,94 @@ exports.DeleteContentObject = async function({libraryId, objectId}) {
     contractAddress: this.utils.HashToAddress(libraryId),
     methodName: "deleteContent",
     methodArgs: [this.utils.HashToAddress(objectId)]
+  });
+};
+
+/* Content object tags, groups and query fields */
+
+/**
+ * Set the Fabric tags associated with a content object draft.
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string} writeToken - Write token of the draft
+ * @param {Array<string>} tags - Fabric tags to set. An empty array clears all tags.
+ *
+ * @returns {Promise<Array<string>>} - The tags associated with the draft
+ */
+exports.SetContentObjectTags = async function({libraryId, objectId, writeToken, tags}) {
+  ValidateParameters({libraryId, objectId});
+  ValidateWriteToken(writeToken);
+  tags = ValidateStringArray({name: "Tags", values: tags});
+
+  this.Log(`Setting content object tags: ${libraryId} ${objectId} ${writeToken}`);
+
+  return await this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "PUT",
+    path: UrlJoin("qlibs", libraryId, "q", writeToken, "tags"),
+    body: tags,
+    allowFailover: false
+  });
+};
+
+/**
+ * Set the Fabric group associations of a content object draft.
+ *
+ * These groups categorize content and are distinct from access groups that grant object permissions.
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string} writeToken - Write token of the draft
+ * @param {Array<string>} groups - Fabric group object IDs to set. An empty array clears all groups.
+ *
+ * @returns {Promise<Array<string>>} - The group associations of the draft
+ */
+exports.SetContentObjectGroups = async function({libraryId, objectId, writeToken, groups}) {
+  ValidateParameters({libraryId, objectId});
+  ValidateWriteToken(writeToken);
+  groups = ValidateStringArray({name: "Groups", values: groups, objectIds: true});
+
+  this.Log(`Setting content object groups: ${libraryId} ${objectId} ${writeToken}`);
+
+  return await this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "PUT",
+    path: UrlJoin("qlibs", libraryId, "q", writeToken, "groups"),
+    body: groups,
+    allowFailover: false
+  });
+};
+
+/**
+ * Replace the unencrypted, indexed query fields of a content object draft.
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string} writeToken - Write token of the draft
+ * @param {Object<string, string>} queryFields - Query fields to set. An empty object clears all fields.
+ *
+ * @returns {Promise<Object<string, string>>} - The query fields associated with the draft
+ */
+exports.SetContentObjectQueryFields = async function({libraryId, objectId, writeToken, queryFields}) {
+  ValidateParameters({libraryId, objectId});
+  ValidateWriteToken(writeToken);
+  queryFields = ValidateQueryFields(queryFields);
+
+  this.Log(`Setting content object query fields: ${libraryId} ${objectId} ${writeToken}`);
+
+  return await this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "PUT",
+    path: UrlJoin("qlibs", libraryId, "q", writeToken, "query_fields"),
+    body: queryFields,
+    allowFailover: false
   });
 };
 
