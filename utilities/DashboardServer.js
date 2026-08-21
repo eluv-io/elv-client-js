@@ -1,10 +1,16 @@
 // Local web app for running the VU Playout Monitor pipeline (VUSiteTitlePlayoutURLs.js
 // then VUSiteTitleDashboard.js) from a browser, so colleagues can regenerate the
-// dashboard without a terminal or their own PRIVATE_KEY/EMAIL/PASSWORD env var setup.
+// dashboard without a terminal.
+//
+// The form only asks for a private key - everything else (TENANT_ID, MARKETPLACE,
+// COMPARE_SITE_OBJECT_ID, AUTHORITY_URL/NONCE/EXP, EST_/TVOD_ EMAIL+PASSWORD,
+// FABRIC_CONFIG_URL) comes from each person's own .env.local, which the two child
+// scripts load themselves (see their own inline .env.local loader). See
+// .env.local.example at the repo root for the full list.
 //
 // Meant to be run locally by each person (node utilities/DashboardServer.js, then open
-// http://localhost:4321) - credentials submitted through the form are held only in
-// memory for the duration of that run's two child processes and are never written to
+// http://localhost:4321) - the private key submitted through the form is held only in
+// memory for the duration of that run's two child processes and is never written to
 // disk, logged, or kept once the run finishes. This process itself is not meant to be
 // exposed beyond localhost.
 //
@@ -26,7 +32,6 @@ const REPO_ROOT = path.resolve(__dirname, "..");
 const PLAYOUT_SCRIPT = path.join(__dirname, "VUSiteTitlePlayoutURLs.js");
 const DASHBOARD_SCRIPT = path.join(__dirname, "VUSiteTitleDashboard.js");
 const DASHBOARD_HTML = path.join(__dirname, "data", "vu_site_playout_state", "dashboard.html");
-const DEFAULT_TENANT_ID = "itenpQ9zSeeFbz8hTHF1pKeD3P3wLpB";
 const DEFAULT_FABRIC_CONFIG_URL = "https://main.net955305.contentfabric.io/config";
 const RUN_TTL_MS = 10 * 60 * 1000;
 
@@ -65,14 +70,13 @@ const performRun = async (runId, creds) => {
   let env = {
     ...process.env,
     PRIVATE_KEY: creds.privateKey,
-    EMAIL: creds.email,
-    PASSWORD: creds.password,
-    TENANT_ID: creds.tenantId || DEFAULT_TENANT_ID,
     FABRIC_CONFIG_URL: process.env.FABRIC_CONFIG_URL || DEFAULT_FABRIC_CONFIG_URL
   };
   // the caller's reference to creds is dropped by the caller right after this is
   // invoked - env (holding the only remaining copy) is cleared once both child
-  // processes have exited, win or lose.
+  // processes have exited, win or lose. Everything besides PRIVATE_KEY/FABRIC_CONFIG_URL
+  // is left unset here on purpose - the child scripts' own .env.local loader fills in
+  // TENANT_ID, MARKETPLACE, EST_/TVOD_ creds, etc. from that file.
   creds = null;
 
   try {
@@ -145,23 +149,14 @@ const HTML_PAGE = `<!doctype html>
 <body>
   <div class="wrap">
     <h1>VU Playout Monitor</h1>
-    <p class="sub">Enter your fabric credentials to run discovery and regenerate the dashboard. Nothing is stored on this server &mdash; credentials are used only for this run and discarded as soon as it finishes.</p>
+    <p class="sub">Enter your private key to run discovery and regenerate the dashboard. Nothing is stored on this server &mdash; it's used only for this run and discarded as soon as it finishes. Everything else (tenant, marketplace, CSAT test accounts, etc.) is read from your own .env.local.</p>
     <form id="runForm">
       <label>Private Key
         <input type="password" id="privateKey" autocomplete="off" required />
       </label>
-      <label>Email
-        <input type="email" id="email" autocomplete="off" required />
-      </label>
-      <label>Password
-        <input type="password" id="password" autocomplete="off" required />
-      </label>
-      <label>Tenant ID
-        <input type="text" id="tenantId" autocomplete="off" placeholder="${DEFAULT_TENANT_ID}" />
-      </label>
       <div class="error" id="formError"></div>
       <button type="submit" id="runBtn">Run pipeline</button>
-      <div class="note">Runs VUSiteTitlePlayoutURLs.js, then VUSiteTitleDashboard.js. This can take several minutes on a large site.</div>
+      <div class="note">Runs VUSiteTitlePlayoutURLs.js, then VUSiteTitleDashboard.js. This can take several minutes on a large site. See .env.local.example at the repo root for the rest of the required configuration.</div>
     </form>
     <div class="log" id="log"></div>
     <div class="result" id="result"></div>
@@ -191,10 +186,7 @@ const HTML_PAGE = `<!doctype html>
       runBtn.textContent = "Running\\u2026";
 
       const body = {
-        privateKey: document.getElementById("privateKey").value,
-        email: document.getElementById("email").value,
-        password: document.getElementById("password").value,
-        tenantId: document.getElementById("tenantId").value
+        privateKey: document.getElementById("privateKey").value
       };
 
       let res;
@@ -215,9 +207,8 @@ const HTML_PAGE = `<!doctype html>
         return;
       }
 
-      // credentials are no longer needed in the page once the run has started
+      // no longer needed in the page once the run has started
       document.getElementById("privateKey").value = "";
-      document.getElementById("password").value = "";
 
       const source = new EventSource("/run-stream/" + data.runId);
       source.addEventListener("log", (evt) => {
@@ -290,9 +281,9 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ error: "Invalid request body." }));
         return;
       }
-      if(!creds.privateKey || !creds.email || !creds.password) {
+      if(!creds.privateKey) {
         res.writeHead(400, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Private key, email, and password are required." }));
+        res.end(JSON.stringify({ error: "Private key is required." }));
         return;
       }
 
