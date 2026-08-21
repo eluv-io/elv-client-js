@@ -28,6 +28,9 @@ run() {
   fi
 }
 
+run "TV1" \
+    "iq__jVDVt88LT2eSsuJxuFStHuty1Nv" \
+    "iq__4FyosGPpVLEs7N5FRGSYy44i2XjM,iq__nkf5aPCE1Zy3iw77AUkFzR8tzUy,iq__3ZzeSwoDw6jdACuNjmKiHqqr8yoZ"
 # Day 2
 
 # run "TV1" \
@@ -121,61 +124,61 @@ run() {
 #     "iq__HbD4zo2zFLPKaDJuHmK2VCa9kfL" \
 #     "iq__V52RKBmuWGFkPcoTEK1WBbucktf,iq__2i5hXonMRz2Tw2uozxkjr6nAfrRW"
 
-run "Table 2" \
-    "iq__qhjANvRGWj7MFLTK39WpSr3gyvF" \
-    "iq__4C2kCWW5Fg8MweH4fvUGURxLDLuW,iq__3QLfTyAMRhz7xzzPDqFkdr3gtdDz"
+# run "Table 2" \
+#     "iq__qhjANvRGWj7MFLTK39WpSr3gyvF" \
+#     "iq__4C2kCWW5Fg8MweH4fvUGURxLDLuW,iq__3QLfTyAMRhz7xzzPDqFkdr3gtdDz"
 
-run "Table 3" \
-    "iq__3drDQytzmKeU4gZe8ji3eWa67ppF" \
-    "iq__4ZqZXp1v2TNjqgUvoFtdYL54g9GU,iq__Kou2pzJ85FFpYdQZZZZFFfRdNSo,iq__jM4CXBaG6WLE37HzBzrKxFq8sCz,iq__25K4DH5qVnBAZQMCgTEJXUv8g7VY"
+# run "Table 3" \
+#     "iq__3drDQytzmKeU4gZe8ji3eWa67ppF" \
+#     "iq__4ZqZXp1v2TNjqgUvoFtdYL54g9GU,iq__Kou2pzJ85FFpYdQZZZZFFfRdNSo,iq__jM4CXBaG6WLE37HzBzrKxFq8sCz,iq__25K4DH5qVnBAZQMCgTEJXUv8g7VY"
 
-run "Table 4" \
-    "iq__6Qde1Pgxd2okvPXhqwMt8xo7BW8" \
-    "iq__3VJ5qX9UyTut3xTWSKW2W3ZnEfS2"
+# run "Table 4" \
+#     "iq__6Qde1Pgxd2okvPXhqwMt8xo7BW8" \
+#     "iq__3VJ5qX9UyTut3xTWSKW2W3ZnEfS2"
 
-run "Table 5" \
-    "iq__2kcHhh32HfdCqXAssJgFTusiXwYB" \
-    "iq__4XPEbyWBZbw1CevHmt6kqS24vQnr,iq__NWMiMkjzttTLsxTchiSTZ2BFuRN,iq__WJZEzYACAkVg6trK7sskH5U6uG7"
+# run "Table 5" \
+#     "iq__2kcHhh32HfdCqXAssJgFTusiXwYB" \
+#     "iq__4XPEbyWBZbw1CevHmt6kqS24vQnr,iq__NWMiMkjzttTLsxTchiSTZ2BFuRN,iq__WJZEzYACAkVg6trK7sskH5U6uG7"
 
-run "Table 6" \
-    "iq__4PPzFtX9JSZARHDCKgkUkep6F5dq" \
-    "iq__2oz4mJhB9ej87XemaD6u51xSyNCz,iq__2JXXdYiosZbqTaaSwdQoYFnXqGDe"
+# run "Table 6" \
+#     "iq__4PPzFtX9JSZARHDCKgkUkep6F5dq" \
+#     "iq__2oz4mJhB9ej87XemaD6u51xSyNCz,iq__2JXXdYiosZbqTaaSwdQoYFnXqGDe"
 
-run "Table 7" \
-    "iq__Si9GhX3h6zfKN5bmq5xdQi4jEVS" \
-    "iq__xZy1dEEJqCojmHeKp2j3ZEJVVq2,iq__qS3VUPapLz6Zuv53Qz9rteSaNuB"
+# run "Table 7" \
+#     "iq__Si9GhX3h6zfKN5bmq5xdQi4jEVS" \
+#     "iq__xZy1dEEJqCojmHeKp2j3ZEJVVq2,iq__qS3VUPapLz6Zuv53Qz9rteSaNuB"
 
-run "Table 8" \
-    "iq__2gVRjkuPfyrKL8HRkqyZ3D6UkVtj" \
-    "iq__3kqeULgzfcJcyUHdrth384inHWN4,iq__3iTVBc1CLSvXLBVDBhBuDATsDeXs"
+# run "Table 8" \
+#     "iq__2gVRjkuPfyrKL8HRkqyZ3D6UkVtj" \
+#     "iq__3kqeULgzfcJcyUHdrth384inHWN4,iq__3iTVBc1CLSvXLBVDBhBuDATsDeXs"
 
-run "Table 9" \
-    "iq__2k4vHKw2gFhJdjdDXTHHRGjYbrxf" \
-    "iq__VYPFoeTWt3nLLgVZfiEognNh7X2,iq__3kvgMXeqy7R1isgKF3jwEmRUc2MA"
+# run "Table 9" \
+#     "iq__2k4vHKw2gFhJdjdDXTHHRGjYbrxf" \
+#     "iq__VYPFoeTWt3nLLgVZfiEognNh7X2,iq__3kvgMXeqy7R1isgKF3jwEmRUc2MA"
 
-run "Table 10" \
-    "iq__2GwEh6k6BrKZJBDT31jhEbKvN97a" \
-    "iq__3WAYJGgcgV8QjviXpFd2N6aSZQrz,iq__43N3HUTwQYxazuSLphnevA9ukTRf"
+# run "Table 10" \
+#     "iq__2GwEh6k6BrKZJBDT31jhEbKvN97a" \
+#     "iq__3WAYJGgcgV8QjviXpFd2N6aSZQrz,iq__43N3HUTwQYxazuSLphnevA9ukTRf"
 
-run "Table 11" \
-    "iq__buRsgJ8Mb3i3jxyX4BS7XyX5Yio" \
-    "iq__2C6PMTgZMCoi5ea6p54C3Geybd4t,iq__2nZ7ML3iP21B6nBHbXaiJWPDKzNp"
+# run "Table 11" \
+#     "iq__buRsgJ8Mb3i3jxyX4BS7XyX5Yio" \
+#     "iq__2C6PMTgZMCoi5ea6p54C3Geybd4t,iq__2nZ7ML3iP21B6nBHbXaiJWPDKzNp"
 
-run "Table 12" \
-    "iq__j9QzwnCaqW6aYezg9xWiwEGxnmM" \
-    "iq__2V7pvu33DXNFCcP7bxm1vyeDtjKZ,iq__2HBZxS2dC1dSKChhfswbF1AHjJ9A"
+# run "Table 12" \
+#     "iq__j9QzwnCaqW6aYezg9xWiwEGxnmM" \
+#     "iq__2V7pvu33DXNFCcP7bxm1vyeDtjKZ,iq__2HBZxS2dC1dSKChhfswbF1AHjJ9A"
 
-run "Table 13" \
-    "iq__41hJfcszH6vbHgCZDDhNsxPbe1PQ" \
-    "iq__DyUzFR7BoByA4gHXRtUEXErqy88,iq__M58gWiFso9ZpWGCUMcr2L61G9jh"
+# run "Table 13" \
+#     "iq__41hJfcszH6vbHgCZDDhNsxPbe1PQ" \
+#     "iq__DyUzFR7BoByA4gHXRtUEXErqy88,iq__M58gWiFso9ZpWGCUMcr2L61G9jh"
 
-run "Table 14" \
-    "iq__3oNmLK4cvshbh4peWM1KjU69zErh" \
-    "iq__3gy2rNRNs39GDkktYLHUUCCrvs2X,iq__4JFprHY4J98yaYWEcM6dVrLxv58S"
+# run "Table 14" \
+#     "iq__3oNmLK4cvshbh4peWM1KjU69zErh" \
+#     "iq__3gy2rNRNs39GDkktYLHUUCCrvs2X,iq__4JFprHY4J98yaYWEcM6dVrLxv58S"
 
-run "Table 15" \
-    "iq__34nbZkk9c7RQaZegAw1t9UVjKuEe" \
-    "iq__45RV4NRi1FdeCHKCzXQXaS1nLmtz,iq__G5PndnpJQHzwnJnxCH4KKPaSaGc"
+# run "Table 15" \
+#     "iq__34nbZkk9c7RQaZegAw1t9UVjKuEe" \
+#     "iq__45RV4NRi1FdeCHKCzXQXaS1nLmtz,iq__G5PndnpJQHzwnJnxCH4KKPaSaGc"
 
 echo ""
 echo "Done. All compositions created."
