@@ -12,6 +12,8 @@
 // a re-ingest under a new one) are removed from the manifest on the next run.
 
 const kindOf = require("kind-of");
+const Ethers = require("ethers");
+const yaml = require("js-yaml");
 
 const { NewOpt, StdOpt } = require("./lib/options");
 const Utility = require("./lib/Utility");
@@ -20,8 +22,29 @@ const Client = require("./lib/concerns/Client");
 const ArgOutfile = require("./lib/concerns/ArgOutfile");
 const Version = require("./lib/concerns/Version");
 
+const BaseContentAbi = require("../src/contracts/v3/BaseContent.js").abi;
+
 const fs = require("fs");
 const path = require("path");
+
+// Minimal .env.local loader (no dotenv dependency, matching this repo's utilities'
+// low-dependency style) - values already set in the real environment always win, so
+// shell-exported overrides still work as expected. Never logs values, only that the
+// file was found.
+(() => {
+  const envPath = path.join(__dirname, "..", ".env.local");
+  if(!fs.existsSync(envPath)) return;
+  for(const line of fs.readFileSync(envPath, "utf8").split("\n")) {
+    const trimmed = line.trim();
+    if(!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if(eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if(/^".*"$/.test(value) || /^'.*'$/.test(value)) value = value.slice(1, -1);
+    if(key && !(key in process.env)) process.env[key] = value;
+  }
+})();
 
 const RE_LINK_HASH = /^\/qfab\/(hq__[a-zA-Z0-9]+)\//;
 const RE_TERRITORY_VARIANT = /distributions\.([^.]+)\.variants\.([^.]+)/;
@@ -33,6 +56,25 @@ const PLAYOUT_FORMATS = [
 ];
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+// elv-client-js's own CallContractMethod (src/EthClient.js) retries forever with no cap
+// whenever the underlying provider error message contains "invalid response" - a real
+// hang risk for the per-playable policy/commit checks below, since not every playable's
+// derived contract address is guaranteed to be a live BaseContent contract. This is an
+// external safety net around that: race the call against a timeout so one bad object
+// can't block the whole run.
+const CHECK_TIMEOUT_MS = Number(process.env.CHECK_TIMEOUT_MS || 15000);
+const withTimeout = (promise, ms, label) => {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(Error(`Timed out after ${ms}ms${label ? ` (${label})` : ""}`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+};
+
+// same tenant the dashboard's Mint Entitlement command targets - kept in sync with
+// utilities/VUSiteTitleDashboard.js's TENANT_ID default.
+const ENTITLEMENT_TENANT_ID = process.env.TENANT_ID || "itenpQ9zSeeFbz8hTHF1pKeD3P3wLpB";
 
 // rebuild a Rep()-style playout URL (specific node host, pinned to whatever version was
 // latest when this call resolved it) into the network-alias form, addressed by object ID
@@ -117,6 +159,16 @@ class VUSiteTitlePlayoutURLs extends Utility {
         NewOpt("indexTitlesSubtree", {
           default: "/indexer/permissions/sorted_ids",
           descTemplate: "Metadata subtree{X} on the index object holding the sorted list of indexed object/version IDs",
+          type: "string"
+        }),
+        NewOpt("compareSiteObjectId", {
+          default: "iq__3S59EtLbz44nSHfse1U5yLxVKVpy",
+          descTemplate: "Another VU site object ID{X} to compare this site's titles list against (which titles are present/missing on each side)",
+          type: "string"
+        }),
+        NewOpt("marketplaceObjectId", {
+          default: process.env.MARKETPLACE || "iq__3Jh7HXVNQujAWfBbJBCu939rLxXc",
+          descTemplate: "Marketplace object ID{X} to read items/NFT templates from - kept in sync with VUSiteTitleDashboard.js's own marketplace default",
           type: "string"
         }),
         NewOpt("tokenDurationDays", {
@@ -298,6 +350,232 @@ class VUSiteTitlePlayoutURLs extends Utility {
     };
   }
 
+  loadCompareSiteSnapshot(stateDir, compareSiteObjectId) {
+    const snapshotPath = path.join(stateDir, "compare_site.ignore.json");
+    if(!fs.existsSync(snapshotPath)) return { site_object_id: compareSiteObjectId, titles: {} };
+    try {
+      const snapshot = JSON.parse(fs.readFileSync(snapshotPath, "utf8"));
+      // a different comparison site than last run - nothing to diff against
+      if(snapshot.site_object_id !== compareSiteObjectId) return { site_object_id: compareSiteObjectId, titles: {} };
+      return snapshot;
+    } catch(err) {
+      this.logger.warn(`Could not parse existing comparison site snapshot at ${snapshotPath}, starting fresh: ${err.message}`);
+      return { site_object_id: compareSiteObjectId, titles: {} };
+    }
+  }
+
+  saveCompareSiteSnapshot(stateDir, snapshot) {
+    fs.writeFileSync(path.join(stateDir, "compare_site.ignore.json"), JSON.stringify(snapshot, null, 2));
+  }
+
+  // Lightweight, snapshot-based tracking for a second VU site object: just its titles
+  // list and their master hashes (no playable/offering discovery, unlike the full
+  // per-title pipeline this site gets), diffed against a snapshot persisted across runs
+  // to report which titles are new and which changed since the previous run.
+  async trackCompareSite({ client, compareSiteObjectId, titlesSubtree, stateDir, logger }) {
+    logger.log(`\nTracking comparison site ${compareSiteObjectId}, subtree ${titlesSubtree}...`);
+
+    const compareSiteVersionHash = await client.LatestVersionHash({ objectId: compareSiteObjectId });
+    const compareSiteLastEditedAt = await this.getLastCommitTime({ client, versionHash: compareSiteVersionHash, logger });
+
+    const compareLibraryId = await client.ContentObjectLibraryId({ objectId: compareSiteObjectId });
+    const compareTitleLinks = await client.ContentObjectMetadata({
+      libraryId: compareLibraryId,
+      objectId: compareSiteObjectId,
+      metadataSubtree: titlesSubtree
+    });
+
+    if(kindOf(compareTitleLinks) !== "object" || Object.keys(compareTitleLinks).length === 0) {
+      throw Error(`No titles found at ${titlesSubtree} on comparison site ${compareSiteObjectId}`);
+    }
+
+    const compareTitleEntries = this.extractTitleLinks({ titleLinks: compareTitleLinks, logger });
+    const previousTitles = this.loadCompareSiteSnapshot(stateDir, compareSiteObjectId).titles || {};
+
+    const resolveName = async (objectId, versionHash) => {
+      try {
+        const meta = await client.ContentObjectMetadata({
+          objectId, versionHash,
+          metadataSubtree: "/public/asset_metadata",
+          select: ["display_title", "title", "title_type"]
+        });
+        return meta.display_title || meta.title || objectId;
+      } catch(err) {
+        return objectId;
+      }
+    };
+
+    const added = [];
+    const updated = [];
+    const currentTitles = {};
+    for(const t of compareTitleEntries) {
+      const prev = previousTitles[t.objectId];
+      if(!prev) {
+        const name = await resolveName(t.objectId, t.versionHash);
+        currentTitles[t.objectId] = { title_object_id: t.objectId, title_name: name, title_master_hash: t.versionHash };
+        added.push({ title_object_id: t.objectId, title_name: name });
+      } else if(prev.title_master_hash !== t.versionHash) {
+        const name = await resolveName(t.objectId, t.versionHash);
+        currentTitles[t.objectId] = { title_object_id: t.objectId, title_name: name, title_master_hash: t.versionHash };
+        updated.push({ title_object_id: t.objectId, title_name: name });
+      } else {
+        currentTitles[t.objectId] = prev;
+      }
+    }
+
+    this.saveCompareSiteSnapshot(stateDir, { site_object_id: compareSiteObjectId, titles: currentTitles, last_run_at: new Date().toISOString() });
+
+    logger.log(`Comparison site has ${compareTitleEntries.length} title(s); ${added.length} new, ${updated.length} updated since last run`);
+
+    return {
+      compare_site_object_id: compareSiteObjectId,
+      compare_site_version_hash: compareSiteVersionHash,
+      compare_site_last_edited_at: compareSiteLastEditedAt,
+      compare_site_total: compareTitleEntries.length,
+      // Full current membership (not just this run's added/updated delta) - lets the
+      // dashboard flag, per title, whether it's also present on the comparison site.
+      // Matched by name, not object ID: each site has its own independently-created
+      // title objects for the same movie, so object IDs never coincide across sites.
+      title_names: compareTitleEntries
+        .map(t => ((currentTitles[t.objectId] && currentTitles[t.objectId].title_name) || "").trim().toLowerCase())
+        .filter(Boolean),
+      // Full title entries (name + object id + version hash) for the site's title list display.
+      titles: compareTitleEntries.map(t => currentTitles[t.objectId]).filter(Boolean),
+      added,
+      updated,
+      tracked_at: new Date().toISOString()
+    };
+  }
+
+  // A resolved link's target can come back shaped either as the target object's full
+  // metadata tree (nft_template linked at the object root - "public" is a top-level key)
+  // or as just the /public subtree directly (nft_template linked straight to /public) -
+  // this tolerates either.
+  extractNftTemplateFields(resolved) {
+    if(!resolved || kindOf(resolved) !== "object") return { name: null, address: null, publicKeys: [] };
+    const pub = resolved.public && kindOf(resolved.public) === "object" ? resolved.public : resolved;
+    // "name" isn't consistently in the same spot across templates in practice - try the
+    // common candidates before giving up.
+    const name = pub.name
+      || pub.display_name
+      || (pub.nft && pub.nft.name)
+      || (pub.asset_metadata && pub.asset_metadata.name)
+      || null;
+    return {
+      name,
+      address: (pub.nft && pub.nft.address) || null,
+      publicKeys: Object.keys(pub)
+    };
+  }
+
+  // Marketplace items (public/asset_metadata/info/items), each carrying an nft_template
+  // link. The link's own hq__ version hash is pulled out explicitly (same RE_LINK_HASH
+  // pattern used for title links) rather than relying on resolveLinks to opaquely
+  // dereference it - that gives an explicit version hash to display, and a version-hash
+  // cache since many items commonly share the same handful of templates. Falls back to a
+  // manual objectId-based fetch if nft_template turns out to be a plain object ID string
+  // instead of a fabric link.
+  async fetchMarketplaceItems({ client, marketplaceObjectId, logger }) {
+    logger.log(`\nFetching marketplace items from ${marketplaceObjectId}...`);
+
+    const marketplaceLibraryId = await client.ContentObjectLibraryId({ objectId: marketplaceObjectId });
+    const items = await client.ContentObjectMetadata({
+      libraryId: marketplaceLibraryId,
+      objectId: marketplaceObjectId,
+      metadataSubtree: "/public/asset_metadata/info/items"
+    });
+
+    if(kindOf(items) !== "object" && kindOf(items) !== "array") {
+      logger.warn(`No marketplace items found at /public/asset_metadata/info/items on ${marketplaceObjectId}`);
+      return [];
+    }
+
+    const entries = Array.isArray(items) ? items.map((item, i) => [String(i), item]) : Object.entries(items);
+    const templateCache = new Map(); // versionHash -> { name, address }
+    const results = [];
+    let loggedMissingNameKeys = false;
+
+    const resolveTemplate = async (versionHash, itemKey) => {
+      if(templateCache.has(versionHash)) return templateCache.get(versionHash);
+      try {
+        const meta = await client.ContentObjectMetadata({ versionHash, metadataSubtree: "/public" });
+        const fields = this.extractNftTemplateFields(meta);
+        if(!fields.name && fields.address && !loggedMissingNameKeys) {
+          logger.warn(`  nft_template resolved but no name field found (tried name/display_name/nft.name/asset_metadata.name) - actual keys under its public subtree: ${fields.publicKeys.join(", ")}`);
+          loggedMissingNameKeys = true;
+        }
+        const resolved = { name: fields.name, address: fields.address };
+        templateCache.set(versionHash, resolved);
+        return resolved;
+      } catch(err) {
+        logger.warn(`  Could not resolve nft_template for marketplace item ${itemKey}: ${err.message}`);
+        return { name: null, address: null };
+      }
+    };
+
+    for(const [itemKey, item] of entries) {
+      if(kindOf(item) !== "object") continue;
+
+      const sku = item.sku || null;
+      const itemName = item.name || null;
+      const template = item.nft_template;
+
+      let templateVersionHash = null;
+      let templateName = null;
+      let nftAddress = null;
+
+      const linkPath = template && kindOf(template) === "object" && template["/"];
+      const hashMatch = linkPath && RE_LINK_HASH.exec(linkPath);
+
+      if(hashMatch) {
+        templateVersionHash = hashMatch[1];
+        const resolved = await resolveTemplate(templateVersionHash, itemKey);
+        templateName = resolved.name;
+        nftAddress = resolved.address;
+      } else if(typeof template === "string" && template.startsWith("iq__")) {
+        try {
+          templateVersionHash = await client.LatestVersionHash({ objectId: template });
+          const resolved = await resolveTemplate(templateVersionHash, itemKey);
+          templateName = resolved.name;
+          nftAddress = resolved.address;
+        } catch(err) {
+          logger.warn(`  Could not resolve nft_template for marketplace item ${itemKey}: ${err.message}`);
+        }
+      }
+
+      results.push({
+        item_key: itemKey, sku, item_name: itemName,
+        nft_template_name: templateName, nft_address: nftAddress,
+        nft_template_version_hash: templateVersionHash
+      });
+    }
+
+    logger.log(`Found ${results.length} marketplace item(s), ${results.filter(r => r.nft_address).length} with a resolved NFT template address`);
+    return results;
+  }
+
+  // Cross-references a policy's permission addresses (from checkObjectPolicy) against
+  // the marketplace's NFT template addresses, so a permission can be traced back to the
+  // SKU/template it actually grants access for (or flagged as not matching any known
+  // template).
+  resolvePermissionAddresses({ client, permissions, templateAddressMap }) {
+    return (permissions || []).map(address => {
+      let normalized = null;
+      try {
+        normalized = client.utils.FormatAddress(address).toLowerCase();
+      } catch(_err) {
+        // not a well-formed address - leave unmatched below
+      }
+      const match = normalized ? templateAddressMap.get(normalized) : null;
+      return {
+        address,
+        matched: !!match,
+        sku: match ? match.sku : null,
+        nft_template_name: match ? match.nft_template_name : null
+      };
+    });
+  }
+
   loadManifest(stateDir) {
     const manifestPath = path.join(stateDir, "manifest.ignore.json");
     if(!fs.existsSync(manifestPath)) return { site_object_id: null, titles: {} };
@@ -437,6 +715,7 @@ class VUSiteTitlePlayoutURLs extends Utility {
     const uniqueMap = new Map();
     for(const p of rawPlayables) {
       for(const offering of p.offeringKeys) {
+        if(offering === "sbs") continue; // sbs (side-by-side 3D) offerings are excluded entirely
         const key = `${p.playableObjectId}::${offering}`;
         if(!uniqueMap.has(key)) {
           const context = this.variantContext(p.path);
@@ -539,21 +818,73 @@ class VUSiteTitlePlayoutURLs extends Utility {
     };
   }
 
+  // Compares a title's previous vs. newly (re-)discovered playables to describe what
+  // metadata was added since the last run that changed this title's master hash - new
+  // territory/variant/offering combos, new audio/subtitle tracks, or new offer SKUs.
+  // Additions only (not removals/edits) - this is a "what's new to check" list, not a
+  // full diff.
+  diffTitleMetadata({ previous, current }) {
+    const additions = [];
+    const prevByKey = new Map((previous.playables || []).map(p => [`${p.playable_object_id}::${p.offering}`, p]));
+
+    for(const p of current.playables || []) {
+      const key = `${p.playable_object_id}::${p.offering}`;
+      const prevP = prevByKey.get(key);
+      const context = [p.territory, p.variant].filter(Boolean).join("/") || p.offering;
+
+      if(!prevP) {
+        additions.push({
+          playable_object_id: p.playable_object_id,
+          text: `New offering: ${context} (${p.offering})${p.is_trailer ? " [trailer]" : ""}`
+        });
+        continue;
+      }
+
+      const prevAudio = new Set((prevP.audio || []).map(a => JSON.stringify(a)));
+      for(const a of p.audio || []) {
+        if(!prevAudio.has(JSON.stringify(a))) {
+          additions.push({ playable_object_id: p.playable_object_id, text: `New audio track on ${context}: ${a.label || a.language_code || "?"}` });
+        }
+      }
+
+      const prevSubs = new Set((prevP.subtitles || []).map(s => JSON.stringify(s)));
+      for(const s of p.subtitles || []) {
+        if(!prevSubs.has(JSON.stringify(s))) {
+          additions.push({ playable_object_id: p.playable_object_id, text: `New subtitle track on ${context}: ${s.label || s.language_code || "?"}` });
+        }
+      }
+
+      const prevSkus = new Set();
+      for(const offer of prevP.offers || []) {
+        for(const pkg of offer.packages || []) {
+          if(pkg.sku) prevSkus.add(pkg.sku);
+        }
+      }
+      for(const offer of p.offers || []) {
+        for(const pkg of offer.packages || []) {
+          if(pkg.sku && !prevSkus.has(pkg.sku)) {
+            additions.push({ playable_object_id: p.playable_object_id, text: `New SKU on ${context}: ${pkg.sku} (${offer.offer_name})` });
+          }
+        }
+      }
+    }
+
+    return additions;
+  }
+
   // Second, independent way to authorize playout URLs: instead of the fabric client's
   // own object-scoped signed token, sign in as a real user (tenant + email + password)
   // and use the resulting fabric_token. One token per run (not per playable - this
   // endpoint authenticates a user session, not a specific object), reused everywhere.
   // Entirely optional: returns null (not an error) when TENANT_ID/EMAIL/PASSWORD aren't set.
-  async fetchUserSignedToken({ logger }) {
+  async fetchUserSignedToken({ email, password, tenantId, logger, label }) {
     const authorityUrl = process.env.AUTHORITY_URL || "https://host-76-74-28-232.contentfabric.io";
-    const tenantId = process.env.TENANT_ID || "itenpQ9zSeeFbz8hTHF1pKeD3P3wLpB";
-    const email = process.env.EMAIL;
-    const password = process.env.PASSWORD;
     const nonce = process.env.NONCE || "test_nonce__";
     const exp = Number(process.env.EXP || 86400); // 24 hours
+    const tag = label ? `${label} ` : "";
 
     if(!tenantId || !email || !password) {
-      logger.log("TENANT_ID/EMAIL/PASSWORD not set - skipping user-signed player commands");
+      logger.log(`${tag}TENANT_ID/email/password not set - skipping ${tag}user-signed player commands`);
       return null;
     }
 
@@ -573,15 +904,148 @@ class VUSiteTitlePlayoutURLs extends Utility {
     }
 
     const expiresAt = new Date(Date.now() + exp * 1000).toISOString();
-    logger.log(`User-signed token acquired (expires ${expiresAt})`);
-    return { token: body.fabric_token, expiresAt };
+    logger.log(`${tag}user-signed token acquired for ${email} (expires ${expiresAt})`);
+    return { token: body.fabric_token, expiresAt, email };
+  }
+
+  // Live-checks a User CSAT playout URL (its own manifest/license request, not the
+  // playable's format check earlier) so a token/entitlement problem specific to the
+  // signed-in user shows up on the dashboard even when the backend-signed URL is fine.
+  async checkUserSignedUrl(url) {
+    try {
+      const response = await fetch(url);
+      if(response.ok) return null;
+      const bodyText = await response.text().catch(() => "");
+      // Eluvio fabric error bodies are JSON like {"errors":[{"kind":"permission denied",...}]} -
+      // surface just the kind instead of dumping the whole nested error object.
+      let message = bodyText.slice(0, 200);
+      try {
+        const firstError = JSON.parse(bodyText).errors?.[0];
+        if(firstError && firstError.kind) message = firstError.kind;
+      } catch(_parseErr) {
+        // body wasn't JSON - keep the truncated raw text
+      }
+      return { status: response.status, statusText: response.statusText || null, message: message || null };
+    } catch(err) {
+      return { status: null, statusText: null, message: err.message };
+    }
+  }
+
+  // Reads the object's on-chain "_ELV" contract metadata key directly (same call
+  // elv-live-js's NftGetPolicyAndPermissions makes via ElvFabric.GetContractMeta), so a
+  // title's content-object contract can be checked for a set policy without shelling out
+  // to elv-live. Empty/unset metadata comes back as zero-length bytes, not an error.
+  async checkObjectPolicy({ client, objectId }) {
+    const address = client.utils.HashToAddress(objectId);
+    const readMeta = async (key) => {
+      const bytes = await withTimeout(
+        client.CallContractMethod({
+          contractAddress: address,
+          abi: BaseContentAbi,
+          methodName: "getMeta",
+          methodArgs: [key],
+          formatArguments: true
+        }),
+        CHECK_TIMEOUT_MS,
+        `getMeta(${key}) for ${objectId}`
+      );
+      return Ethers.utils.toUtf8String(bytes || "0x").trim();
+    };
+
+    try {
+      const policyText = await readMeta("_ELV");
+
+      // The value elv-live's ContentSetPolicy writes is JSON like
+      // {"auth_policy":{"version":"1.0","body":"name: ...\ndesc: |\n  ...","id":"",...}}.
+      // The wrapper's own id/description are usually left blank - the policy's actual
+      // name/description live inside "body", which is itself a YAML document.
+      let policyVersion = null;
+      let policyName = null;
+      let policyDescription = null;
+      if(policyText) {
+        try {
+          const authPolicy = JSON.parse(policyText).auth_policy || {};
+          policyVersion = authPolicy.version || null;
+          let bodyDoc = null;
+          if(authPolicy.body) {
+            try {
+              bodyDoc = yaml.load(authPolicy.body);
+            } catch(_yamlErr) {
+              // body wasn't valid YAML - fall through to the wrapper's own fields
+            }
+          }
+          policyName = (bodyDoc && bodyDoc.name) || authPolicy.description || authPolicy.id || null;
+          const desc = bodyDoc && (bodyDoc.desc || bodyDoc.description);
+          policyDescription = desc ? desc.replace(/\s+/g, " ").trim() : null;
+        } catch(_parseErr) {
+          // not the expected JSON shape - leave name/version unknown, has_policy is still true
+        }
+      }
+
+      // _NFT_ACCESS is a JSON array of addresses permitted by the policy (same second
+      // read NftGetPolicyAndPermissions makes) - a missing/invalid value just means no
+      // permissions are recorded, not a failure of the whole check.
+      let permissions = [];
+      try {
+        const permissionsText = await readMeta("_NFT_ACCESS");
+        if(permissionsText) permissions = JSON.parse(permissionsText);
+      } catch(_permErr) {
+        permissions = [];
+      }
+
+      return {
+        has_policy: policyText.length > 0,
+        version: policyVersion,
+        name: policyName,
+        description: policyDescription,
+        permissions,
+        error: null,
+        checked_at: new Date().toISOString()
+      };
+    } catch(err) {
+      return { has_policy: null, version: null, name: null, description: null, permissions: [], error: err.message, checked_at: new Date().toISOString() };
+    }
+  }
+
+  // Timestamp of the object's latest commit, for a "Last edited" hint on the dashboard.
+  // The "commit" metadata subtree (auto-populated on every commit) has {author, message,
+  // timestamp} - confirmed against this SDK's own test suite (test/ElvClient.test.js,
+  // "Set Commit Message"), unlike the versions-list endpoint which doesn't document a
+  // timestamp field at all. No libraryId needed - same as the title metadata read above.
+  // ContentObjectMetadata requires either a versionHash or a libraryId+objectId pair
+  // (ValidateParameters in src/Validation.js) - passing a bare objectId throws "Library ID
+  // not specified". versionHash sidesteps that entirely, so this takes one instead of
+  // objectId (the caller already has it cached from getLatestVersionHash).
+  async getLastCommitTime({ client, versionHash, logger }) {
+    try {
+      const commit = await withTimeout(
+        client.ContentObjectMetadata({ versionHash, metadataSubtree: "commit" }),
+        CHECK_TIMEOUT_MS,
+        `commit metadata for ${versionHash}`
+      );
+      if(!commit || !commit.timestamp) {
+        if(logger) logger.warn(`  No commit.timestamp for ${versionHash}: ${JSON.stringify(commit)}`);
+        return null;
+      }
+      const ms = Date.parse(commit.timestamp);
+      if(!Number.isFinite(ms)) {
+        if(logger) logger.warn(`  Could not parse commit.timestamp "${commit.timestamp}" for ${versionHash}`);
+        return null;
+      }
+      return new Date(ms).toISOString();
+    } catch(err) {
+      if(logger) logger.warn(`  Could not read commit metadata for ${versionHash}: ${err.message}`);
+      return null;
+    }
   }
 
   // cheap pass: splice the shared Backend Fabric Token into every cached title's
   // relative paths/license bases. Only network call beyond local signing is one
   // LatestVersionHash lookup per playable that has a widevine license server (cached
-  // per run so it's never repeated for the same playable across formats).
-  async renderTitle({ client, titleEntry, hashCache, fabricToken, userSignedToken }) {
+  // per run so it's never repeated for the same playable across formats). policyCache
+  // and commitTimeCache are shared across the whole run too - the same playable_object_id
+  // commonly recurs across several offerings/territories within a title.
+  async renderTitle({ client, titleEntry, hashCache, fabricToken, signedTokens, checkUserSignedUrls, checkPolicy, policyCache, commitTimeCache, logger }) {
     const getLatestVersionHash = async (playableObjectId) => {
       if(!hashCache.has(playableObjectId)) {
         hashCache.set(playableObjectId, await client.LatestVersionHash({ objectId: playableObjectId }));
@@ -589,40 +1053,76 @@ class VUSiteTitlePlayoutURLs extends Utility {
       return hashCache.get(playableObjectId);
     };
 
+    const getPlayablePolicy = async (playableObjectId) => {
+      if(!policyCache.has(playableObjectId)) {
+        policyCache.set(playableObjectId, await this.checkObjectPolicy({ client, objectId: playableObjectId }));
+      }
+      return policyCache.get(playableObjectId);
+    };
+
+    const getCommitTime = async (playableObjectId) => {
+      if(!commitTimeCache.has(playableObjectId)) {
+        const versionHash = await getLatestVersionHash(playableObjectId);
+        commitTimeCache.set(playableObjectId, await this.getLastCommitTime({ client, versionHash, logger }));
+      }
+      return commitTimeCache.get(playableObjectId);
+    };
+
     const { token: authorizationToken, expiresAt } = fabricToken;
+    const tokenLabels = Object.keys(signedTokens || {});
 
     const renderedPlayables = [];
     for(const p of titleEntry.playables) {
       const formats = [];
       for(const f of p.formats) {
         let licenseServerUrl = null;
-        let userSignedLicenseServerUrl = null;
+        let qhash = null;
         if(f.license_server_base) {
-          const qhash = await getLatestVersionHash(p.playable_object_id);
+          qhash = await getLatestVersionHash(p.playable_object_id);
           licenseServerUrl = renderLicenseServerUrl({ licenseServerBase: f.license_server_base, qhash, authorizationToken });
-          if(userSignedToken) {
-            userSignedLicenseServerUrl = renderLicenseServerUrl({ licenseServerBase: f.license_server_base, qhash, authorizationToken: userSignedToken });
-          }
         }
+
+        // One signed URL per test account (EST/TVOD/...), so each offer can be verified
+        // against the specific wallet that's actually entitled to it.
+        const signed = {};
+        for(const label of tokenLabels) {
+          const tokenInfo = signedTokens[label];
+          if(!tokenInfo) continue;
+          const signedUrl = renderPlayoutUrl({ client, relativePath: f.relative_path, authorizationToken: tokenInfo.token });
+          const signedLicenseServerUrl = f.license_server_base
+            ? renderLicenseServerUrl({ licenseServerBase: f.license_server_base, qhash, authorizationToken: tokenInfo.token })
+            : null;
+          signed[label] = {
+            url: signedUrl,
+            license_server_url: signedLicenseServerUrl,
+            check_error: (checkUserSignedUrls && signedUrl) ? await this.checkUserSignedUrl(signedUrl) : null
+          };
+        }
+
         formats.push({
           format: f.format,
           url: renderPlayoutUrl({ client, relativePath: f.relative_path, authorizationToken }),
           license_server_url: licenseServerUrl,
-          user_signed_url: userSignedToken ? renderPlayoutUrl({ client, relativePath: f.relative_path, authorizationToken: userSignedToken }) : null,
-          user_signed_license_server_url: userSignedLicenseServerUrl
+          signed
         });
       }
 
-      renderedPlayables.push({ ...p, token_expires_at: expiresAt, formats });
+      const playablePolicy = checkPolicy ? await getPlayablePolicy(p.playable_object_id) : null;
+      const lastEditedAt = await getCommitTime(p.playable_object_id);
+
+      renderedPlayables.push({ ...p, token_expires_at: expiresAt, formats, policy: playablePolicy, last_edited_at: lastEditedAt });
     }
 
-    return { ...titleEntry, playables: renderedPlayables };
+    const policy = checkPolicy ? await this.checkObjectPolicy({ client, objectId: titleEntry.title_object_id }) : null;
+
+    return { ...titleEntry, playables: renderedPlayables, policy };
   }
 
   async body() {
     const {
       objectId: siteObjectId, libraryId, titlesSubtree, tokenDurationDays,
-      indexObjectId, indexTitlesSubtree, stateDir, forceRediscover, limit, failLog
+      indexObjectId, indexTitlesSubtree, compareSiteObjectId, marketplaceObjectId,
+      stateDir, forceRediscover, limit, failLog
     } = this.args;
     const logger = this.logger;
     const client = await this.concerns.Client.get();
@@ -630,6 +1130,10 @@ class VUSiteTitlePlayoutURLs extends Utility {
 
     const manifest = this.loadManifest(stateDir);
     manifest.titles = manifest.titles || {};
+
+    logger.log(`Resolving latest version of site object ${siteObjectId}...`);
+    const siteVersionHash = await client.LatestVersionHash({ objectId: siteObjectId });
+    const siteLastEditedAt = await this.getLastCommitTime({ client, versionHash: siteVersionHash, logger });
 
     logger.log(`Retrieving titles list from ${siteObjectId}, subtree ${titlesSubtree}...`);
     const titleLinks = await client.ContentObjectMetadata({
@@ -649,6 +1153,10 @@ class VUSiteTitlePlayoutURLs extends Utility {
     const failures = [];
     const currentlyReferencedIds = new Set();
     let newCount = 0, changedCount = 0, unchangedCount = 0, deferredCount = 0, discoveredThisRun = 0;
+    // Objects/metadata newly seen this run vs. the manifest as it was loaded at the top
+    // of this run (i.e. since the previous run) - surfaced on the dashboard.
+    const addedObjects = [];
+    const metadataAdditions = [];
 
     for(const { index, versionHash, objectId } of titleEntries) {
       currentlyReferencedIds.add(objectId);
@@ -675,6 +1183,21 @@ class VUSiteTitlePlayoutURLs extends Utility {
       try {
         const discovered = await this.discoverTitle({ client, index, versionHash, failures });
         discovered.still_referenced = true;
+
+        if(isNew) {
+          addedObjects.push({ title_object_id: objectId, title_name: discovered.title_name, title_type: discovered.title_type });
+        } else {
+          const additions = this.diffTitleMetadata({ previous: cached, current: discovered });
+          if(additions.length > 0) {
+            metadataAdditions.push({
+              title_object_id: objectId,
+              title_name: discovered.title_name,
+              title_master_hash: discovered.title_master_hash,
+              additions
+            });
+          }
+        }
+
         manifest.titles[objectId] = discovered;
       } catch(err) {
         logger.warn(`  Could not discover title ${objectId}: ${err.message}`);
@@ -706,21 +1229,47 @@ class VUSiteTitlePlayoutURLs extends Utility {
     const fabricToken = { token: fabricTokenValue, expiresAt: new Date(Date.now() + tokenDurationMs).toISOString() };
     logger.log(`Backend Fabric Token acquired (expires ${fabricToken.expiresAt})`);
 
-    let userSignedToken = null;
-    try {
-      userSignedToken = await this.fetchUserSignedToken({ logger });
-    } catch(err) {
-      logger.warn(`Could not acquire user-signed token, skipping user-signed player commands: ${err.message}`);
-      userSignedToken = null;
+    // Two independent test accounts, one per offer type - each SKU is only entitled to
+    // the wallet behind the matching account, so testing EST/TVOD playback separately
+    // means signing in as each one rather than sharing a single generic CSAT user.
+    const signedTokens = {};
+    const walletAddresses = {};
+    for(const label of ["EST", "TVOD"]) {
+      try {
+        const tokenInfo = await this.fetchUserSignedToken({
+          email: process.env[`${label}_EMAIL`],
+          password: process.env[`${label}_PASSWORD`],
+          tenantId: ENTITLEMENT_TENANT_ID,
+          logger, label
+        });
+        signedTokens[label] = tokenInfo;
+        walletAddresses[label] = tokenInfo ? client.utils.DecodeSignedToken(tokenInfo.token).payload.adr : null;
+      } catch(err) {
+        logger.warn(`Could not acquire ${label} user-signed token, skipping ${label} user-signed player commands: ${err.message}`);
+        signedTokens[label] = null;
+        walletAddresses[label] = null;
+      }
     }
 
     const hashCache = new Map();
+    const policyCache = new Map();
+    const commitTimeCache = new Map();
     const results = [];
-    for(const titleEntry of Object.values(manifest.titles)) {
+    const allTitles = Object.values(manifest.titles);
+    logger.log(`\nChecking policy + last-edited for every title and playable (${allTitles.length} titles) - this does one or more network calls per unique playable, so it can take a while on a large site...`);
+    let renderedCount = 0;
+    for(const titleEntry of allTitles) {
       results.push(await this.renderTitle({
         client, titleEntry, hashCache, fabricToken,
-        userSignedToken: userSignedToken && userSignedToken.token
+        signedTokens,
+        checkUserSignedUrls: true,
+        checkPolicy: true,
+        policyCache, commitTimeCache, logger
       }));
+      renderedCount++;
+      if(renderedCount % 10 === 0 || renderedCount === allTitles.length) {
+        logger.log(`  ...${renderedCount}/${allTitles.length} titles rendered (${policyCache.size} unique playables policy-checked, ${commitTimeCache.size} commit-time-checked)`);
+      }
     }
 
     logger.log("");
@@ -764,6 +1313,60 @@ class VUSiteTitlePlayoutURLs extends Utility {
       indexComparison = { index_object_id: indexObjectId, index_titles_subtree: indexTitlesSubtree, error: err.message, compared_at: new Date().toISOString() };
     }
 
+    let compareSiteSummary;
+    try {
+      compareSiteSummary = await this.trackCompareSite({
+        client, compareSiteObjectId, titlesSubtree, stateDir, logger
+      });
+    } catch(err) {
+      logger.warn(`Could not track comparison site ${compareSiteObjectId}: ${err.message}`);
+      compareSiteSummary = { compare_site_object_id: compareSiteObjectId, error: err.message, tracked_at: new Date().toISOString() };
+    }
+
+    // Marketplace items/NFT templates: cross-referenced against every policy's
+    // permission addresses (which permission actually maps to which SKU/template) and
+    // against every offer package's SKU (which template mints that package's entitlement).
+    let marketplaceItems = [];
+    try {
+      marketplaceItems = await this.fetchMarketplaceItems({ client, marketplaceObjectId, logger });
+    } catch(err) {
+      logger.warn(`Could not fetch marketplace items from ${marketplaceObjectId}: ${err.message}`);
+    }
+
+    const templateAddressMap = new Map();
+    const skuToTemplate = new Map();
+    for(const item of marketplaceItems) {
+      if(item.nft_address) {
+        try {
+          templateAddressMap.set(client.utils.FormatAddress(item.nft_address).toLowerCase(), item);
+        } catch(_err) {
+          // not a well-formed address on this item - just skip indexing it
+        }
+      }
+      if(item.sku) skuToTemplate.set(item.sku, item);
+    }
+
+    for(const title of results) {
+      if(title.policy && title.policy.permissions) {
+        title.policy.permissions_resolved = this.resolvePermissionAddresses({ client, permissions: title.policy.permissions, templateAddressMap });
+      }
+      for(const p of title.playables) {
+        if(p.policy && p.policy.permissions) {
+          p.policy.permissions_resolved = this.resolvePermissionAddresses({ client, permissions: p.policy.permissions, templateAddressMap });
+        }
+        for(const offer of (p.offers || [])) {
+          for(const pkg of (offer.packages || [])) {
+            if(pkg.sku && skuToTemplate.has(pkg.sku)) {
+              const template = skuToTemplate.get(pkg.sku);
+              pkg.nft_template_name = template.nft_template_name || null;
+              pkg.nft_template_address = template.nft_address || null;
+              pkg.nft_template_version_hash = template.nft_template_version_hash || null;
+            }
+          }
+        }
+      }
+    }
+
     const currentTrailers = this.extractTrailers(results);
     const previousTrailers = this.loadTrailerSnapshot(stateDir);
     const trailerDiff = this.diffTrailers({ previousTrailers, currentTrailers });
@@ -783,13 +1386,36 @@ class VUSiteTitlePlayoutURLs extends Utility {
       logger.log(`\nTrailers: ${currentTrailers.length} total, no changes since last run`);
     }
 
+    if(addedObjects.length > 0) {
+      logger.log(`\n${addedObjects.length} new object(s) since last run:`);
+      logger.logTable({ list: addedObjects.map(o => ({ title: o.title_name, object_id: o.title_object_id, type: o.title_type })) });
+    }
+    if(metadataAdditions.length > 0) {
+      const totalAdditions = metadataAdditions.reduce((sum, m) => sum + m.additions.length, 0);
+      logger.log(`\n${totalAdditions} metadata addition(s) across ${metadataAdditions.length} object(s) since last run:`);
+      logger.logTable({ list: metadataAdditions.flatMap(m => m.additions.map(a => ({ title: m.title_name, master_hash: m.title_master_hash, playable: a.playable_object_id, addition: a.text }))) });
+    }
+
     const current = {
       site_object_id: siteObjectId, token_duration_days: tokenDurationDays,
+      site_version_hash: siteVersionHash, site_last_edited_at: siteLastEditedAt,
       generated_at: new Date().toISOString(), site_titles_total: titleEntries.length,
-      titles: results, failures, index_comparison: indexComparison,
+      titles: results, failures, index_comparison: indexComparison, compare_site_summary: compareSiteSummary,
+      marketplace_items: marketplaceItems,
       trailer_changes: { total: currentTrailers.length, added: trailerDiff.added, removed: trailerDiff.removed },
-      user_signed_token_available: !!userSignedToken,
-      user_signed_token_expires_at: userSignedToken ? userSignedToken.expiresAt : null
+      object_changes: { added: addedObjects, metadata_additions: metadataAdditions },
+      fabric_token: fabricToken.token,
+      fabric_token_expires_at: fabricToken.expiresAt,
+      signed_tokens: {
+        EST: signedTokens.EST ? {
+          available: true, token: signedTokens.EST.token, expires_at: signedTokens.EST.expiresAt,
+          email: signedTokens.EST.email, wallet_address: walletAddresses.EST
+        } : { available: false, token: null, expires_at: null, email: null, wallet_address: null },
+        TVOD: signedTokens.TVOD ? {
+          available: true, token: signedTokens.TVOD.token, expires_at: signedTokens.TVOD.expiresAt,
+          email: signedTokens.TVOD.email, wallet_address: walletAddresses.TVOD
+        } : { available: false, token: null, expires_at: null, email: null, wallet_address: null }
+      }
     };
     this.saveCurrent(stateDir, current);
 

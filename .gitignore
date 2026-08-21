@@ -3,9 +3,18 @@
 .idea/
 **.ignore.js
 **.ignore.json
+**.ignore.jsonl
 **.ignore.sh
 **.ignore.txt
 **.DS_STORE
+
+.env
+.env.local
+.env.*.local
+
+.claude/
+
+utilities/data/vu_site_playout_state/dashboard.html
 
 deploy-docs.sh
 

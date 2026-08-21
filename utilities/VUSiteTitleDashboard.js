@@ -17,7 +17,6 @@ const outfile = path.resolve(getArg("outfile", path.join(stateDir, "dashboard.ht
 
 const tenantId = process.env.TENANT_ID || "itenpQ9zSeeFbz8hTHF1pKeD3P3wLpB";
 const marketplace = process.env.MARKETPLACE || "iq__3Jh7HXVNQujAWfBbJBCu939rLxXc";
-const mintEntitlementCommand = (sku) => `./elv-live tenant_mint ${tenantId} ${marketplace} ${sku} <to_wallet_address>`;
 
 const currentPath = path.join(stateDir, "current.ignore.json");
 if(!fs.existsSync(currentPath)) {
@@ -26,6 +25,11 @@ if(!fs.existsSync(currentPath)) {
 }
 
 const current = JSON.parse(fs.readFileSync(currentPath, "utf8"));
+// Mints against the wallet actually decoded from the matching offer's own CSAT token
+// (EST SKUs mint to the EST wallet, TVOD SKUs to the TVOD wallet) - each offer's account
+// is only ever entitled to its own SKUs, so minting to the wrong wallet would defeat the
+// point of testing them separately.
+const mintEntitlementCommand = (sku, walletAddress) => `./elv-live tenant_mint ${tenantId} ${marketplace} ${sku} ${walletAddress || "<no_wallet_address>"}`;
 
 // ---- flatten titles/playables into rows, cross-referencing failures ----
 
@@ -39,13 +43,53 @@ for(const f of current.failures || []) {
   failuresByKey.get(key).push(f.error);
 }
 
+// Same territory.variants.variant path shape the source script parses (VUSiteTitlePlayoutURLs.js's RE_TERRITORY_VARIANT).
+const RE_TERRITORY_VARIANT = /distributions\.([^.]+)\.variants\.([^.]+)/;
+
 const rows = [];
 for(const title of current.titles || []) {
+  // Trailers are no longer their own row - each one is matched to its main asset(s) by
+  // territory/variant and shown as a reference right under each one instead. The same
+  // trailer object commonly serves multiple territory/variant combos (e.g. the same
+  // trailer used for both CA and US) - variant_paths carries every path this playable
+  // was found at, so all of those contexts get the match, not just the first one seen.
+  const trailerByContext = new Map();
+  for(const tp of title.playables || []) {
+    if(tp.is_trailer && tp.offering !== "sbs") {
+      const paths = (tp.variant_paths && tp.variant_paths.length) ? tp.variant_paths : [`distributions.${tp.territory}.variants.${tp.variant}`];
+      const contexts = new Set();
+      for(const p of paths) {
+        const match = RE_TERRITORY_VARIANT.exec(p);
+        if(match) contexts.add(`${match[1]}::${match[2]}`);
+      }
+      if(contexts.size === 0) contexts.add(`${tp.territory}::${tp.variant}`);
+      for(const key of contexts) {
+        if(!trailerByContext.has(key)) trailerByContext.set(key, tp.playable_object_id);
+      }
+    }
+  }
+
   for(const p of title.playables || []) {
+    // sbs (side-by-side 3D) offerings are excluded entirely - VUSiteTitlePlayoutURLs.js
+    // no longer discovers them, but this catches any still lingering in cached state
+    // from before that filter existed, until the next forced rediscovery clears them.
+    if(p.offering === "sbs") continue;
+    if(p.is_trailer) continue;
     const clear = (p.formats || []).find(f => f.format === "dash-clear");
     const widevine = (p.formats || []).find(f => f.format === "dash-widevine");
     const clearFail = failuresByKey.get(failureKey(title.title_object_id, p.playable_object_id, p.offering, "dash-clear")) || [];
     const widevineFail = failuresByKey.get(failureKey(title.title_object_id, p.playable_object_id, p.offering, "dash-widevine")) || [];
+
+    // One signed-URL set per test account (EST/TVOD) - each SKU is only entitled to the
+    // wallet behind the matching account, so playback needs verifying separately per
+    // offer type rather than through one shared generic CSAT login.
+    const signedInfo = (label) => ({
+      clear_url: (clear && clear.signed && clear.signed[label]) ? clear.signed[label].url : null,
+      clear_error: (clear && clear.signed && clear.signed[label]) ? clear.signed[label].check_error : null,
+      widevine_url: (widevine && widevine.signed && widevine.signed[label]) ? widevine.signed[label].url : null,
+      widevine_error: (widevine && widevine.signed && widevine.signed[label]) ? widevine.signed[label].check_error : null,
+      widevine_license_server_url: (widevine && widevine.signed && widevine.signed[label]) ? widevine.signed[label].license_server_url : null
+    });
 
     rows.push({
       title_name: title.title_name,
@@ -56,11 +100,13 @@ for(const title of current.titles || []) {
       offers: p.offers || [],
       territory: p.territory,
       variant: p.variant,
-      is_trailer: !!p.is_trailer,
       offering: p.offering,
       playable_object_id: p.playable_object_id,
+      trailer_playable_object_id: trailerByContext.get(`${p.territory}::${p.variant}`) || null,
       audio: p.audio || [],
       subtitles: p.subtitles || [],
+      playable_policy: p.policy || null,
+      last_edited_at: p.last_edited_at || null,
       dash_clear_url: clear ? clear.url : null,
       dash_clear_ok: !!clear && !clearFail.length,
       dash_clear_error: clearFail.join("; ") || null,
@@ -68,27 +114,128 @@ for(const title of current.titles || []) {
       dash_widevine_ok: !!widevine && !widevineFail.length,
       dash_widevine_error: widevineFail.join("; ") || null,
       license_server_url: widevine ? widevine.license_server_url : null,
-      dash_clear_user_signed_url: clear ? clear.user_signed_url : null,
-      dash_widevine_user_signed_url: widevine ? widevine.user_signed_url : null,
-      user_signed_license_server_url: widevine ? widevine.user_signed_license_server_url : null
+      signed: { EST: signedInfo("EST"), TVOD: signedInfo("TVOD") }
     });
   }
 }
 
+// Human-readable names for known site objects, shown alongside their raw object ID
+// wherever a site is referenced (header, Site Comparison block).
+const SITE_LABELS = {
+  "iq__395wfhZKD9gh8eZ9XDETcZQx6M5r": "VU Master Site (PROD)",
+  "iq__3S59EtLbz44nSHfse1U5yLxVKVpy": "VU Affiliate Master Site - Meta (PROD)"
+};
+const siteLabel = (objectId) => SITE_LABELS[objectId] || null;
+
 const stats = {
   generated_at: current.generated_at,
   site_object_id: current.site_object_id,
+  site_version_hash: current.site_version_hash || null,
+  site_last_edited_at: current.site_last_edited_at || null,
   token_duration_days: current.token_duration_days,
-  user_signed_token_available: !!current.user_signed_token_available,
+  fabric_token: current.fabric_token || null,
+  signed_tokens: current.signed_tokens || { EST: null, TVOD: null },
   site_titles_total: current.site_titles_total != null
     ? current.site_titles_total
     : current.titles.filter(t => t.still_referenced !== false).length
+};
+
+const mainSiteSummary = {
+  siteObjectId: stats.site_object_id,
+  siteVersionHash: stats.site_version_hash,
+  siteLastEditedAt: stats.site_last_edited_at,
+  totalObjects: stats.site_titles_total,
+  newObjects: (current.object_changes && current.object_changes.added) || [],
+  updatedObjects: ((current.object_changes && current.object_changes.metadata_additions) || [])
+    .map(c => ({ title_object_id: c.title_object_id, title_name: c.title_name })),
+  titles: (current.titles || [])
+    .filter(t => t.still_referenced !== false)
+    .map(t => ({ title_object_id: t.title_object_id, title_name: t.title_name, title_master_hash: t.title_master_hash })),
+  error: null
+};
+
+const compareSite = current.compare_site_summary || null;
+const compareSiteSummary = {
+  siteObjectId: compareSite ? compareSite.compare_site_object_id : null,
+  siteVersionHash: compareSite ? compareSite.compare_site_version_hash : null,
+  siteLastEditedAt: compareSite ? compareSite.compare_site_last_edited_at : null,
+  totalObjects: compareSite ? compareSite.compare_site_total : 0,
+  newObjects: (compareSite && compareSite.added) || [],
+  updatedObjects: (compareSite && compareSite.updated) || [],
+  titles: (compareSite && compareSite.titles) || [],
+  error: compareSite ? compareSite.error : "No comparison site recorded yet — run VUSiteTitlePlayoutURLs.js to populate it."
 };
 
 // ---- render ----
 
 const esc = (s) => String(s == null ? "" : s)
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+// user_signed_check_error is { status, statusText, message } | null. httpLabel is just
+// "HTTP 403" for a compact badge; fullText adds the message for titles/tooltips.
+const checkErrorParts = (err) => {
+  if(!err) return null;
+  const httpLabel = err.status ? `HTTP ${err.status}${err.statusText ? " " + err.statusText : ""}` : null;
+  const fullText = [httpLabel, err.message].filter(Boolean).join(" — ");
+  return { httpLabel, message: err.message || null, fullText: fullText || "Request failed" };
+};
+
+// DOM-id-safe token for wiring a dot/refresh-button/error-box together for a given
+// row+format so the client-side recheck script can find and update all three.
+const escId = (s) => String(s).replace(/[^a-zA-Z0-9_-]/g, "_");
+
+// This playable's own "_ELV" policy check (VUSiteTitlePlayoutURLs.js's checkObjectPolicy),
+// shown right under Last edited in the title column so policy gaps are visible per-row,
+// not just in the top-of-page Object Policy summary.
+// Bulleted, individually-copyable list of permission addresses (the policy's
+// "_NFT_ACCESS" contract meta) - shared between the per-row policy line and the
+// top-of-page Object Policy summary.
+// permissions_resolved (VUSiteTitlePlayoutURLs.js's resolvePermissionAddresses) maps
+// each permission address to the marketplace NFT template/SKU that address actually
+// belongs to, when it matches one - shown as a chip so a permission isn't just an
+// opaque address.
+const renderPermissionsList = (policy) => {
+  const permissions = policy && policy.permissions;
+  if(!permissions || permissions.length === 0) return "";
+  const resolved = policy.permissions_resolved;
+  return `<div class="policy-permissions-label">Permissions</div>
+  <ul class="policy-permissions">${permissions.map((addr, i) => {
+    const r = resolved && resolved[i];
+    let matchMark = "";
+    if(r) {
+      const title = r.matched
+        ? `${r.nft_template_name || "Matched"}${r.sku ? " (" + r.sku + ")" : ""}`
+        : "No matching template";
+      matchMark = `<span class="permission-match ${r.matched ? "permission-match--yes" : "permission-match--no"}" title="${esc(title)}"></span>`;
+    }
+    return `<li class="policy-permission-item">
+      <span class="mono truncate" title="${esc(addr)}">${esc(addr)}</span>
+      <button class="icon-btn copy-btn" data-copy="${esc(addr)}" title="Copy permission address" aria-label="Copy permission address">&#10697;</button>
+      ${matchMark}
+    </li>`;
+  }).join("")}</ul>`;
+};
+
+// Used both to render the per-row Policy line and to tag the row's data-policy attribute
+// for the Policy status filter.
+const policyFilterState = (policy) => {
+  if(!policy || policy.has_policy == null) return "unchecked";
+  return policy.has_policy ? "set" : "missing";
+};
+
+const renderPlayablePolicy = (policy) => {
+  const label = "<span class=\"id-label\">Policy</span>";
+  const state = policyFilterState(policy);
+  if(state === "unchecked") {
+    const title = policy && policy.error ? ` title="${esc(policy.error)}"` : "";
+    return `<div class="id-row">${label}<span class="chip chip-warn"${title}>Unchecked</span></div>`;
+  }
+  if(state === "missing") {
+    return `<div class="id-row">${label}<span class="chip chip-critical">No policy</span></div>`;
+  }
+  const nameTitle = policy.description ? ` title="${esc(policy.description)}"` : "";
+  return `<div class="id-row">${label}<span class="chip chip-good"${nameTitle}>${esc(policy.name || "Policy set")}</span></div>${renderPermissionsList(policy)}`;
+};
 
 const fmtDate = (iso) => {
   if(!iso) return "—";
@@ -107,20 +254,6 @@ for(const r of rows) {
   rowsByTitle.get(r.title_object_id).push(r);
 }
 
-const formatCell = (label, url, ok, error) => {
-  if(!url) {
-    return `<div class="fmt-cell fmt-missing" title="${esc(error || "Not generated")}">
-      <span class="dot dot-critical"></span><span class="fmt-label">${label}</span>
-    </div>`;
-  }
-  return `<div class="fmt-cell" title="${esc(error || "")}">
-    <span class="dot ${ok ? "dot-good" : "dot-critical"}"></span>
-    <span class="fmt-label">${label}</span>
-    <a class="icon-btn" href="${esc(url)}" target="_blank" rel="noopener" title="Open ${label} URL" aria-label="Open ${label} URL">&#8599;</a>
-    <button class="icon-btn copy-btn" data-copy="${esc(url)}" title="Copy ${label} URL" aria-label="Copy ${label} URL">&#10697;</button>
-  </div>`;
-};
-
 // start-player.sh copy-paste commands for headset testing: dash-clear takes one URL
 // arg, dash-widevine takes the playout URL plus the license server URL. Referenced by
 // its actual location (~/Desktop) so the command works regardless of the current
@@ -128,13 +261,75 @@ const formatCell = (label, url, ok, error) => {
 const shQuote = (s) => `"${String(s).replace(/"/g, '\\"')}"`;
 const startPlayerCommand = (urls) => `~/Desktop/start-player.sh ${urls.map(shQuote).join(" ")}`;
 
-const playerCell = (label, cmd) => {
+// Single-quoting (vs. shQuote's double-quoting) for arbitrary tokens like signed URLs -
+// safe against every shell metacharacter, not just double-quote-sensitive ones ($, `).
+const shQuoteSingle = (s) => `'${String(s).replace(/'/g, "'\\''")}'`;
+// -L follows redirects the same way fetch() does by default (the fabric responds 307 to
+// route to the right node); -i includes the final response's status/headers above the
+// body, so a 403's error JSON is visible in one command - useful for confirming a mint
+// outside the browser's CORS jail.
+const curlCheckCommand = (url) => `curl -sS -L -i ${shQuoteSingle(url)}`;
+
+// checkError: undefined = no play check performed (no dot shown), null = checked and
+// played fine (green dot), {status,statusText,message} = checked and failed (red dot).
+// checkMeta: {checkId, url} when this format has a live URL that can be re-checked from
+// the browser (adds a refresh/"reload" button, wired to #dot-<checkId>/#err-<checkId> via
+// JS). curlUrl: when given, adds a button that copies a curl command for that same URL -
+// a way to verify playback outside the browser's CORS jail, alongside the live recheck.
+const playerCell = (label, cmd, checkError, checkMeta, curlUrl) => {
+  const checked = checkError !== undefined;
+  const parts = checkErrorParts(checkError);
+  const dotId = checkMeta ? ` id="dot-${esc(checkMeta.checkId)}"` : "";
+  const dot = checked ? `<span class="dot ${parts ? "dot-critical" : "dot-good"}"${dotId} title="${esc(parts ? parts.fullText : "Plays OK")}"></span>` : "";
+  const refreshBtn = checkMeta
+    ? `<button type="button" class="icon-btn recheck-btn" data-check-url="${esc(checkMeta.url)}" data-check-target="${esc(checkMeta.checkId)}" data-check-label="${esc(label)}" title="Re-check ${esc(label)} playback" aria-label="Re-check ${esc(label)} playback">&#8635;</button>`
+    : "";
+  const curlBtn = curlUrl
+    ? `<button type="button" class="qc-mini-btn copy-btn" data-copy="${esc(curlCheckCommand(curlUrl))}" title="Copy curl command for ${esc(label)}" aria-label="Copy curl command for ${esc(label)}">curl</button>`
+    : "";
   if(!cmd) {
-    return `<div class="player-cell-item player-missing"><span class="fmt-label">${label}</span><span class="text-dim">&mdash;</span></div>`;
+    return `<div class="player-cell-item player-missing"><span class="fmt-label">${label}</span>${dot}${refreshBtn}<span class="text-dim">&mdash;</span>${curlBtn}</div>`;
   }
   return `<div class="player-cell-item">
-    <span class="fmt-label">${label}</span>
+    <span class="fmt-label">${label}</span>${dot}${refreshBtn}
     <button class="icon-btn copy-btn" data-copy="${esc(cmd)}" title="Copy ${label} start-player.sh command" aria-label="Copy ${label} start-player.sh command">&#10697;</button>
+    ${curlBtn}
+  </div>`;
+};
+
+// Always rendered (hidden when there's no error) when checkMeta exists, so the
+// recheck button's JS handler can find it by id and fill it in after a live re-check.
+const renderSignedError = (label, err, checkMeta) => {
+  if(!checkMeta) return "";
+  const parts = checkErrorParts(err);
+  const hiddenClass = parts ? "" : " signed-error-hidden";
+  return `<div class="signed-error${hiddenClass}" id="err-${esc(checkMeta.checkId)}">
+    <span class="fmt-label">${esc(label)}</span>
+    <span class="chip chip-critical signed-error-http">${parts && parts.httpLabel ? esc(parts.httpLabel) : ""}</span>
+    <span class="signed-error-msg">${parts && parts.message ? esc(parts.message) : ""}</span>
+    <button type="button" class="icon-btn copy-btn signed-error-curl-btn" data-copy="${esc(curlCheckCommand(checkMeta.url))}" title="Copy curl command to test this URL" aria-label="Copy curl command to test this URL">&#10697;</button>
+  </div>`;
+};
+
+// One User CSAT signed-group per test account (EST/TVOD) - each carries its own
+// Clear/Widevine playout URLs (signed with that account's own token), so both offers'
+// entitlements can be checked side by side in the same row without the URLs mixing.
+const renderSignedGroup = (label, signedData, checkIdBase) => {
+  if(!signedData || (!signedData.clear_url && !signedData.widevine_url)) return "";
+
+  const clearCmd = signedData.clear_url ? startPlayerCommand([signedData.clear_url]) : null;
+  const widevineCmd = (signedData.widevine_url && signedData.widevine_license_server_url)
+    ? startPlayerCommand([signedData.widevine_url, signedData.widevine_license_server_url]) : null;
+
+  const labelSlug = label.toLowerCase();
+  const clearCheckMeta = signedData.clear_url ? { checkId: `${checkIdBase}-${labelSlug}-clear`, url: signedData.clear_url } : null;
+  const widevineCheckMeta = signedData.widevine_url ? { checkId: `${checkIdBase}-${labelSlug}-widevine`, url: signedData.widevine_url } : null;
+
+  return `<div class="signed-group">
+    <div class="signed-group-label">User CSAT (${esc(label)})</div>
+    <div class="player-cell">${playerCell("Clear", clearCmd, signedData.clear_url ? signedData.clear_error : undefined, clearCheckMeta, signedData.clear_url)}${playerCell("Widevine", widevineCmd, signedData.widevine_url ? signedData.widevine_error : undefined, widevineCheckMeta, signedData.widevine_url)}</div>
+    ${renderSignedError("Clear", signedData.clear_error, clearCheckMeta)}
+    ${renderSignedError("Widevine", signedData.widevine_error, widevineCheckMeta)}
   </div>`;
 };
 
@@ -160,41 +355,53 @@ const qcColumn = (r, type, entries) => {
   </div>`;
 };
 
-// Per-row confirmation that this playable's data has been copied into the external
-// QC spreadsheet, persisted per playable+offering in localStorage.
-const qcSheetToggle = (r) => {
-  const key = `${r.playable_object_id}::${r.offering}`;
-  return `<button type="button" class="qcsheet-toggle" data-state="off" data-qcsheet-key="${esc(key)}" aria-pressed="false">
-    <span class="qcsheet-check"></span><span class="qcsheet-label">Added to QC Sheet</span>
-  </button>`;
-};
-
 // Commercial offers (EST/VOD/etc.) configured per distribution/variant, so these can
 // differ row to row within the same title depending on territory/variant.
-const renderOffers = (offers) => {
+// signedByLabel: the row's r.signed ({EST: {...}, TVOD: {...}}) - each offer named EST or
+// TVOD gets its own matching CSAT playout URLs nested right under it, since that account
+// is what's actually being tested against that offer's entitlement. checkIdBase wires up
+// the nested recheck buttons the same way the old Playout URLs column did.
+const renderOffers = (offers, signedByLabel, checkIdBase) => {
   if(!offers || offers.length === 0) return `<span class="text-dim">None</span>`;
 
   const blocks = offers.map(offer => {
+    const walletAddress = stats.signed_tokens[offer.offer_name]
+      ? stats.signed_tokens[offer.offer_name].wallet_address
+      : null;
     const packages = offer.packages.map(pkg => {
       const mintBtn = pkg.sku
-        ? `<button type="button" class="qc-mini-btn copy-btn offer-mint-btn" data-copy="${esc(mintEntitlementCommand(pkg.sku))}" title="Copy tenant_mint command for this SKU">Mint Entitlement</button>`
+        ? `<button type="button" class="qc-mini-btn copy-btn offer-mint-btn" data-copy="${esc(mintEntitlementCommand(pkg.sku, walletAddress))}" title="Copy tenant_mint command for this SKU">Mint Entitlement</button>`
         : "";
       return `<div class="offer-package">
         <ul class="offer-package-list">
           <li><span class="text-dim">Package ID:</span> <span class="mono">${esc(pkg.package_id)}</span></li>
           ${pkg.sku ? `<li><span class="text-dim">SKU:</span> <span class="mono">${esc(pkg.sku)}</span></li>` : ""}
+          ${pkg.nft_template_name ? `<li><span class="text-dim">NFT Template:</span> ${esc(pkg.nft_template_name)}</li>` : ""}
+          ${pkg.nft_template_version_hash ? `<li class="offer-nft-line"><span class="text-dim">Version:</span> <span class="mono truncate" title="${esc(pkg.nft_template_version_hash)}">${esc(pkg.nft_template_version_hash)}</span></li>` : ""}
+          ${pkg.nft_template_address ? `<li class="offer-nft-line"><span class="text-dim">NFT Address:</span> <span class="mono truncate" title="${esc(pkg.nft_template_address)}">${esc(pkg.nft_template_address)}</span><button type="button" class="icon-btn copy-btn" data-copy="${esc(pkg.nft_template_address)}" title="Copy NFT template address" aria-label="Copy NFT template address">&#10697;</button></li>` : ""}
         </ul>
         ${mintBtn}
       </div>`;
     }).join("");
+    const signedGroup = signedByLabel ? renderSignedGroup(offer.offer_name, signedByLabel[offer.offer_name], checkIdBase) : "";
     return `<div class="offer-block">
       <div class="offer-name">${esc(offer.offer_name)}</div>
       ${packages}
+      ${signedGroup}
     </div>`;
   }).join("");
 
   return `<div class="offers-cell">${blocks}</div>`;
 };
+
+// Titles also present on the comparison site (current.compare_site_summary.title_names -
+// the site's full current membership, not just this run's added/updated delta). Matched
+// by name, not object ID: each site has its own independently-created title objects for
+// the same movie, so object IDs never coincide across sites.
+const compareSiteTitleNames = new Set(
+  ((current.compare_site_summary && current.compare_site_summary.title_names) || []).map(n => n.trim().toLowerCase())
+);
+const inCompareSite = (titleName) => compareSiteTitleNames.has((titleName || "").trim().toLowerCase());
 
 const titleBlocks = titleOrder.map(titleObjectId => {
   const titleRows = rowsByTitle.get(titleObjectId);
@@ -204,45 +411,45 @@ const titleBlocks = titleOrder.map(titleObjectId => {
     const clearPlayerCmd = r.dash_clear_url ? startPlayerCommand([r.dash_clear_url]) : null;
     const widevinePlayerCmd = (r.dash_widevine_url && r.license_server_url)
       ? startPlayerCommand([r.dash_widevine_url, r.license_server_url]) : null;
-    const clearUserSignedPlayerCmd = r.dash_clear_user_signed_url ? startPlayerCommand([r.dash_clear_user_signed_url]) : null;
-    const widevineUserSignedPlayerCmd = (r.dash_widevine_user_signed_url && r.user_signed_license_server_url)
-      ? startPlayerCommand([r.dash_widevine_user_signed_url, r.user_signed_license_server_url]) : null;
+    const checkIdBase = escId([r.title_object_id, r.playable_object_id, r.territory, r.variant, r.offering].join("_"));
     return `
-    <tr class="data-row" data-search="${esc([r.title_name, r.territory, r.variant, r.offering, r.playable_object_id].join(" ").toLowerCase())}">
+    <tr class="data-row" data-search="${esc([r.title_name, r.territory, r.variant, r.offering, r.playable_object_id].join(" ").toLowerCase())}" data-policy="${policyFilterState(r.playable_policy)}" data-offers="${(r.offers && r.offers.length > 0) ? "yes" : "no"}" data-last-edited="${esc(r.last_edited_at || "")}">
       <td><div class="title-id-cell">
         <div class="id-row"><span class="id-label">Territory</span><span>${esc(r.territory) || "—"}</span></div>
-        <div class="id-row"><span class="id-label">Variant</span><span>${esc(r.variant) || "—"}${r.is_trailer ? '<span class="chip chip-trailer">Trailer</span>' : ""}</span></div>
+        <div class="id-row"><span class="id-label">Variant</span><span>${esc(r.variant) || "—"}</span></div>
         <div class="id-row"><span class="id-label">Offering</span><span>${esc(r.offering)}</span></div>
         <div class="id-row"><span class="id-label">Playable</span><span class="mono truncate" title="${esc(r.playable_object_id)}">${esc(r.playable_object_id)}</span></div>
+        ${r.trailer_playable_object_id ? `<div class="id-row"><span class="id-label">Trailer</span><span class="mono truncate" title="${esc(r.trailer_playable_object_id)}">${esc(r.trailer_playable_object_id)}</span></div>` : ""}
+        <div class="id-row last-edited"><span class="id-label">Last edited</span><span>${r.last_edited_at ? fmtDate(r.last_edited_at) : "—"}</span></div>
+        ${renderPlayablePolicy(r.playable_policy)}
       </div></td>
-      <td>${renderOffers(r.offers)}</td>
-      <td class="qc-cell" data-qc-type="audio">${qcColumn(r, "audio", r.audio)}</td>
-      <td class="qc-cell" data-qc-type="subtitle">${qcColumn(r, "subtitle", r.subtitles)}</td>
-      <td><div class="url-stack">
-        ${formatCell("Clear", r.dash_clear_url, r.dash_clear_ok, r.dash_clear_error)}
-        ${formatCell("Widevine", r.dash_widevine_url, r.dash_widevine_ok, r.dash_widevine_error)}
-        ${r.license_server_url ? formatCell("License", r.license_server_url, true, null) : '<div class="fmt-cell fmt-missing"><span class="dot dot-critical"></span><span class="fmt-label">License</span></div>'}
-      </div></td>
+      <td>${renderOffers(r.offers, r.signed, checkIdBase)}</td>
+      <td class="qc-cell">
+        <div class="qc-subsection" data-qc-type="audio">
+          <div class="signed-group-label">Audio</div>
+          ${qcColumn(r, "audio", r.audio)}
+        </div>
+        <div class="qc-subsection" data-qc-type="subtitle">
+          <div class="signed-group-label">Subtitle</div>
+          ${qcColumn(r, "subtitle", r.subtitles)}
+        </div>
+      </td>
       <td>
         <div class="signed-group">
           <div class="signed-group-label">Backend Fabric Token</div>
           <div class="player-cell">${playerCell("Clear", clearPlayerCmd)}${playerCell("Widevine", widevinePlayerCmd)}</div>
         </div>
-        <div class="signed-group">
-          <div class="signed-group-label">User CSAT</div>
-          <div class="player-cell">${playerCell("Clear", clearUserSignedPlayerCmd)}${playerCell("Widevine", widevineUserSignedPlayerCmd)}</div>
-        </div>
       </td>
-      <td>${qcSheetToggle(r)}</td>
     </tr>`;
   }).join("");
 
   return `
-    <section class="title-group" data-title-search="${esc(first.title_name.toLowerCase())}">
+    <section class="title-group" data-title-search="${esc(first.title_name.toLowerCase())}" data-meta-site="${inCompareSite(first.title_name) ? "yes" : "no"}">
       <h3 class="title-heading">
         <span>${esc(first.title_name)}</span>
         <span class="chip chip-type">${esc(first.title_type)}</span>
         ${removedBadge}
+        ${inCompareSite(first.title_name) ? `<span class="chip chip-good" title="Also present on ${esc(siteLabel(current.compare_site_summary.compare_site_object_id) || "the comparison site")}">IN META PROD SITE</span>` : ""}
         <span class="text-dim mono title-hash" title="Master VU Hash">${esc(first.title_master_hash)}</span>
       </h3>
       <div class="table-scroll">
@@ -251,11 +458,8 @@ const titleBlocks = titleOrder.map(titleObjectId => {
             <tr>
               <th>Title</th>
               <th>Offers</th>
-              <th>Audio</th>
-              <th>Subtitle</th>
-              <th>Direct URLs</th>
+              <th>Audio / Subtitle</th>
               <th>Playout URLs</th>
-              <th>QC Sheet</th>
             </tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
@@ -264,131 +468,257 @@ const titleBlocks = titleOrder.map(titleObjectId => {
     </section>`;
 }).join("\n");
 
-// Reconciles the site's titles list against a separate catalog/index object, so drift
-// (titles missing from one side or the other) is visible without digging through logs.
-const renderIndexComparison = () => {
-  const cmp = current.index_comparison;
-  if(!cmp) {
+// The site's own display name doubles as the card's title header - drop the standalone
+// word "Site" from it since the card itself already makes that clear from context.
+const siteHeaderName = (objectId) => {
+  const label = siteLabel(objectId);
+  if(!label) return objectId;
+  return label.replace(/\bSite\b/gi, "").replace(/\s{2,}/g, " ").trim();
+};
+
+// Objects newly seen on the site since the previous run, diffed by
+// VUSiteTitlePlayoutURLs.js against its manifest and stored on current.object_changes.added.
+// One stat card per site (this site + the comparison site), each showing total object
+// count, newly added objects, and updated objects since the previous run - replaces the
+// old missing-title comparison view with per-site activity instead.
+const renderSiteSummary = ({ siteObjectId, siteVersionHash, siteLastEditedAt, totalObjects, newObjects, updatedObjects, titles, error }) => {
+  const headerName = siteObjectId ? siteHeaderName(siteObjectId) : "Site";
+  const idLine = siteObjectId
+    ? `<div class="text-dim index-compare-id"><span class="mono">${esc(siteObjectId)}</span></div>`
+    : "";
+  const versionLine = (siteVersionHash || siteLastEditedAt)
+    ? `<div class="site-version-info">
+        ${siteVersionHash ? `<span class="mono truncate" title="${esc(siteVersionHash)}">${esc(siteVersionHash)}</span>` : ""}
+        ${siteLastEditedAt ? `<span class="text-dim">Last edited ${fmtDate(siteLastEditedAt)}</span>` : ""}
+      </div>`
+    : "";
+
+  if(error) {
     return `<div class="index-compare">
-      <div class="index-compare-head"><span class="eyebrow">Index vs Site</span></div>
-      <div class="text-dim">No index comparison recorded yet — run VUSiteTitlePlayoutURLs.js to populate it.</div>
+      <div class="index-compare-head"><div><h4 class="index-compare-title">${esc(headerName)}</h4>${idLine}${versionLine}</div></div>
+      <div class="index-compare-error">Could not track this site: ${esc(error)}</div>
     </div>`;
   }
 
-  if(cmp.error) {
-    return `<div class="index-compare">
-      <div class="index-compare-head">
-        <div>
-          <span class="eyebrow">Index vs Site</span>
-          <div class="text-dim mono index-compare-id">${esc(cmp.index_object_id)}</div>
-        </div>
-      </div>
-      <div class="index-compare-error">Comparison failed: ${esc(cmp.error)}</div>
-    </div>`;
-  }
+  const activityCount = newObjects.length + updatedObjects.length;
+  const itemList = (label, cls, items) => items.map(it => `<li class="mismatch-item">
+    <span class="chip chip-${cls}">${esc(label)}</span>
+    <span>${esc(it.title_name)}</span>
+    <span class="mono text-dim truncate">${esc(it.title_object_id)}</span>
+  </li>`).join("");
 
-  const missingFromSite = cmp.missing_from_site || [];
-  const missingFromIndex = cmp.missing_from_index || [];
-  const mismatchCount = missingFromSite.length + missingFromIndex.length;
-
-  const mismatchList = (label, cls, items) => {
-    if(!items.length) return "";
-    const itemsHtml = items.map(it => `<li class="mismatch-item">
-      <span class="chip chip-${cls}">${esc(label)}</span>
-      <span>${esc(it.title_name)}</span>
-      <span class="mono text-dim truncate">${esc(it.object_id)}</span>
-    </li>`).join("");
-    return `<ul class="mismatch-list">${itemsHtml}</ul>`;
-  };
+  const sortedTitles = (titles || []).slice().sort((a, b) => (a.title_name || "").localeCompare(b.title_name || ""));
+  const titleListHtml = sortedTitles.length > 0
+    ? `<ul class="site-title-list">${sortedTitles.map(t => `<li class="site-title-list-item">
+        <span class="truncate" title="${esc(t.title_name)}">${esc(t.title_name)}</span>
+        <span class="mono text-dim truncate" title="${esc(t.title_master_hash)}">${esc(t.title_master_hash)}</span>
+      </li>`).join("")}</ul>`
+    : `<div class="index-compare-ok">No titles found.</div>`;
 
   return `<div class="index-compare">
     <div class="index-compare-head">
-      <div>
-        <span class="eyebrow">Index vs Site</span>
-        <div class="text-dim mono index-compare-id">${esc(cmp.index_object_id)}</div>
-      </div>
+      <div><h4 class="index-compare-title">${esc(headerName)}</h4>${idLine}${versionLine}</div>
       <div class="index-compare-stats">
-        <div><span class="mono num">${cmp.index_total}</span><span class="text-dim">in index</span></div>
-        <div><span class="mono num">${cmp.site_total}</span><span class="text-dim">on site</span></div>
-        <div><span class="mono num ${mismatchCount > 0 ? "text-critical" : "text-good"}">${mismatchCount}</span><span class="text-dim">mismatch${mismatchCount === 1 ? "" : "es"}</span></div>
+        <div><span class="mono num">${totalObjects}</span><span class="text-dim">total objects</span></div>
+        <div><span class="mono num ${newObjects.length > 0 ? "text-good" : "text-dim"}">${newObjects.length}</span><span class="text-dim">new</span></div>
+        <div><span class="mono num ${updatedObjects.length > 0 ? "text-good" : "text-dim"}">${updatedObjects.length}</span><span class="text-dim">updated</span></div>
       </div>
     </div>
-    ${mismatchCount === 0
-      ? '<div class="index-compare-ok">All index titles match the site.</div>'
-      : mismatchList("Missing from site", "critical", missingFromSite) + mismatchList("Missing from index", "warn", missingFromIndex)
+    ${activityCount === 0
+      ? '<div class="index-compare-ok">No new or updated objects since last run.</div>'
+      : `<ul class="mismatch-list">${itemList("New", "good", newObjects) + itemList("Updated", "warn", updatedObjects)}</ul>`
     }
+    <details class="site-title-list-details">
+      <summary>Titles on this site (${sortedTitles.length})</summary>
+      ${titleListHtml}
+    </details>
   </div>`;
 };
 
-// Trailer additions/removals since the previous run, diffed by VUSiteTitlePlayoutURLs.js
-// against trailers.ignore.json and stored on current.trailer_changes.
-const renderTrailerChanges = () => {
-  const tc = current.trailer_changes;
-  if(!tc) {
-    return `<div class="index-compare">
-      <div class="index-compare-head"><span class="eyebrow">Trailers</span></div>
-      <div class="text-dim">No trailer history recorded yet — run VUSiteTitlePlayoutURLs.js to populate it.</div>
-    </div>`;
+// Every metadata addition since the previous run (new offerings, audio/subtitle tracks,
+// or SKUs), flattened to one table row per playable-level change - the same underlying
+// diff VUSiteTitlePlayoutURLs.js's diffTitleMetadata computes, from
+// current.object_changes.metadata_additions.
+const renderUpdatedPlayables = () => {
+  const changes = (current.object_changes && current.object_changes.metadata_additions) || [];
+  const rows = [];
+  for(const c of changes) {
+    for(const a of c.additions || []) {
+      rows.push({ title_name: c.title_name, title_object_id: c.title_object_id, playable_object_id: a.playable_object_id, text: a.text });
+    }
   }
 
-  const added = tc.added || [];
-  const removed = tc.removed || [];
-  const changeCount = added.length + removed.length;
-
-  const trailerList = (label, cls, items) => {
-    if(!items.length) return "";
-    const itemsHtml = items.map(it => `<li class="mismatch-item">
-      <span class="chip chip-${cls}">${esc(label)}</span>
-      <span>${esc(it.title_name)}</span>
-      <span class="text-dim">${esc([it.territory, it.variant, it.offering].filter(Boolean).join(" "))}</span>
-    </li>`).join("");
-    return `<ul class="mismatch-list">${itemsHtml}</ul>`;
-  };
-
-  return `<div class="index-compare">
-    <div class="index-compare-head">
-      <div><span class="eyebrow">Trailers</span></div>
-      <div class="index-compare-stats">
-        <div><span class="mono num">${tc.total}</span><span class="text-dim">total</span></div>
-        <div><span class="mono num ${added.length > 0 ? "text-good" : "text-dim"}">${added.length}</span><span class="text-dim">added</span></div>
-        <div><span class="mono num ${removed.length > 0 ? "text-critical" : "text-dim"}">${removed.length}</span><span class="text-dim">removed</span></div>
-      </div>
+  return `<section class="updated-objects">
+    <div class="updated-objects-head">
+      <span class="eyebrow">Updated</span>
+      ${rows.length > 0
+        ? `<span class="text-dim">${rows.length} change${rows.length === 1 ? "" : "s"} across ${changes.length} object${changes.length === 1 ? "" : "s"} since last run</span>`
+        : ""
+      }
     </div>
-    ${changeCount === 0
-      ? '<div class="index-compare-ok">No trailer changes since last run.</div>'
-      : trailerList("Added", "good", added) + trailerList("Removed", "critical", removed)
+    ${rows.length === 0
+      ? '<div class="index-compare-ok">No playable object changes since last run.</div>'
+      : `<div class="table-scroll">
+          <table class="updated-table">
+            <thead><tr><th>Title</th><th>Playable</th><th>Change</th></tr></thead>
+            <tbody>${rows.map(r => `<tr>
+              <td>${esc(r.title_name)}<div class="mono text-dim truncate" title="${esc(r.title_object_id)}">${esc(r.title_object_id)}</div></td>
+              <td>${r.playable_object_id ? `<span class="mono truncate" title="${esc(r.playable_object_id)}">${esc(r.playable_object_id)}</span>` : "—"}</td>
+              <td>${esc(r.text)}</td>
+            </tr>`).join("")}</tbody>
+          </table>
+        </div>`
     }
-  </div>`;
+  </section>`;
+};
+
+// Every title is expected to carry both a CA and a US distribution, each with an EST and
+// a TVOD offer. Flags any title (still referenced on the site) missing one of those four
+// combinations, so gaps are visible without hunting through each title's rows.
+const REQUIRED_TERRITORIES = ["CA", "US"];
+const REQUIRED_OFFER_NAMES = ["EST", "TVOD"];
+
+const renderMissingDistributions = () => {
+  const rows = [];
+  const typesSeen = new Map(); // type slug -> label, in first-seen order
+
+  for(const title of current.titles || []) {
+    if(title.still_referenced === false) continue;
+
+    const offersByTerritory = new Map();
+    for(const p of title.playables || []) {
+      if(p.offering === "sbs" || p.is_trailer) continue;
+      if(!offersByTerritory.has(p.territory)) offersByTerritory.set(p.territory, new Set());
+      const offerSet = offersByTerritory.get(p.territory);
+      for(const o of p.offers || []) offerSet.add(o.offer_name);
+    }
+
+    const missing = [];
+    for(const territory of REQUIRED_TERRITORIES) {
+      if(!offersByTerritory.has(territory)) {
+        missing.push({ type: `no-${territory.toLowerCase()}`, label: `No ${territory} distribution` });
+        continue;
+      }
+      const offerSet = offersByTerritory.get(territory);
+      for(const offerName of REQUIRED_OFFER_NAMES) {
+        if(!offerSet.has(offerName)) {
+          missing.push({ type: `${territory.toLowerCase()}-missing-${offerName.toLowerCase()}`, label: `${territory} missing ${offerName}` });
+        }
+      }
+    }
+
+    if(missing.length > 0) {
+      for(const m of missing) {
+        if(!typesSeen.has(m.type)) typesSeen.set(m.type, m.label);
+      }
+      rows.push({ title_name: title.title_name, title_object_id: title.title_object_id, missing });
+    }
+  }
+
+  const filterBar = rows.length > 0
+    ? `<div class="discrepancy-filters" role="group" aria-label="Filter by discrepancy type">
+        <button type="button" class="chip-filter active" data-discrepancy-filter="all">All</button>
+        ${Array.from(typesSeen.entries()).map(([type, label]) =>
+          `<button type="button" class="chip-filter" data-discrepancy-filter="${esc(type)}">${esc(label)}</button>`
+        ).join("")}
+      </div>`
+    : "";
+
+  return `<section class="updated-objects">
+    <div class="updated-objects-head">
+      <span class="eyebrow">Discrepancies</span>
+      <span class="text-dim">Every title should have CA + US distributions, each with EST and TVOD offers</span>
+    </div>
+    ${filterBar}
+    ${rows.length === 0
+      ? '<div class="index-compare-ok">All titles have CA + US distributions with EST and TVOD offers.</div>'
+      : `<div class="table-scroll discrepancies-scroll">
+          <table class="updated-table">
+            <thead><tr><th>Title</th><th>Missing</th></tr></thead>
+            <tbody>${rows.map(r => `<tr data-discrepancy-types="${esc(r.missing.map(m => m.type).join(" "))}">
+              <td>${esc(r.title_name)}<div class="mono text-dim truncate" title="${esc(r.title_object_id)}">${esc(r.title_object_id)}</div></td>
+              <td>${r.missing.map(m => `<span class="chip chip-critical">${esc(m.label)}</span>`).join(" ")}</td>
+            </tr>`).join("")}</tbody>
+          </table>
+        </div>`
+    }
+  </section>`;
 };
 
 const html = `<div class="dash-root">
   <header class="dash-header">
     <div>
       <div class="eyebrow">VU Playout Monitor</div>
-      <h1>Site <span class="mono">${esc(stats.site_object_id)}</span></h1>
     </div>
-    <div class="header-meta">
-      <div><span class="text-dim">Generated</span> ${fmtDate(stats.generated_at)}</div>
-      <div><span class="text-dim">Token lifetime</span> ${stats.token_duration_days}d</div>
-      <div><span class="text-dim">User CSAT token</span> <span class="${stats.user_signed_token_available ? "text-good" : "text-dim"}">${stats.user_signed_token_available ? "available" : "not configured"}</span></div>
+    <div class="header-right">
+      <div class="header-meta">
+        <div><span class="text-dim">Generated</span> ${fmtDate(stats.generated_at)}</div>
+        <div><span class="text-dim">Token lifetime</span> ${stats.token_duration_days}d</div>
+        <div><span class="text-dim">EST CSAT</span> <span class="${stats.signed_tokens.EST && stats.signed_tokens.EST.available ? "text-good" : "text-dim"}">${stats.signed_tokens.EST && stats.signed_tokens.EST.available ? "available" : "not configured"}</span></div>
+        <div><span class="text-dim">TVOD CSAT</span> <span class="${stats.signed_tokens.TVOD && stats.signed_tokens.TVOD.available ? "text-good" : "text-dim"}">${stats.signed_tokens.TVOD && stats.signed_tokens.TVOD.available ? "available" : "not configured"}</span></div>
+      </div>
+      <div class="header-tokens">
+        <div class="header-token-item">
+          <span class="text-dim">Backend Fabric Token</span>
+          ${stats.fabric_token
+            ? `<button class="icon-btn copy-btn" data-copy="${esc(stats.fabric_token)}" title="Copy Backend Fabric Token" aria-label="Copy Backend Fabric Token">&#10697;</button>`
+            : `<span class="text-dim">&mdash;</span>`}
+        </div>
+        ${["EST", "TVOD"].map(label => {
+          const t = stats.signed_tokens[label];
+          return `<div class="header-token-item">
+            <span class="text-dim">${label} CSAT Token</span>
+            ${t && t.token
+              ? `<button class="icon-btn copy-btn" data-copy="${esc(t.token)}" title="Copy ${label} CSAT Token" aria-label="Copy ${label} CSAT Token">&#10697;</button>`
+              : `<span class="text-dim">&mdash;</span>`}
+            ${t && t.email ? `<span class="header-token-email">${esc(t.email)}</span>` : ""}
+          </div>`;
+        }).join("")}
+      </div>
     </div>
   </header>
 
-  <section class="top-summary">
-    <div class="hero-stat">
-      <div class="hero-stat-value">${stats.site_titles_total}</div>
-      <div class="hero-stat-label">Titles on site</div>
-    </div>
-    ${renderIndexComparison()}
-    ${renderTrailerChanges()}
+  <section class="site-summary-stack">
+    ${renderSiteSummary(mainSiteSummary)}
+    ${renderSiteSummary(compareSiteSummary)}
   </section>
+
+  ${renderUpdatedPlayables()}
+  ${renderMissingDistributions()}
 
   <section class="filter-bar">
     <input id="search" type="search" placeholder="Search title, territory, variant, offering, playable ID&hellip;" aria-label="Search" />
-    <div class="chip-filters" role="group" aria-label="Filter by QC Sheet status">
-      <button class="chip-filter active" data-filter="all">All</button>
-      <button class="chip-filter" data-filter="qc-yes">Added to QC Sheet</button>
-      <button class="chip-filter" data-filter="qc-no">Not Added</button>
+    <div class="filter-group">
+      <span class="filter-group-label">Policy</span>
+      <div class="chip-filters" data-filter-group="policy" role="group" aria-label="Filter by policy status">
+        <button class="chip-filter active" data-filter="all">All</button>
+        <button class="chip-filter" data-filter="set">Set</button>
+        <button class="chip-filter" data-filter="missing">Missing</button>
+        <button class="chip-filter" data-filter="unchecked">Unchecked</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="filter-group-label">Offers</span>
+      <div class="chip-filters" data-filter-group="offers" role="group" aria-label="Filter by offers created">
+        <button class="chip-filter active" data-filter="all">All</button>
+        <button class="chip-filter" data-filter="yes">Has Offers</button>
+        <button class="chip-filter" data-filter="no">No Offers</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="filter-group-label">Meta Prod Site</span>
+      <div class="chip-filters" data-filter-group="metaSite" role="group" aria-label="Filter by presence on VU Affiliate Master Site">
+        <button class="chip-filter active" data-filter="all">All</button>
+        <button class="chip-filter" data-filter="yes">In Meta Prod Site</button>
+        <button class="chip-filter" data-filter="no">Not Meta Prod Site</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="filter-group-label">Last Edited</span>
+      <div class="chip-filters" data-filter-group="edited" role="group" aria-label="Filter by last edited">
+        <button class="chip-filter active" data-filter="all">Any Time</button>
+        <button class="chip-filter" data-filter="24h">Last 24hrs</button>
+      </div>
     </div>
   </section>
 
@@ -487,29 +817,22 @@ const css = `
   text-wrap: balance;
 }
 .dash-header h1 .mono { font-size: 0.62em; color: var(--text-dim); font-weight: 500; }
+.site-version-info { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; font-size: 12px; color: var(--text-dim); }
+.site-version-info .truncate { max-width: 280px; }
+.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 .header-meta { display: flex; gap: 20px; font-size: 13px; }
 .header-meta .text-dim { margin-right: 4px; }
+.header-tokens { display: flex; gap: 16px; font-size: 12px; }
+.header-token-item { display: flex; align-items: center; gap: 6px; }
+.header-token-item .text-dim { margin-right: 2px; }
+.header-token-email { color: var(--text-dim); font-size: 11px; }
 
-.top-summary {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-  align-items: stretch;
-}
-.hero-stat {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: var(--radius);
-  padding: 16px 22px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-  min-width: 170px;
-}
-.hero-stat-value { font-family: var(--font-mono); font-size: 38px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
-.hero-stat-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+.site-summary-stack { display: flex; flex-direction: row; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+
+.updated-objects { margin: 16px 0; }
+.updated-objects-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+table.updated-table { min-width: 0; }
+table.updated-table .truncate { max-width: 280px; }
 
 .index-compare {
   flex: 1 1 420px;
@@ -522,6 +845,7 @@ const css = `
   gap: 12px;
 }
 .index-compare-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+.index-compare-title { margin: 0; font-size: 15px; font-weight: 700; }
 .index-compare-id { font-size: 11px; margin-top: 2px; }
 .index-compare-stats { display: flex; gap: 20px; }
 .index-compare-stats > div { display: flex; flex-direction: column; gap: 2px; font-size: 12px; }
@@ -531,6 +855,26 @@ const css = `
 .mismatch-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
 .mismatch-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; flex-wrap: wrap; }
 .mismatch-item .truncate { max-width: 220px; }
+.site-title-list-details { border-top: 1px solid var(--border); padding-top: 10px; }
+.site-title-list-details summary { cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-dim); user-select: none; }
+.site-title-list-details summary:hover { color: var(--text); }
+.site-title-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
+.site-title-list-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12px; padding: 3px 0; }
+.site-title-list-item .truncate:first-child { max-width: 55%; }
+.site-title-list-item .mono { max-width: 42%; }
+.policy-permissions-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); font-weight: 700; margin-top: 2px; }
+.policy-permissions { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; width: 100%; }
+.policy-permission-item { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 11px; }
+.policy-permission-item .truncate { max-width: 200px; }
+.permission-match {
+  width: 14px; height: 14px; border-radius: 4px; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 9px; line-height: 1;
+}
+.permission-match--yes { background: var(--good); color: var(--accent-ink); }
+.permission-match--yes::after { content: "\\2713"; }
+.permission-match--no { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+.permission-match--no::after { content: "\\2715"; }
 
 .filter-bar {
   position: sticky;
@@ -539,30 +883,34 @@ const css = `
   background: var(--bg);
   padding: 10px 0;
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 10px;
+  flex-wrap: nowrap;
   align-items: center;
   border-bottom: 1px solid var(--border);
+  overflow-x: auto;
 }
 #search {
-  flex: 1 1 280px;
+  flex: 0 1 170px;
+  min-width: 120px;
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
   border-radius: var(--radius);
-  padding: 9px 12px;
-  font-size: 14px;
+  padding: 7px 9px;
+  font-size: 13px;
   font-family: var(--font-sans);
 }
 #search:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.chip-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-group { display: flex; flex-direction: row; align-items: center; gap: 5px; flex: none; white-space: nowrap; }
+.filter-group-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-dim); font-weight: 700; }
+.chip-filters { display: flex; gap: 4px; flex-wrap: nowrap; }
 .chip-filter {
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text-dim);
   border-radius: 999px;
-  padding: 7px 13px;
-  font-size: 12.5px;
+  padding: 5px 9px;
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
   font-family: var(--font-sans);
@@ -583,13 +931,15 @@ const css = `
 .title-hash { font-size: 11px; margin-left: auto; }
 .chip { border-radius: 5px; padding: 2px 7px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
 .chip-type { background: var(--surface-2); color: var(--text-dim); }
-.chip-trailer { background: var(--surface-2); color: var(--text-dim); margin-left: 6px; text-transform: none; font-size: 10px; padding: 1px 6px; }
 .chip-removed { background: color-mix(in srgb, var(--removed) 22%, transparent); color: var(--removed); }
 .chip-critical { background: color-mix(in srgb, var(--critical) 20%, transparent); color: var(--critical); }
 .chip-warn { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--warn); }
 .chip-good { background: color-mix(in srgb, var(--good) 20%, transparent); color: var(--good); }
 
 .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+.discrepancies-scroll { max-height: 217px; overflow-y: auto; }
+.discrepancies-scroll thead th { position: sticky; top: 0; background: var(--surface); }
+.discrepancy-filters { display: flex; gap: 4px; flex-wrap: wrap; margin: 4px 0 10px; }
 table { border-collapse: collapse; width: 100%; min-width: 1180px; font-size: 13px; }
 thead th {
   text-align: left;
@@ -610,9 +960,11 @@ tbody tr:hover td { background: var(--surface-2); }
 .title-id-cell { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
 .id-row { display: flex; align-items: baseline; gap: 8px; font-size: 12.5px; }
 .id-label { flex: none; min-width: 54px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); }
+.id-row.last-edited { margin-top: 2px; padding-top: 4px; border-top: 1px dashed var(--border); color: var(--text-dim); font-size: 11.5px; }
 
-.offers-cell { display: flex; flex-direction: column; gap: 10px; min-width: 200px; max-width: 260px; font-size: 12px; }
-.offer-block { display: flex; flex-direction: column; gap: 3px; }
+.offers-cell { display: flex; flex-direction: row; flex-wrap: wrap; align-items: flex-start; font-size: 12px; }
+.offer-block { display: flex; flex-direction: column; gap: 6px; min-width: 200px; max-width: 260px; }
+.offer-block + .offer-block { margin-left: 10px; padding-left: 10px; border-left: 1px solid var(--border); }
 .offer-name {
   font-weight: 700; color: var(--accent); text-transform: uppercase;
   font-size: 11px; letter-spacing: 0.04em;
@@ -621,9 +973,9 @@ tbody tr:hover td { background: var(--surface-2); }
 .offer-package-list { margin: 0; padding-left: 16px; list-style: disc; color: var(--text-dim); line-height: 1.5; }
 .offer-package-list li::marker { color: var(--border); }
 .offer-package-list .mono { color: var(--text); }
+.offer-package-list li.offer-nft-line { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; white-space: nowrap; }
+.offer-package-list li.offer-nft-line .truncate { max-width: 140px; }
 .offer-mint-btn { align-self: flex-start; }
-
-.url-stack { display: flex; flex-direction: column; gap: 5px; }
 
 .player-cell { display: flex; flex-direction: column; gap: 4px; }
 .player-cell-item { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
@@ -632,8 +984,20 @@ tbody tr:hover td { background: var(--surface-2); }
 .signed-group { display: flex; flex-direction: column; gap: 4px; }
 .signed-group + .signed-group { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
 .signed-group-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); font-weight: 700; }
+.signed-error {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 5px 7px;
+  max-width: 240px; padding: 4px 7px; border-radius: 5px; line-height: 1.4;
+  background: color-mix(in srgb, var(--critical) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--critical) 28%, transparent);
+}
+.signed-error .fmt-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-dim); }
+.signed-error-msg { color: var(--critical); font-size: 11px; }
+.signed-error.signed-error-hidden { display: none; }
+.signed-error-http:empty { display: none; }
+.signed-error-msg:empty { display: none; }
 
 .qc-cell { min-width: 200px; max-width: 260px; vertical-align: top; }
+.qc-subsection + .qc-subsection { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
 .qc-col { display: flex; flex-direction: column; gap: 6px; }
 .qc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .qc-item { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; line-height: 1.35; }
@@ -667,28 +1031,13 @@ tbody tr:hover td { background: var(--surface-2); }
 .qc-mini-btn:hover { color: var(--accent); border-color: var(--accent); }
 .qc-mini-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-.qcsheet-toggle {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim);
-  border-radius: 999px; padding: 6px 12px; font-size: 11.5px; font-weight: 600;
-  cursor: pointer; font-family: var(--font-sans); white-space: nowrap;
-}
-.qcsheet-toggle:hover { border-color: var(--accent); }
-.qcsheet-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.qcsheet-check {
-  width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--border);
-  background: var(--surface); flex: none; display: inline-flex; align-items: center; justify-content: center;
-  font-size: 9px; line-height: 1; color: transparent;
-}
-.qcsheet-check::after { content: "\\2713"; }
-.qcsheet-toggle[data-state="on"] { background: color-mix(in srgb, var(--good) 22%, var(--surface-2)); border-color: var(--good); color: var(--good); }
-.qcsheet-toggle[data-state="on"] .qcsheet-check { background: var(--good); border-color: var(--good); color: var(--accent-ink); }
-
-.fmt-cell { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
 .fmt-label { font-size: 12px; }
 .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
 .dot-good { background: var(--good); }
 .dot-critical { background: var(--critical); }
+.dot-checking { background: var(--warn); animation: dot-pulse 1s ease-in-out infinite; }
+@keyframes dot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { .dot-checking { animation: none; } }
 .icon-btn {
   border: 1px solid var(--border);
   background: var(--surface-2);
@@ -705,6 +1054,10 @@ tbody tr:hover td { background: var(--surface-2); }
 }
 .icon-btn:hover { color: var(--accent); border-color: var(--accent); }
 .icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.icon-btn:disabled { opacity: 0.5; cursor: default; }
+.recheck-btn.is-checking { animation: recheck-spin 0.8s linear infinite; }
+@keyframes recheck-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .recheck-btn.is-checking { animation: none; } }
 
 .toast {
   position: fixed;
@@ -773,24 +1126,49 @@ tbody tr:hover td { background: var(--surface-2); }
 const js = `
 (function () {
   var search = document.getElementById("search");
-  var filters = Array.prototype.slice.call(document.querySelectorAll(".chip-filter"));
+  var filterGroupEls = Array.prototype.slice.call(document.querySelectorAll(".chip-filters"));
   var groups = Array.prototype.slice.call(document.querySelectorAll(".title-group"));
-  var activeFilter = "all";
+  var DAY_MS = 24 * 60 * 60 * 1000;
+
+  // one entry per filter group (policy/offers/metaSite/edited), each defaulting to "all"
+  var activeFilters = {};
+  filterGroupEls.forEach(function (el) {
+    activeFilters[el.getAttribute("data-filter-group")] = "all";
+  });
+
+  function editedFilterOk(bucket, lastEditedAt) {
+    if (bucket === "all") return true;
+    var editedMs = lastEditedAt ? Date.parse(lastEditedAt) : NaN;
+    var ageMs = isNaN(editedMs) ? Infinity : (Date.now() - editedMs);
+    return ageMs <= DAY_MS;
+  }
 
   function applyFilters() {
     var q = (search.value || "").toLowerCase().trim();
     groups.forEach(function (group) {
+      // In Meta Prod Site is per-title (data-meta-site on the group), not per row.
+      var metaSiteFilter = activeFilters.metaSite || "all";
+      var metaSiteOk = metaSiteFilter === "all" || metaSiteFilter === group.getAttribute("data-meta-site");
+
+      if (!metaSiteOk) {
+        group.style.display = "none";
+        return;
+      }
+
       var rows = Array.prototype.slice.call(group.querySelectorAll(".data-row"));
       var titleMatches = group.getAttribute("data-title-search").indexOf(q) !== -1;
       var visibleCount = 0;
       rows.forEach(function (row) {
-        var qcToggleEl = row.querySelector(".qcsheet-toggle");
-        var qcAdded = !!qcToggleEl && qcToggleEl.getAttribute("data-state") === "on";
-        var qcOk = activeFilter === "all" ||
-          (activeFilter === "qc-yes" && qcAdded) ||
-          (activeFilter === "qc-no" && !qcAdded);
+        var policyFilter = activeFilters.policy || "all";
+        var policyOk = policyFilter === "all" || policyFilter === row.getAttribute("data-policy");
+
+        var offersFilter = activeFilters.offers || "all";
+        var offersOk = offersFilter === "all" || offersFilter === row.getAttribute("data-offers");
+
+        var editedOk = editedFilterOk(activeFilters.edited || "all", row.getAttribute("data-last-edited"));
+
         var textOk = q === "" || titleMatches || row.getAttribute("data-search").indexOf(q) !== -1;
-        var visible = qcOk && textOk;
+        var visible = policyOk && offersOk && editedOk && textOk;
         row.style.display = visible ? "" : "none";
         if (visible) visibleCount++;
       });
@@ -799,12 +1177,32 @@ const js = `
   }
 
   search.addEventListener("input", applyFilters);
-  filters.forEach(function (btn) {
+  filterGroupEls.forEach(function (groupEl) {
+    var groupKey = groupEl.getAttribute("data-filter-group");
+    var btns = Array.prototype.slice.call(groupEl.querySelectorAll(".chip-filter"));
+    btns.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        btns.forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        activeFilters[groupKey] = btn.getAttribute("data-filter");
+        applyFilters();
+      });
+    });
+  });
+
+  // Discrepancies table's own filter row - independent of the main title filter-bar above,
+  // filters that table's rows directly rather than gating whole title groups.
+  var discrepancyFilterBtns = Array.prototype.slice.call(document.querySelectorAll(".discrepancy-filters .chip-filter"));
+  var discrepancyRows = Array.prototype.slice.call(document.querySelectorAll(".discrepancies-scroll tbody tr"));
+  discrepancyFilterBtns.forEach(function (btn) {
     btn.addEventListener("click", function () {
-      filters.forEach(function (b) { b.classList.remove("active"); });
+      discrepancyFilterBtns.forEach(function (b) { b.classList.remove("active"); });
       btn.classList.add("active");
-      activeFilter = btn.getAttribute("data-filter");
-      applyFilters();
+      var filter = btn.getAttribute("data-discrepancy-filter");
+      discrepancyRows.forEach(function (row) {
+        var types = (row.getAttribute("data-discrepancy-types") || "").split(" ");
+        row.style.display = (filter === "all" || types.indexOf(filter) !== -1) ? "" : "none";
+      });
     });
   });
 
@@ -877,6 +1275,82 @@ const js = `
     }
   }
 
+  // Live re-check of a User CSAT playout URL: after minting an entitlement, click the
+  // refresh button to re-fetch the URL from the browser and update its dot/error box in
+  // place, without re-running the whole discovery script. This does a real cross-origin
+  // fetch, so it only works when the dashboard is opened directly (or via a local
+  // server) - published Claude Artifact pages block outbound fetch via CSP, so the
+  // button will just report a failure there.
+  function formatCheckHttpLabel(status, statusText) {
+    if (!status) return null;
+    return "HTTP " + status + (statusText ? " " + statusText : "");
+  }
+
+  function recheckUrl(url) {
+    return fetch(url).then(function (response) {
+      if (response.ok) return null;
+      return response.text().catch(function () { return ""; }).then(function (bodyText) {
+        var message = bodyText.slice(0, 200);
+        try {
+          var parsed = JSON.parse(bodyText);
+          var firstError = parsed && parsed.errors && parsed.errors[0];
+          if (firstError && firstError.kind) message = firstError.kind;
+        } catch (parseErr) { /* body wasn't JSON - keep the truncated raw text */ }
+        return { status: response.status, statusText: response.statusText || null, message: message || null };
+      });
+    }).catch(function (err) {
+      // A bare "Failed to fetch"/"NetworkError" here is almost always the browser's CORS
+      // policy blocking the request, not a real fabric error - the copy-curl button next
+      // to this message bypasses it entirely.
+      var message = err.message + " (likely CORS - use the curl button below to test directly)";
+      return { status: null, statusText: null, message: message };
+    });
+  }
+
+  function applyCheckResult(target, err) {
+    var dot = document.getElementById("dot-" + target);
+    var errBox = document.getElementById("err-" + target);
+    var httpLabel = err ? formatCheckHttpLabel(err.status, err.statusText) : null;
+    if (dot) {
+      dot.classList.remove("dot-checking", "dot-good", "dot-critical");
+      dot.classList.add(err ? "dot-critical" : "dot-good");
+      var fullText = err ? ([httpLabel, err.message].filter(Boolean).join(" — ") || "Request failed") : "Plays OK";
+      dot.setAttribute("title", fullText);
+    }
+    if (errBox) {
+      if (err) {
+        errBox.classList.remove("signed-error-hidden");
+        var httpEl = errBox.querySelector(".signed-error-http");
+        var msgEl = errBox.querySelector(".signed-error-msg");
+        if (httpEl) httpEl.textContent = httpLabel || "";
+        if (msgEl) msgEl.textContent = err.message || "";
+      } else {
+        errBox.classList.add("signed-error-hidden");
+      }
+    }
+  }
+
+  Array.prototype.slice.call(document.querySelectorAll(".recheck-btn")).forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      if (btn.disabled) return;
+      var url = btn.getAttribute("data-check-url");
+      var target = btn.getAttribute("data-check-target");
+      var label = btn.getAttribute("data-check-label") || "URL";
+      if (!url || !target) return;
+      btn.disabled = true;
+      btn.classList.add("is-checking");
+      var dot = document.getElementById("dot-" + target);
+      if (dot) dot.classList.add("dot-checking");
+      recheckUrl(url).then(function (err) {
+        applyCheckResult(target, err);
+        showToast(label + (err ? " still failing" : " now plays OK"));
+      }).finally(function () {
+        btn.disabled = false;
+        btn.classList.remove("is-checking");
+      });
+    });
+  });
+
   // QC checklist: click-to-cycle pass/fail toggle per audio/subtitle track,
   // persisted in localStorage so state survives reloads and redeploys.
   var QC_STATES = ["untested", "pass", "fail"];
@@ -918,23 +1392,6 @@ const js = `
     if (saved && QC_STATES.indexOf(saved) !== -1) toggle.setAttribute("data-state", saved);
   });
 
-  // "Added to QC Sheet" row toggle: binary on/off, also persisted in localStorage.
-  var QCSHEET_STORAGE_PREFIX = "vupm_qcsheet:";
-  function qcSheetStorageGet(key) {
-    try { return localStorage.getItem(QCSHEET_STORAGE_PREFIX + key); } catch (e) { return null; }
-  }
-  function qcSheetStorageSet(key, value) {
-    try { localStorage.setItem(QCSHEET_STORAGE_PREFIX + key, value); } catch (e) { /* ignore */ }
-  }
-
-  Array.prototype.slice.call(document.querySelectorAll(".qcsheet-toggle")).forEach(function (toggle) {
-    var saved = qcSheetStorageGet(toggle.getAttribute("data-qcsheet-key"));
-    if (saved === "on") {
-      toggle.setAttribute("data-state", "on");
-      toggle.setAttribute("aria-pressed", "true");
-    }
-  });
-
   document.addEventListener("click", function (e) {
     var qcToggle = e.target.closest(".qc-toggle");
     if (qcToggle) {
@@ -942,17 +1399,6 @@ const js = `
       var next = QC_STATES[(QC_STATES.indexOf(current) + 1) % QC_STATES.length];
       qcToggle.setAttribute("data-state", next);
       qcStorageSet(qcToggle.closest(".qc-item").getAttribute("data-qc-key"), next);
-      return;
-    }
-
-    var qcSheetToggle = e.target.closest(".qcsheet-toggle");
-    if (qcSheetToggle) {
-      var isOn = qcSheetToggle.getAttribute("data-state") === "on";
-      var nextState = isOn ? "off" : "on";
-      qcSheetToggle.setAttribute("data-state", nextState);
-      qcSheetToggle.setAttribute("aria-pressed", nextState === "on" ? "true" : "false");
-      qcSheetStorageSet(qcSheetToggle.getAttribute("data-qcsheet-key"), nextState);
-      applyFilters();
       return;
     }
 
@@ -993,7 +1439,6 @@ ${html}
 fs.mkdirSync(path.dirname(outfile), { recursive: true });
 fs.writeFileSync(outfile, fullHtml);
 console.log(`Dashboard written to ${outfile}`);
-const cmpSummary = current.index_comparison && !current.index_comparison.error
-  ? `${(current.index_comparison.missing_from_site || []).length + (current.index_comparison.missing_from_index || []).length} mismatch(es) vs index`
-  : "no index comparison";
-console.log(`Stats: ${stats.site_titles_total} titles on site, ${cmpSummary}`);
+const objectChanges = current.object_changes || {};
+const missingPolicyCount = (current.titles || []).filter(t => t.policy && t.policy.has_policy === false).length;
+console.log(`Stats: ${stats.site_titles_total} titles on site, ${(objectChanges.added || []).length} new object(s), ${missingPolicyCount} missing policy`);
