@@ -64,7 +64,7 @@ for(const title of current.titles || []) {
       }
       if(contexts.size === 0) contexts.add(`${tp.territory}::${tp.variant}`);
       for(const key of contexts) {
-        if(!trailerByContext.has(key)) trailerByContext.set(key, tp.playable_object_id);
+        if(!trailerByContext.has(key)) trailerByContext.set(key, tp);
       }
     }
   }
@@ -91,6 +91,14 @@ for(const title of current.titles || []) {
       widevine_license_server_url: (widevine && widevine.signed && widevine.signed[label]) ? widevine.signed[label].license_server_url : null
     });
 
+    // The matched trailer (if any) already has its own backend-fabric-token-signed
+    // formats rendered by VUSiteTitlePlayoutURLs.js (trailers are playables too) - just
+    // not shown as their own row. Surface those Clear/Widevine URLs alongside the main
+    // asset's, same as the trailer's own ID is already shown.
+    const trailer = trailerByContext.get(`${p.territory}::${p.variant}`) || null;
+    const trailerClear = trailer ? (trailer.formats || []).find(f => f.format === "dash-clear") : null;
+    const trailerWidevine = trailer ? (trailer.formats || []).find(f => f.format === "dash-widevine") : null;
+
     rows.push({
       title_name: title.title_name,
       title_type: title.title_type,
@@ -102,7 +110,10 @@ for(const title of current.titles || []) {
       variant: p.variant,
       offering: p.offering,
       playable_object_id: p.playable_object_id,
-      trailer_playable_object_id: trailerByContext.get(`${p.territory}::${p.variant}`) || null,
+      trailer_playable_object_id: trailer ? trailer.playable_object_id : null,
+      trailer_dash_clear_url: trailerClear ? trailerClear.url : null,
+      trailer_dash_widevine_url: trailerWidevine ? trailerWidevine.url : null,
+      trailer_license_server_url: trailerWidevine ? trailerWidevine.license_server_url : null,
       audio: p.audio || [],
       subtitles: p.subtitles || [],
       playable_policy: p.policy || null,
@@ -411,6 +422,9 @@ const titleBlocks = titleOrder.map(titleObjectId => {
     const clearPlayerCmd = r.dash_clear_url ? startPlayerCommand([r.dash_clear_url]) : null;
     const widevinePlayerCmd = (r.dash_widevine_url && r.license_server_url)
       ? startPlayerCommand([r.dash_widevine_url, r.license_server_url]) : null;
+    const trailerClearPlayerCmd = r.trailer_dash_clear_url ? startPlayerCommand([r.trailer_dash_clear_url]) : null;
+    const trailerWidevinePlayerCmd = (r.trailer_dash_widevine_url && r.trailer_license_server_url)
+      ? startPlayerCommand([r.trailer_dash_widevine_url, r.trailer_license_server_url]) : null;
     const checkIdBase = escId([r.title_object_id, r.playable_object_id, r.territory, r.variant, r.offering].join("_"));
     return `
     <tr class="data-row" data-search="${esc([r.title_name, r.territory, r.variant, r.offering, r.playable_object_id].join(" ").toLowerCase())}" data-policy="${policyFilterState(r.playable_policy)}" data-offers="${(r.offers && r.offers.length > 0) ? "yes" : "no"}" data-last-edited="${esc(r.last_edited_at || "")}">
@@ -439,6 +453,10 @@ const titleBlocks = titleOrder.map(titleObjectId => {
           <div class="signed-group-label">Backend Fabric Token</div>
           <div class="player-cell">${playerCell("Clear", clearPlayerCmd)}${playerCell("Widevine", widevinePlayerCmd)}</div>
         </div>
+        ${r.trailer_playable_object_id ? `<div class="signed-group">
+          <div class="signed-group-label">Trailer (Backend Fabric Token)</div>
+          <div class="player-cell">${playerCell("Clear", trailerClearPlayerCmd)}${playerCell("Widevine", trailerWidevinePlayerCmd)}</div>
+        </div>` : ""}
       </td>
     </tr>`;
   }).join("");
