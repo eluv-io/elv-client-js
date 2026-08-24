@@ -19,7 +19,7 @@ const blueprint = {
 
 const New = context => {
 
-  const add = async ({libraryId, objectId, writeToken, fileInfo, encrypt}) => {
+  const add = async ({libraryId, objectId, writeToken, fileInfo, encrypt, resume}) => {
     const client = await context.concerns.Client.get();
     await client.UploadFiles({
       libraryId,
@@ -27,6 +27,7 @@ const New = context => {
       writeToken,
       fileInfo,
       callback,
+      resume,
       encryption: encrypt ? "cgck" : "none"
     });
   };

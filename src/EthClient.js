@@ -309,6 +309,7 @@ class EthClient {
     methodName,
     methodArgs,
     value,
+    overrides={},
     timeout,
     formatArguments=true,
     cacheContract=true,
@@ -319,7 +320,6 @@ class EthClient {
     if(!abi) { abi = await this.client.ContractAbi({contractAddress}); }
 
     const contract = this.Contract({contractAddress, abi, cacheContract, overrideCachedContract});
-
     // Make method call
     const createMethodCall = await this.CallContractMethod({
       contract,
@@ -327,6 +327,7 @@ class EthClient {
       methodName,
       methodArgs,
       value,
+      overrides,
       formatArguments,
       cacheContract
     });
