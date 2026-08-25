@@ -369,7 +369,6 @@ class FrameClient {
       "CreateAndFinalizeContentObject",
       "CreateAuthorizationToken",
       "CreateContentFolder",
-      "CreateContentGroups",
       "CreateContentLibrary",
       "CreateContentObject",
       "CreateContentQueryFields",
