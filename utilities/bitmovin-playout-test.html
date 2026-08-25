@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bitmovin Playout URL Tester</title>
+<script src="https://cdn.bitmovin.com/player/web/8/bitmovinplayer.js"></script>
+<style>
+  :root { color-scheme: dark; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0e0e12;
+    color: #e8e8ec;
+    margin: 0;
+    padding: 24px;
+    max-width: 900px;
+    margin-inline: auto;
+  }
+  h1 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  p.sub { color: #9a9aa5; font-size: 13px; margin-top: 0; margin-bottom: 20px; }
+  label { display: block; font-size: 12px; color: #aeaeb8; margin: 14px 0 4px; }
+  input, select {
+    width: 100%;
+    box-sizing: border-box;
+    background: #1a1a20;
+    border: 1px solid #2e2e38;
+    border-radius: 6px;
+    color: #e8e8ec;
+    padding: 9px 10px;
+    font-size: 13px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  select { font-family: -apple-system, sans-serif; }
+  button {
+    margin-top: 18px;
+    background: #4f7cff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { background: #3d68f0; }
+  #player {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #000;
+    margin-top: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  #status {
+    margin-top: 12px;
+    font-size: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: #9a9aa5;
+    background: #16161c;
+    border: 1px solid #2e2e38;
+    border-radius: 6px;
+    padding: 10px;
+    display: none;
+  }
+  #status.show { display: block; }
+  #status.error { color: #ff8080; border-color: #4a2a2a; }
+  #status.ok { color: #8fe4a0; border-color: #2a4a30; }
+  .note {
+    font-size: 12px;
+    color: #c9a24a;
+    background: #241f0e;
+    border: 1px solid #4a3f1a;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-top: 16px;
+  }
+  #tracks {
+    display: none;
+    margin-top: 16px;
+    gap: 16px;
+    grid-template-columns: 1fr 1fr;
+  }
+  #tracks.show { display: grid; }
+  .track-col h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #aeaeb8;
+    margin: 0 0 8px;
+  }
+  .track-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    background: #16161c;
+    border: 1px solid #2e2e38;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+  .track-row.active { border-color: #4f7cff; background: #182035; }
+  .track-row span.meta { color: #7a7a85; font-family: ui-monospace, monospace; }
+  .track-row button {
+    margin: 0;
+    padding: 4px 10px;
+    font-size: 11px;
+    background: #2a2a34;
+  }
+  .track-row.active button { background: #4f7cff; }
+  .track-row button:hover { background: #3d68f0; }
+  .empty-note { font-size: 12px; color: #6a6a75; }
+</style>
+</head>
+<body>
+
+<h1>Bitmovin Playout URL Tester</h1>
+<p class="sub">Loads a raw playout manifest URL directly into the Bitmovin Web Player. Use Safari for FairPlay (HLS) URLs — Safari cannot play Widevine (DASH) regardless of player.</p>
+
+<label for="license">Bitmovin Player License Key</label>
+<input id="license" value="47395463-bcb3-47a8-9644-7f4d2a544ab6">
+
+<label for="type">Manifest Type</label>
+<select id="type">
+  <option value="hls">HLS (FairPlay/clear) — required for Safari</option>
+  <option value="dash" selected>DASH (Widevine/clear) — will NOT play in Safari if DRM'd</option>
+</select>
+
+<label for="url">Playout URL</label>
+<input id="url" value="https://host-76-74-91-4.contentfabric.io/qlibs/ilib2mcZRFVoW1fza69zrsmzAxsAWwuG/q/hq__2UWjvUmJp3mB1BmZHofJ6CknaZMazZzUTpNrUtzv6GnzSqtspem8d4nAzffp7BnftwvAy9kVFxxr/rep/playout/default/dash-clear/dash.mpd?authorization=ascsj_5UzNCdWyLSeHqrZCpMGC1tRqgMojDcxguTvnHNfYvhkHZxy4x14FmaRRKq3K5evx7pfWJSgGbWBpGM9oiX1pGE4qmJKuF7h8xYKFMy4KEuSEPfqaMwsUTdb2ezCzj3Vkpwpzy5EJSwYve2URe9rBb1EPK1s9AaksLb5VfsVewrUdi2qmZR5uX1LHLnJXzvMvJtxKmgBtY2u658bbstb2PSy99ingHRL53sMDD4smXXUoPAWAWHywK8KLNjcx7ncERqREvQw8qMJExB2XjzLWAUbrVVF9abj3PPKzuJGdStSx6B8MDJjMLmgArK6HQf2vkQjNRiDUN1Ha2FXk6msTnAES7rgsXTK64hFsYwfBGyX3M41tcnzPbsWoKNosoXoDrYGqYU9apeM9adAMh9MoexjWcN7CNj13VkW9emefff48yVrFUbsb1p7TsfkGMaGHaqfrDiBR2WYgHen3GkZ3dpy7RWqnh3A1P5KwqHCeGqEP6WhrY78Y1WqZ6LMSeNaFTeSsc7XSevxbW1Q35SfAmxDrdWD9facdmPJ7LqFTAv77RZErtd6fJxLFxChzoX5wgg3ZvPnd8WT4xsWo7x8HkR1G5AqAjA3YLcKiDWzza4cThRQuxnMEC755EsDrBbBpk8nzmQHyvrvTjXtJ54qMnvX1MrHeWarXMxhsNrxM4TY6S7gA5XUWyejGa7PPPugepYQspoYgyp29GpMR6DsThsixoVzUxLvgGuBAgGVbbV5JmywtBFH6Yd1tgJ13v1H5PZCj4nyF9in7FoT5x8UKZNySXmpH4GrsbbKLJE3NKZ1jA9ffW81bnXtYsvh8nEuNQrdhn8nKanbgev57PnCofr9TP278Ra2BissgQG7Dzho3XsnU4pqGm2XnWVLHE4P9VeuJJZfMDGfyMgxuU4v7mGi5fce8q3LacNXkDXEneJKVWRpVYdRUMKKEioUdK3MfMhA9Q9F5rjFtKbVvpEqqD75YUPbS5biH2eztX5NnJwfF6zHXP8sNcUMHpLbXCaFbF2nFxHnQq3ZBgmj2XwPjwfWKGyz6CrUEnSmbJDN3fMMv2PKb6Lp5WxFToVeJutnkwJw8fhT4aFfrA5nS7z79PYh2aUuyooa58vSEwUyscXfXKzHx37tqce4rDER3g6hQbhubrJLZEZUXTsnFjsT92H1RJw5ZgT5ufDHXSacDeovixAmv6QYTTbMmu6zd56igQcWxkCaQiWXpVnScpY8i333hwmU8GnCLaAjUTk8nqg1L3iRChFyiH4NcaPZ26CWRgTgPYhLzpe9nuhYXSgbha4&resolve=false&sid=EFFAE1D72FE1">
+
+<label for="widevineUrl">Widevine License URL (only used for DASH)</label>
+<input id="widevineUrl" placeholder="e.g. https://main.net955305.contentfabric.io/.../justplay">
+
+<button id="loadBtn">Load in Player</button>
+
+<div class="note">
+Safari has no Widevine CDM, so DASH+Widevine will always fail there. Clear (unencrypted) DASH is different — Safari does support MSE, so Bitmovin's player can decode clear DASH in Safari, though Safari's MSE implementation is less robust than Chrome's and can still surface codec/segment issues that Chrome doesn't. For DRM'd content, HLS+FairPlay is the only path that works in Safari.
+</div>
+
+<div id="player"></div>
+<div id="status"></div>
+
+<div id="tracks">
+  <div class="track-col">
+    <h3>Audio tracks</h3>
+    <div id="audioTracks"><span class="empty-note">Load a source to see tracks.</span></div>
+  </div>
+  <div class="track-col">
+    <h3>Subtitle / caption tracks</h3>
+    <div id="subtitleTracks"><span class="empty-note">Load a source to see tracks.</span></div>
+  </div>
+</div>
+
+<script>
+const statusEl = document.getElementById('status');
+function log(msg, cls) {
+  statusEl.className = 'show' + (cls ? ' ' + cls : '');
+  statusEl.textContent = msg;
+}
+
+let player = null;
+
+document.getElementById('loadBtn').addEventListener('click', async () => {
+  const license = document.getElementById('license').value.trim();
+  const type = document.getElementById('type').value;
+  const url = document.getElementById('url').value.trim();
+  const widevineUrl = document.getElementById('widevineUrl').value.trim();
+
+  if (!license) { log('Enter your Bitmovin Player license key first.', 'error'); return; }
+  if (!url) { log('Enter a playout URL.', 'error'); return; }
+
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  if (isSafari && type === 'dash') {
+    log('Warning: Safari detected with DASH/Widevine selected. Safari has no Widevine CDM — this will fail. Proceeding anyway so you can see the actual error.', 'error');
+  }
+
+  const playerContainer = document.getElementById('player');
+  playerContainer.innerHTML = '';
+
+  const config = {
+    key: license,
+    playback: { autoplay: false, muted: false }
+  };
+
+  const source = {};
+  if (type === 'dash') {
+    source.dash = url;
+    if (widevineUrl) {
+      source.drm = { widevine: { LA_URL: widevineUrl } };
+    }
+  } else {
+    source.hls = url;
+  }
+
+  try {
+    if (player) { await player.destroy(); }
+    player = new bitmovin.player.Player(playerContainer, config);
+    await player.load(source);
+    log('Loaded successfully. Duration: ' + player.getDuration().toFixed(1) + 's', 'ok');
+    renderTracks();
+  } catch (err) {
+    log('Player error: ' + (err && err.message ? err.message : JSON.stringify(err)), 'error');
+    document.getElementById('tracks').className = '';
+  }
+});
+
+function renderTracks() {
+  const tracksEl = document.getElementById('tracks');
+  const audioEl = document.getElementById('audioTracks');
+  const subEl = document.getElementById('subtitleTracks');
+  tracksEl.className = 'show';
+
+  // Audio tracks
+  const audioTracks = player.getAvailableAudio ? player.getAvailableAudio() : [];
+  const currentAudioId = player.getAudio ? (player.getAudio() || {}).id : null;
+  if (!audioTracks || audioTracks.length === 0) {
+    audioEl.innerHTML = '<span class="empty-note">No audio tracks reported.</span>';
+  } else {
+    audioEl.innerHTML = '';
+    audioTracks.forEach(track => {
+      const row = document.createElement('div');
+      row.className = 'track-row' + (track.id === currentAudioId ? ' active' : '');
+      row.innerHTML = `<div>${track.label || track.lang || track.id}<br><span class="meta">${track.lang || ''} · ${track.id}</span></div>`;
+      const btn = document.createElement('button');
+      btn.textContent = track.id === currentAudioId ? 'Active' : 'Switch';
+      btn.onclick = () => { player.setAudio(track.id); log('Switched audio to: ' + (track.label || track.id), 'ok'); renderTracks(); };
+      row.appendChild(btn);
+      audioEl.appendChild(row);
+    });
+  }
+
+  // Subtitle tracks
+  const subTracks = player.subtitles ? player.subtitles.list() : [];
+  const currentSub = player.subtitles ? player.subtitles.getActive() : null;
+  const currentSubId = currentSub ? currentSub.id : null;
+  if (!subTracks || subTracks.length === 0) {
+    subEl.innerHTML = '<span class="empty-note">No subtitle/caption tracks reported.</span>';
+  } else {
+    subEl.innerHTML = '';
+    // "off" option
+    const offRow = document.createElement('div');
+    offRow.className = 'track-row' + (currentSubId == null ? ' active' : '');
+    offRow.innerHTML = '<div>Off</div>';
+    const offBtn = document.createElement('button');
+    offBtn.textContent = currentSubId == null ? 'Active' : 'Switch';
+    offBtn.onclick = () => { player.subtitles.disable(currentSubId); renderTracks(); };
+    offRow.appendChild(offBtn);
+    subEl.appendChild(offRow);
+
+    subTracks.forEach(track => {
+      const row = document.createElement('div');
+      row.className = 'track-row' + (track.id === currentSubId ? ' active' : '');
+      row.innerHTML = `<div>${track.label || track.lang || track.id}<br><span class="meta">${track.lang || ''} · ${track.kind || ''} · ${track.id}</span></div>`;
+      const btn = document.createElement('button');
+      btn.textContent = track.id === currentSubId ? 'Active' : 'Switch';
+      btn.onclick = () => { player.subtitles.enable(track.id); log('Switched subtitles to: ' + (track.label || track.id), 'ok'); renderTracks(); };
+      row.appendChild(btn);
+      subEl.appendChild(row);
+    });
+  }
+}
+</script>
+
+</body>
+</html>

@@ -287,7 +287,10 @@ const curlCheckCommand = (url) => `curl -sS -L -i ${shQuoteSingle(url)}`;
 // the browser (adds a refresh/"reload" button, wired to #dot-<checkId>/#err-<checkId> via
 // JS). curlUrl: when given, adds a button that copies a curl command for that same URL -
 // a way to verify playback outside the browser's CORS jail, alongside the live recheck.
-const playerCell = (label, cmd, checkError, checkMeta, curlUrl) => {
+// copyKind: what the copy button's title says it copies - "start-player.sh command" for
+// Headset Playout (the default, wrapping the URL(s) in the desktop launch script) or
+// "URL" for Global Playout (the bare standalone URL, no wrapping).
+const playerCell = (label, cmd, checkError, checkMeta, curlUrl, copyKind = "start-player.sh command") => {
   const checked = checkError !== undefined;
   const parts = checkErrorParts(checkError);
   const dotId = checkMeta ? ` id="dot-${esc(checkMeta.checkId)}"` : "";
@@ -303,7 +306,7 @@ const playerCell = (label, cmd, checkError, checkMeta, curlUrl) => {
   }
   return `<div class="player-cell-item">
     <span class="fmt-label">${label}</span>${dot}${refreshBtn}
-    <button class="icon-btn copy-btn" data-copy="${esc(cmd)}" title="Copy ${label} start-player.sh command" aria-label="Copy ${label} start-player.sh command">&#10697;</button>
+    <button class="icon-btn copy-btn" data-copy="${esc(cmd)}" title="Copy ${label} ${esc(copyKind)}" aria-label="Copy ${label} ${esc(copyKind)}">&#10697;</button>
     ${curlBtn}
   </div>`;
 };
@@ -451,11 +454,17 @@ const titleBlocks = titleOrder.map(titleObjectId => {
       <td>
         <div class="signed-group">
           <div class="signed-group-label">Backend Fabric Token</div>
+          <div class="signed-subgroup-label">Headset Playout</div>
           <div class="player-cell">${playerCell("Clear", clearPlayerCmd)}${playerCell("Widevine", widevinePlayerCmd)}</div>
+          <div class="signed-subgroup-label">Global Playout</div>
+          <div class="player-cell">${playerCell("Clear", r.dash_clear_url, undefined, undefined, undefined, "URL")}${playerCell("Widevine", r.dash_widevine_url, undefined, undefined, undefined, "URL")}</div>
         </div>
         ${r.trailer_playable_object_id ? `<div class="signed-group">
           <div class="signed-group-label">Trailer (Backend Fabric Token)</div>
+          <div class="signed-subgroup-label">Headset Playout</div>
           <div class="player-cell">${playerCell("Clear", trailerClearPlayerCmd)}${playerCell("Widevine", trailerWidevinePlayerCmd)}</div>
+          <div class="signed-subgroup-label">Global Playout</div>
+          <div class="player-cell">${playerCell("Clear", r.trailer_dash_clear_url, undefined, undefined, undefined, "URL")}${playerCell("Widevine", r.trailer_dash_widevine_url, undefined, undefined, undefined, "URL")}</div>
         </div>` : ""}
       </td>
     </tr>`;
@@ -1002,6 +1011,8 @@ tbody tr:hover td { background: var(--surface-2); }
 .signed-group { display: flex; flex-direction: column; gap: 4px; }
 .signed-group + .signed-group { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
 .signed-group-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); font-weight: 700; }
+.signed-subgroup-label { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-dim); opacity: 0.8; margin-top: 4px; }
+.signed-subgroup-label:first-of-type { margin-top: 0; }
 .signed-error {
   display: flex; align-items: center; flex-wrap: wrap; gap: 5px 7px;
   max-width: 240px; padding: 4px 7px; border-radius: 5px; line-height: 1.4;
