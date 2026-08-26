@@ -114,6 +114,23 @@ for(const title of current.titles || []) {
       trailer_dash_clear_url: trailerClear ? trailerClear.url : null,
       trailer_dash_widevine_url: trailerWidevine ? trailerWidevine.url : null,
       trailer_license_server_url: trailerWidevine ? trailerWidevine.license_server_url : null,
+      // undefined = not checked (only one territory for this variant, or pre-dates this
+      // check), null = checked but the fetch failed on one side, true/false = compared.
+      streams_match: p.streams_match,
+      streams_match_reference_territory: p.streams_match_reference_territory || null,
+      streams_match_diff: p.streams_match_diff || null,
+      streams_match_common: p.streams_match_common || null,
+      streams_sources_match: p.streams_sources_match,
+      streams_sources_match_reference_territory: p.streams_sources_match_reference_territory || null,
+      streams_sources_diff: p.streams_sources_diff || null,
+      streams_sources_match_list: p.streams_sources_match_list || null,
+      streams_sources_hqp: p.streams_sources_hqp || null,
+      streams_sources_diff_reference_hqp: p.streams_sources_diff_reference_hqp || null,
+      // check_key_ids.py port: every DRM key_id referenced by this playable's
+      // offerings/{offering}/playout/streams encryption_schemes must appear in both
+      // elv/crypt/drm/kids and offerings/{offering}/playout/drm_keys. undefined = not
+      // checked (pre-dates this check), null = checked but errored, true/false = result.
+      drm_verified: p.drm_verified,
       audio: p.audio || [],
       subtitles: p.subtitles || [],
       playable_policy: p.policy || null,
@@ -248,6 +265,113 @@ const renderPlayablePolicy = (policy) => {
   return `<div class="id-row">${label}<span class="chip chip-good"${nameTitle}>${esc(policy.name || "Policy set")}</span></div>${renderPermissionsList(policy)}`;
 };
 
+// Two cross-territory checks against offerings/{offering}/media_struct/streams for
+// same-variant playables in different territories (undefined on both = only one territory
+// carries this variant, nothing to compare against - renders nothing; null = compared but
+// the fetch failed on one side).
+//
+// r.streams_match: the full set of stream keys matches exactly, hash suffix included.
+// r.streams_match_diff (mismatch only): {missing, extra} keys relative to the reference
+// territory. r.streams_match_common: the stream keys present (and thus identical) on both
+// sides, whether or not the overall check passed - shown on hover either way.
+//
+// r.streams_sources_match: for every stream key common to both sides, streams/{stream}/
+// sources/sources is an exact match - a finer check than key equality, since two streams
+// can share a key but still point at different underlying source content.
+// r.streams_sources_diff (mismatch only): the common stream keys whose sources differed.
+// r.streams_sources_match_list: the common stream keys whose sources did match.
+//
+// A native title="" attribute is unreliable for content this long (slow to appear,
+// inconsistent across browsers/embedded viewers), so this feeds a single shared,
+// JS-positioned #chip-tooltip node instead (wired up in the page script below) - the
+// content travels as data-tooltip-json rather than being embedded as a child element,
+// since a child would get clipped by .table-scroll's overflow:auto near the bottom of
+// the scroll area.
+// note: an optional standalone line shown above the itemized sections (e.g. which
+// territory this was compared against) - always shown when given, regardless of length.
+// sections: [{label, items}], only rendered when items is non-empty - each item gets its
+// own line (not comma-joined), so one long stream key never runs into the next.
+const renderStreamsMatchChip = (chipClass, chipLabel, note, sections) => {
+  const nonEmptySections = (sections || []).filter(s => s.items && s.items.length);
+  const lines = [
+    note ? { label: "", items: [note] } : null,
+    ...nonEmptySections
+  ].filter(Boolean);
+  const dataAttr = lines.length ? ` data-tooltip-json="${esc(JSON.stringify(lines))}" tabindex="0"` : "";
+  return `<span class="chip-hover-wrap"${dataAttr}><span class="chip ${chipClass}">${esc(chipLabel)}</span></span>`;
+};
+
+const renderStreamsMatch = (r) => {
+  if(r.streams_match === undefined && r.streams_sources_match === undefined) return "";
+
+  const streamsChip = r.streams_match === null
+    ? renderStreamsMatchChip("chip-warn", "Check failed", "", [])
+    : r.streams_match === false
+      ? renderStreamsMatchChip("chip-critical", "Mismatch",
+          r.streams_match_reference_territory ? `Differs from ${r.streams_match_reference_territory}` : "",
+          [
+            { label: "Missing", items: (r.streams_match_diff && r.streams_match_diff.missing) || [] },
+            { label: "Extra", items: (r.streams_match_diff && r.streams_match_diff.extra) || [] },
+            { label: "Matching", items: r.streams_match_common || [] }
+          ])
+      : renderStreamsMatchChip("chip-good", "Match", "", [
+          { label: "Matching", items: r.streams_match_common || [] }
+        ]);
+
+  // The Sources tooltip shows the actual hqp_ part reference(s) behind each stream,
+  // not just the stream key again (which the Streams tooltip already lists) - so
+  // hovering here answers "what does each stream actually point at", not just
+  // "which stream names lined up".
+  const hqpFor = (key) => {
+    const values = (r.streams_sources_hqp && r.streams_sources_hqp[key]) || [];
+    return values.length ? values.join(", ") : "no hqp_ found";
+  };
+  const refHqpFor = (key) => {
+    const values = (r.streams_sources_diff_reference_hqp && r.streams_sources_diff_reference_hqp[key]) || [];
+    return values.length ? values.join(", ") : "no hqp_ found";
+  };
+  const matchingSourceLines = (r.streams_sources_match_list || []).map(k => `${k}: ${hqpFor(k)}`);
+  const differingSourceLines = (r.streams_sources_diff || []).map(k =>
+    `${k}: ${hqpFor(k)} (vs ${r.streams_sources_match_reference_territory || "reference"}: ${refHqpFor(k)})`
+  );
+
+  const sourcesMatchedCount = (r.streams_sources_match_list || []).length;
+  const sourcesDiffCount = (r.streams_sources_diff || []).length;
+  const sourcesTotal = sourcesMatchedCount + sourcesDiffCount;
+  const sourcesChip = r.streams_sources_match === null
+    ? renderStreamsMatchChip("chip-warn", "Check failed", "", [])
+    : r.streams_sources_match === false
+      ? renderStreamsMatchChip("chip-critical", "Mismatch",
+          [
+            r.streams_sources_match_reference_territory ? `Differs from ${r.streams_sources_match_reference_territory}` : "",
+            sourcesTotal ? `${sourcesMatchedCount} of ${sourcesTotal} shared streams have matching sources` : ""
+          ].filter(Boolean).join(" — "),
+          [
+            { label: "Differing sources", items: differingSourceLines },
+            { label: "Matching sources", items: matchingSourceLines }
+          ])
+      : renderStreamsMatchChip("chip-good", "Match",
+          sourcesTotal ? `All ${sourcesTotal} shared streams have matching sources` : "",
+          [
+            { label: "Sources", items: matchingSourceLines }
+          ]);
+
+  return `<div class="id-row"><span class="id-label">Streams</span>${streamsChip}</div>
+  <div class="id-row"><span class="id-label">Sources</span>${sourcesChip}</div>`;
+};
+
+// check_key_ids.py port (VUSiteTitlePlayoutURLs.js's checkDrmKeyIds): every DRM key_id
+// this playable's streams reference is present in both elv/crypt/drm/kids and
+// offerings/{offering}/playout/drm_keys. Shown as a light right next to the Widevine
+// label, since an unresolvable key_id is specifically a Widevine/DRM playback risk, not
+// a Clear-format one. undefined = not checked - renders nothing.
+const renderDrmLight = (drmVerified) => {
+  if(drmVerified === undefined) return "";
+  if(drmVerified === null) return `<span class="dot dot-warn" title="DRM key ID verification failed to run"></span>`;
+  if(drmVerified === false) return `<span class="dot dot-critical" title="DRM key ID(s) referenced by this stream are missing from elv/crypt/drm/kids or playout/drm_keys"></span>`;
+  return `<span class="dot dot-good" title="DRM key IDs verified - all referenced key_ids present in elv/crypt/drm/kids and playout/drm_keys"></span>`;
+};
+
 const fmtDate = (iso) => {
   if(!iso) return "—";
   const d = new Date(iso);
@@ -290,7 +414,9 @@ const curlCheckCommand = (url) => `curl -sS -L -i ${shQuoteSingle(url)}`;
 // copyKind: what the copy button's title says it copies - "start-player.sh command" for
 // Headset Playout (the default, wrapping the URL(s) in the desktop launch script) or
 // "URL" for Global Playout (the bare standalone URL, no wrapping).
-const playerCell = (label, cmd, checkError, checkMeta, curlUrl, copyKind = "start-player.sh command") => {
+// extraIndicator: optional HTML snippet rendered right after the label (e.g. the DRM
+// key-verification light next to "Widevine").
+const playerCell = (label, cmd, checkError, checkMeta, curlUrl, copyKind = "start-player.sh command", extraIndicator = "") => {
   const checked = checkError !== undefined;
   const parts = checkErrorParts(checkError);
   const dotId = checkMeta ? ` id="dot-${esc(checkMeta.checkId)}"` : "";
@@ -302,10 +428,10 @@ const playerCell = (label, cmd, checkError, checkMeta, curlUrl, copyKind = "star
     ? `<button type="button" class="qc-mini-btn copy-btn" data-copy="${esc(curlCheckCommand(curlUrl))}" title="Copy curl command for ${esc(label)}" aria-label="Copy curl command for ${esc(label)}">curl</button>`
     : "";
   if(!cmd) {
-    return `<div class="player-cell-item player-missing"><span class="fmt-label">${label}</span>${dot}${refreshBtn}<span class="text-dim">&mdash;</span>${curlBtn}</div>`;
+    return `<div class="player-cell-item player-missing"><span class="fmt-label">${label}</span>${extraIndicator}${dot}${refreshBtn}<span class="text-dim">&mdash;</span>${curlBtn}</div>`;
   }
   return `<div class="player-cell-item">
-    <span class="fmt-label">${label}</span>${dot}${refreshBtn}
+    <span class="fmt-label">${label}</span>${extraIndicator}${dot}${refreshBtn}
     <button class="icon-btn copy-btn" data-copy="${esc(cmd)}" title="Copy ${label} ${esc(copyKind)}" aria-label="Copy ${label} ${esc(copyKind)}">&#10697;</button>
     ${curlBtn}
   </div>`;
@@ -417,58 +543,106 @@ const compareSiteTitleNames = new Set(
 );
 const inCompareSite = (titleName) => compareSiteTitleNames.has((titleName || "").trim().toLowerCase());
 
+// Territory's own asset identity/status (Playable ID, Trailer ID, Last Edited, Policy,
+// Streams/Sources match) - nested at the top of that territory's Audio/Playout cell,
+// since these describe the played asset rather than its commercial offers.
+const renderTerritoryMeta = (r) => `<div class="title-id-cell">
+    <div class="id-row"><span class="id-label">Playable</span><span class="mono truncate" title="${esc(r.playable_object_id)}">${esc(r.playable_object_id)}</span></div>
+    ${r.trailer_playable_object_id ? `<div class="id-row"><span class="id-label">Trailer</span><span class="mono truncate" title="${esc(r.trailer_playable_object_id)}">${esc(r.trailer_playable_object_id)}</span></div>` : ""}
+    <div class="id-row last-edited"><span class="id-label">Last edited</span><span>${r.last_edited_at ? fmtDate(r.last_edited_at) : "—"}</span></div>
+    ${renderPlayablePolicy(r.playable_policy)}
+    ${renderStreamsMatch(r)}
+  </div>`;
+
+// The "single Audio/Playout" sub-column: territory meta, merged Audio+Subtitle QC, and
+// the Backend Fabric Token playout URLs (Headset/Global x Clear/Widevine), plus the
+// matched trailer's own playout URLs when this territory+variant has one. URLs are
+// always shown regardless of the Streams/Sources match state above - that's contextual
+// information alongside the URLs, not a gate on them.
+const renderAudioPlayoutCell = (r) => {
+  const clearPlayerCmd = r.dash_clear_url ? startPlayerCommand([r.dash_clear_url]) : null;
+  const widevinePlayerCmd = (r.dash_widevine_url && r.license_server_url)
+    ? startPlayerCommand([r.dash_widevine_url, r.license_server_url]) : null;
+  const trailerClearPlayerCmd = r.trailer_dash_clear_url ? startPlayerCommand([r.trailer_dash_clear_url]) : null;
+  const trailerWidevinePlayerCmd = (r.trailer_dash_widevine_url && r.trailer_license_server_url)
+    ? startPlayerCommand([r.trailer_dash_widevine_url, r.trailer_license_server_url]) : null;
+
+  return `<div class="audio-playout-cell">
+    ${renderTerritoryMeta(r)}
+    <div class="qc-subsection" data-qc-type="audio">
+      <div class="signed-group-label">Audio</div>
+      ${qcColumn(r, "audio", r.audio)}
+    </div>
+    <div class="qc-subsection" data-qc-type="subtitle">
+      <div class="signed-group-label">Subtitle</div>
+      ${qcColumn(r, "subtitle", r.subtitles)}
+    </div>
+    <div class="signed-group">
+      <div class="signed-group-label">Backend Fabric Token</div>
+      <div class="signed-subgroup-label">Headset Playout</div>
+      <div class="player-cell">${playerCell("Clear", clearPlayerCmd)}${playerCell("Widevine", widevinePlayerCmd, undefined, undefined, undefined, "start-player.sh command", renderDrmLight(r.drm_verified))}</div>
+      <div class="signed-subgroup-label">Global Playout</div>
+      <div class="player-cell">${playerCell("Clear", r.dash_clear_url, undefined, undefined, undefined, "URL")}${playerCell("Widevine", r.dash_widevine_url, undefined, undefined, undefined, "URL", renderDrmLight(r.drm_verified))}</div>
+    </div>
+    ${r.trailer_playable_object_id ? `<div class="signed-group">
+      <div class="signed-group-label">Trailer (Backend Fabric Token)</div>
+      <div class="signed-subgroup-label">Headset Playout</div>
+      <div class="player-cell">${playerCell("Clear", trailerClearPlayerCmd)}${playerCell("Widevine", trailerWidevinePlayerCmd)}</div>
+      <div class="signed-subgroup-label">Global Playout</div>
+      <div class="player-cell">${playerCell("Clear", r.trailer_dash_clear_url, undefined, undefined, undefined, "URL")}${playerCell("Widevine", r.trailer_dash_widevine_url, undefined, undefined, undefined, "URL")}</div>
+    </div>` : ""}
+  </div>`;
+};
+
+// data-* attributes on each variant row now have to aggregate across whichever
+// territories are present for that variant, since one <tr> covers all of them.
+const aggregatePolicyState = (records) => {
+  if(records.some(r => policyFilterState(r.playable_policy) === "missing")) return "missing";
+  if(records.some(r => policyFilterState(r.playable_policy) === "unchecked")) return "unchecked";
+  return records.length ? "set" : "unchecked";
+};
+const aggregateOffersFlag = (records) => records.some(r => r.offers && r.offers.length > 0) ? "yes" : "no";
+const aggregateLastEdited = (records) => {
+  const dates = records.map(r => r.last_edited_at).filter(Boolean);
+  if(!dates.length) return "";
+  return dates.reduce((latest, d) => (Date.parse(d) > Date.parse(latest) ? d : latest));
+};
+
 const titleBlocks = titleOrder.map(titleObjectId => {
   const titleRows = rowsByTitle.get(titleObjectId);
   const first = titleRows[0];
   const removedBadge = !first.still_referenced ? `<span class="chip chip-removed">No longer on site</span>` : "";
-  const rowsHtml = titleRows.map(r => {
-    const clearPlayerCmd = r.dash_clear_url ? startPlayerCommand([r.dash_clear_url]) : null;
-    const widevinePlayerCmd = (r.dash_widevine_url && r.license_server_url)
-      ? startPlayerCommand([r.dash_widevine_url, r.license_server_url]) : null;
-    const trailerClearPlayerCmd = r.trailer_dash_clear_url ? startPlayerCommand([r.trailer_dash_clear_url]) : null;
-    const trailerWidevinePlayerCmd = (r.trailer_dash_widevine_url && r.trailer_license_server_url)
-      ? startPlayerCommand([r.trailer_dash_widevine_url, r.trailer_license_server_url]) : null;
-    const checkIdBase = escId([r.title_object_id, r.playable_object_id, r.territory, r.variant, r.offering].join("_"));
+
+  // Pivoted layout: one row per variant, one Offers/Audio-Playout column-pair per
+  // territory (rather than the old one-row-per-territory-variant-combo layout) - lets
+  // a variant's CA and US assets be compared side by side instead of scrolling between
+  // separate rows.
+  const variantOrder = Array.from(new Set(titleRows.map(r => r.variant))).sort();
+  const territoryOrder = Array.from(new Set(titleRows.map(r => r.territory))).sort();
+  const cellMap = new Map(); // `${territory}::${variant}` -> row record
+  for(const r of titleRows) cellMap.set(`${r.territory}::${r.variant}`, r);
+
+  const rowsHtml = variantOrder.map(variant => {
+    const territoryRecords = territoryOrder.map(t => cellMap.get(`${t}::${variant}`)).filter(Boolean);
+    const searchParts = [variant];
+    for(const r of territoryRecords) searchParts.push(r.territory, r.playable_object_id);
+
+    const territoryCellsHtml = territoryOrder.map(t => {
+      const r = cellMap.get(`${t}::${variant}`);
+      if(!r) return `<td class="empty-territory-cell territory-start">&mdash;</td><td class="empty-territory-cell">&mdash;</td>`;
+      const checkIdBase = escId([r.title_object_id, r.playable_object_id, r.territory, r.variant, r.offering].join("_"));
+      return `<td class="territory-start">${renderOffers(r.offers, r.signed, checkIdBase)}</td><td>${renderAudioPlayoutCell(r)}</td>`;
+    }).join("");
+
     return `
-    <tr class="data-row" data-search="${esc([r.title_name, r.territory, r.variant, r.offering, r.playable_object_id].join(" ").toLowerCase())}" data-policy="${policyFilterState(r.playable_policy)}" data-offers="${(r.offers && r.offers.length > 0) ? "yes" : "no"}" data-last-edited="${esc(r.last_edited_at || "")}">
-      <td><div class="title-id-cell">
-        <div class="id-row"><span class="id-label">Territory</span><span>${esc(r.territory) || "—"}</span></div>
-        <div class="id-row"><span class="id-label">Variant</span><span>${esc(r.variant) || "—"}</span></div>
-        <div class="id-row"><span class="id-label">Offering</span><span>${esc(r.offering)}</span></div>
-        <div class="id-row"><span class="id-label">Playable</span><span class="mono truncate" title="${esc(r.playable_object_id)}">${esc(r.playable_object_id)}</span></div>
-        ${r.trailer_playable_object_id ? `<div class="id-row"><span class="id-label">Trailer</span><span class="mono truncate" title="${esc(r.trailer_playable_object_id)}">${esc(r.trailer_playable_object_id)}</span></div>` : ""}
-        <div class="id-row last-edited"><span class="id-label">Last edited</span><span>${r.last_edited_at ? fmtDate(r.last_edited_at) : "—"}</span></div>
-        ${renderPlayablePolicy(r.playable_policy)}
-      </div></td>
-      <td>${renderOffers(r.offers, r.signed, checkIdBase)}</td>
-      <td class="qc-cell">
-        <div class="qc-subsection" data-qc-type="audio">
-          <div class="signed-group-label">Audio</div>
-          ${qcColumn(r, "audio", r.audio)}
-        </div>
-        <div class="qc-subsection" data-qc-type="subtitle">
-          <div class="signed-group-label">Subtitle</div>
-          ${qcColumn(r, "subtitle", r.subtitles)}
-        </div>
-      </td>
-      <td>
-        <div class="signed-group">
-          <div class="signed-group-label">Backend Fabric Token</div>
-          <div class="signed-subgroup-label">Headset Playout</div>
-          <div class="player-cell">${playerCell("Clear", clearPlayerCmd)}${playerCell("Widevine", widevinePlayerCmd)}</div>
-          <div class="signed-subgroup-label">Global Playout</div>
-          <div class="player-cell">${playerCell("Clear", r.dash_clear_url, undefined, undefined, undefined, "URL")}${playerCell("Widevine", r.dash_widevine_url, undefined, undefined, undefined, "URL")}</div>
-        </div>
-        ${r.trailer_playable_object_id ? `<div class="signed-group">
-          <div class="signed-group-label">Trailer (Backend Fabric Token)</div>
-          <div class="signed-subgroup-label">Headset Playout</div>
-          <div class="player-cell">${playerCell("Clear", trailerClearPlayerCmd)}${playerCell("Widevine", trailerWidevinePlayerCmd)}</div>
-          <div class="signed-subgroup-label">Global Playout</div>
-          <div class="player-cell">${playerCell("Clear", r.trailer_dash_clear_url, undefined, undefined, undefined, "URL")}${playerCell("Widevine", r.trailer_dash_widevine_url, undefined, undefined, undefined, "URL")}</div>
-        </div>` : ""}
-      </td>
+    <tr class="data-row" data-search="${esc(searchParts.join(" ").toLowerCase())}" data-policy="${aggregatePolicyState(territoryRecords)}" data-offers="${aggregateOffersFlag(territoryRecords)}" data-last-edited="${esc(aggregateLastEdited(territoryRecords))}">
+      <td class="variant-cell">${esc(variant) || "—"}</td>
+      ${territoryCellsHtml}
     </tr>`;
   }).join("");
+
+  const territoryHeadRow = territoryOrder.map(t => `<th colspan="2" class="territory-head">${esc(t)}</th>`).join("");
+  const territorySubHeadRow = territoryOrder.map(() => `<th>Offers</th><th>Audio / Playout</th>`).join("");
 
   return `
     <section class="title-group" data-title-search="${esc(first.title_name.toLowerCase())}" data-meta-site="${inCompareSite(first.title_name) ? "yes" : "no"}">
@@ -483,10 +657,11 @@ const titleBlocks = titleOrder.map(titleObjectId => {
         <table>
           <thead>
             <tr>
-              <th>Title</th>
-              <th>Offers</th>
-              <th>Audio / Subtitle</th>
-              <th>Playout URLs</th>
+              <th rowspan="2">Variant</th>
+              ${territoryHeadRow}
+            </tr>
+            <tr>
+              ${territorySubHeadRow}
             </tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
@@ -755,6 +930,8 @@ const html = `<div class="dash-root">
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+  <div id="chip-tooltip" role="tooltip"></div>
+
   <div id="copyModal" class="copy-modal" role="dialog" aria-modal="true" aria-label="Copy to clipboard">
     <div class="copy-modal-inner">
       <div class="copy-modal-head">
@@ -963,11 +1140,44 @@ table.updated-table .truncate { max-width: 280px; }
 .chip-warn { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--warn); }
 .chip-good { background: color-mix(in srgb, var(--good) 20%, transparent); color: var(--good); }
 
+.chip-hover-wrap { display: inline-flex; cursor: default; }
+
+/* Single shared tooltip node, positioned via JS (getBoundingClientRect) rather than
+   CSS-relative-to-trigger - .table-scroll's overflow:auto would otherwise clip an
+   absolutely-positioned child tooltip that hangs below a chip near the bottom of the
+   scroll area. position:fixed here escapes that clipping entirely. */
+#chip-tooltip {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  min-width: 220px;
+  max-width: min(90vw, 820px);
+  max-height: 80vh;
+  overflow: auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text);
+  pointer-events: none;
+}
+#chip-tooltip.show { display: block; }
+.chip-tooltip-line { white-space: nowrap; }
+.chip-tooltip-line + .chip-tooltip-line { margin-top: 1px; }
+.chip-tooltip-label { display: block; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); font-weight: 700; white-space: nowrap; }
+.chip-tooltip-label:not(:first-child) { margin-top: 8px; }
+
 .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
 .discrepancies-scroll { max-height: 217px; overflow-y: auto; }
 .discrepancies-scroll thead th { position: sticky; top: 0; background: var(--surface); }
 .discrepancy-filters { display: flex; gap: 4px; flex-wrap: wrap; margin: 4px 0 10px; }
-table { border-collapse: collapse; width: 100%; min-width: 1180px; font-size: 13px; }
+table { border-collapse: collapse; width: 100%; min-width: 700px; font-size: 13px; }
 thead th {
   text-align: left;
   font-size: 10.5px;
@@ -979,6 +1189,7 @@ thead th {
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
+thead th.territory-head { text-align: center; font-size: 12px; letter-spacing: 0.08em; border-left: 1px solid var(--border); }
 tbody td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; background: var(--surface); }
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: var(--surface-2); }
@@ -988,6 +1199,12 @@ tbody tr:hover td { background: var(--surface-2); }
 .id-row { display: flex; align-items: baseline; gap: 8px; font-size: 12.5px; }
 .id-label { flex: none; min-width: 54px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); }
 .id-row.last-edited { margin-top: 2px; padding-top: 4px; border-top: 1px dashed var(--border); color: var(--text-dim); font-size: 11.5px; }
+
+.variant-cell { font-weight: 700; white-space: nowrap; vertical-align: top; }
+.audio-playout-cell { display: flex; flex-direction: column; gap: 10px; min-width: 240px; max-width: 320px; }
+.audio-playout-cell > .title-id-cell { padding-bottom: 8px; border-bottom: 1px dashed var(--border); }
+.empty-territory-cell { color: var(--text-dim); text-align: center; }
+.territory-start { border-left: 1px solid var(--border); }
 
 .offers-cell { display: flex; flex-direction: row; flex-wrap: wrap; align-items: flex-start; font-size: 12px; }
 .offer-block { display: flex; flex-direction: column; gap: 6px; min-width: 200px; max-width: 260px; }
@@ -1064,6 +1281,7 @@ tbody tr:hover td { background: var(--surface-2); }
 .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
 .dot-good { background: var(--good); }
 .dot-critical { background: var(--critical); }
+.dot-warn { background: var(--warn); }
 .dot-checking { background: var(--warn); animation: dot-pulse 1s ease-in-out infinite; }
 @keyframes dot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 @media (prefers-reduced-motion: reduce) { .dot-checking { animation: none; } }
@@ -1448,6 +1666,65 @@ const js = `
       copyText(copyBtn.getAttribute("data-copy"), "Copied to clipboard");
     }
   });
+
+  // Streams/Sources chip hover panel - a single shared node positioned via
+  // getBoundingClientRect rather than CSS-relative-to-trigger, so .table-scroll's
+  // overflow:auto can't clip it near the bottom of the scroll area.
+  var chipTooltip = document.getElementById("chip-tooltip");
+  function escChipTooltip(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function renderChipTooltip(sections) {
+    var html = "";
+    for (var i = 0; i < sections.length; i++) {
+      var section = sections[i];
+      if (section.label) html += "<div class='chip-tooltip-label'>" + escChipTooltip(section.label) + "</div>";
+      for (var j = 0; j < section.items.length; j++) {
+        html += "<div class='chip-tooltip-line'>" + escChipTooltip(section.items[j]) + "</div>";
+      }
+    }
+    return html;
+  }
+  function positionChipTooltip(trigger) {
+    var rect = trigger.getBoundingClientRect();
+    chipTooltip.style.left = "0px";
+    chipTooltip.style.top = "0px";
+    chipTooltip.classList.add("show");
+    var tw = chipTooltip.offsetWidth;
+    var left = Math.min(Math.max(8, rect.left), window.innerWidth - tw - 8);
+    var top = rect.bottom + 6;
+    if (top + chipTooltip.offsetHeight > window.innerHeight - 8) top = rect.top - chipTooltip.offsetHeight - 6;
+    chipTooltip.style.left = left + "px";
+    chipTooltip.style.top = Math.max(8, top) + "px";
+  }
+  function showChipTooltip(trigger) {
+    var raw = trigger.getAttribute("data-tooltip-json");
+    if (!raw) return;
+    var lines;
+    try { lines = JSON.parse(raw); } catch (e) { return; }
+    chipTooltip.innerHTML = renderChipTooltip(lines);
+    positionChipTooltip(trigger);
+  }
+  function hideChipTooltip() {
+    chipTooltip.classList.remove("show");
+  }
+  document.addEventListener("mouseover", function (e) {
+    var trigger = e.target.closest && e.target.closest(".chip-hover-wrap[data-tooltip-json]");
+    if (trigger) showChipTooltip(trigger);
+  });
+  document.addEventListener("mouseout", function (e) {
+    var trigger = e.target.closest && e.target.closest(".chip-hover-wrap[data-tooltip-json]");
+    if (trigger && !trigger.contains(e.relatedTarget)) hideChipTooltip();
+  });
+  document.addEventListener("focusin", function (e) {
+    var trigger = e.target.closest && e.target.closest(".chip-hover-wrap[data-tooltip-json]");
+    if (trigger) showChipTooltip(trigger);
+  });
+  document.addEventListener("focusout", function (e) {
+    var trigger = e.target.closest && e.target.closest(".chip-hover-wrap[data-tooltip-json]");
+    if (trigger) hideChipTooltip();
+  });
+  window.addEventListener("scroll", hideChipTooltip, true);
 })();
 `;
 

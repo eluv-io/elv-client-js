@@ -14,6 +14,7 @@
 const kindOf = require("kind-of");
 const Ethers = require("ethers");
 const yaml = require("js-yaml");
+const deepEqual = require("deep-equal");
 
 const { NewOpt, StdOpt } = require("./lib/options");
 const Utility = require("./lib/Utility");
@@ -736,6 +737,11 @@ class VUSiteTitlePlayoutURLs extends Utility {
 
     logger.log(`  Title: "${titleName}" (${titleType}) - ${uniqueMap.size} unique playable/offering combo(s)`);
 
+    // Not persisted (kept only for this title's discovery pass) - used below to flag
+    // whether same-variant playables across different territories carry matching media
+    // structure, then discarded so current.ignore.json doesn't balloon with raw stream reps.
+    const streamsByPlayable = new Map();
+
     const playables = [];
     for(const { playableObjectId, offering, paths, audio, subtitles, territory, variant, isTrailer, offers } of uniqueMap.values()) {
       try {
@@ -790,6 +796,44 @@ class VUSiteTitlePlayoutURLs extends Utility {
           }
         }
 
+        // Fetched once per playable/offering, held only in streamsByPlayable for the
+        // cross-territory comparison right after this loop - not stored on the playable
+        // itself (see the comment on streamsByPlayable above). drmVerified (checkDrmKeyIds)
+        // IS stored directly on the playable - it's a standalone per-playable pass/fail,
+        // not something compared across territories.
+        let drmVerified; // undefined for trailers - not checked
+        if(!isTrailer) {
+          let playableVersionHash = null;
+          try {
+            playableVersionHash = await client.LatestVersionHash({ objectId: playableObjectId });
+          } catch(err) {
+            logger.warn(`    Could not resolve version hash for ${playableObjectId}: ${err.message}`);
+          }
+
+          if(playableVersionHash) {
+            try {
+              const streams = await client.ContentObjectMetadata({
+                versionHash: playableVersionHash,
+                metadataSubtree: `offerings/${offering}/media_struct/streams`
+              });
+              streamsByPlayable.set(playableObjectId, streams || null);
+            } catch(err) {
+              logger.warn(`    Could not read media_struct/streams for ${playableObjectId} offering="${offering}": ${err.message}`);
+              streamsByPlayable.set(playableObjectId, undefined); // undefined = fetch failed, distinct from null = fetched empty
+            }
+
+            try {
+              drmVerified = await this.checkDrmKeyIds({ client, versionHash: playableVersionHash, offering, logger });
+            } catch(err) {
+              logger.warn(`    Could not verify DRM key IDs for ${playableObjectId} offering="${offering}": ${err.message}`);
+              drmVerified = null; // checked but failed/errored, distinct from undefined (never checked)
+            }
+          } else {
+            streamsByPlayable.set(playableObjectId, undefined);
+            drmVerified = null;
+          }
+        }
+
         playables.push({
           playable_object_id: playableObjectId,
           offering,
@@ -800,11 +844,115 @@ class VUSiteTitlePlayoutURLs extends Utility {
           audio,
           subtitles,
           offers,
-          formats
+          formats,
+          drm_verified: drmVerified
         });
       } catch(err) {
         logger.warn(`    FAILED: ${playableObjectId} offering="${offering}": ${err.message}`);
         failures.push({ index, object_id: objectId, playable_object_id: playableObjectId, offering, error: err.message });
+      }
+    }
+
+    // Cross-territory media-structure checks: same offering+variant (e.g. "default"/
+    // "uhd-2d-sdr") commonly appears once per territory (CA, US, ...) as separate playable
+    // objects - each should carry the exact same streams. Group by offering+variant (never
+    // territory - that's the axis being compared across) and flag every playable against
+    // the first one seen in its group. A group with only one territory has nothing to
+    // compare against, so its playable(s) are left unchecked.
+    //
+    // Two tests, both against offerings/{offering}/media_struct/streams:
+    // 1. streams_match: the full set of stream keys matches exactly, hash suffix included
+    //    (e.g. "spanish_latin_am_dub_dolby_5_1__81836d65e49ce252bf51d6068c2270a5") - not
+    //    just the same tracks, but the identical underlying source per track.
+    // 2. streams_sources_match: for every stream key common to both sides, the "hqp_..."
+    //    part reference(s) inside streams/{stream}/sources/sources match - a finer-grained
+    //    check than key equality alone, since two streams could share a key but still point
+    //    at different source parts underneath. Deliberately NOT a raw deep-equal of
+    //    sources.sources as a whole: that field's shape differs by territory in practice
+    //    (e.g. CA: sources: [["hqp_...", "168595427"], ...] vs US: sources: [{source:
+    //    "hqp_...", duration, entry_point, timeline_start, timeline_end}, ...]) even when
+    //    both reference the identical part, so only the "hqp_" identifiers themselves -
+    //    wherever they appear in that structure - are pulled out and compared.
+    const extractHqpValues = (node) => {
+      const found = [];
+      const walk = (v) => {
+        if(typeof v === "string") {
+          if(v.startsWith("hqp_")) found.push(v);
+        } else if(Array.isArray(v)) {
+          v.forEach(walk);
+        } else if(v && typeof v === "object") {
+          Object.values(v).forEach(walk);
+        }
+      };
+      walk(node);
+      return found;
+    };
+
+    const streamsGroups = new Map();
+    for(const p of playables) {
+      if(p.is_trailer) continue;
+      const key = `${p.offering}::${p.variant}`;
+      if(!streamsGroups.has(key)) streamsGroups.set(key, []);
+      streamsGroups.get(key).push(p);
+    }
+
+    for(const groupPlayables of streamsGroups.values()) {
+      const territories = new Set(groupPlayables.map(p => p.territory));
+      if(territories.size < 2) continue; // only one territory present - nothing to compare
+
+      let reference = null;
+      for(const p of groupPlayables) {
+        const streams = streamsByPlayable.get(p.playable_object_id);
+        if(streams === undefined) {
+          p.streams_match = null; // fetch failed - unknown, not flagged either way
+          p.streams_sources_match = null;
+          continue;
+        }
+        const keys = Object.keys(streams).sort();
+        if(!reference) {
+          reference = { territory: p.territory, streams, keys };
+          p.streams_match = true;
+          p.streams_match_common = keys; // trivially - it's compared against itself
+          p.streams_sources_match = true;
+          p.streams_sources_match_list = keys;
+          p.streams_sources_hqp = {};
+          for(const k of keys) p.streams_sources_hqp[k] = extractHqpValues(streams[k]?.sources?.sources);
+          continue;
+        }
+
+        const missing = reference.keys.filter(k => !keys.includes(k));
+        const extra = keys.filter(k => !reference.keys.includes(k));
+        const commonKeys = keys.filter(k => reference.keys.includes(k));
+        p.streams_match = missing.length === 0 && extra.length === 0;
+        p.streams_match_reference_territory = reference.territory;
+        p.streams_match_common = commonKeys; // present (and thus identical) on both sides
+        if(!p.streams_match) {
+          // relative to the reference territory: missing = stream keys it has that this
+          // one lacks, extra = stream keys this one has that it doesn't
+          p.streams_match_diff = { missing, extra };
+        }
+
+        const hqpByKey = {}; // this playable's own hqp_ value(s) per common stream key
+        const referenceHqpByKey = {}; // reference territory's, only kept for mismatched keys
+        const sourcesMismatches = commonKeys.filter(k => {
+          const a = extractHqpValues(reference.streams[k]?.sources?.sources);
+          const b = extractHqpValues(streams[k]?.sources?.sources);
+          hqpByKey[k] = b;
+          if(!deepEqual(a, b, { strict: true })) {
+            referenceHqpByKey[k] = a;
+            return true;
+          }
+          return false;
+        });
+        const sourcesMatches = commonKeys.filter(k => !sourcesMismatches.includes(k));
+        p.streams_sources_match = commonKeys.length > 0 ? sourcesMismatches.length === 0 : null;
+        p.streams_sources_match_reference_territory = reference.territory;
+        p.streams_sources_match_list = sourcesMatches; // common stream keys whose sources.sources also matched
+        p.streams_sources_hqp = hqpByKey; // this playable's hqp_ value(s), keyed by stream
+        if(sourcesMismatches.length > 0) {
+          p.streams_sources_diff = sourcesMismatches;
+          p.streams_sources_diff_reference_hqp = referenceHqpByKey; // reference's hqp_ value(s) for the differing keys
+        }
       }
     }
 
@@ -1037,6 +1185,55 @@ class VUSiteTitlePlayoutURLs extends Utility {
       if(logger) logger.warn(`  Could not read commit metadata for ${versionHash}: ${err.message}`);
       return null;
     }
+  }
+
+  // Ports check_key_ids.py: every key_id referenced by offerings/{offering}/playout/
+  // streams/*/encryption_schemes/{cenc,aes-128,cbcs}/key_id must appear as a key in BOTH
+  // elv/crypt/drm/kids and offerings/{offering}/playout/drm_keys - a DRM key referenced
+  // by a stream but missing from either lookup means playback would fail to decrypt.
+  // No key_ids referenced at all is treated as a pass, matching the script's exit-0
+  // "no key_ids found" case.
+  async checkDrmKeyIds({ client, versionHash, offering, logger }) {
+    const [playoutStreams, drmKeys, drmKids] = await Promise.all([
+      withTimeout(
+        client.ContentObjectMetadata({ versionHash, metadataSubtree: `offerings/${offering}/playout/streams` }),
+        CHECK_TIMEOUT_MS, `playout streams for ${versionHash}`
+      ),
+      withTimeout(
+        client.ContentObjectMetadata({ versionHash, metadataSubtree: `offerings/${offering}/playout/drm_keys` }),
+        CHECK_TIMEOUT_MS, `drm_keys for ${versionHash}`
+      ),
+      withTimeout(
+        client.ContentObjectMetadata({ versionHash, metadataSubtree: "elv/crypt/drm/kids" }),
+        CHECK_TIMEOUT_MS, `drm kids for ${versionHash}`
+      )
+    ]);
+
+    const schemeNames = ["cenc", "aes-128", "cbcs"];
+    const keyIds = new Set();
+    const streamList = Array.isArray(playoutStreams) ? playoutStreams
+      : (playoutStreams && typeof playoutStreams === "object") ? Object.values(playoutStreams) : [];
+    for(const stream of streamList) {
+      if(!stream || typeof stream !== "object") continue;
+      const schemes = stream.encryption_schemes;
+      if(!schemes || typeof schemes !== "object") continue;
+      for(const schemeName of schemeNames) {
+        const scheme = schemes[schemeName];
+        if(scheme && scheme.key_id) keyIds.add(scheme.key_id);
+      }
+    }
+
+    if(keyIds.size === 0) {
+      if(logger) logger.warn(`    No DRM key_ids found under offerings/${offering}/playout/streams for ${versionHash} - treating as verified`);
+      return true;
+    }
+
+    const kidsObj = (drmKids && typeof drmKids === "object") ? drmKids : {};
+    const keysObj = (drmKeys && typeof drmKeys === "object") ? drmKeys : {};
+    for(const kid of keyIds) {
+      if(!(kid in kidsObj) || !(kid in keysObj)) return false;
+    }
+    return true;
   }
 
   // cheap pass: splice the shared Backend Fabric Token into every cached title's
