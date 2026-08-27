@@ -31,6 +31,10 @@ const current = JSON.parse(fs.readFileSync(currentPath, "utf8"));
 // point of testing them separately.
 const mintEntitlementCommand = (sku, walletAddress) => `./elv-live tenant_mint ${tenantId} ${marketplace} ${sku} ${walletAddress || "<no_wallet_address>"}`;
 
+// Regenerates DRM keys for a playable whose checkDrmKeyIds check found a key_id missing
+// from elv/crypt/drm/kids or offerings/{offering}/playout/drm_keys.
+const mezRegenKeysCommand = (playableObjectId) => `node utilities/MezRegenDrmKeys.js --objectId ${playableObjectId}`;
+
 // ---- flatten titles/playables into rows, cross-referencing failures ----
 
 const failureKey = (objectId, playableObjectId, offering, format) =>
@@ -199,6 +203,16 @@ const compareSiteSummary = {
 const esc = (s) => String(s == null ? "" : s)
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
+// Wraps inline content (a dot, a match/no-match mark, etc.) with the same JS-positioned
+// #chip-tooltip hover panel the Streams/Sources chips use, instead of a native title=""
+// attribute - a native tooltip is unreliable here (slow to appear, inconsistent across
+// browsers/embedded viewers), which is exactly why that panel exists in the first place.
+const hoverTip = (innerHtml, text) => {
+  if(!text) return innerHtml;
+  const dataAttr = ` data-tooltip-json="${esc(JSON.stringify([{ label: "", items: [text] }]))}" tabindex="0"`;
+  return `<span class="chip-hover-wrap"${dataAttr}>${innerHtml}</span>`;
+};
+
 // user_signed_check_error is { status, statusText, message } | null. httpLabel is just
 // "HTTP 403" for a compact badge; fullText adds the message for titles/tooltips.
 const checkErrorParts = (err) => {
@@ -231,10 +245,10 @@ const renderPermissionsList = (policy) => {
     const r = resolved && resolved[i];
     let matchMark = "";
     if(r) {
-      const title = r.matched
-        ? `${r.nft_template_name || "Matched"}${r.sku ? " (" + r.sku + ")" : ""}`
-        : "No matching template";
-      matchMark = `<span class="permission-match ${r.matched ? "permission-match--yes" : "permission-match--no"}" title="${esc(title)}"></span>`;
+      const tipText = r.matched
+        ? `Policy Permissions match NFT address in Offer — ${r.nft_template_name || "Matched"}${r.sku ? " (" + r.sku + ")" : ""}`
+        : "Policy Permissions do not match any NFT address in Offer";
+      matchMark = hoverTip(`<span class="permission-match ${r.matched ? "permission-match--yes" : "permission-match--no"}"></span>`, tipText);
     }
     return `<li class="policy-permission-item">
       <span class="mono truncate" title="${esc(addr)}">${esc(addr)}</span>
@@ -364,12 +378,18 @@ const renderStreamsMatch = (r) => {
 // this playable's streams reference is present in both elv/crypt/drm/kids and
 // offerings/{offering}/playout/drm_keys. Shown as a light right next to the Widevine
 // label, since an unresolvable key_id is specifically a Widevine/DRM playback risk, not
-// a Clear-format one. undefined = not checked - renders nothing.
-const renderDrmLight = (drmVerified) => {
+// a Clear-format one. undefined = not checked - renders nothing. When verification found
+// a missing key_id, a "MezRegenKeys" button copies the command to regenerate them for
+// this specific playable.
+const renderDrmLight = (drmVerified, playableObjectId) => {
   if(drmVerified === undefined) return "";
-  if(drmVerified === null) return `<span class="dot dot-warn" title="DRM key ID verification failed to run"></span>`;
-  if(drmVerified === false) return `<span class="dot dot-critical" title="DRM key ID(s) referenced by this stream are missing from elv/crypt/drm/kids or playout/drm_keys"></span>`;
-  return `<span class="dot dot-good" title="DRM key IDs verified - all referenced key_ids present in elv/crypt/drm/kids and playout/drm_keys"></span>`;
+  if(drmVerified === null) return hoverTip(`<span class="dot dot-warn"></span>`, "DRM key ID verification failed to run");
+  if(drmVerified === false) {
+    const light = hoverTip(`<span class="dot dot-critical"></span>`, "DRM key ID(s) referenced by this stream are missing from elv/crypt/drm/kids or playout/drm_keys");
+    const regenBtn = `<button type="button" class="qc-mini-btn copy-btn" data-copy="${esc(mezRegenKeysCommand(playableObjectId))}" title="Copy MezRegenKeys command for this playable" aria-label="Copy MezRegenKeys command for this playable">MezRegenKeys</button>`;
+    return `${light}${regenBtn}`;
+  }
+  return hoverTip(`<span class="dot dot-good"></span>`, "Mez Keys are Valid - all referenced key_ids present in elv/crypt/drm/kids and playout/drm_keys");
 };
 
 const fmtDate = (iso) => {
@@ -420,7 +440,9 @@ const playerCell = (label, cmd, checkError, checkMeta, curlUrl, copyKind = "star
   const checked = checkError !== undefined;
   const parts = checkErrorParts(checkError);
   const dotId = checkMeta ? ` id="dot-${esc(checkMeta.checkId)}"` : "";
-  const dot = checked ? `<span class="dot ${parts ? "dot-critical" : "dot-good"}"${dotId} title="${esc(parts ? parts.fullText : "Plays OK")}"></span>` : "";
+  const dot = checked
+    ? hoverTip(`<span class="dot ${parts ? "dot-critical" : "dot-good"}"${dotId}></span>`, parts ? parts.fullText : "User with Entitlement obtains Manifest")
+    : "";
   const refreshBtn = checkMeta
     ? `<button type="button" class="icon-btn recheck-btn" data-check-url="${esc(checkMeta.url)}" data-check-target="${esc(checkMeta.checkId)}" data-check-label="${esc(label)}" title="Re-check ${esc(label)} playback" aria-label="Re-check ${esc(label)} playback">&#8635;</button>`
     : "";
@@ -543,109 +565,75 @@ const compareSiteTitleNames = new Set(
 );
 const inCompareSite = (titleName) => compareSiteTitleNames.has((titleName || "").trim().toLowerCase());
 
-// Territory's own asset identity/status (Playable ID, Trailer ID, Last Edited, Policy,
-// Streams/Sources match) - nested at the top of that territory's Audio/Playout cell,
-// since these describe the played asset rather than its commercial offers.
-const renderTerritoryMeta = (r) => `<div class="title-id-cell">
-    <div class="id-row"><span class="id-label">Playable</span><span class="mono truncate" title="${esc(r.playable_object_id)}">${esc(r.playable_object_id)}</span></div>
-    ${r.trailer_playable_object_id ? `<div class="id-row"><span class="id-label">Trailer</span><span class="mono truncate" title="${esc(r.trailer_playable_object_id)}">${esc(r.trailer_playable_object_id)}</span></div>` : ""}
-    <div class="id-row last-edited"><span class="id-label">Last edited</span><span>${r.last_edited_at ? fmtDate(r.last_edited_at) : "—"}</span></div>
-    ${renderPlayablePolicy(r.playable_policy)}
-    ${renderStreamsMatch(r)}
-  </div>`;
-
-// The "single Audio/Playout" sub-column: territory meta, merged Audio+Subtitle QC, and
-// the Backend Fabric Token playout URLs (Headset/Global x Clear/Widevine), plus the
-// matched trailer's own playout URLs when this territory+variant has one. URLs are
-// always shown regardless of the Streams/Sources match state above - that's contextual
-// information alongside the URLs, not a gate on them.
-const renderAudioPlayoutCell = (r) => {
-  const clearPlayerCmd = r.dash_clear_url ? startPlayerCommand([r.dash_clear_url]) : null;
-  const widevinePlayerCmd = (r.dash_widevine_url && r.license_server_url)
-    ? startPlayerCommand([r.dash_widevine_url, r.license_server_url]) : null;
-  const trailerClearPlayerCmd = r.trailer_dash_clear_url ? startPlayerCommand([r.trailer_dash_clear_url]) : null;
-  const trailerWidevinePlayerCmd = (r.trailer_dash_widevine_url && r.trailer_license_server_url)
-    ? startPlayerCommand([r.trailer_dash_widevine_url, r.trailer_license_server_url]) : null;
-
-  return `<div class="audio-playout-cell">
-    ${renderTerritoryMeta(r)}
-    <div class="qc-subsection" data-qc-type="audio">
-      <div class="signed-group-label">Audio</div>
-      ${qcColumn(r, "audio", r.audio)}
-    </div>
-    <div class="qc-subsection" data-qc-type="subtitle">
-      <div class="signed-group-label">Subtitle</div>
-      ${qcColumn(r, "subtitle", r.subtitles)}
-    </div>
-    <div class="signed-group">
-      <div class="signed-group-label">Backend Fabric Token</div>
-      <div class="signed-subgroup-label">Headset Playout</div>
-      <div class="player-cell">${playerCell("Clear", clearPlayerCmd)}${playerCell("Widevine", widevinePlayerCmd, undefined, undefined, undefined, "start-player.sh command", renderDrmLight(r.drm_verified))}</div>
-      <div class="signed-subgroup-label">Global Playout</div>
-      <div class="player-cell">${playerCell("Clear", r.dash_clear_url, undefined, undefined, undefined, "URL")}${playerCell("Widevine", r.dash_widevine_url, undefined, undefined, undefined, "URL", renderDrmLight(r.drm_verified))}</div>
-    </div>
-    ${r.trailer_playable_object_id ? `<div class="signed-group">
-      <div class="signed-group-label">Trailer (Backend Fabric Token)</div>
-      <div class="signed-subgroup-label">Headset Playout</div>
-      <div class="player-cell">${playerCell("Clear", trailerClearPlayerCmd)}${playerCell("Widevine", trailerWidevinePlayerCmd)}</div>
-      <div class="signed-subgroup-label">Global Playout</div>
-      <div class="player-cell">${playerCell("Clear", r.trailer_dash_clear_url, undefined, undefined, undefined, "URL")}${playerCell("Widevine", r.trailer_dash_widevine_url, undefined, undefined, undefined, "URL")}</div>
-    </div>` : ""}
-  </div>`;
-};
-
-// data-* attributes on each variant row now have to aggregate across whichever
-// territories are present for that variant, since one <tr> covers all of them.
-const aggregatePolicyState = (records) => {
-  if(records.some(r => policyFilterState(r.playable_policy) === "missing")) return "missing";
-  if(records.some(r => policyFilterState(r.playable_policy) === "unchecked")) return "unchecked";
-  return records.length ? "set" : "unchecked";
-};
-const aggregateOffersFlag = (records) => records.some(r => r.offers && r.offers.length > 0) ? "yes" : "no";
-const aggregateLastEdited = (records) => {
-  const dates = records.map(r => r.last_edited_at).filter(Boolean);
-  if(!dates.length) return "";
-  return dates.reduce((latest, d) => (Date.parse(d) > Date.parse(latest) ? d : latest));
+// Which of US/CA (the only two territories in real data) have at least one offer
+// anywhere in this title - a title-level property for the Offers filter dropdown, not a
+// per-row one, since "Both US & CA" only makes sense looking across the whole title.
+const titleOffersTerritory = (titleRows) => {
+  const withOffers = new Set(titleRows.filter(r => r.offers && r.offers.length > 0).map(r => r.territory));
+  const hasUS = withOffers.has("US");
+  const hasCA = withOffers.has("CA");
+  if(hasUS && hasCA) return "both";
+  if(hasUS) return "us";
+  if(hasCA) return "ca";
+  return "none";
 };
 
 const titleBlocks = titleOrder.map(titleObjectId => {
   const titleRows = rowsByTitle.get(titleObjectId);
   const first = titleRows[0];
   const removedBadge = !first.still_referenced ? `<span class="chip chip-removed">No longer on site</span>` : "";
-
-  // Pivoted layout: one row per variant, one Offers/Audio-Playout column-pair per
-  // territory (rather than the old one-row-per-territory-variant-combo layout) - lets
-  // a variant's CA and US assets be compared side by side instead of scrolling between
-  // separate rows.
-  const variantOrder = Array.from(new Set(titleRows.map(r => r.variant))).sort();
-  const territoryOrder = Array.from(new Set(titleRows.map(r => r.territory))).sort();
-  const cellMap = new Map(); // `${territory}::${variant}` -> row record
-  for(const r of titleRows) cellMap.set(`${r.territory}::${r.variant}`, r);
-
-  const rowsHtml = variantOrder.map(variant => {
-    const territoryRecords = territoryOrder.map(t => cellMap.get(`${t}::${variant}`)).filter(Boolean);
-    const searchParts = [variant];
-    for(const r of territoryRecords) searchParts.push(r.territory, r.playable_object_id);
-
-    const territoryCellsHtml = territoryOrder.map(t => {
-      const r = cellMap.get(`${t}::${variant}`);
-      if(!r) return `<td class="empty-territory-cell territory-start">&mdash;</td><td class="empty-territory-cell">&mdash;</td>`;
-      const checkIdBase = escId([r.title_object_id, r.playable_object_id, r.territory, r.variant, r.offering].join("_"));
-      return `<td class="territory-start">${renderOffers(r.offers, r.signed, checkIdBase)}</td><td>${renderAudioPlayoutCell(r)}</td>`;
-    }).join("");
-
+  const rowsHtml = titleRows.map(r => {
+    const clearPlayerCmd = r.dash_clear_url ? startPlayerCommand([r.dash_clear_url]) : null;
+    const widevinePlayerCmd = (r.dash_widevine_url && r.license_server_url)
+      ? startPlayerCommand([r.dash_widevine_url, r.license_server_url]) : null;
+    const trailerClearPlayerCmd = r.trailer_dash_clear_url ? startPlayerCommand([r.trailer_dash_clear_url]) : null;
+    const trailerWidevinePlayerCmd = (r.trailer_dash_widevine_url && r.trailer_license_server_url)
+      ? startPlayerCommand([r.trailer_dash_widevine_url, r.trailer_license_server_url]) : null;
+    const checkIdBase = escId([r.title_object_id, r.playable_object_id, r.territory, r.variant, r.offering].join("_"));
     return `
-    <tr class="data-row" data-search="${esc(searchParts.join(" ").toLowerCase())}" data-policy="${aggregatePolicyState(territoryRecords)}" data-offers="${aggregateOffersFlag(territoryRecords)}" data-last-edited="${esc(aggregateLastEdited(territoryRecords))}">
-      <td class="variant-cell">${esc(variant) || "—"}</td>
-      ${territoryCellsHtml}
+    <tr class="data-row" data-search="${esc([r.title_name, r.territory, r.variant, r.offering, r.playable_object_id].join(" ").toLowerCase())}" data-policy="${policyFilterState(r.playable_policy)}" data-last-edited="${esc(r.last_edited_at || "")}">
+      <td><div class="title-id-cell">
+        <div class="id-row"><span class="id-label">Territory</span><span>${esc(r.territory) || "—"}</span></div>
+        <div class="id-row"><span class="id-label">Variant</span><span>${esc(r.variant) || "—"}</span></div>
+        ${renderStreamsMatch(r)}
+        <div class="id-row"><span class="id-label">Offering</span><span>${esc(r.offering)}</span></div>
+        <div class="id-row"><span class="id-label">Playable</span><span class="mono truncate" title="${esc(r.playable_object_id)}">${esc(r.playable_object_id)}</span></div>
+        ${r.trailer_playable_object_id ? `<div class="id-row"><span class="id-label">Trailer</span><span class="mono truncate" title="${esc(r.trailer_playable_object_id)}">${esc(r.trailer_playable_object_id)}</span></div>` : ""}
+        <div class="id-row last-edited"><span class="id-label">Last edited</span><span>${r.last_edited_at ? fmtDate(r.last_edited_at) : "—"}</span></div>
+        ${renderPlayablePolicy(r.playable_policy)}
+      </div></td>
+      <td>${renderOffers(r.offers, r.signed, checkIdBase)}</td>
+      <td class="qc-cell">
+        <div class="qc-subsection" data-qc-type="audio">
+          <div class="signed-group-label">Audio</div>
+          ${qcColumn(r, "audio", r.audio)}
+        </div>
+        <div class="qc-subsection" data-qc-type="subtitle">
+          <div class="signed-group-label">Subtitle</div>
+          ${qcColumn(r, "subtitle", r.subtitles)}
+        </div>
+      </td>
+      <td>
+        <div class="signed-group">
+          <div class="signed-group-label">Backend Fabric Token</div>
+          <div class="signed-subgroup-label">Headset Playout</div>
+          <div class="player-cell">${playerCell("Clear", clearPlayerCmd)}${playerCell("Widevine", widevinePlayerCmd)}</div>
+          <div class="signed-subgroup-label">Global Playout</div>
+          <div class="player-cell">${playerCell("Clear", r.dash_clear_url, undefined, undefined, undefined, "URL")}${playerCell("Widevine", r.dash_widevine_url, undefined, undefined, undefined, "URL", renderDrmLight(r.drm_verified, r.playable_object_id))}</div>
+        </div>
+        ${r.trailer_playable_object_id ? `<div class="signed-group">
+          <div class="signed-group-label">Trailer (Backend Fabric Token)</div>
+          <div class="signed-subgroup-label">Headset Playout</div>
+          <div class="player-cell">${playerCell("Clear", trailerClearPlayerCmd)}${playerCell("Widevine", trailerWidevinePlayerCmd)}</div>
+          <div class="signed-subgroup-label">Global Playout</div>
+          <div class="player-cell">${playerCell("Clear", r.trailer_dash_clear_url, undefined, undefined, undefined, "URL")}${playerCell("Widevine", r.trailer_dash_widevine_url, undefined, undefined, undefined, "URL")}</div>
+        </div>` : ""}
+      </td>
     </tr>`;
   }).join("");
 
-  const territoryHeadRow = territoryOrder.map(t => `<th colspan="2" class="territory-head">${esc(t)}</th>`).join("");
-  const territorySubHeadRow = territoryOrder.map(() => `<th>Offers</th><th>Audio / Playout</th>`).join("");
-
   return `
-    <section class="title-group" data-title-search="${esc(first.title_name.toLowerCase())}" data-meta-site="${inCompareSite(first.title_name) ? "yes" : "no"}">
+    <section class="title-group" data-title-search="${esc(first.title_name.toLowerCase())}" data-meta-site="${inCompareSite(first.title_name) ? "yes" : "no"}" data-offers-territory="${titleOffersTerritory(titleRows)}">
       <h3 class="title-heading">
         <span>${esc(first.title_name)}</span>
         <span class="chip chip-type">${esc(first.title_type)}</span>
@@ -657,11 +645,10 @@ const titleBlocks = titleOrder.map(titleObjectId => {
         <table>
           <thead>
             <tr>
-              <th rowspan="2">Variant</th>
-              ${territoryHeadRow}
-            </tr>
-            <tr>
-              ${territorySubHeadRow}
+              <th>Title</th>
+              <th>Offers</th>
+              <th>Audio / Subtitle</th>
+              <th>Playout URLs</th>
             </tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
@@ -737,115 +724,23 @@ const renderSiteSummary = ({ siteObjectId, siteVersionHash, siteLastEditedAt, to
   </div>`;
 };
 
-// Every metadata addition since the previous run (new offerings, audio/subtitle tracks,
-// or SKUs), flattened to one table row per playable-level change - the same underlying
-// diff VUSiteTitlePlayoutURLs.js's diffTitleMetadata computes, from
-// current.object_changes.metadata_additions.
-const renderUpdatedPlayables = () => {
-  const changes = (current.object_changes && current.object_changes.metadata_additions) || [];
-  const rows = [];
-  for(const c of changes) {
-    for(const a of c.additions || []) {
-      rows.push({ title_name: c.title_name, title_object_id: c.title_object_id, playable_object_id: a.playable_object_id, text: a.text });
-    }
-  }
 
-  return `<section class="updated-objects">
-    <div class="updated-objects-head">
-      <span class="eyebrow">Updated</span>
-      ${rows.length > 0
-        ? `<span class="text-dim">${rows.length} change${rows.length === 1 ? "" : "s"} across ${changes.length} object${changes.length === 1 ? "" : "s"} since last run</span>`
-        : ""
-      }
+// Dropdown checkbox menu for one filter group (Policy/Offers/Meta Prod Site/Last Edited)
+// in the main filter-bar - multi-select, OR'd within the group (no boxes checked = no
+// filtering by this group at all). The page JS wires open/close and applyFilters().
+const filterDropdown = (groupKey, label, ariaLabel, options) => `<div class="filter-dropdown" data-filter-group="${esc(groupKey)}">
+    <button type="button" class="filter-dropdown-btn">
+      <span>${esc(label)}</span>
+      <span class="filter-dropdown-count" hidden>0</span>
+      <span class="filter-dropdown-caret">&#9662;</span>
+    </button>
+    <div class="filter-dropdown-panel" role="group" aria-label="${esc(ariaLabel)}">
+      ${options.map(o => `<label class="filter-checkbox-item">
+        <input type="checkbox" value="${esc(o.value)}" />
+        <span>${esc(o.label)}</span>
+      </label>`).join("")}
     </div>
-    ${rows.length === 0
-      ? '<div class="index-compare-ok">No playable object changes since last run.</div>'
-      : `<div class="table-scroll">
-          <table class="updated-table">
-            <thead><tr><th>Title</th><th>Playable</th><th>Change</th></tr></thead>
-            <tbody>${rows.map(r => `<tr>
-              <td>${esc(r.title_name)}<div class="mono text-dim truncate" title="${esc(r.title_object_id)}">${esc(r.title_object_id)}</div></td>
-              <td>${r.playable_object_id ? `<span class="mono truncate" title="${esc(r.playable_object_id)}">${esc(r.playable_object_id)}</span>` : "—"}</td>
-              <td>${esc(r.text)}</td>
-            </tr>`).join("")}</tbody>
-          </table>
-        </div>`
-    }
-  </section>`;
-};
-
-// Every title is expected to carry both a CA and a US distribution, each with an EST and
-// a TVOD offer. Flags any title (still referenced on the site) missing one of those four
-// combinations, so gaps are visible without hunting through each title's rows.
-const REQUIRED_TERRITORIES = ["CA", "US"];
-const REQUIRED_OFFER_NAMES = ["EST", "TVOD"];
-
-const renderMissingDistributions = () => {
-  const rows = [];
-  const typesSeen = new Map(); // type slug -> label, in first-seen order
-
-  for(const title of current.titles || []) {
-    if(title.still_referenced === false) continue;
-
-    const offersByTerritory = new Map();
-    for(const p of title.playables || []) {
-      if(p.offering === "sbs" || p.is_trailer) continue;
-      if(!offersByTerritory.has(p.territory)) offersByTerritory.set(p.territory, new Set());
-      const offerSet = offersByTerritory.get(p.territory);
-      for(const o of p.offers || []) offerSet.add(o.offer_name);
-    }
-
-    const missing = [];
-    for(const territory of REQUIRED_TERRITORIES) {
-      if(!offersByTerritory.has(territory)) {
-        missing.push({ type: `no-${territory.toLowerCase()}`, label: `No ${territory} distribution` });
-        continue;
-      }
-      const offerSet = offersByTerritory.get(territory);
-      for(const offerName of REQUIRED_OFFER_NAMES) {
-        if(!offerSet.has(offerName)) {
-          missing.push({ type: `${territory.toLowerCase()}-missing-${offerName.toLowerCase()}`, label: `${territory} missing ${offerName}` });
-        }
-      }
-    }
-
-    if(missing.length > 0) {
-      for(const m of missing) {
-        if(!typesSeen.has(m.type)) typesSeen.set(m.type, m.label);
-      }
-      rows.push({ title_name: title.title_name, title_object_id: title.title_object_id, missing });
-    }
-  }
-
-  const filterBar = rows.length > 0
-    ? `<div class="discrepancy-filters" role="group" aria-label="Filter by discrepancy type">
-        <button type="button" class="chip-filter active" data-discrepancy-filter="all">All</button>
-        ${Array.from(typesSeen.entries()).map(([type, label]) =>
-          `<button type="button" class="chip-filter" data-discrepancy-filter="${esc(type)}">${esc(label)}</button>`
-        ).join("")}
-      </div>`
-    : "";
-
-  return `<section class="updated-objects">
-    <div class="updated-objects-head">
-      <span class="eyebrow">Discrepancies</span>
-      <span class="text-dim">Every title should have CA + US distributions, each with EST and TVOD offers</span>
-    </div>
-    ${filterBar}
-    ${rows.length === 0
-      ? '<div class="index-compare-ok">All titles have CA + US distributions with EST and TVOD offers.</div>'
-      : `<div class="table-scroll discrepancies-scroll">
-          <table class="updated-table">
-            <thead><tr><th>Title</th><th>Missing</th></tr></thead>
-            <tbody>${rows.map(r => `<tr data-discrepancy-types="${esc(r.missing.map(m => m.type).join(" "))}">
-              <td>${esc(r.title_name)}<div class="mono text-dim truncate" title="${esc(r.title_object_id)}">${esc(r.title_object_id)}</div></td>
-              <td>${r.missing.map(m => `<span class="chip chip-critical">${esc(m.label)}</span>`).join(" ")}</td>
-            </tr>`).join("")}</tbody>
-          </table>
-        </div>`
-    }
-  </section>`;
-};
+  </div>`;
 
 const html = `<div class="dash-root">
   <header class="dash-header">
@@ -885,43 +780,27 @@ const html = `<div class="dash-root">
     ${renderSiteSummary(compareSiteSummary)}
   </section>
 
-  ${renderUpdatedPlayables()}
-  ${renderMissingDistributions()}
-
   <section class="filter-bar">
     <input id="search" type="search" placeholder="Search title, territory, variant, offering, playable ID&hellip;" aria-label="Search" />
-    <div class="filter-group">
-      <span class="filter-group-label">Policy</span>
-      <div class="chip-filters" data-filter-group="policy" role="group" aria-label="Filter by policy status">
-        <button class="chip-filter active" data-filter="all">All</button>
-        <button class="chip-filter" data-filter="set">Set</button>
-        <button class="chip-filter" data-filter="missing">Missing</button>
-        <button class="chip-filter" data-filter="unchecked">Unchecked</button>
-      </div>
-    </div>
-    <div class="filter-group">
-      <span class="filter-group-label">Offers</span>
-      <div class="chip-filters" data-filter-group="offers" role="group" aria-label="Filter by offers created">
-        <button class="chip-filter active" data-filter="all">All</button>
-        <button class="chip-filter" data-filter="yes">Has Offers</button>
-        <button class="chip-filter" data-filter="no">No Offers</button>
-      </div>
-    </div>
-    <div class="filter-group">
-      <span class="filter-group-label">Meta Prod Site</span>
-      <div class="chip-filters" data-filter-group="metaSite" role="group" aria-label="Filter by presence on VU Affiliate Master Site">
-        <button class="chip-filter active" data-filter="all">All</button>
-        <button class="chip-filter" data-filter="yes">In Meta Prod Site</button>
-        <button class="chip-filter" data-filter="no">Not Meta Prod Site</button>
-      </div>
-    </div>
-    <div class="filter-group">
-      <span class="filter-group-label">Last Edited</span>
-      <div class="chip-filters" data-filter-group="edited" role="group" aria-label="Filter by last edited">
-        <button class="chip-filter active" data-filter="all">Any Time</button>
-        <button class="chip-filter" data-filter="24h">Last 24hrs</button>
-      </div>
-    </div>
+    ${filterDropdown("policy", "Policy", "Filter by policy status", [
+      { value: "set", label: "Set" },
+      { value: "missing", label: "Missing" }
+    ])}
+    ${filterDropdown("offersTerritory", "Offers", "Filter by offers by territory", [
+      { value: "both", label: "Both US & CA" },
+      { value: "us", label: "Only US" },
+      { value: "ca", label: "Only CA" },
+      { value: "none", label: "None" }
+    ])}
+    ${filterDropdown("metaSite", "Meta Prod Site Object", "Filter by presence on VU Affiliate Master Site", [
+      { value: "yes", label: "Yes" },
+      { value: "no", label: "No" }
+    ])}
+    ${filterDropdown("edited", "Last Edited", "Filter by last edited", [
+      { value: "12h", label: "Last 12hrs" },
+      { value: "24h", label: "Last 24hrs" },
+      { value: "week", label: "This week" }
+    ])}
   </section>
 
   <main id="titles-container">
@@ -1033,11 +912,6 @@ const css = `
 
 .site-summary-stack { display: flex; flex-direction: row; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
 
-.updated-objects { margin: 16px 0; }
-.updated-objects-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-table.updated-table { min-width: 0; }
-table.updated-table .truncate { max-width: 280px; }
-
 .index-compare {
   flex: 1 1 420px;
   background: var(--surface);
@@ -1105,22 +979,49 @@ table.updated-table .truncate { max-width: 280px; }
   font-family: var(--font-sans);
 }
 #search:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.filter-group { display: flex; flex-direction: row; align-items: center; gap: 5px; flex: none; white-space: nowrap; }
-.filter-group-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-dim); font-weight: 700; }
-.chip-filters { display: flex; gap: 4px; flex-wrap: nowrap; }
-.chip-filter {
+
+.filter-dropdown { position: relative; flex: none; }
+.filter-dropdown-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--border); color: var(--text-dim);
+  border-radius: 999px; padding: 6px 10px; font-size: 11.5px; font-weight: 600;
+  cursor: pointer; font-family: var(--font-sans); white-space: nowrap;
+}
+.filter-dropdown-btn:hover { color: var(--text); border-color: var(--accent); }
+.filter-dropdown.open .filter-dropdown-btn,
+.filter-dropdown-btn.has-active { color: var(--text); border-color: var(--accent); }
+.filter-dropdown-caret { font-size: 9px; color: var(--text-dim); }
+.filter-dropdown-count {
+  background: var(--accent); color: var(--accent-ink); border-radius: 999px;
+  font-size: 10px; font-weight: 700; line-height: 1; padding: 2px 6px;
+}
+/* position:fixed + JS-computed coordinates (set on open, via getBoundingClientRect of
+   the button) rather than position:absolute relative to the trigger - .filter-bar has
+   overflow-x:auto, which (per the CSS overflow-x/-y interaction) clips descendants
+   vertically too, so an absolutely-positioned panel would get cut off. Fixed escapes
+   that the same way #chip-tooltip does, since .filter-bar sets no transform/filter/
+   perspective/will-change to create a new containing block for fixed descendants. */
+.filter-dropdown-panel {
+  display: none;
+  position: fixed;
+  z-index: 30;
+  min-width: 170px;
   background: var(--surface);
   border: 1px solid var(--border);
-  color: var(--text-dim);
-  border-radius: 999px;
-  padding: 5px 9px;
-  font-size: 11.5px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: var(--font-sans);
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  flex-direction: column;
+  gap: 2px;
 }
-.chip-filter:hover { color: var(--text); border-color: var(--accent); }
-.chip-filter.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.filter-dropdown.open .filter-dropdown-panel { display: flex; }
+.filter-checkbox-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12.5px; font-weight: 400; text-transform: none; letter-spacing: normal;
+  padding: 6px 8px; border-radius: 5px; cursor: pointer; white-space: nowrap; color: var(--text);
+}
+.filter-checkbox-item:hover { background: var(--surface-2); }
+.filter-checkbox-item input { accent-color: var(--accent); cursor: pointer; }
 
 .title-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
 .title-heading {
@@ -1174,10 +1075,7 @@ table.updated-table .truncate { max-width: 280px; }
 .chip-tooltip-label:not(:first-child) { margin-top: 8px; }
 
 .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
-.discrepancies-scroll { max-height: 217px; overflow-y: auto; }
-.discrepancies-scroll thead th { position: sticky; top: 0; background: var(--surface); }
-.discrepancy-filters { display: flex; gap: 4px; flex-wrap: wrap; margin: 4px 0 10px; }
-table { border-collapse: collapse; width: 100%; min-width: 700px; font-size: 13px; }
+table { border-collapse: collapse; width: 100%; min-width: 1180px; font-size: 13px; }
 thead th {
   text-align: left;
   font-size: 10.5px;
@@ -1189,7 +1087,6 @@ thead th {
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
-thead th.territory-head { text-align: center; font-size: 12px; letter-spacing: 0.08em; border-left: 1px solid var(--border); }
 tbody td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; background: var(--surface); }
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: var(--surface-2); }
@@ -1199,12 +1096,6 @@ tbody tr:hover td { background: var(--surface-2); }
 .id-row { display: flex; align-items: baseline; gap: 8px; font-size: 12.5px; }
 .id-label { flex: none; min-width: 54px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); }
 .id-row.last-edited { margin-top: 2px; padding-top: 4px; border-top: 1px dashed var(--border); color: var(--text-dim); font-size: 11.5px; }
-
-.variant-cell { font-weight: 700; white-space: nowrap; vertical-align: top; }
-.audio-playout-cell { display: flex; flex-direction: column; gap: 10px; min-width: 240px; max-width: 320px; }
-.audio-playout-cell > .title-id-cell { padding-bottom: 8px; border-bottom: 1px dashed var(--border); }
-.empty-territory-cell { color: var(--text-dim); text-align: center; }
-.territory-start { border-left: 1px solid var(--border); }
 
 .offers-cell { display: flex; flex-direction: row; flex-wrap: wrap; align-items: flex-start; font-size: 12px; }
 .offer-block { display: flex; flex-direction: column; gap: 6px; min-width: 200px; max-width: 260px; }
@@ -1373,31 +1264,44 @@ tbody tr:hover td { background: var(--surface-2); }
 const js = `
 (function () {
   var search = document.getElementById("search");
-  var filterGroupEls = Array.prototype.slice.call(document.querySelectorAll(".chip-filters"));
+  var filterDropdownEls = Array.prototype.slice.call(document.querySelectorAll(".filter-dropdown"));
   var groups = Array.prototype.slice.call(document.querySelectorAll(".title-group"));
-  var DAY_MS = 24 * 60 * 60 * 1000;
+  var HOUR_MS = 60 * 60 * 1000;
+  var DAY_MS = 24 * HOUR_MS;
+  var WEEK_MS = 7 * DAY_MS;
 
-  // one entry per filter group (policy/offers/metaSite/edited), each defaulting to "all"
+  // one entry per filter group (policy/offersTerritory/metaSite/edited) - an array of
+  // checked values, OR'd together; an empty array means "no filtering by this group".
   var activeFilters = {};
-  filterGroupEls.forEach(function (el) {
-    activeFilters[el.getAttribute("data-filter-group")] = "all";
+  filterDropdownEls.forEach(function (el) {
+    activeFilters[el.getAttribute("data-filter-group")] = [];
   });
 
-  function editedFilterOk(bucket, lastEditedAt) {
-    if (bucket === "all") return true;
+  function matchesAny(selected, value) {
+    return selected.length === 0 || selected.indexOf(value) !== -1;
+  }
+
+  function editedFilterOk(selectedBuckets, lastEditedAt) {
+    if (selectedBuckets.length === 0) return true;
     var editedMs = lastEditedAt ? Date.parse(lastEditedAt) : NaN;
     var ageMs = isNaN(editedMs) ? Infinity : (Date.now() - editedMs);
-    return ageMs <= DAY_MS;
+    return selectedBuckets.some(function (bucket) {
+      if (bucket === "12h") return ageMs <= 12 * HOUR_MS;
+      if (bucket === "24h") return ageMs <= DAY_MS;
+      if (bucket === "week") return ageMs <= WEEK_MS;
+      return false;
+    });
   }
 
   function applyFilters() {
     var q = (search.value || "").toLowerCase().trim();
     groups.forEach(function (group) {
-      // In Meta Prod Site is per-title (data-meta-site on the group), not per row.
-      var metaSiteFilter = activeFilters.metaSite || "all";
-      var metaSiteOk = metaSiteFilter === "all" || metaSiteFilter === group.getAttribute("data-meta-site");
+      // Meta Prod Site and Offers-by-territory are per-title (attributes on the group
+      // itself), not per row.
+      var metaSiteOk = matchesAny(activeFilters.metaSite || [], group.getAttribute("data-meta-site"));
+      var offersTerritoryOk = matchesAny(activeFilters.offersTerritory || [], group.getAttribute("data-offers-territory"));
 
-      if (!metaSiteOk) {
+      if (!metaSiteOk || !offersTerritoryOk) {
         group.style.display = "none";
         return;
       }
@@ -1406,16 +1310,11 @@ const js = `
       var titleMatches = group.getAttribute("data-title-search").indexOf(q) !== -1;
       var visibleCount = 0;
       rows.forEach(function (row) {
-        var policyFilter = activeFilters.policy || "all";
-        var policyOk = policyFilter === "all" || policyFilter === row.getAttribute("data-policy");
-
-        var offersFilter = activeFilters.offers || "all";
-        var offersOk = offersFilter === "all" || offersFilter === row.getAttribute("data-offers");
-
-        var editedOk = editedFilterOk(activeFilters.edited || "all", row.getAttribute("data-last-edited"));
+        var policyOk = matchesAny(activeFilters.policy || [], row.getAttribute("data-policy"));
+        var editedOk = editedFilterOk(activeFilters.edited || [], row.getAttribute("data-last-edited"));
 
         var textOk = q === "" || titleMatches || row.getAttribute("data-search").indexOf(q) !== -1;
-        var visible = policyOk && offersOk && editedOk && textOk;
+        var visible = policyOk && editedOk && textOk;
         row.style.display = visible ? "" : "none";
         if (visible) visibleCount++;
       });
@@ -1424,33 +1323,48 @@ const js = `
   }
 
   search.addEventListener("input", applyFilters);
-  filterGroupEls.forEach(function (groupEl) {
-    var groupKey = groupEl.getAttribute("data-filter-group");
-    var btns = Array.prototype.slice.call(groupEl.querySelectorAll(".chip-filter"));
-    btns.forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        btns.forEach(function (b) { b.classList.remove("active"); });
-        btn.classList.add("active");
-        activeFilters[groupKey] = btn.getAttribute("data-filter");
+
+  filterDropdownEls.forEach(function (dd) {
+    var groupKey = dd.getAttribute("data-filter-group");
+    var btn = dd.querySelector(".filter-dropdown-btn");
+    var panel = dd.querySelector(".filter-dropdown-panel");
+    var countEl = dd.querySelector(".filter-dropdown-count");
+    var checkboxes = Array.prototype.slice.call(dd.querySelectorAll("input[type=checkbox]"));
+
+    function positionPanel() {
+      var rect = btn.getBoundingClientRect();
+      panel.style.left = Math.min(rect.left, window.innerWidth - panel.offsetWidth - 8) + "px";
+      panel.style.top = (rect.bottom + 6) + "px";
+    }
+
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var isOpen = dd.classList.contains("open");
+      filterDropdownEls.forEach(function (other) { other.classList.remove("open"); });
+      if (!isOpen) {
+        dd.classList.add("open");
+        positionPanel();
+      }
+    });
+
+    checkboxes.forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        var selected = checkboxes.filter(function (c) { return c.checked; }).map(function (c) { return c.value; });
+        activeFilters[groupKey] = selected;
+        if (countEl) {
+          countEl.textContent = selected.length;
+          countEl.hidden = selected.length === 0;
+        }
+        btn.classList.toggle("has-active", selected.length > 0);
         applyFilters();
       });
     });
   });
 
-  // Discrepancies table's own filter row - independent of the main title filter-bar above,
-  // filters that table's rows directly rather than gating whole title groups.
-  var discrepancyFilterBtns = Array.prototype.slice.call(document.querySelectorAll(".discrepancy-filters .chip-filter"));
-  var discrepancyRows = Array.prototype.slice.call(document.querySelectorAll(".discrepancies-scroll tbody tr"));
-  discrepancyFilterBtns.forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      discrepancyFilterBtns.forEach(function (b) { b.classList.remove("active"); });
-      btn.classList.add("active");
-      var filter = btn.getAttribute("data-discrepancy-filter");
-      discrepancyRows.forEach(function (row) {
-        var types = (row.getAttribute("data-discrepancy-types") || "").split(" ");
-        row.style.display = (filter === "all" || types.indexOf(filter) !== -1) ? "" : "none";
-      });
-    });
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest(".filter-dropdown")) {
+      filterDropdownEls.forEach(function (dd) { dd.classList.remove("open"); });
+    }
   });
 
   var toast = document.getElementById("toast");
@@ -1561,8 +1475,9 @@ const js = `
     if (dot) {
       dot.classList.remove("dot-checking", "dot-good", "dot-critical");
       dot.classList.add(err ? "dot-critical" : "dot-good");
-      var fullText = err ? ([httpLabel, err.message].filter(Boolean).join(" — ") || "Request failed") : "Plays OK";
-      dot.setAttribute("title", fullText);
+      var fullText = err ? ([httpLabel, err.message].filter(Boolean).join(" — ") || "Request failed") : "User with Entitlement obtains Manifest";
+      var dotWrap = dot.closest(".chip-hover-wrap");
+      if (dotWrap) dotWrap.setAttribute("data-tooltip-json", JSON.stringify([{ label: "", items: [fullText] }]));
     }
     if (errBox) {
       if (err) {
