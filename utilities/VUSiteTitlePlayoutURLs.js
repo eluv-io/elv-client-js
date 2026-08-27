@@ -391,6 +391,16 @@ class VUSiteTitlePlayoutURLs extends Utility {
     }
 
     const compareTitleEntries = this.extractTitleLinks({ titleLinks: compareTitleLinks, logger });
+    // Same staleness issue as the main site (see body()) - the comparison site's own
+    // titles link can lag behind a title's actual latest version, so resolve it directly
+    // rather than trusting the link.
+    for(const entry of compareTitleEntries) {
+      try {
+        entry.versionHash = await client.LatestVersionHash({ objectId: entry.objectId });
+      } catch(err) {
+        logger.warn(`  Could not resolve latest version for ${entry.objectId}, falling back to the comparison site's own link (${entry.versionHash}): ${err.message}`);
+      }
+    }
     const previousTitles = this.loadCompareSiteSnapshot(stateDir, compareSiteObjectId).titles || {};
 
     const resolveName = async (objectId, versionHash) => {
@@ -557,9 +567,14 @@ class VUSiteTitlePlayoutURLs extends Utility {
 
   // Cross-references a policy's permission addresses (from checkObjectPolicy) against
   // the marketplace's NFT template addresses, so a permission can be traced back to the
-  // SKU/template it actually grants access for (or flagged as not matching any known
-  // template).
-  resolvePermissionAddresses({ client, permissions, templateAddressMap }) {
+  // SKU/template it actually grants access for. "matched" requires BOTH that the address
+  // resolves to a known marketplace template AND that the address is one of ownAddresses
+  // (the addresses actually linked to this specific object's own playable offer SKUs) -
+  // an address that happens to belong to some unrelated marketplace template is not a
+  // valid permission for this object, even though it's a real template somewhere in the
+  // marketplace. sku/nft_template_name are still reported either way, so a wrong-but-known
+  // match can be told apart from a genuinely unknown address.
+  resolvePermissionAddresses({ client, permissions, templateAddressMap, ownAddresses }) {
     return (permissions || []).map(address => {
       let normalized = null;
       try {
@@ -567,12 +582,14 @@ class VUSiteTitlePlayoutURLs extends Utility {
       } catch(_err) {
         // not a well-formed address - leave unmatched below
       }
-      const match = normalized ? templateAddressMap.get(normalized) : null;
+      const template = normalized ? templateAddressMap.get(normalized) : null;
+      const isOwnAddress = !!(normalized && ownAddresses && ownAddresses.has(normalized));
       return {
         address,
-        matched: !!match,
-        sku: match ? match.sku : null,
-        nft_template_name: match ? match.nft_template_name : null
+        matched: !!template && isOwnAddress,
+        known_elsewhere_in_marketplace: !!template && !isOwnAddress,
+        sku: template ? template.sku : null,
+        nft_template_name: template ? template.nft_template_name : null
       };
     });
   }
@@ -1345,7 +1362,22 @@ class VUSiteTitlePlayoutURLs extends Utility {
 
     const titleEntries = this.extractTitleLinks({ titleLinks, logger });
 
-    logger.log(`Found ${titleEntries.length} title(s) referenced by the site\n`);
+    logger.log(`Found ${titleEntries.length} title(s) referenced by the site`);
+    // The site's own titles link freezes whatever version was latest when the SITE object
+    // was last published - if a title gets a new version afterward (metadata edit, new
+    // offer, policy fix, ...) without the site being re-published, that link keeps
+    // pointing at the stale version forever, and --forceRediscover re-discovers the same
+    // stale version on every run since it never asks the title object itself what its
+    // actual latest version is. Resolve that here instead of trusting the site's link.
+    logger.log(`Resolving each title's own latest version (may differ from the site's link if the title changed since the site was last published)...`);
+    for(const entry of titleEntries) {
+      try {
+        entry.versionHash = await client.LatestVersionHash({ objectId: entry.objectId });
+      } catch(err) {
+        logger.warn(`  Could not resolve latest version for ${entry.objectId}, falling back to the site's own link (${entry.versionHash}): ${err.message}`);
+      }
+    }
+    logger.log("");
 
     const failures = [];
     const currentlyReferencedIds = new Set();
@@ -1543,13 +1575,52 @@ class VUSiteTitlePlayoutURLs extends Utility {
       if(item.sku) skuToTemplate.set(item.sku, item);
     }
 
+    // The address behind a SKU, resolved via the same skuToTemplate lookup used below to
+    // annotate packages - kept separate so ownAddresses can be computed before that
+    // annotation pass runs.
+    const skuAddress = (sku) => {
+      const template = sku && skuToTemplate.get(sku);
+      if(!template || !template.nft_address) return null;
+      try {
+        return client.utils.FormatAddress(template.nft_address).toLowerCase();
+      } catch(_err) {
+        return null;
+      }
+    };
+
     for(const title of results) {
+      // Every address actually linked to one of this title's own playable offer SKUs
+      // (across all its playables) - a title-level policy permission only counts as
+      // matched if it's one of these, not just any address found somewhere in the
+      // marketplace.
+      const titleOwnAddresses = new Set();
+      for(const p of title.playables) {
+        if(p.offering === "sbs") continue;
+        for(const offer of (p.offers || [])) {
+          for(const pkg of (offer.packages || [])) {
+            const addr = skuAddress(pkg.sku);
+            if(addr) titleOwnAddresses.add(addr);
+          }
+        }
+      }
+
       if(title.policy && title.policy.permissions) {
-        title.policy.permissions_resolved = this.resolvePermissionAddresses({ client, permissions: title.policy.permissions, templateAddressMap });
+        title.policy.permissions_resolved = this.resolvePermissionAddresses({ client, permissions: title.policy.permissions, templateAddressMap, ownAddresses: titleOwnAddresses });
       }
       for(const p of title.playables) {
         if(p.policy && p.policy.permissions) {
-          p.policy.permissions_resolved = this.resolvePermissionAddresses({ client, permissions: p.policy.permissions, templateAddressMap });
+          // A playable-level policy permission is scoped even tighter - only this specific
+          // playable's own offer SKUs count, not its sibling playables' (e.g. the US
+          // uhd-2d-sdr playable's policy shouldn't be "matched" by the US uhd-3d-hdr
+          // playable's SKU just because they're the same title).
+          const playableOwnAddresses = new Set();
+          for(const offer of (p.offers || [])) {
+            for(const pkg of (offer.packages || [])) {
+              const addr = skuAddress(pkg.sku);
+              if(addr) playableOwnAddresses.add(addr);
+            }
+          }
+          p.policy.permissions_resolved = this.resolvePermissionAddresses({ client, permissions: p.policy.permissions, templateAddressMap, ownAddresses: playableOwnAddresses });
         }
         for(const offer of (p.offers || [])) {
           for(const pkg of (offer.packages || [])) {

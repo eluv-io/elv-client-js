@@ -245,9 +245,18 @@ const renderPermissionsList = (policy) => {
     const r = resolved && resolved[i];
     let matchMark = "";
     if(r) {
-      const tipText = r.matched
-        ? `Policy Permissions match NFT address in Offer — ${r.nft_template_name || "Matched"}${r.sku ? " (" + r.sku + ")" : ""}`
-        : "Policy Permissions do not match any NFT address in Offer";
+      // matched requires the address to belong to a SKU actually linked to this object's
+      // own playable offers - known_elsewhere_in_marketplace means the address IS a real
+      // marketplace template, just not this object's own (a wrong/stale permission,
+      // distinct from an address that isn't a template anywhere).
+      let tipText;
+      if(r.matched) {
+        tipText = `Policy Permissions match NFT address in Offer — ${r.nft_template_name || "Matched"}${r.sku ? " (" + r.sku + ")" : ""}`;
+      } else if(r.known_elsewhere_in_marketplace) {
+        tipText = `Policy Permission does NOT match this object's own offer SKU — belongs to a different marketplace template instead: ${r.nft_template_name || "unknown"}${r.sku ? " (" + r.sku + ")" : ""}`;
+      } else {
+        tipText = "Policy Permission does not match any NFT template in the marketplace";
+      }
       matchMark = hoverTip(`<span class="permission-match ${r.matched ? "permission-match--yes" : "permission-match--no"}"></span>`, tipText);
     }
     return `<li class="policy-permission-item">
@@ -263,6 +272,30 @@ const renderPermissionsList = (policy) => {
 const policyFilterState = (policy) => {
   if(!policy || policy.has_policy == null) return "unchecked";
   return policy.has_policy ? "set" : "missing";
+};
+
+// This playable's own policy has at least one permission address that resolvePermissionAddresses
+// (VUSiteTitlePlayoutURLs.js) found doesn't actually belong to one of this playable's own
+// offer SKUs - see the Permissions filter.
+const hasPermissionsMismatch = (policy) => {
+  const resolved = policy && policy.permissions_resolved;
+  return !!(resolved && resolved.some(r => r.matched === false));
+};
+
+// checkDrmKeyIds (VUSiteTitlePlayoutURLs.js) found a DRM key_id referenced by this
+// playable's streams that's missing from elv/crypt/drm/kids or playout/drm_keys - see the
+// DRM filter. Only the definite "checked and failed" case (false), not "never checked"
+// (undefined) or "check errored" (null).
+const hasDrmInvalid = (drmVerified) => drmVerified === false;
+
+// Either test account's (EST/TVOD) own signed playout URL failed its live playback check
+// (the "User with Entitlement obtains Manifest" dot) - see the Offer Playout Error filter.
+// Distinct from the generic Backend Fabric Token check, which isn't tied to a specific offer.
+const hasOfferPlayoutError = (signed) => {
+  return ["EST", "TVOD"].some(label => {
+    const s = signed && signed[label];
+    return !!(s && (s.clear_error || s.widevine_error));
+  });
 };
 
 const renderPlayablePolicy = (policy) => {
@@ -591,7 +624,7 @@ const titleBlocks = titleOrder.map(titleObjectId => {
       ? startPlayerCommand([r.trailer_dash_widevine_url, r.trailer_license_server_url]) : null;
     const checkIdBase = escId([r.title_object_id, r.playable_object_id, r.territory, r.variant, r.offering].join("_"));
     return `
-    <tr class="data-row" data-search="${esc([r.title_name, r.territory, r.variant, r.offering, r.playable_object_id].join(" ").toLowerCase())}" data-policy="${policyFilterState(r.playable_policy)}" data-last-edited="${esc(r.last_edited_at || "")}">
+    <tr class="data-row" data-search="${esc([r.title_name, r.territory, r.variant, r.offering, r.playable_object_id].join(" ").toLowerCase())}" data-policy="${policyFilterState(r.playable_policy)}" data-last-edited="${esc(r.last_edited_at || "")}" data-permissions-mismatch="${hasPermissionsMismatch(r.playable_policy) ? "yes" : "no"}" data-drm-invalid="${hasDrmInvalid(r.drm_verified) ? "yes" : "no"}" data-offer-playout-error="${hasOfferPlayoutError(r.signed) ? "yes" : "no"}">
       <td><div class="title-id-cell">
         <div class="id-row"><span class="id-label">Territory</span><span>${esc(r.territory) || "—"}</span></div>
         <div class="id-row"><span class="id-label">Variant</span><span>${esc(r.variant) || "—"}</span></div>
@@ -800,6 +833,15 @@ const html = `<div class="dash-root">
       { value: "12h", label: "Last 12hrs" },
       { value: "24h", label: "Last 24hrs" },
       { value: "week", label: "This week" }
+    ])}
+    ${filterDropdown("permissionsMismatch", "Permissions", "Filter by policy permissions mismatch", [
+      { value: "yes", label: "Mismatch" }
+    ])}
+    ${filterDropdown("drmInvalid", "DRM", "Filter by DRM Mez Keys validity", [
+      { value: "yes", label: "Mez Keys Invalid" }
+    ])}
+    ${filterDropdown("offerPlayoutError", "Offer Playout", "Filter by offer playout check errors", [
+      { value: "yes", label: "Error" }
     ])}
   </section>
 
@@ -1051,27 +1093,30 @@ const css = `
   display: none;
   position: fixed;
   z-index: 1000;
-  min-width: 220px;
-  max-width: min(90vw, 820px);
+  min-width: 200px;
+  max-width: min(90vw, 340px);
   max-height: 80vh;
   overflow: auto;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-  font-size: 11px;
+  font-size: 13.5px;
   line-height: 1.5;
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
   color: var(--text);
-  pointer-events: none;
+  user-select: text;
 }
 #chip-tooltip.show { display: block; }
-.chip-tooltip-line { white-space: nowrap; }
-.chip-tooltip-line + .chip-tooltip-line { margin-top: 1px; }
-.chip-tooltip-label { display: block; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); font-weight: 700; white-space: nowrap; }
+/* Narrower box on purpose (easier to read) - lines wrap instead of staying single-line/
+   scrollable, and break mid-word if needed so one long stream key/address can't force
+   horizontal scroll on its own. */
+.chip-tooltip-line { white-space: normal; overflow-wrap: break-word; word-break: break-word; }
+.chip-tooltip-line + .chip-tooltip-line { margin-top: 4px; }
+.chip-tooltip-label { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); font-weight: 700; white-space: nowrap; }
 .chip-tooltip-label:not(:first-child) { margin-top: 8px; }
 
 .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
@@ -1312,9 +1357,12 @@ const js = `
       rows.forEach(function (row) {
         var policyOk = matchesAny(activeFilters.policy || [], row.getAttribute("data-policy"));
         var editedOk = editedFilterOk(activeFilters.edited || [], row.getAttribute("data-last-edited"));
+        var permissionsOk = matchesAny(activeFilters.permissionsMismatch || [], row.getAttribute("data-permissions-mismatch"));
+        var drmOk = matchesAny(activeFilters.drmInvalid || [], row.getAttribute("data-drm-invalid"));
+        var offerPlayoutOk = matchesAny(activeFilters.offerPlayoutError || [], row.getAttribute("data-offer-playout-error"));
 
         var textOk = q === "" || titleMatches || row.getAttribute("data-search").indexOf(q) !== -1;
-        var visible = policyOk && editedOk && textOk;
+        var visible = policyOk && editedOk && permissionsOk && drmOk && offerPlayoutOk && textOk;
         row.style.display = visible ? "" : "none";
         if (visible) visibleCount++;
       });
@@ -1584,7 +1632,10 @@ const js = `
 
   // Streams/Sources chip hover panel - a single shared node positioned via
   // getBoundingClientRect rather than CSS-relative-to-trigger, so .table-scroll's
-  // overflow:auto can't clip it near the bottom of the scroll area.
+  // overflow:auto can't clip it near the bottom of the scroll area. Accepts pointer
+  // events (unlike a native title="" tooltip) so its text can be selected/copied by
+  // hand, plus a Copy button for one click - both need the panel to stay open while the
+  // mouse is over the panel itself, not just the trigger chip.
   var chipTooltip = document.getElementById("chip-tooltip");
   function escChipTooltip(s) {
     return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -1593,7 +1644,9 @@ const js = `
     var html = "";
     for (var i = 0; i < sections.length; i++) {
       var section = sections[i];
-      if (section.label) html += "<div class='chip-tooltip-label'>" + escChipTooltip(section.label) + "</div>";
+      if (section.label) {
+        html += "<div class='chip-tooltip-label'>" + escChipTooltip(section.label) + "</div>";
+      }
       for (var j = 0; j < section.items.length; j++) {
         html += "<div class='chip-tooltip-line'>" + escChipTooltip(section.items[j]) + "</div>";
       }
@@ -1629,7 +1682,12 @@ const js = `
   });
   document.addEventListener("mouseout", function (e) {
     var trigger = e.target.closest && e.target.closest(".chip-hover-wrap[data-tooltip-json]");
-    if (trigger && !trigger.contains(e.relatedTarget)) hideChipTooltip();
+    // Moving from the trigger chip into the tooltip panel itself (to select/copy text)
+    // shouldn't hide it - only actually leaving both should.
+    if (trigger && !trigger.contains(e.relatedTarget) && !chipTooltip.contains(e.relatedTarget)) hideChipTooltip();
+  });
+  chipTooltip.addEventListener("mouseout", function (e) {
+    if (!chipTooltip.contains(e.relatedTarget)) hideChipTooltip();
   });
   document.addEventListener("focusin", function (e) {
     var trigger = e.target.closest && e.target.closest(".chip-hover-wrap[data-tooltip-json]");
@@ -1637,7 +1695,7 @@ const js = `
   });
   document.addEventListener("focusout", function (e) {
     var trigger = e.target.closest && e.target.closest(".chip-hover-wrap[data-tooltip-json]");
-    if (trigger) hideChipTooltip();
+    if (trigger && !chipTooltip.contains(e.relatedTarget)) hideChipTooltip();
   });
   window.addEventListener("scroll", hideChipTooltip, true);
 })();
