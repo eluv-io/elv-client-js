@@ -167,6 +167,16 @@ class VUSiteTitlePlayoutURLs extends Utility {
           descTemplate: "Another VU site object ID{X} to compare this site's titles list against (which titles are present/missing on each side)",
           type: "string"
         }),
+        NewOpt("vubiquityIndexStagingObjectId", {
+          default: "iq__43cX21Fivb5zCRorH7uurv9K8kyc",
+          descTemplate: "Vubiquity Search Master Index object ID{X} (META PROD - STAGING) to check /indexer/last_run on",
+          type: "string"
+        }),
+        NewOpt("vubiquityIndexProdObjectId", {
+          default: "iq__4FB4SYgqejRDJdhvcW9jDFP4SHoi",
+          descTemplate: "Vubiquity Search Master Index object ID{X} (META PROD) to check /indexer/last_run on",
+          type: "string"
+        }),
         NewOpt("marketplaceObjectId", {
           default: process.env.MARKETPLACE || "iq__3Jh7HXVNQujAWfBbJBCu939rLxXc",
           descTemplate: "Marketplace object ID{X} to read items/NFT templates from - kept in sync with VUSiteTitleDashboard.js's own marketplace default",
@@ -183,8 +193,9 @@ class VUSiteTitlePlayoutURLs extends Utility {
           type: "string"
         }),
         NewOpt("forceRediscover", {
-          descTemplate: "Ignore the cached manifest and re-run structural discovery for every title{X}, even unchanged ones",
-          type: "boolean"
+          descTemplate: "Ignore the cached manifest and re-run structural discovery for every title{X}, even unchanged ones (default: true - pass --no-forceRediscover to only discover new/changed titles)",
+          type: "boolean",
+          default: true
         }),
         NewOpt("limit", {
           descTemplate: "Only discover the first N new/changed title(s){X} (for testing; unrelated cached titles still render)",
@@ -351,6 +362,122 @@ class VUSiteTitlePlayoutURLs extends Utility {
     };
   }
 
+  // Resolves a display name for each indexed object/version ID (as returned by
+  // extractSortedIds), preferring a name already known from this run's own title
+  // discovery (nameCache, keyed by objectId) over a fresh metadata read - the indexed
+  // IDs are almost always titles already discovered elsewhere in this same run, so the
+  // cache avoids re-fetching most of them. Same shape/tolerance as compareAgainstIndex's
+  // resolveName, just reusable across index objects instead of inlined to one.
+  async resolveIndexedTitleNames({ client, entries, nameCache, logger }) {
+    const libraryIdCache = new Map();
+    const results = [];
+    for(const entry of entries) {
+      let name = nameCache.get(entry.objectId);
+      if(!name) {
+        try {
+          let libraryId;
+          if(!entry.versionHash) {
+            if(!libraryIdCache.has(entry.objectId)) {
+              libraryIdCache.set(entry.objectId, await client.ContentObjectLibraryId({ objectId: entry.objectId }));
+            }
+            libraryId = libraryIdCache.get(entry.objectId);
+          }
+          const meta = await client.ContentObjectMetadata({
+            libraryId, objectId: entry.objectId, versionHash: entry.versionHash,
+            metadataSubtree: "/public/asset_metadata",
+            select: ["display_title", "title", "title_type"]
+          });
+          name = meta.display_title || meta.title || entry.objectId;
+        } catch(err) {
+          logger.warn(`  Could not resolve name for indexed object ${entry.objectId}: ${err.message}`);
+          name = entry.objectId;
+        }
+      }
+      results.push({ object_id: entry.objectId, title_name: name });
+    }
+    return results;
+  }
+
+  // Fetches a search-index object's /indexer/last_run (populated by the indexer itself
+  // each time it completes a run) so the dashboard can show, per index, what content
+  // hash it last indexed - purely a read, no indexing triggered. /indexer/last_run is a
+  // plain hash string, not an object (confirmed via ObjectGetMetadata.js against the
+  // real index objects). Also fetches /indexer/permissions/sorted_ids - the list of
+  // object IDs this index actually covers - and resolves each to its title name.
+  async checkIndexLastRun({ client, indexObjectId, label, nameCache, titlesSubtree, logger }) {
+    logger.log(`\nChecking /indexer/last_run on index object ${indexObjectId} (${label})...`);
+    const indexVersionHash = await client.LatestVersionHash({ objectId: indexObjectId });
+    const indexerMeta = await client.ContentObjectMetadata({
+      objectId: indexObjectId,
+      versionHash: indexVersionHash,
+      metadataSubtree: "/indexer",
+      select: ["last_run"]
+    });
+    const hash = (indexerMeta && typeof indexerMeta.last_run === "string") ? indexerMeta.last_run : null;
+
+    logger.log(`Retrieving /indexer/permissions/sorted_ids from ${indexObjectId}...`);
+    const sortedIdsNode = await client.ContentObjectMetadata({
+      objectId: indexObjectId,
+      versionHash: indexVersionHash,
+      metadataSubtree: "/indexer/permissions/sorted_ids"
+    });
+    const indexedEntries = this.extractSortedIds({ node: sortedIdsNode, logger });
+    const indexedTitles = await this.resolveIndexedTitleNames({
+      client, entries: indexedEntries, nameCache: nameCache || new Map(), logger
+    });
+    logger.log(`Resolved ${indexedTitles.length} indexed title(s) for ${indexObjectId}`);
+
+    // /indexer/last_run is the version hash of the site (the indexer's root content,
+    // confirmed via ObjectGetMetadata.js: config.fabric.root.content is this same site
+    // object) at the moment it was last crawled - not the site's current latest version,
+    // which may have moved on since (new/removed titles) without the index re-running.
+    // Diff sorted_ids against the site's title list AS OF THAT EXACT VERSION, so this
+    // catches genuine index staleness rather than being confused by newer site changes
+    // the index was never expected to cover yet.
+    let indexVsSiteDiff = null;
+    if(hash) {
+      try {
+        const siteAtRunTitleLinks = await client.ContentObjectMetadata({
+          versionHash: hash,
+          metadataSubtree: titlesSubtree
+        });
+        const siteAtRunEntries = this.extractTitleLinks({ titleLinks: siteAtRunTitleLinks, logger });
+        const siteObjectIds = new Set(siteAtRunEntries.map(e => e.objectId));
+        const indexedObjectIds = new Set(indexedEntries.map(e => e.objectId));
+
+        const missingFromIndex = await this.resolveIndexedTitleNames({
+          client, entries: siteAtRunEntries.filter(e => !indexedObjectIds.has(e.objectId)),
+          nameCache: nameCache || new Map(), logger
+        });
+        const extraInIndex = await this.resolveIndexedTitleNames({
+          client, entries: indexedEntries.filter(e => !siteObjectIds.has(e.objectId)),
+          nameCache: nameCache || new Map(), logger
+        });
+
+        indexVsSiteDiff = {
+          site_at_run_total: siteAtRunEntries.length,
+          indexed_total: indexedEntries.length,
+          missing_from_index: missingFromIndex,
+          extra_in_index: extraInIndex
+        };
+        logger.log(`Index vs site @ last_run: ${missingFromIndex.length} missing from index, ${extraInIndex.length} extra in index`);
+      } catch(err) {
+        logger.warn(`  Could not diff indexed IDs against site version ${hash}: ${err.message}`);
+        indexVsSiteDiff = { error: err.message };
+      }
+    }
+
+    return {
+      index_object_id: indexObjectId,
+      index_label: label,
+      index_version_hash: indexVersionHash,
+      hash,
+      indexed_titles: indexedTitles,
+      index_vs_site_diff: indexVsSiteDiff,
+      checked_at: new Date().toISOString()
+    };
+  }
+
   loadCompareSiteSnapshot(stateDir, compareSiteObjectId) {
     const snapshotPath = path.join(stateDir, "compare_site.ignore.json");
     if(!fs.existsSync(snapshotPath)) return { site_object_id: compareSiteObjectId, titles: {} };
@@ -373,7 +500,7 @@ class VUSiteTitlePlayoutURLs extends Utility {
   // list and their master hashes (no playable/offering discovery, unlike the full
   // per-title pipeline this site gets), diffed against a snapshot persisted across runs
   // to report which titles are new and which changed since the previous run.
-  async trackCompareSite({ client, compareSiteObjectId, titlesSubtree, stateDir, logger }) {
+  async trackCompareSite({ client, compareSiteObjectId, titlesSubtree, stateDir, mainTitlesByName, logger }) {
     logger.log(`\nTracking comparison site ${compareSiteObjectId}, subtree ${titlesSubtree}...`);
 
     const compareSiteVersionHash = await client.LatestVersionHash({ objectId: compareSiteObjectId });
@@ -432,6 +559,33 @@ class VUSiteTitlePlayoutURLs extends Utility {
       } else {
         currentTitles[t.objectId] = prev;
       }
+    }
+
+    // For every current title that also exists on the VU Master site (matched by name),
+    // fetch its policy/offers/variants structure and diff it against the VU Master
+    // version - the "policy, offers and variants metadata" comparison shown next to the
+    // Affiliate Master Meta hash on the dashboard. Always recomputed (not cached against
+    // compare_site.ignore.json's added/updated tracking above), since the diff can change
+    // when the MAIN title changes even if this affiliate title's own hash didn't.
+    if(mainTitlesByName) {
+      let diffedCount = 0;
+      for(const t of compareTitleEntries) {
+        const entry = currentTitles[t.objectId];
+        if(!entry) continue;
+        const mainTitle = mainTitlesByName.get((entry.title_name || "").trim().toLowerCase());
+        if(!mainTitle) continue;
+        try {
+          const affiliateStructure = await this.discoverAffiliateTitleStructure({
+            client, objectId: t.objectId, versionHash: t.versionHash, logger
+          });
+          entry.diff = this.diffTitleStructures({ mainTitle, affiliateStructure });
+        } catch(err) {
+          logger.warn(`  Could not fetch affiliate structure for "${entry.title_name}" (${t.objectId}): ${err.message}`);
+          entry.diff = { error: err.message };
+        }
+        diffedCount++;
+      }
+      logger.log(`Diffed policy/offers/variants for ${diffedCount} title(s) present on both sites`);
     }
 
     this.saveCompareSiteSnapshot(stateDir, { site_object_id: compareSiteObjectId, titles: currentTitles, last_run_at: new Date().toISOString() });
@@ -1172,6 +1326,100 @@ class VUSiteTitlePlayoutURLs extends Utility {
     }
   }
 
+  // Lightweight structural fetch for a comparison-site title, used only to diff against
+  // the VU Master version of the same title (policy/offers/variants) - NOT full discovery.
+  // No PlayoutOptions/format resolution, no signed CSAT tokens, no per-playable policy or
+  // last-edited/DRM checks - just the raw distribution/variant/offer structure (one
+  // metadata read, reusing the same pure findPlayables/offersByDistributionVariant
+  // parsing the main site's own discovery uses) plus the title-level policy.
+  async discoverAffiliateTitleStructure({ client, objectId, versionHash, logger }) {
+    const titleMeta = await client.ContentObjectMetadata({
+      objectId, versionHash,
+      metadataSubtree: "/public/asset_metadata"
+    });
+
+    const offersLookup = this.offersByDistributionVariant(titleMeta);
+    const rawPlayables = this.findPlayables(titleMeta);
+
+    const uniqueMap = new Map();
+    for(const p of rawPlayables) {
+      const context = this.variantContext(p.path);
+      if(context.isTrailer) continue; // structural diff only cares about main assets
+      for(const offering of p.offeringKeys) {
+        if(offering === "sbs") continue;
+        const key = `${p.playableObjectId}::${offering}`;
+        if(!uniqueMap.has(key)) {
+          uniqueMap.set(key, {
+            territory: context.territory,
+            variant: context.variant,
+            offering,
+            offers: offersLookup.get(`${context.territory}::${context.variant}`) || []
+          });
+        }
+      }
+    }
+
+    const policy = await this.checkObjectPolicy({ client, objectId });
+
+    return { playables: Array.from(uniqueMap.values()), policy };
+  }
+
+  // Compares a VU Master title's own policy/playables against the equivalent structure
+  // fetched from the Affiliate Master Meta site (discoverAffiliateTitleStructure) - the
+  // "policy, offers and variants metadata" diff shown next to the Affiliate Master Meta
+  // hash on the dashboard.
+  diffTitleStructures({ mainTitle, affiliateStructure }) {
+    const mainPolicy = mainTitle.policy || {};
+    const affPolicy = affiliateStructure.policy || {};
+    const policyDiff = {
+      main_has_policy: mainPolicy.has_policy === true,
+      affiliate_has_policy: affPolicy.has_policy === true,
+      main_policy_name: mainPolicy.name || null,
+      affiliate_policy_name: affPolicy.name || null
+    };
+    policyDiff.matches = policyDiff.main_has_policy === policyDiff.affiliate_has_policy
+      && policyDiff.main_policy_name === policyDiff.affiliate_policy_name;
+
+    const buildCoverage = (playables) => {
+      const map = new Map();
+      for(const p of playables || []) {
+        if(p.is_trailer || p.offering === "sbs") continue;
+        const key = `${p.territory}::${p.variant}`;
+        if(!map.has(key)) map.set(key, new Set());
+        for(const o of p.offers || []) map.get(key).add(o.offer_name);
+      }
+      return map;
+    };
+    const mainCoverage = buildCoverage(mainTitle.playables);
+    const affCoverage = buildCoverage(affiliateStructure.playables);
+
+    const allKeys = new Set([...mainCoverage.keys(), ...affCoverage.keys()]);
+    const variantDiffs = [];
+    for(const key of allKeys) {
+      if(!mainCoverage.has(key)) {
+        variantDiffs.push({ variant: key, status: "affiliate_only", affiliate_offers: Array.from(affCoverage.get(key)) });
+        continue;
+      }
+      if(!affCoverage.has(key)) {
+        variantDiffs.push({ variant: key, status: "main_only", main_offers: Array.from(mainCoverage.get(key)) });
+        continue;
+      }
+      const mainOffers = mainCoverage.get(key);
+      const affOffers = affCoverage.get(key);
+      const missingOnAffiliate = Array.from(mainOffers).filter(o => !affOffers.has(o));
+      const extraOnAffiliate = Array.from(affOffers).filter(o => !mainOffers.has(o));
+      if(missingOnAffiliate.length || extraOnAffiliate.length) {
+        variantDiffs.push({ variant: key, status: "offer_mismatch", missing_on_affiliate: missingOnAffiliate, extra_on_affiliate: extraOnAffiliate });
+      }
+    }
+
+    return {
+      policy: policyDiff,
+      variant_diffs: variantDiffs,
+      has_differences: !policyDiff.matches || variantDiffs.length > 0
+    };
+  }
+
   // Timestamp of the object's latest commit, for a "Last edited" hint on the dashboard.
   // The "commit" metadata subtree (auto-populated on every commit) has {author, message,
   // timestamp} - confirmed against this SDK's own test suite (test/ElvClient.test.js,
@@ -1336,6 +1584,7 @@ class VUSiteTitlePlayoutURLs extends Utility {
     const {
       objectId: siteObjectId, libraryId, titlesSubtree, tokenDurationDays,
       indexObjectId, indexTitlesSubtree, compareSiteObjectId, marketplaceObjectId,
+      vubiquityIndexStagingObjectId, vubiquityIndexProdObjectId,
       stateDir, forceRediscover, limit, failLog
     } = this.args;
     const logger = this.logger;
@@ -1542,15 +1791,46 @@ class VUSiteTitlePlayoutURLs extends Utility {
       indexComparison = { index_object_id: indexObjectId, index_titles_subtree: indexTitlesSubtree, error: err.message, compared_at: new Date().toISOString() };
     }
 
+    // name -> this run's VU Master title (policy + playables), so trackCompareSite can
+    // diff each matched Affiliate Master Meta title against it.
+    const mainTitlesByName = new Map(
+      results.map(t => [(t.title_name || "").trim().toLowerCase(), t])
+    );
+
     let compareSiteSummary;
     try {
       compareSiteSummary = await this.trackCompareSite({
-        client, compareSiteObjectId, titlesSubtree, stateDir, logger
+        client, compareSiteObjectId, titlesSubtree, stateDir, mainTitlesByName, logger
       });
     } catch(err) {
       logger.warn(`Could not track comparison site ${compareSiteObjectId}: ${err.message}`);
       compareSiteSummary = { compare_site_object_id: compareSiteObjectId, error: err.message, tracked_at: new Date().toISOString() };
     }
+
+    // Two Vubiquity search-index objects that index this comparison site's content -
+    // checked independently of the title-tracking above (a failure here or there
+    // shouldn't hide the other), so the dashboard can show each index's last run status
+    // right alongside the Affiliate Master Meta site card. Seed the name cache with every
+    // title already discovered this run (both VU Master and Affiliate Master Meta) so
+    // resolving each index's indexed IDs to a title name rarely needs a fresh fetch.
+    const indexedTitleNameCache = new Map();
+    for(const t of results) indexedTitleNameCache.set(t.title_object_id, t.title_name);
+    for(const t of (compareSiteSummary.titles || [])) indexedTitleNameCache.set(t.title_object_id, t.title_name);
+
+    const vubiquityIndexTargets = [
+      { objectId: vubiquityIndexStagingObjectId, label: "Vubiquity Search Master Index - META (PROD - STAGING)" },
+      { objectId: vubiquityIndexProdObjectId, label: "Vubiquity Search Master Index - META (PROD)" }
+    ];
+    compareSiteSummary.vubiquity_indexes = await Promise.all(
+      vubiquityIndexTargets.map(async ({ objectId, label }) => {
+        try {
+          return await this.checkIndexLastRun({ client, indexObjectId: objectId, label, nameCache: indexedTitleNameCache, titlesSubtree, logger });
+        } catch(err) {
+          logger.warn(`Could not check /indexer/last_run on index object ${objectId} (${label}): ${err.message}`);
+          return { index_object_id: objectId, index_label: label, error: err.message, checked_at: new Date().toISOString() };
+        }
+      })
+    );
 
     // Marketplace items/NFT templates: cross-referenced against every policy's
     // permission addresses (which permission actually maps to which SKU/template) and

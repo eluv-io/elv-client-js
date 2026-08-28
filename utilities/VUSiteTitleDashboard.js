@@ -195,6 +195,7 @@ const compareSiteSummary = {
   newObjects: (compareSite && compareSite.added) || [],
   updatedObjects: (compareSite && compareSite.updated) || [],
   titles: (compareSite && compareSite.titles) || [],
+  vubiquityIndexes: (compareSite && compareSite.vubiquity_indexes) || [],
   error: compareSite ? compareSite.error : "No comparison site recorded yet — run VUSiteTitlePlayoutURLs.js to populate it."
 };
 
@@ -296,6 +297,17 @@ const hasOfferPlayoutError = (signed) => {
     const s = signed && signed[label];
     return !!(s && (s.clear_error || s.widevine_error));
   });
+};
+
+// Overall pass/fail for a playable row's collapsed-state indicator - reuses the same four
+// signals the Policy/Permissions/DRM/Offer Playout filters already check, so "green" here
+// means the row wouldn't be caught by any of those filters. Policy "unchecked" counts as
+// not-good (same as "missing") since either way there's no confirmed valid policy.
+const rowHasIssue = (r) => {
+  return policyFilterState(r.playable_policy) !== "set"
+    || hasPermissionsMismatch(r.playable_policy)
+    || hasDrmInvalid(r.drm_verified)
+    || hasOfferPlayoutError(r.signed);
 };
 
 const renderPlayablePolicy = (policy) => {
@@ -598,23 +610,96 @@ const compareSiteTitleNames = new Set(
 );
 const inCompareSite = (titleName) => compareSiteTitleNames.has((titleName || "").trim().toLowerCase());
 
-// Which of US/CA (the only two territories in real data) have at least one offer
-// anywhere in this title - a title-level property for the Offers filter dropdown, not a
-// per-row one, since "Both US & CA" only makes sense looking across the whole title.
-const titleOffersTerritory = (titleRows) => {
-  const withOffers = new Set(titleRows.filter(r => r.offers && r.offers.length > 0).map(r => r.territory));
-  const hasUS = withOffers.has("US");
-  const hasCA = withOffers.has("CA");
-  if(hasUS && hasCA) return "both";
-  if(hasUS) return "us";
-  if(hasCA) return "ca";
+// name -> that title's full comparison-site entry (master version hash, plus the
+// policy/offers/variants diff against the VU Master version, computed by
+// VUSiteTitlePlayoutURLs.js's diffTitleStructures) - for showing the Affiliate Master
+// Meta hash and its diff alongside the VU Master hash on titles found on both sites.
+const compareSiteEntryByName = new Map(
+  ((current.compare_site_summary && current.compare_site_summary.titles) || [])
+    .map(t => [(t.title_name || "").trim().toLowerCase(), t])
+);
+const compareSiteEntryFor = (titleName) => compareSiteEntryByName.get((titleName || "").trim().toLowerCase()) || null;
+
+// Renders the expandable policy/offers/variants diff panel inline next to the Affiliate
+// Master Meta hash. diff is undefined on data from before this check existed (renders
+// nothing - just the hash, no toggle), or {error} if the affiliate fetch itself failed.
+// Collapsed by default - click to reveal.
+const renderTitleDiff = (diff) => {
+  if(!diff) return "";
+  if(diff.error) {
+    return `<details class="title-diff-details"><summary><span class="chip chip-warn">Compare failed</span></summary><div class="title-diff-body text-dim">${esc(diff.error)}</div></details>`;
+  }
+
+  const policy = diff.policy || {};
+  const policyLine = policy.matches
+    ? `<div class="title-diff-row"><span class="chip chip-good">Policy matches</span> ${esc(policy.main_policy_name || "No policy set")}</div>`
+    : `<div class="title-diff-row"><span class="chip chip-critical">Policy differs</span></div>
+       <div class="title-diff-subrow">VU Master: ${policy.main_has_policy ? esc(policy.main_policy_name || "Policy set") : "No policy"}</div>
+       <div class="title-diff-subrow">Affiliate: ${policy.affiliate_has_policy ? esc(policy.affiliate_policy_name || "Policy set") : "No policy"}</div>`;
+
+  // v.variant is "TERRITORY::VARIANT" - split it out into separately labeled pieces
+  // (rather than one opaque raw string) so which territory and which variant differ is
+  // clear at a glance.
+  const variantLines = (diff.variant_diffs || []).map(v => {
+    const [territory, variant] = String(v.variant || "").split("::");
+    const locLabel = `<span class="title-diff-loc"><span class="mono">${esc(territory || v.variant || "")}</span>${variant ? ` / <span class="mono">${esc(variant)}</span>` : ""}</span>`;
+    if(v.status === "main_only") {
+      return `<div class="title-diff-row"><span class="chip chip-critical">Only on VU Master</span> ${locLabel} <span class="text-dim">offers: ${esc((v.main_offers || []).join(", ") || "none")}</span></div>`;
+    }
+    if(v.status === "affiliate_only") {
+      return `<div class="title-diff-row"><span class="chip chip-critical">Only on Affiliate</span> ${locLabel} <span class="text-dim">offers: ${esc((v.affiliate_offers || []).join(", ") || "none")}</span></div>`;
+    }
+    const parts = [];
+    if(v.missing_on_affiliate && v.missing_on_affiliate.length) parts.push(`missing on Affiliate: ${v.missing_on_affiliate.join(", ")}`);
+    if(v.extra_on_affiliate && v.extra_on_affiliate.length) parts.push(`extra on Affiliate: ${v.extra_on_affiliate.join(", ")}`);
+    return `<div class="title-diff-row"><span class="chip chip-warn">Offer mismatch</span> ${locLabel} <span class="text-dim">${esc(parts.join(" — "))}</span></div>`;
+  }).join("");
+
+  const summaryChip = diff.has_differences
+    ? `<span class="chip chip-warn">Differences found</span>`
+    : `<span class="chip chip-good">Matches VU Master</span>`;
+
+  return `<details class="title-diff-details">
+    <summary>Compare to VU Master ${summaryChip}</summary>
+    <div class="title-diff-body">
+      ${policyLine}
+      ${variantLines || (diff.has_differences ? "" : `<div class="title-diff-row text-dim">All territory/variant offers match.</div>`)}
+    </div>
+  </details>`;
+};
+
+// Which of EST/TVOD (the only two offer types in real data) exist anywhere in this
+// title - a title-level property for the Offers filter dropdown, not a per-row one, so
+// "Both EST and TVOD" reflects the whole title even if any single territory/variant only
+// carries one of the two.
+const titleOffersType = (titleRows) => {
+  const offerNames = new Set();
+  for(const r of titleRows) {
+    for(const offer of r.offers || []) offerNames.add(offer.offer_name);
+  }
+  const hasEST = offerNames.has("EST");
+  const hasTVOD = offerNames.has("TVOD");
+  if(hasEST && hasTVOD) return "both";
+  if(hasEST) return "est";
+  if(hasTVOD) return "tvod";
   return "none";
+};
+
+// Title-level state for the "VU vs Meta Diff" filter, from the same diff renderTitleDiff
+// reads - "" (not on the comparison site at all, so nothing to diff) is deliberately its
+// own bucket, distinct from "match", so the filter never claims an uncompared title
+// matches VU Master.
+const metaDiffState = (diff) => {
+  if(!diff) return "";
+  if(diff.error) return "error";
+  return diff.has_differences ? "diff" : "match";
 };
 
 const titleBlocks = titleOrder.map(titleObjectId => {
   const titleRows = rowsByTitle.get(titleObjectId);
   const first = titleRows[0];
   const removedBadge = !first.still_referenced ? `<span class="chip chip-removed">No longer on site</span>` : "";
+  const compareEntry = inCompareSite(first.title_name) ? compareSiteEntryFor(first.title_name) : null;
   const rowsHtml = titleRows.map(r => {
     const clearPlayerCmd = r.dash_clear_url ? startPlayerCommand([r.dash_clear_url]) : null;
     const widevinePlayerCmd = (r.dash_widevine_url && r.license_server_url)
@@ -623,9 +708,22 @@ const titleBlocks = titleOrder.map(titleObjectId => {
     const trailerWidevinePlayerCmd = (r.trailer_dash_widevine_url && r.trailer_license_server_url)
       ? startPlayerCommand([r.trailer_dash_widevine_url, r.trailer_license_server_url]) : null;
     const checkIdBase = escId([r.title_object_id, r.playable_object_id, r.territory, r.variant, r.offering].join("_"));
+    const rowBad = rowHasIssue(r);
+    const summaryOffers = (r.offers && r.offers.length) ? r.offers.map(o => esc(o.offer_name)).join(", ") : "None";
     return `
-    <tr class="data-row" data-search="${esc([r.title_name, r.territory, r.variant, r.offering, r.playable_object_id].join(" ").toLowerCase())}" data-policy="${policyFilterState(r.playable_policy)}" data-last-edited="${esc(r.last_edited_at || "")}" data-permissions-mismatch="${hasPermissionsMismatch(r.playable_policy) ? "yes" : "no"}" data-drm-invalid="${hasDrmInvalid(r.drm_verified) ? "yes" : "no"}" data-offer-playout-error="${hasOfferPlayoutError(r.signed) ? "yes" : "no"}">
-      <td><div class="title-id-cell">
+    <tr class="data-row ${rowBad ? "row-bad" : "row-good"}" data-search="${esc([r.title_name, r.territory, r.variant, r.offering, r.playable_object_id].join(" ").toLowerCase())}" data-policy="${policyFilterState(r.playable_policy)}" data-last-edited="${esc(r.last_edited_at || "")}" data-permissions-mismatch="${hasPermissionsMismatch(r.playable_policy) ? "yes" : "no"}" data-drm-invalid="${hasDrmInvalid(r.drm_verified) ? "yes" : "no"}" data-offer-playout-error="${hasOfferPlayoutError(r.signed) ? "yes" : "no"}">
+      <td class="row-summary-cell" colspan="4">
+        <button type="button" class="row-toggle" aria-expanded="false">
+          <span class="dot ${rowBad ? "dot-critical" : "dot-good"}"></span>
+          <span class="row-toggle-caret">&#9656;</span>
+          <span class="row-summary-field"><span class="id-label">Territory</span><span>${esc(r.territory) || "—"}</span></span>
+          <span class="row-summary-field"><span class="id-label">Variant</span><span>${esc(r.variant) || "—"}</span></span>
+          <span class="row-summary-field"><span class="id-label">Playable</span><span class="mono truncate" title="${esc(r.playable_object_id)}">${esc(r.playable_object_id)}</span></span>
+          <span class="row-summary-field"><span class="id-label">Offers</span><span>${summaryOffers}</span></span>
+        </button>
+      </td>
+      <td class="row-detail-cell"><div class="title-id-cell">
+        <button type="button" class="row-collapse-btn"><span class="row-toggle-caret">&#9656;</span>Collapse</button>
         <div class="id-row"><span class="id-label">Territory</span><span>${esc(r.territory) || "—"}</span></div>
         <div class="id-row"><span class="id-label">Variant</span><span>${esc(r.variant) || "—"}</span></div>
         ${renderStreamsMatch(r)}
@@ -635,8 +733,8 @@ const titleBlocks = titleOrder.map(titleObjectId => {
         <div class="id-row last-edited"><span class="id-label">Last edited</span><span>${r.last_edited_at ? fmtDate(r.last_edited_at) : "—"}</span></div>
         ${renderPlayablePolicy(r.playable_policy)}
       </div></td>
-      <td>${renderOffers(r.offers, r.signed, checkIdBase)}</td>
-      <td class="qc-cell">
+      <td class="row-detail-cell">${renderOffers(r.offers, r.signed, checkIdBase)}</td>
+      <td class="row-detail-cell qc-cell">
         <div class="qc-subsection" data-qc-type="audio">
           <div class="signed-group-label">Audio</div>
           ${qcColumn(r, "audio", r.audio)}
@@ -646,7 +744,7 @@ const titleBlocks = titleOrder.map(titleObjectId => {
           ${qcColumn(r, "subtitle", r.subtitles)}
         </div>
       </td>
-      <td>
+      <td class="row-detail-cell">
         <div class="signed-group">
           <div class="signed-group-label">Backend Fabric Token</div>
           <div class="signed-subgroup-label">Headset Playout</div>
@@ -666,13 +764,21 @@ const titleBlocks = titleOrder.map(titleObjectId => {
   }).join("");
 
   return `
-    <section class="title-group" data-title-search="${esc(first.title_name.toLowerCase())}" data-meta-site="${inCompareSite(first.title_name) ? "yes" : "no"}" data-offers-territory="${titleOffersTerritory(titleRows)}">
+    <section class="title-group" data-title-search="${esc(first.title_name.toLowerCase())}" data-meta-site="${inCompareSite(first.title_name) ? "yes" : "no"}" data-offers-type="${titleOffersType(titleRows)}" data-meta-diff="${metaDiffState(compareEntry ? compareEntry.diff : null)}">
       <h3 class="title-heading">
-        <span>${esc(first.title_name)}</span>
-        <span class="chip chip-type">${esc(first.title_type)}</span>
-        ${removedBadge}
-        ${inCompareSite(first.title_name) ? `<span class="chip chip-good" title="Also present on ${esc(siteLabel(current.compare_site_summary.compare_site_object_id) || "the comparison site")}">IN META PROD SITE</span>` : ""}
-        <span class="text-dim mono title-hash" title="Master VU Hash">${esc(first.title_master_hash)}</span>
+        <div class="title-heading-top">
+          <span>${esc(first.title_name)}</span>
+          <span class="chip chip-type">${esc(first.title_type)}</span>
+          ${removedBadge}
+          ${inCompareSite(first.title_name) ? `<span class="chip chip-good" title="Also present on ${esc(siteLabel(current.compare_site_summary.compare_site_object_id) || "the comparison site")}">IN META PROD SITE</span>` : ""}
+        </div>
+        <div class="title-heading-hashes">
+          <div class="title-hash-row"><span class="title-hash-label">VU Master</span><span class="text-dim mono title-hash" title="VU Master Hash">${esc(first.title_master_hash)}</span></div>
+          ${compareEntry ? `<div class="title-hashes-affiliate">
+              ${renderTitleDiff(compareEntry.diff)}
+              <div class="title-hash-row"><span class="title-hash-label">Affiliate Master Meta</span><span class="text-dim mono title-hash" title="Affiliate Master Meta Hash (${esc(siteLabel(current.compare_site_summary.compare_site_object_id) || "the comparison site")})">${esc(compareEntry.title_master_hash)}</span></div>
+            </div>` : ""}
+        </div>
       </h3>
       <div class="table-scroll">
         <table>
@@ -698,12 +804,73 @@ const siteHeaderName = (objectId) => {
   return label.replace(/\bSite\b/gi, "").replace(/\s{2,}/g, " ").trim();
 };
 
+// One block per Vubiquity search-index object tracked against the Affiliate Master Meta
+// site (current.compare_site_summary.vubiquity_indexes, from
+// VUSiteTitlePlayoutURLs.js's checkIndexLastRun) - shows the index's own last indexer
+// run hash. /indexer/last_run on the actual index objects is a plain hash string (not an
+// object), confirmed via ObjectGetMetadata.js.
+const renderIndexLastRun = (idx) => {
+  if(!idx) return "";
+  if(idx.error) {
+    return `<div class="index-last-run index-last-run-error">
+      <div class="index-last-run-label">${esc(idx.index_label || idx.index_object_id)}</div>
+      <div class="index-compare-error">Could not check /indexer/last_run: ${esc(idx.error)}</div>
+    </div>`;
+  }
+  const indexedTitles = (idx.indexed_titles || []).slice().sort((a, b) => (a.title_name || "").localeCompare(b.title_name || ""));
+  const indexedTitlesHtml = indexedTitles.length > 0
+    ? `<ul class="site-title-list">${indexedTitles.map(t => `<li class="site-title-list-item">
+        <span class="truncate" title="${esc(t.title_name)}">${esc(t.title_name)}</span>
+        <span class="mono text-dim truncate" title="${esc(t.object_id)}">${esc(t.object_id)}</span>
+      </li>`).join("")}</ul>`
+    : `<div class="index-compare-ok">No IDs found at /indexer/permissions/sorted_ids.</div>`;
+
+  return `<div class="index-last-run">
+    <div class="index-last-run-label">${esc(idx.index_label || idx.index_object_id)}</div>
+    <div class="text-dim index-compare-id"><span class="mono">${esc(idx.index_object_id)}</span></div>
+    <div class="index-last-run-hash">
+      <span class="text-dim">Site's Version Hash Indexed</span>
+      ${idx.hash ? `<span class="mono truncate" title="${esc(idx.hash)}">${esc(idx.hash)}</span>` : `<span class="text-dim">&mdash; not set &mdash;</span>`}
+    </div>
+    <details class="site-title-list-details">
+      <summary>Indexed IDs (${indexedTitles.length})</summary>
+      ${indexedTitlesHtml}
+    </details>
+    ${renderIndexVsSiteDiff(idx.index_vs_site_diff)}
+  </div>`;
+};
+
+// Compares sorted_ids (what the index actually covers) against the site's own title
+// list AS OF THE EXACT VERSION /indexer/last_run indexed - not the site's current
+// latest version, which may have added/removed titles since without the index
+// re-running. Surfaces genuine index staleness rather than being confused by newer
+// site changes the index was never expected to cover yet.
+const renderIndexVsSiteDiff = (diff) => {
+  if(!diff) return "";
+  if(diff.error) {
+    return `<div class="index-compare-error">Could not compare against the site version indexed: ${esc(diff.error)}</div>`;
+  }
+  const itemList = (label, cls, items) => items.map(it => `<li class="mismatch-item">
+    <span class="chip chip-${cls}">${esc(label)}</span>
+    <span class="truncate" title="${esc(it.title_name)}">${esc(it.title_name)}</span>
+    <span class="mono text-dim truncate" title="${esc(it.object_id)}">${esc(it.object_id)}</span>
+  </li>`).join("");
+  const totalDiff = diff.missing_from_index.length + diff.extra_in_index.length;
+  if(totalDiff === 0) {
+    return `<div class="index-compare-ok">Index matches the site version it last indexed (${diff.site_at_run_total} object(s)).</div>`;
+  }
+  return `<details class="site-title-list-details">
+    <summary>Index vs site @ last run: ${diff.missing_from_index.length} missing, ${diff.extra_in_index.length} extra</summary>
+    <ul class="mismatch-list">${itemList("Missing from index", "critical", diff.missing_from_index)}${itemList("Extra in index", "warn", diff.extra_in_index)}</ul>
+  </details>`;
+};
+
 // Objects newly seen on the site since the previous run, diffed by
 // VUSiteTitlePlayoutURLs.js against its manifest and stored on current.object_changes.added.
 // One stat card per site (this site + the comparison site), each showing total object
 // count, newly added objects, and updated objects since the previous run - replaces the
 // old missing-title comparison view with per-site activity instead.
-const renderSiteSummary = ({ siteObjectId, siteVersionHash, siteLastEditedAt, totalObjects, newObjects, updatedObjects, titles, error }) => {
+const renderSiteSummary = ({ siteObjectId, siteVersionHash, siteLastEditedAt, totalObjects, newObjects, updatedObjects, titles, vubiquityIndexes, error }) => {
   const headerName = siteObjectId ? siteHeaderName(siteObjectId) : "Site";
   const idLine = siteObjectId
     ? `<div class="text-dim index-compare-id"><span class="mono">${esc(siteObjectId)}</span></div>`
@@ -719,6 +886,9 @@ const renderSiteSummary = ({ siteObjectId, siteVersionHash, siteLastEditedAt, to
     return `<div class="index-compare">
       <div class="index-compare-head"><div><h4 class="index-compare-title">${esc(headerName)}</h4>${idLine}${versionLine}</div></div>
       <div class="index-compare-error">Could not track this site: ${esc(error)}</div>
+      ${(vubiquityIndexes || []).length > 0
+        ? `<div class="index-last-run-stack">${vubiquityIndexes.map(renderIndexLastRun).join("")}</div>`
+        : ""}
     </div>`;
   }
 
@@ -754,6 +924,9 @@ const renderSiteSummary = ({ siteObjectId, siteVersionHash, siteLastEditedAt, to
       <summary>Titles on this site (${sortedTitles.length})</summary>
       ${titleListHtml}
     </details>
+    ${(vubiquityIndexes || []).length > 0
+      ? `<div class="index-last-run-stack">${vubiquityIndexes.map(renderIndexLastRun).join("")}</div>`
+      : ""}
   </div>`;
 };
 
@@ -819,15 +992,20 @@ const html = `<div class="dash-root">
       { value: "set", label: "Set" },
       { value: "missing", label: "Missing" }
     ])}
-    ${filterDropdown("offersTerritory", "Offers", "Filter by offers by territory", [
-      { value: "both", label: "Both US & CA" },
-      { value: "us", label: "Only US" },
-      { value: "ca", label: "Only CA" },
+    ${filterDropdown("offersType", "Offers", "Filter by offer type", [
+      { value: "both", label: "Both EST and TVOD" },
+      { value: "est", label: "Only EST" },
+      { value: "tvod", label: "Only TVOD" },
       { value: "none", label: "None" }
     ])}
     ${filterDropdown("metaSite", "Meta Prod Site Object", "Filter by presence on VU Affiliate Master Site", [
       { value: "yes", label: "Yes" },
       { value: "no", label: "No" }
+    ])}
+    ${filterDropdown("metaDiff", "VU vs Meta Diff", "Filter by differences between VU Master and Affiliate Master Meta", [
+      { value: "diff", label: "Has Differences" },
+      { value: "match", label: "Matches VU Master" },
+      { value: "error", label: "Compare Failed" }
     ])}
     ${filterDropdown("edited", "Last Edited", "Filter by last edited", [
       { value: "12h", label: "Last 12hrs" },
@@ -952,10 +1130,10 @@ const css = `
 .header-token-item .text-dim { margin-right: 2px; }
 .header-token-email { color: var(--text-dim); font-size: 11px; }
 
-.site-summary-stack { display: flex; flex-direction: row; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+.site-summary-stack { display: flex; flex-direction: column; gap: 14px; align-items: stretch; }
 
 .index-compare {
-  flex: 1 1 420px;
+  flex: none;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -972,6 +1150,11 @@ const css = `
 .index-compare-stats .num { font-size: 18px; }
 .index-compare-ok { color: var(--good); font-size: 13px; font-weight: 600; }
 .index-compare-error { color: var(--critical); font-size: 13px; }
+.index-last-run-stack { border-top: 1px solid var(--border); padding-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+.index-last-run { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; }
+.index-last-run-error { border-color: var(--critical); }
+.index-last-run-label { font-size: 12.5px; font-weight: 700; }
+.index-last-run-hash { display: flex; align-items: center; gap: 8px; font-size: 12px; flex-wrap: wrap; }
 .mismatch-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
 .mismatch-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; flex-wrap: wrap; }
 .mismatch-item .truncate { max-width: 220px; }
@@ -1068,14 +1251,33 @@ const css = `
 .title-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
 .title-heading {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 6px;
   font-size: 16px;
   font-weight: 700;
   margin: 0;
 }
-.title-hash { font-size: 11px; margin-left: auto; }
+.title-heading-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.title-heading-hashes { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.title-hashes-affiliate { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.title-hash-row { display: flex; align-items: baseline; gap: 6px; }
+.title-hash-label { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-dim); font-weight: 700; white-space: nowrap; }
+.title-hash { font-size: 11px; }
+
+.title-diff-details { font-weight: 400; }
+.title-diff-details summary {
+  cursor: pointer; font-size: 10.5px; color: var(--text-dim); font-weight: 600;
+  display: flex; align-items: center; gap: 6px; user-select: none; white-space: nowrap;
+}
+.title-diff-details summary:hover { color: var(--text); }
+.title-diff-body {
+  margin-top: 6px; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 6px; display: flex; flex-direction: column; gap: 4px;
+  font-size: 12px; font-weight: 400; text-align: left; min-width: 260px; max-width: 420px;
+}
+.title-diff-row { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.title-diff-subrow { font-size: 11px; color: var(--text-dim); padding-left: 4px; }
+.title-diff-loc { font-size: 11.5px; font-weight: 600; }
 .chip { border-radius: 5px; padding: 2px 7px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
 .chip-type { background: var(--surface-2); color: var(--text-dim); }
 .chip-removed { background: color-mix(in srgb, var(--removed) 22%, transparent); color: var(--removed); }
@@ -1136,6 +1338,31 @@ tbody td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-a
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: var(--surface-2); }
 .truncate { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Playable rows: collapsed by default (summary bar only), expand to reveal the full row. */
+.row-summary-cell { padding: 0; }
+.row-toggle {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap; width: 100%; text-align: left;
+  background: none; border: none; cursor: pointer; padding: 8px 10px; font: inherit; color: inherit;
+}
+.row-toggle:hover { background: var(--surface-2); }
+.row-toggle-caret { flex: none; font-size: 10px; color: var(--text-dim); transition: transform 0.15s ease; }
+.row-summary-field { display: flex; align-items: baseline; gap: 6px; font-size: 12.5px; }
+.row-summary-field .id-label { flex: none; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); }
+.row-summary-field .mono { max-width: 260px; }
+.data-row.row-good .row-summary-cell { background: color-mix(in srgb, var(--good) 10%, transparent); }
+.data-row.row-bad .row-summary-cell { background: color-mix(in srgb, var(--critical) 10%, transparent); }
+.data-row .row-detail-cell { display: none; }
+.data-row.row-expanded .row-summary-cell { display: none; }
+.data-row.row-expanded .row-detail-cell { display: table-cell; }
+.data-row.row-expanded .row-toggle-caret { transform: rotate(90deg); }
+.row-collapse-btn {
+  display: flex; align-items: center; gap: 6px; align-self: flex-start;
+  background: none; border: none; cursor: pointer; padding: 0 0 4px; margin-bottom: 4px;
+  border-bottom: 1px dashed var(--border); font: inherit; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim);
+}
+.row-collapse-btn:hover { color: var(--text); }
 
 .title-id-cell { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
 .id-row { display: flex; align-items: baseline; gap: 8px; font-size: 12.5px; }
@@ -1315,7 +1542,7 @@ const js = `
   var DAY_MS = 24 * HOUR_MS;
   var WEEK_MS = 7 * DAY_MS;
 
-  // one entry per filter group (policy/offersTerritory/metaSite/edited) - an array of
+  // one entry per filter group (policy/offersType/metaSite/edited) - an array of
   // checked values, OR'd together; an empty array means "no filtering by this group".
   var activeFilters = {};
   filterDropdownEls.forEach(function (el) {
@@ -1341,12 +1568,13 @@ const js = `
   function applyFilters() {
     var q = (search.value || "").toLowerCase().trim();
     groups.forEach(function (group) {
-      // Meta Prod Site and Offers-by-territory are per-title (attributes on the group
-      // itself), not per row.
+      // Meta Prod Site, Offers-by-type and VU vs Meta Diff are per-title (attributes on
+      // the group itself), not per row.
       var metaSiteOk = matchesAny(activeFilters.metaSite || [], group.getAttribute("data-meta-site"));
-      var offersTerritoryOk = matchesAny(activeFilters.offersTerritory || [], group.getAttribute("data-offers-territory"));
+      var offersTypeOk = matchesAny(activeFilters.offersType || [], group.getAttribute("data-offers-type"));
+      var metaDiffOk = matchesAny(activeFilters.metaDiff || [], group.getAttribute("data-meta-diff"));
 
-      if (!metaSiteOk || !offersTerritoryOk) {
+      if (!metaSiteOk || !offersTypeOk || !metaDiffOk) {
         group.style.display = "none";
         return;
       }
@@ -1558,6 +1786,28 @@ const js = `
         btn.disabled = false;
         btn.classList.remove("is-checking");
       });
+    });
+  });
+
+  // Playable rows render collapsed by default (Territory/Variant/Playable/Offers plus a
+  // green/red status dot) - click the summary bar to reveal the full row, or the
+  // "Collapse" button at the top of the expanded row to close it again (the summary bar
+  // itself is hidden while expanded, so it can't double as the close control).
+  Array.prototype.slice.call(document.querySelectorAll(".row-toggle")).forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var row = btn.closest(".data-row");
+      if (!row) return;
+      row.classList.add("row-expanded");
+      btn.setAttribute("aria-expanded", "true");
+    });
+  });
+  Array.prototype.slice.call(document.querySelectorAll(".row-collapse-btn")).forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var row = btn.closest(".data-row");
+      if (!row) return;
+      row.classList.remove("row-expanded");
+      var toggle = row.querySelector(".row-toggle");
+      if (toggle) toggle.setAttribute("aria-expanded", "false");
     });
   });
 
