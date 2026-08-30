@@ -375,6 +375,7 @@ class FrameClient {
       "CreateNTPInstance",
       "CreateNonOwnerCap",
       "CreatePart",
+      "CreatePlainToken",
       "CreateProductionMaster",
       "CreateShare",
       "CreateSignedMessageJSON",
