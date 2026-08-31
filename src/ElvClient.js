@@ -936,6 +936,57 @@ class ElvClient {
     json                    79b  {"adr":"VVf4DQU357tDnZGYQeDrntRJ5rs=","spc":"ispc3ANoVSzNA3P6t7abLR69ho5YPPZU"}
    */
 
+  /*
+    PLAIN TOKEN  PREFIX + BODY | aplsjcJf1HYcDDUuCdXcSZtU86nYK162YmYJeuqwMczEBJVkD5D5EvsBvVwYDRsf4hzDvBWMoe9piBpqx...
+    PREFIX       6b  aplsjc | apl=plain s=ES256K jc=json-compressed
+    BODY             base58(SIGNATURE + PAYLOAD)
+    SIGNATURE   65b  ES256K signature
+    PAYLOAD          raw-deflate JSON
+    json             {"adr":"VVf4DQU357tDnZGYQeDrntRJ5rs=","spc":"ispc3ANoVSzNA3P6t7abLR69ho5YPPZU"}
+   */
+
+  /**
+   * Create a signed "plain" authorization token (`aplsjc...`).
+   *
+   * Plain tokens are largely the same as client-signed access tokens - they do not contain a b/c transaction
+   * and authorization is determined from the rights of the current signer's address.
+   * Currently needed for tenant content query /tenant/:tid/q/query
+   * This token will be deprecated in the future in favor of client-signed access tokens.
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {string=} libraryId - Optional library ID to scope the token. If omitted, the token is space-wide.
+   * @returns {Promise<string>} - The signed Plain auth token
+   */
+  async CreatePlainToken({libraryId}={}) {
+    const address = this.CurrentAccountAddress();
+    if(!address) {
+      throw Error("Unable to create plain token: No signer is configured");
+    }
+
+    const token = {
+      adr: Buffer.from(address.replace(/^0x/, ""), "hex").toString("base64"),
+      spc: await this.ContentSpaceId()
+    };
+
+    if(libraryId) {
+      token.lib = libraryId;
+    }
+
+    const compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
+    const signature = await this.authClient.Sign(Ethers.utils.keccak256(compressedToken));
+    const signatureBytes = Buffer.from(signature.replace(/^0x/, ""), "hex");
+
+    if(signatureBytes.length !== 65) {
+      throw Error("Unable to create plain token: Expected a 65-byte ES256K signature");
+    }
+
+    return `aplsjc${this.utils.B58(Buffer.concat([
+      signatureBytes,
+      Buffer.from(compressedToken)
+    ]))}`;
+  }
+
   async PersonalSign({
     message,
     addEthereumPrefix,
