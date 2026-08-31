@@ -3432,10 +3432,16 @@ exports.TenantContent = async function({
 
   const path = UrlJoin("tenants", tenantId, "q", "query");
 
-  let token = await this.MetadataAuth({
-    libraryId: tenantId.replace("iten", "ilib"),
-    objectId: tenantId.replace("iten", "iq__")
-  });
+  let token;
+
+  if(select.length > 0) {
+    token = await this.CreatePlainToken();
+  } else {
+    token = await this.MetadataAuth({
+      libraryId: tenantId.replace("iten", "ilib"),
+      objectId: tenantId.replace("iten", "iq__")
+    });
+  }
 
   const queryParams = {
     filter,
