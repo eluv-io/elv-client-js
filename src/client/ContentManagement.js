@@ -1144,6 +1144,12 @@ exports.DeleteContentVersion = async function({versionHash}) {
 /**
  * Delete specified content object
  *
+ * Note: deleting an object does not unregister it from the owner's access indexor, so
+ * every delete leaves a dead entry behind. AccessIndexDebt lists them, and
+ * ObjectCleanup removes them. Prefer DeleteContentObjectBatch when deleting in bulk -
+ * the cleanup is a single unbounded loop that reverts once there are more dead entries
+ * than one block can clear, and the batch method chunks the work to stay under that.
+ *
  * @methodGroup Content Objects
  * @namedParams
  * @param {string} libraryId - ID of the library
