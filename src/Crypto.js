@@ -194,15 +194,10 @@ const Crypto = {
 
     const dataArray = new Uint8Array(data);
 
-    for(let i = 0; i < dataArray.length; i += 1000000) {
-      const end = Math.min(dataArray.length, i + 1000000);
-      stream.write(dataArray.slice(i, end));
-    }
-
-    stream.end();
-
     let encryptedChunks = [];
-    await new Promise((resolve, reject) => {
+    // Attach handlers before writing - the loop below yields between blocks, so encrypted
+    // output starts arriving while still feeding the stream
+    const finished = new Promise((resolve, reject) => {
       stream
         .on("data", chunk => {
           encryptedChunks.push(chunk);
@@ -214,6 +209,21 @@ const Crypto = {
           reject(e);
         });
     });
+
+    for(let i = 0; i < dataArray.length; i += 1000000) {
+      const end = Math.min(dataArray.length, i + 1000000);
+      stream.write(dataArray.slice(i, end));
+
+      // The cipher is synchronous WASM (~140ms/MB), so yield between blocks to keep a multi-MB
+      // chunk from freezing painting and input for the whole encrypt
+      if(end < dataArray.length) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    }
+
+    stream.end();
+
+    await finished;
 
     return Buffer.concat(encryptedChunks);
   },

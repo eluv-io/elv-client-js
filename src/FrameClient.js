@@ -60,12 +60,17 @@ class FrameClient {
         let callback = args && args.callback;
         if(callback) { delete args.callback; }
 
+        // An AbortSignal can't be cloned - check for it locally or it becomes a plain object
+        let signal = args && args.signal;
+        if(signal) { delete args.signal; }
+
         return await this.SendMessage({
           options: {
             calledMethod: methodName,
             args: this.utils.MakeClonable(args)
           },
-          callback
+          callback,
+          signal
         });
       };
     }
@@ -141,8 +146,12 @@ class FrameClient {
     };
   }
 
-  async SendMessage({options={}, callback, noResponse=false}) {
+  async SendMessage({options={}, callback, noResponse=false, signal}) {
     const requestId = Id.next();
+
+    if(signal && signal.aborted) {
+      throw new DOMException("Aborted", "AbortError");
+    }
 
     let callbackId;
     if(callback) { callbackId = Id.next(); }
@@ -167,15 +176,30 @@ class FrameClient {
       timeout = options.args.fcTimeout;
     }
 
-    return (await this.AwaitMessage(requestId, timeout, callback, callbackId, operation));
+    return (await this.AwaitMessage(requestId, timeout, callback, callbackId, operation, signal));
   }
 
-  async AwaitMessage(requestId, timeout, callback, callbackId, operation) {
+  async AwaitMessage(requestId, timeout, callback, callbackId, operation, signal) {
     return await new Promise((resolve, reject) => {
-      let methodListener;
+      let methodListener, callbackListener, abortListener, timeoutId;
+
+      const RemoveListeners = () => {
+        clearTimeout(timeoutId);
+
+        if(typeof window !== "undefined") {
+          window.removeEventListener("message", methodListener);
+
+          if(callbackListener) {
+            window.removeEventListener("message", callbackListener);
+          }
+        }
+
+        if(abortListener) {
+          signal.removeEventListener("abort", abortListener);
+        }
+      };
 
       // Initialize or reset timeout
-      let timeoutId;
       const touchTimeout = () => {
         if(timeoutId) {
           clearTimeout(timeoutId);
@@ -183,20 +207,22 @@ class FrameClient {
 
         if(timeout > 0) {
           timeoutId = setTimeout(() => {
-            if(typeof window !== "undefined") {
-              window.removeEventListener("message", methodListener);
-
-              if(callbackListener) {
-                window.removeEventListener("message", callbackListener);
-              }
-            }
+            RemoveListeners();
             reject(`Request ${requestId} timed out (${operation})`);
           }, timeout * 1000);
         }
       };
 
+      if(signal) {
+        abortListener = () => {
+          RemoveListeners();
+          reject(new DOMException("Aborted", "AbortError"));
+        };
+
+        signal.addEventListener("abort", abortListener, {once: true});
+      }
+
       // Set up callback listener
-      let callbackListener;
       if(callbackId) {
         callbackListener = (event) => {
           try {
@@ -226,10 +252,7 @@ class FrameClient {
             return;
           }
 
-          clearTimeout(timeoutId);
-
-          window.removeEventListener("message", methodListener);
-          if(callbackListener) { window.removeEventListener("message", callbackListener); }
+          RemoveListeners();
 
           if(message.error) {
             reject(message.error);
@@ -237,10 +260,7 @@ class FrameClient {
             resolve(message.response);
           }
         } catch(error){
-          clearTimeout(timeoutId);
-
-          window.removeEventListener("message", methodListener);
-          if(callbackListener) { window.removeEventListener("message", callbackListener); }
+          RemoveListeners();
 
           reject(error);
         }
@@ -280,6 +300,9 @@ class FrameClient {
       "DownloadFile",
       "DownloadPart",
       "FinalizeUploadJob",
+      "ListFilesJob",
+      "ListFilesUploadJobs",
+      "ResumeFileUploadJob",
       "UpdateContentObjectGraph",
       "UploadFileData",
       "UploadFiles",
@@ -433,6 +456,8 @@ class FrameClient {
       "LinkUrl",
       "ListAccessGroups",
       "ListFiles",
+      "ListFilesJob",
+      "ListFilesUploadJobs",
       "ListNTPInstances",
       "LRODraftInfo",
       "LROStatus",
@@ -480,6 +505,7 @@ class FrameClient {
       "ReplaceMetadata",
       "Request",
       "ResetRegion",
+      "ResumeFileUploadJob",
       "ResetTenantId",
       "RevokeShare",
       "SendFunds",
