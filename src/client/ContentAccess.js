@@ -3309,36 +3309,56 @@ exports.QParts = async function({libraryId, objectId, partHash, format="blob"}) 
 /* Content groups */
 
 /**
+ * Retrieve a content object property ("tags", "groups" or "query_fields").
+ *
+ * @private
+ */
+const ContentObjectProperty = async function({objectId, versionHash, writeToken, property}) {
+  if(writeToken && versionHash) {
+    throw Error(`Cannot specify writeToken and versionHash at same time (token:${writeToken}, hash:${versionHash})`);
+  }
+
+  if(writeToken) {
+    ValidateWriteToken(writeToken);
+  } else if(versionHash) {
+    ValidateVersion(versionHash);
+  } else {
+    ValidateObject(objectId);
+  }
+
+  if(writeToken) {
+    objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+  } else if(versionHash) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  }
+
+  const token = await this.GenerateStateChannelToken({
+    objectId,
+    versionHash
+  });
+
+  return this.HttpClient.RequestJsonBody({
+    headers: {Authorization: `Bearer ${token}`},
+    method: "GET",
+    path: UrlJoin("q", writeToken || versionHash || objectId, property)
+  });
+};
+
+/**
  * Get content tags
  *
  * @methodGroup Content Groups
  * @namedParams
- * @param {string} libraryId - ID of the library
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Hash of the object version
  * @param {string=} writeToken - Write token of the draft
  *
- * @returns {Promise<Array<string>>} - Response containing the list of tags
+ * @returns {Promise<Array<string>>} - The content object tags
  */
-exports.ContentTags = async function({libraryId, objectId, versionHash, writeToken}) {
-  ValidateLibrary(libraryId);
-  ValidateParameters({libraryId, objectId, versionHash, writeToken});
+exports.ContentObjectTags = async function({objectId, versionHash, writeToken}) {
+  this.Log(`Retrieving content tags: ${writeToken || versionHash || objectId}`);
 
-  const id = objectId || versionHash || writeToken;
-  let path = UrlJoin("qlibs", libraryId, "q", id, "tags");
-
-  const token = await this.GenerateStateChannelToken({
-    libraryId,
-    objectId
-  });
-
-  return this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: { "Authorization": `Bearer ${token}` },
-      method: "GET",
-      path: path
-    })
-  );
+  return ContentObjectProperty.call(this, {objectId, versionHash, writeToken, property: "tags"});
 };
 
 /**
@@ -3346,118 +3366,122 @@ exports.ContentTags = async function({libraryId, objectId, versionHash, writeTok
  *
  * @methodGroup Content Groups
  * @namedParams
- * @param {string} libraryId - ID of the library
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Hash of the object version
  * @param {string=} writeToken - Write token of the draft
  *
- * @returns {Promise<Object>} - Response containing the query fields
+ * @returns {Promise<Object<string, string>>} - The content object query fields
  */
-exports.ContentQueryFields = async function({libraryId, objectId, versionHash, writeToken}) {
-  ValidateLibrary(libraryId);
-  ValidateParameters({libraryId, objectId, versionHash, writeToken});
+exports.ContentObjectQueryFields = async function({objectId, versionHash, writeToken}) {
+  this.Log(`Retrieving content query fields: ${writeToken || versionHash || objectId}`);
 
-  const id = objectId || versionHash || writeToken;
-  let path = UrlJoin("qlibs", libraryId, "q", id, "query_fields");
-
-  const token = await this.GenerateStateChannelToken({
-    libraryId,
-    objectId
-  });
-
-  return this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: { "Authorization": `Bearer ${token}` },
-      method: "GET",
-      path: path
-    })
-  );
+  return ContentObjectProperty.call(this, {objectId, versionHash, writeToken, property: "query_fields"});
 };
 
 /**
- * Get content object groups (folders)
+ * Get the groups a content object belongs to
  *
  * @methodGroup Content Groups
  * @namedParams
- * @param {string} libraryId - ID of the library
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Hash of the object version
  * @param {string=} writeToken - Write token of the draft
  *
- * @returns {Promise<Array<string>>} - Response containing the list of groups a content object belongs to
+ * @returns {Promise<Array<string>>} - The content groups the object belongs to
  */
-exports.ContentObjectFolders = async function({libraryId, objectId, versionHash, writeToken}) {
-  ValidateLibrary(libraryId);
-  ValidateParameters({libraryId, objectId, versionHash, writeToken});
+exports.ContentObjectGroups = async function({objectId, versionHash, writeToken}) {
+  this.Log(`Retrieving content object groups: ${writeToken || versionHash || objectId}`);
 
-  const id = objectId || versionHash || writeToken;
-  let path = UrlJoin("qlibs", libraryId, "q", id, "groups");
-
-  const token = await this.GenerateStateChannelToken({
-    libraryId,
-    objectId
-  });
-
-  return this.utils.ResponseToJson(
-    this.HttpClient.Request({
-      headers: { "Authorization": `Bearer ${token}` },
-      method: "GET",
-      path: path
-    })
-  );
+  return ContentObjectProperty.call(this, {objectId, versionHash, writeToken, property: "groups"});
 };
 
 /**
- * Get tenant content
+ * Query tenant content.
+ *
+ * The response is based on the fabric index and can use groups, query_fields and tags for filtering and sorting.
+ * The response may include metadata fields as specified in select/remove.
  *
  * @methodGroup Tenants
- * @param {Object<field: string, desc: boolean>=} sortOptions - Options to sort by where
- *  - 'field' (string): The field to sort by
- *  - 'desc' (boolean): Determines whether the order is descending
- * @param {Array<string>=} filter - Filter options
- * @param {Array<string>=} select - List of metadata subtree paths to return
- * @param {number=} start - Index of the first content object to retrieve. Defaults to the first content
- * @param {number=} limit - Integer specifying the number of contents to return. Defaults to 100
+ * @namedParams
+ * @param {string=} tenantId - ID of the tenant to query. Defaults to the tenant of the current user
+ * @param {Array<string>=} filter - Filter expressions of the form `<field>:<comparator>:<value>`, e.g.
+ *  `tag:eq:elv:media:live_stream` or `qf.date:ge:2026-09-01`. Multiple expressions are combined with AND.
  *
- * @returns {Promise<Object>} - Response containing the tenant content
+ *  Comparators: `::` or `:co:` contains, `:nc:` not contains, `:eq:` equals, `:ne:` not equals,
+ *  `:lt:` less than, `:le:` less than or equal, `:gt:` greater than, `:ge:` greater than or equal.
+ *  Comparisons are lexicographic string comparisons. `:sw:` and `:ew:` are not supported here.
+ *
+ *  Reserved fields:
+ *  - `tag` - matches when *any one* of the object's tags satisfies the expression
+ *  - `group` - ID of a content group the object belongs to
+ *  - `unique_group.id`, `unique_group.type`
+ *  - `lib`, `library` - library ID. Supports `:eq:` only
+ *  - `created_block_time` - when the latest version was created. Comparison operators only
+ *
+ *  Any other field name is treated as a query field name. Prefix with `qf.` to filter on a query field
+ *  whose name collides with a reserved one, e.g. `qf.tag:eq:x`. `created_block_number` is no longer
+ *  supported and is rejected.
+ *
+ * @param {string=} sortBy - Name of a query field to sort by. This is a query field name, not a metadata path,
+ *  and only one may be given. When omitted, results are sorted by the time the latest version was created.
+ *
+ *  Note that sorting by a query field also restricts the results to objects that have that field
+ * @param {boolean=} sortDescending=false - Sort in descending order
+ * @param {(Array<string> | string)=} include - Index data to return alongside each result. Tokens:
+ *  `tags`, `groups`, `uniquegroups`, `fields` (query fields), `type`, `name`, `all`, `none`. May be given
+ *  as an array or as a comma-separated string. The Fabric defaults to query fields only; `none` suppresses
+ *  all index data, including those
+ * @param {Array<string>=} select - Metadata subtree paths to include in each result. If omitted, no metadata
+ *  is retrieved at all and each result contains only its IDs and index data
+ * @param {Array<string>=} remove - Metadata subtree paths to omit from each result. Only has an effect when
+ *  `select` is also specified
+ * @param {number=} start - Index of the first object to retrieve. Defaults to the first
+ * @param {number=} limit - Maximum number of objects to return. Defaults to 100, capped at 998
+ * @param {string=} authorizationToken - Additional authorization token for the request
+ *
+ * @returns {Promise<Object>} - The query result, including `versions` and `paging` information. One entry per
+ *  content object - the index holds only the latest version - carrying `id`, `hash`, `qlib_id`,
+ *  `last_modified_at` and whatever `include` selects - by default the object's query fields
  */
 exports.TenantContent = async function({
-  sortOptions,
+  tenantId,
   filter=[],
+  sortBy,
+  sortDescending,
+  include,
   select=[],
+  remove=[],
   start,
-  limit
+  limit,
+  authorizationToken
 }) {
-  const tenantId = await this.userProfileClient.TenantContractId();
+  tenantId = tenantId || await this.userProfileClient.TenantContractId();
+  ValidatePresence("tenantId", tenantId);
+
+  this.Log(`Querying content for tenant ${tenantId}`);
 
   const path = UrlJoin("tenants", tenantId, "q", "query");
 
-  let token = await this.MetadataAuth({
-    libraryId: tenantId.replace("iten", "ilib"),
-    objectId: tenantId.replace("iten", "iq__")
-  });
+  // Tenant query works best with plain token - it allows it to return objecte metadata fields.
+  const token = authorizationToken || await this.CreatePlainToken();
 
   const queryParams = {
     filter,
+    sort_by: sortBy,
+    sort_descending: sortDescending,
+    include,
     select,
+    remove,
     start,
     limit
   };
 
-  // Filter comparators
-  //   ::, :co: contains
-  //   :nc: not contains
-  //   :eq: equals
-  //   :ne: not equals
-  //   :lt: less than
-  //   :le: less than or equal
-  //   :gt: greater than
-  //   :ge: greater than or equal
-
-  if(sortOptions && sortOptions.field) {
-    queryParams["sort_by"] = sortOptions.field;
-    queryParams["sort_descending"] = sortOptions.desc;
-  }
+  Object.keys(queryParams).forEach(key => {
+    const value = queryParams[key];
+    if(value === undefined || (Array.isArray(value) && value.length === 0)) {
+      delete queryParams[key];
+    }
+  });
 
   return this.utils.ResponseToJson(
     this.HttpClient.Request({
