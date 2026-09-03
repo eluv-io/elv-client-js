@@ -22,6 +22,7 @@
 const UrlJoin = require("url-join");
 
 const {
+  ValidateAddress,
   ValidateObject,
   ValidatePresence
 } = require("../Validation");
@@ -167,6 +168,64 @@ const ResolveWallet = async function({client, contractAddress}) {
 };
 
 /**
+ * Sweep one contract's access index: check its dead-entry debt, clean it up if that fits
+ * in a block, and report what happened. Wallets and groups carry the same kind of index
+ * and are addressed the same way, so this is shared between the two.
+ *
+ * skipIfClean avoids spending a transaction on a contract that has nothing to remove.
+ * The owner-wallet sweep never needs it - each call follows a chunk of deletions from
+ * that same owner, so there is always something dead to find - but a group sweep runs
+ * once per processed chunk regardless of which wallet the chunk belonged to, and most
+ * chunks will not touch most groups.
+ */
+const SweepIndex = async function({client, contractAddress, skipIfClean = false}) {
+  try {
+    const debt = await client.AccessIndexDebt({contractAddress});
+
+    // AccessIndexDebt already resolved a raw account address to its wallet contract -
+    // use that resolved address from here on, not the possibly-unresolved input, so the
+    // cleanup call and the report below are both about the contract that actually holds
+    // the index, whether the caller passed a group, a wallet, or a plain account
+    const resolvedAddress = debt.contractAddress;
+
+    if(!debt.sweepable) {
+      return {
+        contractAddress: resolvedAddress,
+        status: "skipped",
+        reason: `${debt.dead} dead entries exceeds the ${debt.maxSweepable} a sweep can remove in one block`,
+        dead: debt.dead,
+        maxSweepable: debt.maxSweepable
+      };
+    }
+
+    if(skipIfClean && debt.dead === 0) {
+      return {contractAddress: resolvedAddress, status: "clean", dead: 0};
+    }
+
+    const result = await client.ObjectCleanup({
+      contractAddress: resolvedAddress,
+      objectTypeToClean: "content_object"
+    });
+
+    const lengths = (result[resolvedAddress] || result[client.utils.FormatAddress(resolvedAddress)] || {});
+    const before = (lengths.beforeCleanup || {}).contentObjectsLength;
+    const after = (lengths.afterCleanup || {}).contentObjectsLength;
+
+    return {
+      contractAddress: resolvedAddress,
+      status: "swept",
+      dead: debt.dead,
+      before,
+      after,
+      removed: (before === undefined || after === undefined) ? undefined : before - after,
+      transacted: true
+    };
+  } catch(error) {
+    return {contractAddress, status: "failed", reason: error.message};
+  }
+};
+
+/**
  * How many dead entries one cleanUpContentObjects call can remove and still fit in a
  * block. Falls back to a conservative constant when the block gas limit is unreadable.
  */
@@ -224,6 +283,8 @@ exports.AccessIndexDebt = async function({contractAddress, concurrency = DEFAULT
     methodName: "getContentObjectsLength",
     formatArguments: false
   })).toNumber();
+
+  this.Log(`${wallet}: ${length} entries to check (concurrency ${concurrency})`);
 
   const positions = [];
   for(let i = 0; i < length; i++) { positions.push(i); }
@@ -733,20 +794,37 @@ exports.PoolIndexEntries = async function({
  * chunk starts. That ordering is the point of the method - deleting everything first
  * and sweeping afterwards is exactly the failure it exists to prevent.
  *
+ * A group contract carries the same kind of index as a wallet, and so does a plain user
+ * account once resolved to its wallet - an object deleted while it still has a
+ * permission grant through a group, or is referenced by some other account's wallet,
+ * leaves a dead entry there too. Owners are discovered per object, but a deleted
+ * object's contract is gone before its group memberships or other referencing accounts
+ * could be read back off it, so those addresses can't be discovered the same way and
+ * must be passed in explicitly. Each one is swept at the same cadence as the owner
+ * wallets - once per processed chunk, regardless of which wallet that chunk belonged to
+ * - so no index accumulates more unswept dead entries than a single chunk can produce.
+ *
  * @methodGroup Reclamation
  * @namedParams
  * @param {Array<string | Object>} objects - Object IDs, or {objectId, libraryId}
- * @param {boolean=} cleanUpIndexes=true - Sweep each affected owner's index
+ * @param {Array<string>=} groupOrUserAddresses - Addresses of group contracts, wallets,
+ * or plain user accounts (resolved to their wallet the same way an object's owner is)
+ * to also sweep, in addition to each object's owner wallet
+ * @param {boolean=} cleanUpIndexes=true - Sweep each affected owner's index, and the
+ * indexes in `groupOrUserAddresses` where given
  * @param {number=} maxDeadEntriesPerSweep - Objects deleted between sweeps. Defaults to
  * what the current block gas limit allows
  * @param {number=} concurrency=8 - Objects deleted at once within a chunk
  * @param {boolean=} dryRun=false - Report the plan, including chunking, and change nothing
- * @param {function=} onProgress - Called as ({phase, objectId, owner, done, total})
+ * @param {function=} onProgress - Called as ({phase, objectId, owner, done, total}) for
+ * "sweep"/"sweep-groups", or ({phase: "delete", objectId, owner, status, reason, done,
+ * total}) for "delete" - status is "deleted" or "failed", reason is set only on failure
  *
- * @returns {Promise<Object>} - {deleted, failed, sweeps, transactions, dryRun}
+ * @returns {Promise<Object>} - {deleted, failed, sweeps, groupSweeps, transactions, dryRun}
  */
 exports.DeleteContentObjectBatch = async function({
   objects,
+  groupOrUserAddresses,
   cleanUpIndexes = true,
   maxDeadEntriesPerSweep,
   concurrency = DEFAULT_CONCURRENCY,
@@ -756,6 +834,11 @@ exports.DeleteContentObjectBatch = async function({
   ValidatePresence("objects", objects);
 
   if(!Array.isArray(objects)) { throw Error("objects must be an array"); }
+  if(groupOrUserAddresses && !Array.isArray(groupOrUserAddresses)) {
+    throw Error("groupOrUserAddresses must be an array");
+  }
+
+  const sweepAddresses = (groupOrUserAddresses || []).map(address => ValidateAddress(address));
 
   const resolved = await ResolveObjects({client: this, objects, concurrency});
   const usable = resolved.filter(entry => !entry.error);
@@ -785,13 +868,15 @@ exports.DeleteContentObjectBatch = async function({
   const chunkSize = maxDeadEntriesPerSweep || await SweepBudget({client: this});
 
   this.Log(
-    `Deleting ${usable.length} object(s) across ${Object.keys(byWallet).length} index(es), ` +
+    `Deleting ${usable.length} object(s) across ${Object.keys(byWallet).length} index(es)` +
+    `${sweepAddresses.length > 0 ? ` and ${sweepAddresses.length} group/user address(es)` : ""}, ` +
     `${chunkSize} per sweep${dryRun ? " (dry run)" : ""}`
   );
 
   const deleted = [];
   const errors = failed.slice();
   const sweeps = [];
+  const groupSweeps = [];
   let transactions = 0;
   let done = 0;
 
@@ -814,15 +899,23 @@ exports.DeleteContentObjectBatch = async function({
           sweeps.push({contractAddress: wallet, objects: chunk.length, status: "planned"});
         }
 
+        if(cleanUpIndexes && sweepAddresses.length > 0) {
+          sweepAddresses.forEach(address => {
+            groupSweeps.push({contractAddress: address, objects: chunk.length, status: "planned"});
+          });
+        }
+
         done += chunk.length;
         continue;
       }
 
       const chunkResults = await this.utils.LimitedMap(concurrency, chunk, async entry => {
+        let result;
+
         try {
           await this.DeleteContentObject({libraryId: entry.libraryId, objectId: entry.objectId});
 
-          return {
+          result = {
             objectId: entry.objectId,
             libraryId: entry.libraryId,
             owner: entry.owner,
@@ -830,13 +923,23 @@ exports.DeleteContentObjectBatch = async function({
             status: "deleted"
           };
         } catch(error) {
-          return {objectId: entry.objectId, libraryId: entry.libraryId, status: "failed", reason: error.message};
+          result = {objectId: entry.objectId, libraryId: entry.libraryId, status: "failed", reason: error.message};
         } finally {
           done += 1;
           if(onProgress) {
-            onProgress({phase: "delete", objectId: entry.objectId, owner: wallet, done, total: usable.length});
+            onProgress({
+              phase: "delete",
+              objectId: entry.objectId,
+              owner: wallet,
+              status: result.status,
+              reason: result.reason,
+              done,
+              total: usable.length
+            });
           }
         }
+
+        return result;
       });
 
       chunkResults.forEach(result => {
@@ -850,49 +953,27 @@ exports.DeleteContentObjectBatch = async function({
         }
       });
 
-      if(!sweepable) { continue; }
+      // Both sweeps are awaited and verified here, before the next chunk adds more dead
+      // entries to either the owner's index or a group's
+      if(sweepable) {
+        if(onProgress) { onProgress({phase: "sweep", owner: wallet, done, total: usable.length}); }
 
-      // Awaited and verified, before the next chunk adds more dead entries
-      if(onProgress) { onProgress({phase: "sweep", owner: wallet, done, total: usable.length}); }
+        const sweep = await SweepIndex({client: this, contractAddress: wallet});
+        if(sweep.status === "swept") { transactions += 1; }
+        sweeps.push(sweep);
+      }
 
-      try {
-        const debt = await this.AccessIndexDebt({contractAddress: wallet});
+      if(cleanUpIndexes && sweepAddresses.length > 0) {
+        if(onProgress) { onProgress({phase: "sweep-groups", owner: wallet, done, total: usable.length}); }
 
-        if(!debt.sweepable) {
-          sweeps.push({
-            contractAddress: wallet,
-            status: "skipped",
-            reason: `${debt.dead} dead entries exceeds the ${debt.maxSweepable} a sweep can remove in one block`,
-            dead: debt.dead,
-            maxSweepable: debt.maxSweepable
-          });
-
-          continue;
+        for(const address of sweepAddresses) {
+          const sweep = await SweepIndex({client: this, contractAddress: address, skipIfClean: true});
+          if(sweep.status === "swept") { transactions += 1; }
+          groupSweeps.push(sweep);
         }
-
-        const result = await this.ObjectCleanup({
-          contractAddress: wallet,
-          objectTypeToClean: "content_object"
-        });
-        transactions += 1;
-
-        const lengths = (result[wallet] || result[this.utils.FormatAddress(wallet)] || {});
-        const before = (lengths.beforeCleanup || {}).contentObjectsLength;
-        const after = (lengths.afterCleanup || {}).contentObjectsLength;
-
-        sweeps.push({
-          contractAddress: wallet,
-          status: "swept",
-          dead: debt.dead,
-          before,
-          after,
-          removed: (before === undefined || after === undefined) ? undefined : before - after
-        });
-      } catch(error) {
-        sweeps.push({contractAddress: wallet, status: "failed", reason: error.message});
       }
     }
   }
 
-  return {deleted, failed: errors, sweeps, transactions, dryRun};
+  return {deleted, failed: errors, sweeps, groupSweeps, transactions, dryRun};
 };
