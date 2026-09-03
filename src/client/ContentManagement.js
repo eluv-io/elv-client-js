@@ -25,6 +25,34 @@ const {
   ValidatePresence,
 } = require("../Validation");
 
+/* Validation for Fabric tags, groups and query fields */
+
+const ValidateTags = (tags) => {
+  if(!Array.isArray(tags)) {
+    throw Error("Tags must be an array");
+  }
+};
+
+// Group references are content object IDs. A library ID is also accepted, since a library
+// may act as a group (see the Fabric's "lib" unique group type).
+const ValidateGroups = (groups) => {
+  if(!Array.isArray(groups)) {
+    throw Error("Groups must be an array");
+  }
+
+  groups.forEach(groupId => {
+    if(typeof groupId !== "string" || !(groupId.startsWith("iq__") || groupId.startsWith("ilib"))) {
+      throw Error(`Invalid group ID: ${groupId}`);
+    }
+  });
+};
+
+const ValidateQueryFields = (queryFields) => {
+  if(typeof queryFields !== "object" || queryFields === null || Array.isArray(queryFields)) {
+    throw Error("Query fields must be an object");
+  }
+};
+
 exports.SetVisibility = async function({id, visibility}) {
   this.Log(`Setting visibility ${visibility} on ${id}`);
 
@@ -536,14 +564,18 @@ exports.RemoveLibraryContentType = async function({libraryId, typeId, typeName, 
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {string=} objectId - ID of the object (if contract already exists)
- * @param {Object=} options -
- * type: Version hash of the content type to associate with the object
- *
- * meta: Metadata to use for the new object
- *
- * noEncryptionConk: Set to true to prevent creation of an encryption conk for the object
- *
- * createKMSConk: Set to true to create a KMS conk for object (usually for sharing a playable object) (incompatible with noEncryptionConk: true)
+ * @param {Object=} options - Additional object creation options
+ * @param {string=} options.type - Version hash of the content type to associate with the object
+ * @param {Object=} options.meta - Metadata to use for the new object
+ * @param {string=} options.copy_from - Version hash of an existing object version to copy
+ * @param {string=} options.objectType - System-level object type, e.g. "cgroup" for a content group. May only be
+ * specified when creating a new object - the Fabric rejects an object type change on a new version of an existing object
+ * @param {Array<string>=} options.tags - Fabric tags to associate with the object
+ * @param {Array<string>=} options.groups - IDs of the content groups to add the object to. These categorize content and
+ * are distinct from the access groups that grant permissions
+ * @param {Object<string, string>=} options.queryFields - Unencrypted, indexed query fields to associate with the object
+ * @param {boolean=} options.noEncryptionConk - Set to true to prevent creation of an encryption conk for the object
+ * @param {boolean=} options.createKMSConk - Set to true to create a KMS conk for object (usually for sharing a playable object) (incompatible with noEncryptionConk: true)
  *
  * @returns {Promise<Object>} - Response containing the object ID and write token of the draft, as well as the url of the node that created the write token.
  */
@@ -554,6 +586,10 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
   this.Log(`Creating content object: ${libraryId} ${objectId || ""}`);
 
   if(options.noEncryptionConk && options.createKMSConk) throw new Error("Incompatible options: noEncryptionConk and createKMSConk both set to true");
+
+  if(options.tags !== undefined) { ValidateTags(options.tags); }
+  if(options.groups !== undefined) { ValidateGroups(options.groups); }
+  if(options.queryFields !== undefined) { ValidateQueryFields(options.queryFields); }
 
   // Look up content type, if specified
   let typeId;
@@ -613,7 +649,11 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
     body: {      // filter out options not recognized by server (noEncryptionConk, createKMSConk)
       type: options.type,
       meta: options.meta,
-      copy_from: options.copy_from
+      copy_from: options.copy_from,
+      object_type: options.objectType,
+      tags: options.tags,
+      groups: options.groups,
+      query_fields: options.queryFields
     }
   });
 
@@ -1620,4 +1660,321 @@ exports.DeleteWriteToken = async function({writeToken}) {
   });
 
   await this.HttpClient.ClearWriteToken({writeToken});
+};
+
+/* Content group creation, modification, deletion */
+
+/**
+ * Create content tags
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Array<string>} tags - List of tags
+ *
+ * @returns {Promise<Array<string>>} - The tags on the object after the update
+ */
+exports.AddContentObjectTags = async function({libraryId, writeToken, tags}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+  ValidatePresence("tags", tags);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "tags");
+  const objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+
+  this.Log(`Adding tags: ${tags.join(", ")}`);
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "POST",
+    path: path,
+    body: tags,
+    allowFailover: false
+  });
+};
+
+/**
+ * Update content tags, replacing any existing tags
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Array<string>} tags - Tags the object should have. Must be given explicitly - pass an empty
+ * array to remove all tags
+ *
+ * @returns {Promise<Array<string>>} - The tags on the object after the update
+ */
+exports.SetContentObjectTags = async function({libraryId, writeToken, tags}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+  ValidateTags(tags);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "tags");
+  const objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+
+  this.Log(`Updating tags: ${Array.isArray(tags) ? tags.join(", ") : tags}`);
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "PUT",
+    path: path,
+    body: tags,
+    allowFailover: false
+  });
+};
+
+/**
+ * Remove the given tags from a content object
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Array<string>} tags - List of tags
+ *
+ * @returns {Promise<Array<string>>} - The tags on the object after the update
+ */
+exports.RemoveContentObjectTags = async function({libraryId, writeToken, tags=[]}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+  ValidatePresence("tags", tags);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "tags");
+  const objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+
+  this.Log(`Removing tags: ${tags.join(", ")}`);
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "DELETE",
+    path: path,
+    body: tags,
+    allowFailover: false
+  });
+};
+
+/**
+ * Create content query fields
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Object} queryFields - Query fields defined by key/value pairs for each field
+ *
+ * @returns {Promise<Object<string, string>>} - The query fields on the object after the update
+ */
+exports.AddContentObjectQueryFields = async function({libraryId, writeToken, queryFields}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+  ValidatePresence("queryFields", queryFields);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "query_fields");
+  const objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "POST",
+    path: path,
+    body: queryFields,
+    allowFailover: false
+  });
+};
+
+/**
+ * Replace existing content query fields
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Object<string, string>} queryFields - Query fields as key/value pairs. Must be given explicitly -
+ * pass an empty object to remove all fields
+ *
+ * @returns {Promise<Object<string, string>>} - The query fields on the object after the update
+ */
+exports.SetContentObjectQueryFields = async function({libraryId, writeToken, queryFields}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+  ValidateQueryFields(queryFields);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "query_fields");
+  const objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "PUT",
+    path: path,
+    body: queryFields,
+    allowFailover: false
+  });
+};
+
+/**
+ * Remove the given query fields from a content object
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Array<string>} fieldNames - Names of the query fields to remove
+ *
+ * @returns {Promise<Object<string, string>>} - The query fields on the object after the update
+ */
+exports.RemoveContentObjectQueryFields = async function({libraryId, writeToken, fieldNames=[]}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+  ValidatePresence("fieldNames", fieldNames);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "query_fields");
+  const objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+
+  this.Log(`Removing query fields: ${fieldNames.join(", ")}`);
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "DELETE",
+    path: path,
+    body: fieldNames,
+    allowFailover: false
+  });
+};
+
+/**
+ * Create a content group - a content object that other content objects can be associated with in order to
+ * categorize them. Content groups are distinct from the access groups that grant permissions.
+ *
+ * The group is left as a draft; finalize it before adding content objects to it.
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string=} name - Internal content management name of the group
+ * @param {string=} displayTitle - Public-facing title of the group
+ * @param {Array<string>=} tags - Fabric tags to associate with the group
+ * @param {Object<string, string>=} queryFields - Unencrypted, indexed query fields to associate with the group,
+ * as key/value pairs
+ *
+ * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
+ */
+exports.CreateContentGroup = async function({libraryId, name, displayTitle, tags, queryFields}) {
+  ValidateLibrary(libraryId);
+
+  const {objectId, writeToken} = await this.CreateContentObject({
+    libraryId,
+    options: {
+      objectType: "cgroup",
+      meta: {
+        public: {
+          name,
+          asset_metadata: {
+            display_title: displayTitle
+          }
+        }
+      },
+      tags,
+      queryFields
+    }
+  });
+
+  this.Log(`Created content group: ${objectId}`);
+
+  return {
+    objectId,
+    writeToken
+  };
+};
+
+/**
+ * Add a content object to the given content groups. Groups the object already belongs to are retained.
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Array<string>} groups - IDs of the content groups to add the object to. An empty array is a no-op
+ *
+ * @returns {Promise<Array<string>>} - The groups the object belongs to after the update. Order is not preserved
+ */
+exports.AddContentObjectGroups = async function({libraryId, writeToken, groups=[]}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+  ValidateGroups(groups);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "groups");
+  const objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+
+  this.Log(`Adding groups: ${groups.join(", ")}`);
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "POST",
+    path: path,
+    body: groups,
+    allowFailover: false
+  });
+};
+
+/**
+ * Set the content groups a content object belongs to, replacing any existing groups.
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Array<string>} groups - IDs of the content groups the object should belong to. Must be given
+ * explicitly - pass an empty array to remove the object from all groups
+ *
+ * @returns {Promise<Array<string>>} - The groups the object belongs to after the update. Order is not preserved
+ */
+exports.SetContentObjectGroups = async function({libraryId, writeToken, groups}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+  ValidateGroups(groups);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "groups");
+  const objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+
+  this.Log(`Setting groups: ${groups.join(", ")}`);
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "PUT",
+    path: path,
+    body: groups,
+    allowFailover: false
+  });
+};
+
+/**
+ * Remove a content object from the given content groups. Groups not listed are retained, and
+ * removing a group the object does not belong to is a no-op.
+ *
+ * @methodGroup Content Groups
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token of the draft
+ * @param {Array<string>} groups - IDs of the content groups to remove the object from. An empty array is a no-op
+ *
+ * @returns {Promise<Array<string>>} - The groups the object belongs to after the update. Order is not preserved
+ */
+exports.RemoveContentObjectGroups = async function({libraryId, writeToken, groups=[]}) {
+  ValidateLibrary(libraryId);
+  ValidateWriteToken(writeToken);
+  ValidateGroups(groups);
+
+  const path = UrlJoin("qlibs", libraryId, "q", writeToken, "groups");
+  const objectId = this.utils.DecodeWriteToken(writeToken).objectId;
+
+  this.Log(`Removing groups: ${groups.join(", ")}`);
+
+  return this.HttpClient.RequestJsonBody({
+    headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+    method: "DELETE",
+    path: path,
+    body: groups,
+    allowFailover: false
+  });
 };
