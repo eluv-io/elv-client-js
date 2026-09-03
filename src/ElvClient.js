@@ -1547,6 +1547,7 @@ Object.assign(ElvClient.prototype, require("./client/Files"));
 Object.assign(ElvClient.prototype, require("./client/ABRPublishing"));
 Object.assign(ElvClient.prototype, require("./client/LiveStream"));
 Object.assign(ElvClient.prototype, require("./client/ContentManagement"));
+Object.assign(ElvClient.prototype, require("./client/ContentReclaim"));
 Object.assign(ElvClient.prototype, require("./client/NTP"));
 Object.assign(ElvClient.prototype, require("./client/NFT"));
 Object.assign(ElvClient.prototype, require("./client/Shares"));

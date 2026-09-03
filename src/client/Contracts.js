@@ -1122,6 +1122,7 @@ exports.ObjectCleanup = async function ({
         formatArguments: false,
       });
       res.beforeCleanup.librariesLength = before.toNumber();
+      this.Log(`${contractAddress}: ${before.toNumber()} libraries before cleanup`);
 
       await this.CallContractMethodAndWait({
         contractAddress,
@@ -1144,6 +1145,7 @@ exports.ObjectCleanup = async function ({
         formatArguments: false,
       });
       res.beforeCleanup.contentObjectsLength = before.toNumber();
+      this.Log(`${contractAddress}: ${before.toNumber()} content objects before cleanup`);
 
       await this.CallContractMethodAndWait({
         contractAddress,
@@ -1166,6 +1168,7 @@ exports.ObjectCleanup = async function ({
         formatArguments: false,
       });
       res.beforeCleanup.accessGroupsLength = before.toNumber();
+      this.Log(`${contractAddress}: ${before.toNumber()} access groups before cleanup`);
 
       await this.CallContractMethodAndWait({
         contractAddress,
@@ -1188,6 +1191,7 @@ exports.ObjectCleanup = async function ({
         formatArguments: false,
       });
       res.beforeCleanup.contentTypesLength = before.toNumber();
+      this.Log(`${contractAddress}: ${before.toNumber()} content types before cleanup`);
 
       await this.CallContractMethodAndWait({
         contractAddress,
