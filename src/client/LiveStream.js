@@ -4216,6 +4216,43 @@ exports.OutputsReset = async function({libraryId, objectId, outputId}) {
 };
 
 /**
+ * Manually switch a live output's active input hop (e.g. primary <-> failover).
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output to switch
+ * @param {number=} hop=0 - Target hop index (0 = primary input, 1 = first failover input)
+ *
+ * @returns {Promise<Object>} - Response from the hop call
+ */
+exports.OutputsHop = async function({libraryId, objectId, outputId, hop=0}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputId", outputId);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  // Route to a live egress node, then to the specific output's node
+  const {restore} = await RouteToLiveEgress({client: this});
+  await RouteToOutputNode({client: this, libraryId, objectId, outputId});
+
+  try {
+    return await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: UrlJoin("live", "outputs", outputId, "ctrl", "hop"),
+      queryParams: {hop},
+      constant: false
+    });
+  } finally {
+    restore();
+  }
+};
+
+/**
  * Delete a live output.
  *
  * @methodGroup Live Stream
