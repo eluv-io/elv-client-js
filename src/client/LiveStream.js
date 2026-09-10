@@ -1287,6 +1287,117 @@ exports.StreamStartRecording = async function({name, start=false}) {
 };
 
 /**
+ * Stop the current live recording and start a new one with a new edge write token.
+ * The main object is finalized only once.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name - Object ID or name of the live stream object
+ *
+ * @return {Promise<Object>} - The status response for the new recording session
+ */
+exports.StreamRestartRecording = async function({name}) {
+  let status = await this.StreamStatus({name});
+  const oldEdgeWriteToken = status?.edgeWriteToken;
+
+  if(!oldEdgeWriteToken) {
+    throw new Error("Unable to restart stream - no active recording session");
+  }
+
+  if(["running", "starting", "stalled"].includes(status.state)) {
+    status = await this.StreamStartOrStopOrReset({name, op: "stop"});
+  }
+
+  const IsStopped = currentStatus =>
+    currentStatus?.state === "stopped" &&
+    !currentStatus.error &&
+    currentStatus.edgeWriteToken === oldEdgeWriteToken;
+
+  if(!IsStopped(status)) {
+    throw new Error(`Unable to restart stream - current LRO did not stop definitively (state: ${status?.state || "unknown"})`);
+  }
+
+  const {libraryId, objectId, fabricApi} = status;
+  if(!fabricApi) {
+    throw new Error("Unable to restart stream - ingress node API is unavailable");
+  }
+
+  this.SetNodes({fabricURIs: [fabricApi]});
+
+  let mainWriteToken;
+  let newEdgeWriteToken;
+  let mainObjectFinalizeStarted = false;
+
+  try {
+    ({writeToken: mainWriteToken} = await this.EditContentObject({
+      libraryId,
+      objectId
+    }));
+
+    ({writeToken: newEdgeWriteToken} = await this.EditContentObject({
+      libraryId,
+      objectId
+    }));
+
+    await this.MergeMetadata({
+      libraryId,
+      objectId,
+      writeToken: mainWriteToken,
+      metadata: {
+        live_recording: {
+          status: {
+            edge_write_token: newEdgeWriteToken,
+            state: "active"
+          },
+          fabric_config: {
+            edge_write_token: newEdgeWriteToken
+          }
+        }
+      }
+    });
+
+    // Verify the old LRO is definitively stopped before publishing and deleting the old token.
+    status = await this.StreamStatus({name});
+    if(!IsStopped(status)) {
+      throw new Error(`Unable to restart stream - current LRO stop could not be confirmed (state: ${status?.state || "unknown"})`);
+    }
+    mainObjectFinalizeStarted = true;
+    const finalizeResponse = await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: mainWriteToken,
+      commitMessage: `Restart stream with edge write token ${newEdgeWriteToken}`
+    });
+
+    try {
+      await this.DeleteWriteToken({writeToken: oldEdgeWriteToken});
+    } catch(error) {
+      this.Log(`Unable to delete old edge write token ${oldEdgeWriteToken}: ${error.message}`, true);
+    }
+
+    const restartedStatus = await this.StreamStartOrStopOrReset({name, op: "start"});
+    return {
+      ...restartedStatus,
+      hash: finalizeResponse.hash
+    };
+  } catch(error) {
+    // Before main-object finalization begins, both new drafts are safe to discard and the old
+    // stopped recording remains referenced by the published object.
+    if(!mainObjectFinalizeStarted) {
+      for(const writeToken of [newEdgeWriteToken, mainWriteToken].filter(Boolean)) {
+        try {
+          await this.DeleteWriteToken({writeToken});
+        } catch(cleanupError) {
+          this.Log(`Unable to clean up restart write token ${writeToken}: ${cleanupError.message}`, true);
+        }
+      }
+    }
+
+    throw error;
+  }
+};
+
+/**
  * Start, stop or reset a stream within the current session (current edge write token)
  *
  * @methodGroup Live Stream
