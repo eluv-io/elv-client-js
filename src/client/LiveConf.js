@@ -585,17 +585,22 @@ class LiveConf {
       customXcParams?.video_seg_duration_ts ?? segDurations.video;
     conf.live_recording.recording_config.recording_params.xc_params.force_keyint = segDurations.keyint;
 
-    // Optional override output timebase and frame duration (ts)
-    if(segDurations.videoTimeBase && R.isNil(customXcParams?.video_time_base)) {
-      conf.live_recording.recording_config.recording_params.xc_params.video_time_base = segDurations.videoTimeBase;
+    // These must be recomputed from scratch on every (re)configuration to avoid stale values
+    if(R.isNil(customXcParams?.video_time_base)) {
+      if(segDurations.videoTimeBase) {
+        conf.live_recording.recording_config.recording_params.xc_params.video_time_base = segDurations.videoTimeBase;
 
-      // Note 'source_timescale' needs to be set to the output timebase and is used by playout
-      if(R.isNil(customRecordingParams?.source_timescale)) {
-        conf.live_recording.recording_config.recording_params.source_timescale = this.calcOutputTimebase(segDurations.videoTimeBase);
+        // Note 'source_timescale' needs to be set to the output timebase and is used by playout
+        if(R.isNil(customRecordingParams?.source_timescale)) {
+          conf.live_recording.recording_config.recording_params.source_timescale = this.calcOutputTimebase(segDurations.videoTimeBase);
+        }
+      } else {
+        conf.live_recording.recording_config.recording_params.xc_params.video_time_base = null;
       }
     }
-    if(segDurations.videoFrameDurationTs && R.isNil(customXcParams?.video_frame_duration_ts)) {
-      conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts = segDurations.videoFrameDurationTs;
+    if(R.isNil(customXcParams?.video_frame_duration_ts)) {
+      conf.live_recording.recording_config.recording_params.xc_params.video_frame_duration_ts =
+        segDurations.videoFrameDurationTs || null;
     }
 
     const ladder_specs = customSettings.liveRecordingConfigProfile?.playout_config?.ladder_specs;
