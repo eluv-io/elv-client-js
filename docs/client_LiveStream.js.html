@@ -1585,6 +1585,34 @@ exports.StreamStartOrStopOrReset = async function({name, op}) {
       });
     } catch(error) {
       console.log("LRO Start (failed): ", error);
+
+      // Check for unsupported input conditions before returning
+      // generic "LRO start failed - must create a stream first" error
+      try {
+        const configMeta = await this.ContentObjectMetadata({
+          libraryId: status.libraryId,
+          objectId: status.objectId,
+          metadataSubtree: "live_recording_config",
+          select: [
+            "probe_info",
+            "input_stream_info"
+          ]
+        });
+
+        const probeInfo = configMeta?.probe_info || configMeta?.input_stream_info;
+        const unsupportedAudio = (probeInfo?.streams || [])
+          .find(stream => stream.codec_type === "audio" &amp;&amp; stream.sample_rate === 44100);
+
+        if(unsupportedAudio) {
+          return {
+            state: status.state,
+            error: "Unsupported audio sample rate: 44.1 kHz. Only 48 kHz audio is supported."
+          };
+        }
+      } catch(probeError) {
+        console.error("Unable to check audio sample rate", probeError);
+      }
+
       return {
         state: status.state,
         error: "LRO start failed - must create a stream first"
