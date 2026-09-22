@@ -393,13 +393,19 @@ exports.StreamCreate = async function({
     metadata
   });
 
+  // If the profile is changing, only carry over name and url so stale
+  // settings from the old profile are cleared
+  const baseLiveRecordingConfig = liveRecordingConfig?.name && liveRecordingConfig.name !== oldProfile ?
+    R.pick(["url", "name"], currentLiveRecordingConfig) :
+    currentLiveRecordingConfig;
+
   // Full overwrite avoids the server-side merge mixing streams from the old and new profile
   await this.ReplaceMetadata({
     libraryId,
     objectId,
     writeToken,
     metadataSubtree: "live_recording_config",
-    metadata: R.mergeDeepRight(currentLiveRecordingConfig, liveRecordingConfig)
+    metadata: R.mergeDeepRight(baseLiveRecordingConfig, liveRecordingConfig)
   });
 
   try {
