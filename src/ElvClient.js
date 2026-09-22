@@ -131,6 +131,7 @@ class ElvClient {
    * @param {Array<string>} authServiceURIs - A list of full URIs to auth service endpoints
    * @param {Array<string>} fileServiceURIs - A list of full URIs to file service endpoints
    * @param {Array<string>=} searchURIs - A list of full URIs to search service endpoints
+   * @param {Array<string>=} tenantQueryURIs - A list of full URIs to tenant query service endpoints
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth. Also known as an anonymous token containing the space
@@ -152,6 +153,7 @@ class ElvClient {
     authServiceURIs,
     fileServiceURIs,
     searchURIs,
+    tenantQueryURIs,
     ethereumContractTimeout = 10,
     trustAuthorityId,
     staticToken,
@@ -179,6 +181,7 @@ class ElvClient {
     this.fileServiceURIs = fileServiceURIs || fabricURIs;
     this.ethereumURIs = ethereumURIs;
     this.searchURIs = searchURIs;
+    this.tenantQueryURIs = tenantQueryURIs || [];
     this.ethereumContractTimeout = ethereumContractTimeout;
 
     this.trustAuthorityId = trustAuthorityId;
@@ -262,6 +265,11 @@ class ElvClient {
 
       const searchURIs = fabricInfo.network.services.search || [];
 
+      let tenantQueryURIs = fabricInfo.network.services.tenant_query || [];
+      if(tenantQueryURIs.find(filterHTTPS)) {
+        tenantQueryURIs = tenantQueryURIs.filter(filterHTTPS);
+      }
+
       const fabricVersion = Math.max(...(fabricInfo.network.api_versions || [2]));
 
       return {
@@ -275,6 +283,7 @@ class ElvClient {
         fileServiceURIs,
         kmsURIs: kmsUrls,
         searchURIs,
+        tenantQueryURIs,
         fabricVersion
       };
     } catch(error) {
@@ -378,6 +387,7 @@ class ElvClient {
       authServiceURIs,
       fileServiceURIs,
       searchURIs,
+      tenantQueryURIs,
       fabricVersion
     } = await ElvClient.Configuration({
       configUrl,
@@ -395,6 +405,7 @@ class ElvClient {
       authServiceURIs,
       fileServiceURIs,
       searchURIs,
+      tenantQueryURIs,
       ethereumContractTimeout,
       trustAuthorityId,
       staticToken,
@@ -427,6 +438,7 @@ class ElvClient {
     this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, networkName: this.networkName, debug: this.debug});
     this.FileServiceHttpClient = new HttpClient({uris: this.fileServiceURIs, networkName: this.networkName, debug: this.debug});
     this.SearchHttpClient = new HttpClient({uris: this.searchURIs || [], networkName: this.networkName, debug: this.debug});
+    this.TenantQueryHttpClient = new HttpClient({uris: this.tenantQueryURIs || [], networkName: this.networkName, debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, networkId: this.networkId, debug: this.debug, timeout: this.ethereumContractTimeout});
 
     if(!this.signer) {
@@ -483,7 +495,7 @@ class ElvClient {
       throw Error("Unable to change region: Configuration URL not set");
     }
 
-    const {fabricURIs, ethereumURIs, authServiceURIs, fileServiceURIs, searchURIs} = await ElvClient.Configuration({
+    const {fabricURIs, ethereumURIs, authServiceURIs, fileServiceURIs, searchURIs, tenantQueryURIs} = await ElvClient.Configuration({
       configUrl: this.configUrl,
       region
     });
@@ -495,7 +507,8 @@ class ElvClient {
       ethereumURIs,
       authServiceURIs,
       fileServiceURIs,
-      searchURIs
+      searchURIs,
+      tenantQueryURIs
     });
 
     return {
@@ -503,7 +516,8 @@ class ElvClient {
       ethereumURIs,
       fileServiceURIs,
       authServiceURIs,
-      searchURIs
+      searchURIs,
+      tenantQueryURIs
     };
   }
 
@@ -558,7 +572,8 @@ class ElvClient {
       ethereumURIs: this.ethereumURIs,
       authServiceURIs: this.authServiceURIs,
       fileServiceURIs: this.fileServiceURIs,
-      searchURIs: this.searchURIs
+      searchURIs: this.searchURIs,
+      tenantQueryURIs: this.tenantQueryURIs
     };
   }
 
@@ -571,10 +586,11 @@ class ElvClient {
    * @param {Array<string>=} authServiceURIs - A list of URLs for the auth service, in preference order
    * @param {Array<string>=} fileServiceURIs - A list of URLs for file service jobs, in preference order
    * @param {Array<string>=} searchURIs - A list of URLs for the search nodes, in preference order
+   * @param {Array<string>=} tenantQueryURIs - A list of URLs for the tenant query nodes, in preference order
    *
    * @methodGroup Nodes
    */
-  SetNodes({fabricURIs, ethereumURIs, authServiceURIs, fileServiceURIs, searchURIs}) {
+  SetNodes({fabricURIs, ethereumURIs, authServiceURIs, fileServiceURIs, searchURIs, tenantQueryURIs}) {
     if(fabricURIs) {
       this.fabricURIs = fabricURIs;
 
@@ -608,6 +624,13 @@ class ElvClient {
 
       this.SearchHttpClient.uris = searchURIs;
       this.SearchHttpClient.uriIndex = 0;
+    }
+
+    if(tenantQueryURIs) {
+      this.tenantQueryURIs = tenantQueryURIs;
+
+      this.TenantQueryHttpClient.uris = tenantQueryURIs;
+      this.TenantQueryHttpClient.uriIndex = 0;
     }
   }
 
@@ -935,6 +958,57 @@ class ElvClient {
     PAYLOAD                 85b  json-compressed
     json                    79b  {"adr":"VVf4DQU357tDnZGYQeDrntRJ5rs=","spc":"ispc3ANoVSzNA3P6t7abLR69ho5YPPZU"}
    */
+
+  /*
+    PLAIN TOKEN  PREFIX + BODY | aplsjcJf1HYcDDUuCdXcSZtU86nYK162YmYJeuqwMczEBJVkD5D5EvsBvVwYDRsf4hzDvBWMoe9piBpqx...
+    PREFIX       6b  aplsjc | apl=plain s=ES256K jc=json-compressed
+    BODY             base58(SIGNATURE + PAYLOAD)
+    SIGNATURE   65b  ES256K signature
+    PAYLOAD          raw-deflate JSON
+    json             {"adr":"VVf4DQU357tDnZGYQeDrntRJ5rs=","spc":"ispc3ANoVSzNA3P6t7abLR69ho5YPPZU"}
+   */
+
+  /**
+   * Create a signed "plain" authorization token (`aplsjc...`).
+   *
+   * Plain tokens are largely the same as client-signed access tokens - they do not contain a b/c transaction
+   * and authorization is determined from the rights of the current signer's address.
+   * Currently needed for tenant content query /tenant/:tid/q/query
+   * This token will be deprecated in the future in favor of client-signed access tokens.
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {string=} libraryId - Optional library ID to scope the token. If omitted, the token is space-wide.
+   * @returns {Promise<string>} - The signed Plain auth token
+   */
+  async CreatePlainToken({libraryId}={}) {
+    const address = this.CurrentAccountAddress();
+    if(!address) {
+      throw Error("Unable to create plain token: No signer is configured");
+    }
+
+    const token = {
+      adr: Buffer.from(address.replace(/^0x/, ""), "hex").toString("base64"),
+      spc: await this.ContentSpaceId()
+    };
+
+    if(libraryId) {
+      token.lib = libraryId;
+    }
+
+    const compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
+    const signature = await this.authClient.Sign(Ethers.utils.keccak256(compressedToken));
+    const signatureBytes = Buffer.from(signature.replace(/^0x/, ""), "hex");
+
+    if(signatureBytes.length !== 65) {
+      throw Error("Unable to create plain token: Expected a 65-byte ES256K signature");
+    }
+
+    return `aplsjc${this.utils.B58(Buffer.concat([
+      signatureBytes,
+      Buffer.from(compressedToken)
+    ]))}`;
+  }
 
   async PersonalSign({
     message,

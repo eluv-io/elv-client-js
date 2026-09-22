@@ -197,6 +197,10 @@ const CueInfo = async ({eventId, status}) => {
  * @param {boolean=} options.linkToSite - If enabled, will create a link in the live stream site
  * @param {boolean=} options.initializeDrm - If enabled, will initialize DRM for the object
  * @param {string=} options.ingressNodeId - ID of the ingress node used for stream allocation (required for non-public nodes)
+ * @param {Object=} options.metadata - Additional metadata to merge into the live stream object metadata
+ * @param {Array<string>=} options.tags - Fabric tags to associate with the live stream
+ * @param {Array<string>=} options.groups - Fabric content group IDs to associate with the live stream. Distinct from access groups.
+ * @param {Object<string, string>=} options.queryFields - Fabric query fields to associate with the live stream
  *
  * @return {Promise<Object>} - Object containing objectId, libraryId, writeToken, and hash if finalized
  */
@@ -212,6 +216,20 @@ exports.StreamCreate = async function({
   const existingObject = !!objectId;
   let contentType;
   let adminGroups = options.accessGroups ?? [];
+  const customMetadata = options.metadata === undefined ? {} : options.metadata;
+  const {tags, groups, queryFields} = options;
+
+  if(typeof customMetadata !== "object" || Array.isArray(customMetadata)) {
+    throw Error("Stream metadata must be an object");
+  }
+
+  if(customMetadata.public !== undefined && (customMetadata.public === null || typeof customMetadata.public !== "object" || Array.isArray(customMetadata.public))) {
+    throw Error("Stream public metadata must be an object");
+  }
+
+  if(customMetadata.public?.asset_metadata !== undefined && (customMetadata.public.asset_metadata === null || typeof customMetadata.public.asset_metadata !== "object" || Array.isArray(customMetadata.public.asset_metadata))) {
+    throw Error("Stream public asset metadata must be an object");
+  }
 
   // Retrieve live stream content type
   try {
@@ -265,7 +283,10 @@ exports.StreamCreate = async function({
     editResponse = await this.CreateContentObject({
       libraryId,
       options: {
-        type: contentType
+        type: contentType,
+        tags,
+        groups,
+        queryFields
       }
     });
     objectId = editResponse.objectId;
@@ -273,14 +294,27 @@ exports.StreamCreate = async function({
 
   const {writeToken} = editResponse;
   const {
-    accessGroup,
-    name=defaultName,
     displayTitle,
     description,
     permission="editable",
     ingressNodeId,
     initializeDrm=true
   } = options;
+  const name = options.name ?? customMetadata.public?.name ?? defaultName;
+
+  if(existingObject) {
+    if(tags !== undefined) {
+      await this.SetContentObjectTags({libraryId, objectId, writeToken, tags});
+    }
+
+    if(groups !== undefined) {
+      await this.SetContentObjectGroups({libraryId, objectId, writeToken, groups});
+    }
+
+    if(queryFields !== undefined) {
+      await this.SetContentObjectQueryFields({libraryId, objectId, writeToken, queryFields});
+    }
+  }
 
   if(!liveRecordingConfig) {
     liveRecordingConfig = {};
@@ -311,10 +345,9 @@ exports.StreamCreate = async function({
     })
   );
 
-  const metadata = {
+  const generatedMetadata = {
     public: {
       name,
-      description,
       asset_metadata: {
         display_title: displayTitle || name,
         title: name || displayTitle || defaultName,
@@ -324,6 +357,22 @@ exports.StreamCreate = async function({
       }
     }
   };
+  const metadata = R.mergeDeepRight(generatedMetadata, customMetadata);
+
+  // Explicit options take precedence over custom metadata
+  metadata.public.name = name;
+  if(options.name !== undefined) {
+    metadata.public.asset_metadata.title = name;
+    metadata.public.asset_metadata.slug = slugify(name);
+  }
+
+  if(displayTitle !== undefined) {
+    metadata.public.asset_metadata.display_title = displayTitle;
+  }
+
+  if(description !== undefined) {
+    metadata.public.description = description;
+  }
 
   const currentLiveRecordingConfig = await this.ContentObjectMetadata({
     libraryId,
@@ -1090,9 +1139,9 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
         status.recordingStatus = lroStatus.custom.status;
       }
     } catch(error) {
-      console.log("LRO Status (failed): ", error.response.statusCode);
+      console.log("LRO Status (failed): ", error.response?.statusCode);
       status.state = "stopped";
-      status.error = error.response;
+      status.error = error.response || error.message;
       return status;
     }
 
@@ -1284,6 +1333,117 @@ exports.StreamStartRecording = async function({name, start=false}) {
   }
 
   return status;
+};
+
+/**
+ * Stop the current live recording and start a new one with a new edge write token.
+ * The main object is finalized only once.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name - Object ID or name of the live stream object
+ *
+ * @return {Promise<Object>} - The status response for the new recording session
+ */
+exports.StreamRestartRecording = async function({name}) {
+  let status = await this.StreamStatus({name});
+  const oldEdgeWriteToken = status?.edgeWriteToken;
+
+  if(!oldEdgeWriteToken) {
+    throw new Error("Unable to restart stream - no active recording session");
+  }
+
+  if(["running", "starting", "stalled"].includes(status.state)) {
+    status = await this.StreamStartOrStopOrReset({name, op: "stop"});
+  }
+
+  const IsStopped = currentStatus =>
+    currentStatus?.state === "stopped" &&
+    !currentStatus.error &&
+    currentStatus.edgeWriteToken === oldEdgeWriteToken;
+
+  if(!IsStopped(status)) {
+    throw new Error(`Unable to restart stream - current LRO did not stop definitively (state: ${status?.state || "unknown"})`);
+  }
+
+  const {libraryId, objectId, fabricApi} = status;
+  if(!fabricApi) {
+    throw new Error("Unable to restart stream - ingress node API is unavailable");
+  }
+
+  this.SetNodes({fabricURIs: [fabricApi]});
+
+  let mainWriteToken;
+  let newEdgeWriteToken;
+  let mainObjectFinalizeStarted = false;
+
+  try {
+    ({writeToken: mainWriteToken} = await this.EditContentObject({
+      libraryId,
+      objectId
+    }));
+
+    ({writeToken: newEdgeWriteToken} = await this.EditContentObject({
+      libraryId,
+      objectId
+    }));
+
+    await this.MergeMetadata({
+      libraryId,
+      objectId,
+      writeToken: mainWriteToken,
+      metadata: {
+        live_recording: {
+          status: {
+            edge_write_token: newEdgeWriteToken,
+            state: "active"
+          },
+          fabric_config: {
+            edge_write_token: newEdgeWriteToken
+          }
+        }
+      }
+    });
+
+    // Verify the old LRO is definitively stopped before publishing and deleting the old token.
+    status = await this.StreamStatus({name});
+    if(!IsStopped(status)) {
+      throw new Error(`Unable to restart stream - current LRO stop could not be confirmed (state: ${status?.state || "unknown"})`);
+    }
+    mainObjectFinalizeStarted = true;
+    const finalizeResponse = await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: mainWriteToken,
+      commitMessage: `Restart stream with edge write token ${newEdgeWriteToken}`
+    });
+
+    try {
+      await this.DeleteWriteToken({writeToken: oldEdgeWriteToken});
+    } catch(error) {
+      this.Log(`Unable to delete old edge write token ${oldEdgeWriteToken}: ${error.message}`, true);
+    }
+
+    const restartedStatus = await this.StreamStartOrStopOrReset({name, op: "start"});
+    return {
+      ...restartedStatus,
+      hash: finalizeResponse.hash
+    };
+  } catch(error) {
+    // Before main-object finalization begins, both new drafts are safe to discard and the old
+    // stopped recording remains referenced by the published object.
+    if(!mainObjectFinalizeStarted) {
+      for(const writeToken of [newEdgeWriteToken, mainWriteToken].filter(Boolean)) {
+        try {
+          await this.DeleteWriteToken({writeToken});
+        } catch(cleanupError) {
+          this.Log(`Unable to clean up restart write token ${writeToken}: ${cleanupError.message}`, true);
+        }
+      }
+    }
+
+    throw error;
+  }
 };
 
 /**
@@ -3532,6 +3692,13 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
       method: "live/outputs",
       constant:  true
     });
+  } catch(error) {
+    if(error.status === 404) {
+      // Stream object may have been deleted
+      return {};
+    }
+
+    throw error;
   } finally {
     restore();
   }
@@ -3544,17 +3711,22 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
       const streamId = value.input?.stream;
       if(!streamId) { return; }
 
-      const [streamLibraryId, streamStatus] = await Promise.all([
-        this.ContentObjectLibraryId({objectId: streamId}),
-        this.StreamStatus({name: streamId})
-      ]);
+      try {
+        const [streamLibraryId, streamStatus] = await Promise.all([
+          this.ContentObjectLibraryId({objectId: streamId}),
+          this.StreamStatus({name: streamId})
+        ]);
 
-      value.input.name = await this.ContentObjectMetadata({
-        libraryId: streamLibraryId,
-        objectId: streamId,
-        metadataSubtree: "/public/name",
-      });
-      value.input.status = streamStatus?.state;
+        value.input.name = await this.ContentObjectMetadata({
+          libraryId: streamLibraryId,
+          objectId: streamId,
+          metadataSubtree: "/public/name",
+        });
+        value.input.status = streamStatus?.state;
+      } catch(error) {
+        // Stream object may have been deleted
+        value.input.status = "unavailable";
+      }
     }
   );
 
@@ -3569,9 +3741,13 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
 
   const nodeUrls = {};
   await this.utils.LimitedMap(10, nodeIds, async nodeId => {
-    const nodes = await this.SpaceNodes({matchNodeId: nodeId});
-    const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
-    if(fabricUrl) { nodeUrls[nodeId] = fabricUrl; }
+    try {
+      const nodes = await this.SpaceNodes({matchNodeId: nodeId});
+      const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+      if(fabricUrl) { nodeUrls[nodeId] = fabricUrl; }
+    } catch(error) {
+      this.Log(`Failed to resolve node ${nodeId}: ${error.message}`, true);
+    }
   });
 
   // Rewrite fabric-generated srt_pull URLs to the egress host, and group outputs by node
@@ -4192,6 +4368,43 @@ exports.OutputsReset = async function({libraryId, objectId, outputId}) {
       libraryId,
       objectId,
       method: UrlJoin("live", "outputs", outputId, "ctrl", "reset"),
+      constant: false
+    });
+  } finally {
+    restore();
+  }
+};
+
+/**
+ * Manually switch a live output's active input hop (e.g. primary <-> failover).
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {string} outputId - ID of the output to switch
+ * @param {number=} hop=0 - Target hop index (0 = primary input, 1 = first failover input)
+ *
+ * @returns {Promise<Object>} - Response from the hop call
+ */
+exports.OutputsHop = async function({libraryId, objectId, outputId, hop=0}) {
+  ValidateObject(objectId);
+  ValidatePresence("outputId", outputId);
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  // Route to a live egress node, then to the specific output's node
+  const {restore} = await RouteToLiveEgress({client: this});
+  await RouteToOutputNode({client: this, libraryId, objectId, outputId});
+
+  try {
+    return await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: UrlJoin("live", "outputs", outputId, "ctrl", "hop"),
+      queryParams: {hop},
       constant: false
     });
   } finally {
