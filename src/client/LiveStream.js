@@ -395,7 +395,8 @@ exports.StreamCreate = async function({
 
   // If the profile is changing, only carry over name and url so stale
   // settings from the old profile are cleared
-  const baseLiveRecordingConfig = liveRecordingConfig?.name && liveRecordingConfig.name !== oldProfile ?
+  const changingProfile = liveRecordingConfig?.name && liveRecordingConfig.name !== oldProfile;
+  const baseLiveRecordingConfig = changingProfile ?
     R.pick(["url", "name"], currentLiveRecordingConfig) :
     currentLiveRecordingConfig;
 
@@ -407,6 +408,26 @@ exports.StreamCreate = async function({
     metadataSubtree: "live_recording_config",
     metadata: R.mergeDeepRight(baseLiveRecordingConfig, liveRecordingConfig)
   });
+
+  if(changingProfile) {
+    // Clear live_recording and live_recording_overrides so stale settings from the
+    // previous profile don't persist, matching StreamApplyProfile
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "live_recording",
+      metadata: {}
+    });
+
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "live_recording_overrides",
+      metadata: {}
+    });
+  }
 
   try {
     await this.CreateLinks({
