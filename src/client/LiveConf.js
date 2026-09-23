@@ -538,8 +538,12 @@ class LiveConf {
     conf.live_recording.recording_config.recording_params.description = `Ingest stream ${fileName}`;
     conf.live_recording.recording_config.recording_params.name = `Ingest stream ${fileName}`;
     conf.live_recording.recording_config.recording_params.xc_params.sample_rate = sampleRate;
-    conf.live_recording.recording_config.recording_params.xc_params.enc_height = videoStream.height;
-    conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;
+
+    // Encoding dimensions default to the source but are overridden by profile values if present
+    conf.live_recording.recording_config.recording_params.xc_params.enc_height =
+      customXcParams?.enc_height ?? videoStream.height;
+    conf.live_recording.recording_config.recording_params.xc_params.enc_width =
+      customXcParams?.enc_width ?? videoStream.width;
 
     for(let i =0; i < Object.keys(audioStreams).length; i ++) {
       conf.live_recording.recording_config.recording_params.xc_params.audio_index[i] = parseInt(Object.keys(audioStreams)[i]);
@@ -605,9 +609,6 @@ class LiveConf {
 
     const ladder_specs = customSettings.liveRecordingConfigProfile?.playout_config?.ladder_specs;
     const ladderProfile = ladder_specs?.video?.length > 0 ? ladder_specs : DefaultABRLadder;
-
-    conf.live_recording.recording_config.recording_params.xc_params.enc_height = videoStream.height;
-    conf.live_recording.recording_config.recording_params.xc_params.enc_width = videoStream.width;
 
     // Reset ladder specs (updating existing stream will carry over old specs
     conf.live_recording.recording_config.recording_params.ladder_specs = [];
