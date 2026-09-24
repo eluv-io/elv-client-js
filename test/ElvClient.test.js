@@ -2962,21 +2962,8 @@ describe("Test ElvClient", () => {
       } catch(error) {}
     });
 
-    test("Object Cleanup", async () => {
-      let contractAddress = client.signer.address;
-      const res = await client.ObjectCleanup({contractAddress, objectTypeToClean: "content_object"});
-      expect(res).toBeDefined();
-      expect(res[contractAddress]).toBeDefined();
-
-      const resForSigner = res[contractAddress];
-      expect(resForSigner.beforeCleanup.contentObjectsLength).toBeDefined();
-      expect(resForSigner.afterCleanup.contentObjectsLength).toBeDefined();
-      const beforeCleanup = resForSigner.beforeCleanup.contentObjectsLength;
-      const afterCleanup = resForSigner.afterCleanup.contentObjectsLength;
-      expect(afterCleanup).toBeLessThan(beforeCleanup);
-    });
-
-    test("Clear Tenancy", async () => {
+    // 'Clear Tenancy' test removes tenant details from existing account
+    test.skip("Clear Tenancy", async () => {
 
       await client.ResetTenantId({
         objectId: libraryId
@@ -3007,33 +2994,75 @@ describe("Test ElvClient", () => {
       expect(tenantContractId).toEqual("");
     });
 
-    /*
-
     test("Delete Content Type", async () => {
-      await client.DeleteContentObject({libraryId: contentSpaceLibraryId, objectId: typeId});
+      const typeId = await client.CreateContentType({
+        name: "Content type to be deleted",
+        bitcode: testFile1
+      });
+      await client.DeleteContentType({typeId});
 
       try {
-        await client.ContentObject({libraryId: contentSpaceLibraryId, objectId: typeId});
-        expect(undefined).toBeDefined();
+        await client.ContentObject({libraryId: client.contentSpaceLibraryId, objectId: typeId});
       } catch(error) {
         expect(error.status).toEqual(404);
       }
     });
 
     test("Delete Content Library", async () => {
-      await client.DeleteContentLibrary({libraryId});
+      const newLibraryId = await client.CreateContentLibrary({name: "Needs to be deleted"});
+      expect(newLibraryId).toBeDefined();
 
+      // add contents to new library
+      const {id, write_token} = await client.CreateContentObject({libraryId: newLibraryId});
+      await client.FinalizeContentObject({libraryId: newLibraryId, objectId: id, writeToken: write_token});
+
+      // delete library will fail
       try {
-        await client.ContentLibrary({libraryId});
-        expect(undefined).toBeDefined();
+        await client.DeleteContentLibrary({libraryId: newLibraryId});
+      } catch(e){
+        expect(e.message).toContain("has content objects, Please delete them before deleting library");
+      }
+
+      // delete content object
+      await client.DeleteContentObject({libraryId: newLibraryId, objectId: id});
+
+      // cleanup library for the user and associated groups
+      let contractAddress = client.signer.address;
+      await client.ObjectCleanup({contractAddress, objectTypeToClean:"content_object"});
+
+      // deletes the library
+      await client.DeleteContentLibrary({libraryId: newLibraryId});
+      try {
+        await client.ContentLibrary({libraryId: newLibraryId});
       } catch(error) {
-        expect(error.status).toEqual(404);
+        expect(error.status).toEqual(403);
       }
     });
-    */
 
-    test.skip("Delete Access Group", async () => {
+    test("Delete Access Group", async () => {
+      const accessGroupAddress = await client.CreateAccessGroup({
+        name: "Test Access Group For Testing Deletion",
+        description: "Test Access Group For Testing Deletion",
+        metadata: {
+          group: "metadata"
+        }
+      });
+      expect(accessGroupAddress).toBeDefined();
       await client.DeleteAccessGroup({contractAddress: accessGroupAddress});
+    });
+
+    test("Object Cleanup", async () => {
+      let contractAddress = client.signer.address;
+      const res = await client.ObjectCleanup({contractAddress, objectTypeToClean: "all"});
+      expect(res).toBeDefined();
+      expect(res[contractAddress]).toBeDefined();
+
+      const resForSigner = res[contractAddress];
+      expect(resForSigner.beforeCleanup.librariesLength).toBeDefined();
+      expect(resForSigner.afterCleanup.librariesLength).toBeDefined();
+      const beforeCleanup = resForSigner.beforeCleanup.librariesLength;
+      const afterCleanup = resForSigner.afterCleanup.librariesLength;
+      expect(afterCleanup).toBeLessThan(beforeCleanup);
     });
   });
 

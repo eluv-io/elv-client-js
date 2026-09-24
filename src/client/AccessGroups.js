@@ -302,7 +302,7 @@ exports.CreateAccessGroup = async function({name, description, metadata={}, visi
 };
 
 /**
- * NOT YET SUPPORTED - Delete an access group
+ * Delete an access group
  *
  * Calls the kill method on the specified access group's contract
  *
@@ -312,12 +312,18 @@ exports.CreateAccessGroup = async function({name, description, metadata={}, visi
  * @param {string} contractAddress - The address of the access group contract
  */
 exports.DeleteAccessGroup = async function({contractAddress}) {
-  throw Error("Not supported");
-
   // eslint-disable-next-line no-unreachable
   contractAddress = ValidateAddress(contractAddress);
 
   this.Log(`Deleting access group ${contractAddress}`);
+
+  const canEdit = await this.CallContractMethod({
+    contractAddress,
+    methodName: "canEdit"
+  });
+  if(!canEdit) {
+    throw Error(`Current user does not have permission to delete access group ${contractAddress}`);
+  }
 
   await this.CallContractMethodAndWait({
     contractAddress,
