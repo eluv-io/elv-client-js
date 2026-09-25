@@ -813,10 +813,11 @@ exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, writ
  * @param {object=} options -
  * @param {object=} options.meta - New metadata for the object - will be merged into existing metadata if specified
  * @param {string=} options.type - New type for the object - Object ID, version hash or name of type
+ * @param {string=} nodeUrl - Fabric node URL to create the draft on
  *
  * @returns {Promise<object>} - Response containing the object ID and write token of the draft, as well as URL of node handling the draft
  */
-exports.EditContentObject = async function({libraryId, objectId, options={}}) {
+exports.EditContentObject = async function({libraryId, objectId, options={}, nodeUrl}) {
   ValidateParameters({libraryId, objectId});
 
   this.Log(`Opening content draft: ${libraryId} ${objectId}`);
@@ -842,11 +843,12 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
     headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
     method: "POST",
     path: path,
-    body: options
+    body: options,
+    nodeUrl
   });
   // extract the url for the node that handled the request
   // TODO: remove/simplify after we start using /nodes API call to get node URLs for write tokens
-  const nodeUrl = (new URL(rawEditResponse.url)).origin;
+  const responseNodeUrl = (new URL(rawEditResponse.url)).origin;
   const editResponse = await this.utils.ResponseToJson(
     rawEditResponse,
     this.HttpClient.debug,
@@ -854,11 +856,11 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
   );
 
   // Record the node used in creating this write token
-  this.RecordWriteToken({writeToken: editResponse.write_token, fabricNodeUrl: nodeUrl});
+  this.RecordWriteToken({writeToken: editResponse.write_token, fabricNodeUrl: responseNodeUrl});
 
   editResponse.writeToken = editResponse.write_token;
   editResponse.objectId = editResponse.id;
-  editResponse.nodeUrl = nodeUrl;
+  editResponse.nodeUrl = responseNodeUrl;
 
   return editResponse;
 };
