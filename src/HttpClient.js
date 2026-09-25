@@ -65,9 +65,15 @@ class HttpClient {
     allowFailover=true,
     forceFailover=false,
     allowRetry=true,
-    uriIndex
+    uriIndex,
+    nodeUrl
   }) {
     let baseURI = this.BaseURI(uriIndex);
+
+    if(nodeUrl) {
+      baseURI = new URI(nodeUrl);
+      allowFailover = false;
+    }
 
     // If URL contains a write token, it must go to the correct server and can not fail over
     const writeTokenMatch = path.replace(/^\//, "").match(/(qlibs\/ilib[a-zA-Z0-9]+|q|qid)\/(tqw__[a-zA-Z0-9]+)/);
@@ -171,7 +177,8 @@ class HttpClient {
           headers,
           attempts: attempts + 1,
           uriIndex,
-          forceFailover
+          forceFailover,
+          nodeUrl
         });
       }
 

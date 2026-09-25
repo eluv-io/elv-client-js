@@ -1269,13 +1269,12 @@ exports.StreamStartRecording = async function({name, start=false}) {
     fabURI = "https://" + fabURI;
   }
 
-  this.SetNodes({fabricURIs: [fabURI]});
-
   console.log("Node URI", fabURI, "ID", liveRecording.fabric_config.ingress_node_id);
 
   let response = await this.EditContentObject({
     libraryId: libraryId,
-    objectId: objectId
+    objectId: objectId,
+    nodeUrl: fabURI
   });
   const edgeToken = response.write_token;
   console.log("Edge token:", edgeToken);
@@ -1285,7 +1284,8 @@ exports.StreamStartRecording = async function({name, start=false}) {
   */
   response = await this.EditContentObject({
     libraryId: libraryId,
-    objectId: objectId
+    objectId: objectId,
+    nodeUrl: fabURI
   });
   let writeToken = response.write_token;
 
