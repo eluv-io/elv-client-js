@@ -3757,55 +3757,58 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
     restore();
   }
 
-  // Enrich each output's input stream name/status concurrently (read-only, no routing changes)
-  await this.utils.LimitedMap(
-    10,
-    Object.values(outputs),
-    async value => {
-      const streamId = value.input?.stream;
-      if(!streamId) { return; }
+  const nodeIds = includeState ?
+    [...new Set(Object.values(outputs).map(value => OutputDeliveryNodeId(value)).filter(el => !!el))] :
+    [];
 
-      try {
-        const [streamLibraryId, streamStatus] = await Promise.all([
-          this.ContentObjectLibraryId({objectId: streamId}),
-          this.StreamStatus({name: streamId})
-        ]);
+  // Enrich each output's input stream info and resolve node URLs concurrently
+  const [_, nodeUrls] = await Promise.all([
+    this.utils.LimitedMap(
+      10,
+      Object.values(outputs),
+      async value => {
+        const streamId = value.input?.stream;
+        if(!streamId) { return; }
 
-        value.input.name = await this.ContentObjectMetadata({
-          libraryId: streamLibraryId,
-          objectId: streamId,
-          metadataSubtree: "/public/name",
-        });
-        value.input.status = streamStatus?.state;
-      } catch(error) {
-        // Stream object may have been deleted
-        value.input.status = "unavailable";
+        try {
+          const [streamLibraryId, streamStatus] = await Promise.all([
+            this.ContentObjectLibraryId({objectId: streamId}),
+            this.StreamStatus({name: streamId})
+          ]);
+
+          value.input.name = await this.ContentObjectMetadata({
+            libraryId: streamLibraryId,
+            objectId: streamId,
+            metadataSubtree: "/public/name",
+          });
+          value.input.status = streamStatus?.state;
+        } catch(error) {
+          // Stream object may have been deleted
+          value.input.status = "unavailable";
+        }
       }
-    }
-  );
+    ),
+    (async () => {
+      const resolved = {};
+      await this.utils.LimitedMap(10, nodeIds, async nodeId => {
+        try {
+          const nodes = await this.SpaceNodes({matchNodeId: nodeId});
+          const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+          if(fabricUrl) { resolved[nodeId] = fabricUrl; }
+        } catch(error) {
+          this.Log(`Failed to resolve node ${nodeId}: ${error.message}`, true);
+        }
+      });
+      return resolved;
+    })()
+  ]);
 
   if(!includeState) {
     return outputs;
   }
 
-  // Resolve each distinct egress node's fabric URL once (concurrent, read-only)
-  const nodeIds = [...new Set(
-    Object.values(outputs).map(value => OutputDeliveryNodeId(value)).filter(Boolean)
-  )];
-
-  const nodeUrls = {};
-  await this.utils.LimitedMap(10, nodeIds, async nodeId => {
-    try {
-      const nodes = await this.SpaceNodes({matchNodeId: nodeId});
-      const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
-      if(fabricUrl) { nodeUrls[nodeId] = fabricUrl; }
-    } catch(error) {
-      this.Log(`Failed to resolve node ${nodeId}: ${error.message}`, true);
-    }
-  });
-
-  // Rewrite fabric-generated srt_pull URLs to the egress host, and group outputs by node
-  const outputsByNode = {};
+  // Rewrite srt_pull URLs to the egress host and collect outputs with a resolvable node
+  const outputsWithNode = [];
   for(const [key, value] of Object.entries(outputs)) {
     const nodeId = OutputDeliveryNodeId(value);
     const fabricUrl = nodeId && nodeUrls[nodeId];
@@ -3816,36 +3819,28 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
       value.state = {};
       continue;
     }
-    (outputsByNode[nodeId] = outputsByNode[nodeId] || []).push(key);
+    outputsWithNode.push({key, fabricUrl});
   }
 
-  // Fetch state per node: route to the node once, fetch its outputs concurrently, then restore
-  const savedURIs = [...this.fabricURIs];
-  try {
-    for(const [nodeId, outputIds] of Object.entries(outputsByNode)) {
-      this.SetNodes({fabricURIs: [nodeUrls[nodeId]]});
-
-      await this.utils.LimitedMap(10, outputIds, async outputId => {
-        try {
-          outputs[outputId].state = await this.CallBitcodeMethod({
-            libraryId,
-            objectId,
-            method: UrlJoin("live", "outputs", outputId, "state"),
-            queryParams: {
-              "client_stats": 1,
-              "srt_stats": 1
-            },
-            constant: true
-          });
-        } catch(error) {
-          this.Log(`Failed to retrieve state for output ${outputId}: ${error.message}`, true);
-          outputs[outputId].state = {};
-        }
+  // Fetch state for every output, routed directly to its node
+  await this.utils.LimitedMap(10, outputsWithNode, async ({key, fabricUrl}) => {
+    try {
+      outputs[key].state = await this.CallBitcodeMethod({
+        libraryId,
+        objectId,
+        method: UrlJoin("live", "outputs", key, "state"),
+        queryParams: {
+          "client_stats": 1,
+          "srt_stats": 1
+        },
+        constant: true,
+        nodeUrl: fabricUrl
       });
+    } catch(error) {
+      this.Log(`Failed to retrieve state for output ${key}: ${error.message}`, true);
+      outputs[key].state = {};
     }
-  } finally {
-    this.SetNodes({fabricURIs: savedURIs});
-  }
+  });
 
   return outputs;
 };
