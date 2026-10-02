@@ -1231,6 +1231,102 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
 };
 
 /**
+ * Retrieve the state of a live stream. A lightweight alternative to StreamStatus for when only the
+ * state is needed (e.g. when listing many streams): it reads only the metadata required to determine
+ * the state, and fetches the edge metadata and LRO status in parallel rather than sequentially.
+ *
+ * Unlike StreamStatus, errors reading the stream object's metadata (e.g. if it has been deleted) are thrown.
+ *
+ * The state logic mirrors StreamStatus and must be kept consistent with it.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name - Object ID of the live stream object
+ * @param {string=} writeToken - Write token of a draft of the live stream object
+ *
+ * @return {Promise<string>} - The stream state, as reported by StreamStatus (e.g. "unconfigured", "uninitialized", "inactive", "stopped", "running")
+ */
+exports.StreamState = async function({name, writeToken}) {
+  const objectId = name;
+  const libraryId = await this.ContentObjectLibraryId({objectId});
+
+  const meta = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    select: [
+      "live_recording_config/url",
+      "live_recording/fabric_config",
+      "live_recording/playout_config",
+      "live_recording/recording_config"
+    ]
+  }) || {};
+
+  const liveRecording = meta.live_recording;
+
+  if(meta.live_recording_config?.url == undefined) {
+    return "unconfigured";
+  }
+
+  if(liveRecording?.fabric_config == undefined || liveRecording.playout_config == undefined || liveRecording.recording_config == undefined) {
+    return "uninitialized";
+  }
+
+  let fabURI = liveRecording.fabric_config.ingress_node_api;
+  if(fabURI === undefined) {
+    return "uninitialized";
+  }
+
+  // Support both hostname and URL ingress_node_api
+  if(!fabURI.startsWith("http")) {
+    fabURI = "https://" + fabURI;
+  }
+
+  const edgeWriteToken = liveRecording.fabric_config.edge_write_token;
+  if(!edgeWriteToken) {
+    return "inactive";
+  }
+
+  this.RecordWriteToken({writeToken: edgeWriteToken, fabricNodeUrl: fabURI});
+
+  const [edgeMeta, lroStatus] = await Promise.allSettled([
+    this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: "/live/meta",
+      constant: true
+    }),
+    (async () => this.utils.ResponseToJson(
+      HttpClient.Fetch(
+        await this.FabricUrl({
+          libraryId,
+          objectId,
+          writeToken: edgeWriteToken,
+          call: "live/status"
+        })
+      )
+    ))()
+  ]);
+
+  if(edgeMeta.status === "rejected") {
+    return edgeMeta.reason?.message?.includes("ERR_TOO_MANY_REDIRECTS") ? "unavailable" : "inactive";
+  }
+
+  // Stream has never been started
+  if(edgeMeta.value?.live_recording?.recordings?.recording_sequence === undefined) {
+    return "stopped";
+  }
+
+  if(lroStatus.status === "rejected") {
+    return "stopped";
+  }
+
+  // The LRO reports 'terminated' which for the recording means 'stopped'
+  const state = lroStatus.value.state;
+  return state === "terminated" ? "stopped" : state;
+};
+
+/**
  * Create a new edge write token
  *
  * @methodGroup Live Stream
@@ -3683,8 +3779,7 @@ exports.OutputsResolveSrtPullUrls = async function({value}) {
   const nodeId = value.srt_pull?.node_ids?.[0];
   if(!nodeId) { return value; }
 
-  const nodes = await this.SpaceNodes({matchNodeId: nodeId});
-  const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+  const fabricUrl = await NodeFabricUrl({client: this, nodeId});
   RewriteSrtPullUrls(value, fabricUrl);
 
   return value;
@@ -3734,16 +3829,16 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
 
     await this.utils.LimitedMap(10, streamIds, async streamId => {
       try {
-        const [name, streamStatus] = await Promise.all([
+        const [name, status] = await Promise.all([
           (async () => this.ContentObjectMetadata({
             libraryId: await this.ContentObjectLibraryId({objectId: streamId}),
             objectId: streamId,
             metadataSubtree: "/public/name",
           }))(),
-          this.StreamStatus({name: streamId})
+          this.StreamState({name: streamId})
         ]);
 
-        streamInfo[streamId] = {name, status: streamStatus?.state};
+        streamInfo[streamId] = {name, status};
       } catch(error) {
         // Stream object may have been deleted
         streamInfo[streamId] = {status: "unavailable"};
@@ -3982,8 +4077,7 @@ const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}
   }
 
   if(nodeId) {
-    const nodes = await client.SpaceNodes({matchNodeId: nodeId});
-    const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+    const fabricUrl = await NodeFabricUrl({client, nodeId});
     if(fabricUrl) {
       client.SetNodes({fabricURIs: [fabricUrl]});
       if(config) { await client.OutputsResolveSrtPullUrls({value: config}); }
