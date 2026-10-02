@@ -542,6 +542,7 @@ class FrameClient {
       "StreamRestartRecording",
       "StreamStartRecording",
       "StreamStartOrStopOrReset",
+      "StreamState",
       "StreamStatus",
       "StreamStopRecording",
       "StreamUnassignProfile",
