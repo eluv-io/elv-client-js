@@ -1398,8 +1398,6 @@ exports.StreamRestartRecording = async function({name}) {
     throw new Error("Unable to restart stream - ingress node API is unavailable");
   }
 
-  this.SetNodes({fabricURIs: [fabricApi]});
-
   let mainWriteToken;
   let newEdgeWriteToken;
   let mainObjectFinalizeStarted = false;
@@ -1407,12 +1405,14 @@ exports.StreamRestartRecording = async function({name}) {
   try {
     ({writeToken: mainWriteToken} = await this.EditContentObject({
       libraryId,
-      objectId
+      objectId,
+      nodeUrl: fabricApi
     }));
 
     ({writeToken: newEdgeWriteToken} = await this.EditContentObject({
       libraryId,
-      objectId
+      objectId,
+      nodeUrl: fabricApi
     }));
 
     await this.MergeMetadata({
@@ -1622,8 +1622,6 @@ exports.StreamStopRecording = async function({name}) {
       fabURI = "https://" + fabURI;
     }
 
-    this.SetNodes({fabricURIs: [fabURI]});
-
     const metaEdgeWriteToken = mainMeta.live_recording.fabric_config.edge_write_token;
 
     if(!metaEdgeWriteToken) {
@@ -1661,7 +1659,8 @@ exports.StreamStopRecording = async function({name}) {
 
     const {writeToken} = await this.EditContentObject({
       libraryId: libraryId,
-      objectId: objectId
+      objectId: objectId,
+      nodeUrl: fabURI
     });
 
     // Set stop time and inactive state
