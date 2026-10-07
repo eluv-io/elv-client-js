@@ -3826,32 +3826,14 @@ exports.OutputsResolveSrtPullUrls = async function({value}) {
 exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
   ValidateObject(objectId);
 
-  // Resolve Library ID and egress node concurrently. The node list fetched for the egress
-  // lookup is reused below to resolve each output's egress node.
+  // Fetch Library ID and egress node concurrently. Reuse node list for outputs
   let egressNode, nodes;
   [libraryId, {node: egressNode, nodes}] = await Promise.all([
     libraryId || this.ContentObjectLibraryId({objectId}),
     RetrieveLiveEgressNode({client: this})
   ]);
 
-  // Send the list call to any live egress node (only necessary until the API is globally available)
-  let outputs;
-  try {
-    outputs = await this.CallBitcodeMethod({
-      libraryId,
-      objectId,
-      method: "live/outputs",
-      constant:  true,
-      nodeUrl: NodeUrl(egressNode)
-    });
-  } catch(error) {
-    if(error.status === 404) {
-      // Stream object may have been deleted
-      return {};
-    }
-
-    throw error;
-  }
+  const outputs = await RetrieveOutputs({client: this, libraryId, objectId, egressNode});
 
   // Enrich input stream info. Each stream is looked up once, even if it feeds multiple outputs.
   const EnrichInputStreams = async () => {
@@ -3884,52 +3866,17 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
 
   // Resolve each egress node's URL, then fetch output state routed directly to that node
   const RetrieveState = async () => {
-    const nodeIds = [...new Set(Object.values(outputs).map(value => OutputDeliveryNodeId(value)).filter(el => !!el))];
-    const nodeUrls = {};
+    const nodeUrls = await ResolveOutputNodeUrls({client: this, outputs, nodes});
 
-    await this.utils.LimitedMap(10, nodeIds, async nodeId => {
-      try {
-        // Fall back to a direct lookup if the node is missing from the list
-        const fabricUrl = NodeFabricUrlFromList({nodes, nodeId}) || await NodeFabricUrl({client: this, nodeId});
-        if(fabricUrl) { nodeUrls[nodeId] = fabricUrl; }
-      } catch(error) {
-        this.Log(`Failed to resolve node ${nodeId}: ${error.message}`, true);
-      }
-    });
-
-    // Rewrite srt_pull URLs to the egress host and collect outputs with a resolvable node
-    const outputsWithNode = [];
-    for(const [key, value] of Object.entries(outputs)) {
-      const nodeId = OutputDeliveryNodeId(value);
-      const fabricUrl = nodeId && nodeUrls[nodeId];
-
-      RewriteSrtPullUrls(value, fabricUrl);
-
-      if(!fabricUrl) {
-        value.state = {};
-        continue;
-      }
-      outputsWithNode.push({key, fabricUrl});
+    // Rewrite srt_pull URLs to the egress host
+    for(const value of Object.values(outputs)) {
+      RewriteSrtPullUrls(value, nodeUrls[OutputDeliveryNodeId(value)]);
     }
 
-    await this.utils.LimitedMap(10, outputsWithNode, async ({key, fabricUrl}) => {
-      try {
-        outputs[key].state = await this.CallBitcodeMethod({
-          libraryId,
-          objectId,
-          method: UrlJoin("live", "outputs", key, "state"),
-          queryParams: {
-            "client_stats": 1,
-            "srt_stats": 1
-          },
-          constant: true,
-          nodeUrl: fabricUrl
-        });
-      } catch(error) {
-        this.Log(`Failed to retrieve state for output ${key}: ${error.message}`, true);
-        outputs[key].state = {};
-      }
-    });
+    const states = await RetrieveOutputsState({client: this, libraryId, objectId, outputs, nodeUrls});
+    for(const [key, state] of Object.entries(states)) {
+      outputs[key].state = state;
+    }
   };
 
   await Promise.all([
@@ -3938,6 +3885,144 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
   ]);
 
   return outputs;
+};
+
+/**
+ * Retrieve the live state of each output of a stream object. State is fetched from each output's
+ * egress node. Passing the outputs returned by OutputsList (with includeState=false) avoids
+ * retrieving the list again, and allows the list to be displayed before the slower state calls complete.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {Object<string, LiveOutput>=} outputs - Map of output IDs to LiveOutput objects, as returned by OutputsList.
+ * If not provided, the list will be retrieved automatically.
+ *
+ * @returns {Promise<Object<string, Object>>} - Map of output IDs to state, containing client_stats and srt_stats. Outputs whose
+ * state could not be retrieved have an empty state.
+ */
+exports.OutputsListState = async function({libraryId, objectId, outputs}) {
+  ValidateObject(objectId);
+
+  let nodes;
+  if(outputs) {
+    // If the node list can't be retrieved, nodes are resolved individually instead
+    [libraryId, nodes] = await Promise.all([
+      libraryId || this.ContentObjectLibraryId({objectId}),
+      this.SpaceNodes().catch(error => {
+        this.Log(`Failed to retrieve node list: ${error.message}`, true);
+      })
+    ]);
+  } else {
+    let egressNode;
+    [libraryId, {node: egressNode, nodes}] = await Promise.all([
+      libraryId || this.ContentObjectLibraryId({objectId}),
+      RetrieveLiveEgressNode({client: this})
+    ]);
+
+    outputs = await RetrieveOutputs({client: this, libraryId, objectId, egressNode});
+  }
+
+  const nodeUrls = await ResolveOutputNodeUrls({client: this, outputs, nodes});
+
+  return RetrieveOutputsState({client: this, libraryId, objectId, outputs, nodeUrls});
+};
+
+/**
+ * Retrieve the output list of a stream object from a live egress node (only necessary until the
+ * API is globally available).
+ *
+ * @param {Object} client - ElvClient instance
+ * @param {string} libraryId - Library ID of the output settings object
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {Object} egressNode - Live egress node, as returned by RetrieveLiveEgressNode
+ * @returns {Promise<Object<string, LiveOutput>>} - Map of output IDs to LiveOutput objects. Empty if the object was not found.
+ */
+const RetrieveOutputs = async ({client, libraryId, objectId, egressNode}) => {
+  try {
+    return await client.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: "live/outputs",
+      constant: true,
+      nodeUrl: NodeUrl(egressNode)
+    });
+  } catch(error) {
+    if(error.status === 404) {
+      // Stream object may have been deleted
+      return {};
+    }
+
+    throw error;
+  }
+};
+
+/**
+ * Resolve the fabric API URL of each output's egress node. Nodes are looked up in the provided
+ * node list, falling back to a direct lookup for any node missing from it.
+ *
+ * @param {Object} client - ElvClient instance
+ * @param {Object<string, LiveOutput>} outputs - Map of output IDs to LiveOutput objects
+ * @param {Array<Object>=} nodes - Nodes, as returned by SpaceNodes
+ * @returns {Promise<Object<string, string>>} - Map of node IDs to fabric API URLs. Unresolvable nodes are omitted.
+ */
+const ResolveOutputNodeUrls = async ({client, outputs, nodes}) => {
+  const nodeIds = [...new Set(Object.values(outputs).map(value => OutputDeliveryNodeId(value)).filter(el => !!el))];
+  const nodeUrls = {};
+
+  await client.utils.LimitedMap(10, nodeIds, async nodeId => {
+    try {
+      const fabricUrl = NodeFabricUrlFromList({nodes, nodeId}) || await NodeFabricUrl({client, nodeId});
+      if(fabricUrl) { nodeUrls[nodeId] = fabricUrl; }
+    } catch(error) {
+      client.Log(`Failed to resolve node ${nodeId}: ${error.message}`, true);
+    }
+  });
+
+  return nodeUrls;
+};
+
+/**
+ * Fetch the live state of each output, routed directly to its egress node.
+ *
+ * @param {Object} client - ElvClient instance
+ * @param {string} libraryId - Library ID of the output settings object
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {Object<string, LiveOutput>} outputs - Map of output IDs to LiveOutput objects
+ * @param {Object<string, string>} nodeUrls - Map of node IDs to fabric API URLs
+ * @returns {Promise<Object<string, Object>>} - Map of output IDs to state. Outputs without a resolvable node, or
+ * whose state could not be retrieved, have an empty state.
+ */
+const RetrieveOutputsState = async ({client, libraryId, objectId, outputs, nodeUrls}) => {
+  const states = {};
+
+  await client.utils.LimitedMap(10, Object.keys(outputs), async key => {
+    const fabricUrl = nodeUrls[OutputDeliveryNodeId(outputs[key])];
+    if(!fabricUrl) {
+      states[key] = {};
+      return;
+    }
+
+    try {
+      states[key] = await client.CallBitcodeMethod({
+        libraryId,
+        objectId,
+        method: UrlJoin("live", "outputs", key, "state"),
+        queryParams: {
+          "client_stats": 1,
+          "srt_stats": 1
+        },
+        constant: true,
+        nodeUrl: fabricUrl
+      });
+    } catch(error) {
+      client.Log(`Failed to retrieve state for output ${key}: ${error.message}`, true);
+      states[key] = {};
+    }
+  });
+
+  return states;
 };
 
 /**

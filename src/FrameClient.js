@@ -461,6 +461,7 @@ class FrameClient {
       "OutputsHop",
       "OutputsList",
       "OutputsListItem",
+      "OutputsListState",
       "OutputsModify",
       "OutputsModifyBatch",
       "OutputsReset",
