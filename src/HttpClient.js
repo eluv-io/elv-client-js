@@ -65,7 +65,8 @@ class HttpClient {
     allowFailover=true,
     forceFailover=false,
     allowRetry=true,
-    uriIndex
+    uriIndex,
+    signal
   }) {
     let baseURI = this.BaseURI(uriIndex);
 
@@ -115,6 +116,11 @@ class HttpClient {
       headers: this.RequestHeaders(bodyType, headers)
     };
 
+    // fetch() throws on anything that is not a real AbortSignal
+    if(signal instanceof AbortSignal) {
+      fetchParameters.signal = signal;
+    }
+
     if(method === "POST" || method === "PUT" || method === "DELETE") {
       if(body && bodyType === "JSON") {
         fetchParameters.body = JSON.stringify(body);
@@ -135,6 +141,11 @@ class HttpClient {
           fetchParameters
         );
     } catch(error) {
+      if(error && error.name === "AbortError") {
+        // Intentional cancellation - do not treat as a retryable server error
+        throw error;
+      }
+
       response = {
         ok: false,
         status: (error && error.status) || 500,
@@ -171,7 +182,8 @@ class HttpClient {
           headers,
           attempts: attempts + 1,
           uriIndex,
-          forceFailover
+          forceFailover,
+          signal
         });
       }
 

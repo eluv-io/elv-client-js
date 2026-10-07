@@ -91,6 +91,8 @@ exports.ListFiles = async function({libraryId, objectId, path = "", versionHash,
  * @param {string} encryption="none" - Encryption for uploaded files (copy only) - cgck | none
  * @param {boolean} copy=false - If true, will copy the data from S3 into the fabric. Otherwise, a reference to the content will be made.
  * @param {boolean} resume=false - If true, will resume the file jobs stopped
+ * @param {AbortSignal=} signal - If provided, stops the client from tracking the job when aborted. Since the fabric
+ * node has no route to stop an in-progress S3 job, the copy/reference operation itself continues server-side.
  * @param {function=} callback - If specified, will be periodically called with current upload status
  * - Arguments (copy): { done: boolean, uploaded: number, total: number, uploadedFiles: number, totalFiles: number, fileStatus: Object }
  * - Arguments (reference): { done: boolean, uploadedFiles: number, totalFiles: number }
@@ -108,10 +110,19 @@ exports.UploadFilesFromS3 = async function({
   encryption = "none",
   copy = false,
   resume = false,
+  signal,
   callback
 }) {
   ValidateParameters({ libraryId, objectId });
   ValidateWriteToken(writeToken);
+
+  // Aborting only stops the polling below - there is no route to stop the job, so the node keeps
+  // copying from S3
+  const CheckAborted = () => {
+    if(signal && signal.aborted) {
+      throw new DOMException("Upload aborted", "AbortError");
+    }
+  };
 
   const s3prefixRegex = /^s3:\/\/([^/]+)\//i; // for matching and extracting bucket name when full s3:// path is specified
   // if fileInfo source paths start with s3://bucketName/, check against bucket arg passed in, and strip
@@ -183,6 +194,7 @@ exports.UploadFilesFromS3 = async function({
   const trackUploadStatus = async ({ uploadId }) => {
     // eslint-disable-next-line no-constant-condition
     while(true) {
+      CheckAborted();
       await new Promise(resolve => setTimeout(resolve, 1000));
       const status = await this.UploadStatus({ libraryId, objectId, writeToken, uploadId });
 
@@ -294,20 +306,30 @@ exports.UploadFilesFromS3 = async function({
  * @param {string} writeToken - Write token of the draft
  * @param {Array<object>} fileInfo - List of files to upload, including their size, type, and contents
  * @param {string} resume - Resume the upload jobs
+ * @param {AbortSignal=} signal - If provided, aborting it stops sending further data and cancels in-flight
+ * requests. The write token/draft is untouched, so the upload can be resumed later.
  * @param {string} encryption="none" - Encryption for uploaded files - cgck | none
  * @param {function=} callback - If specified, will be called after each job segment is finished with the current upload progress
  * - Format: {"filename1": {uploaded: number, total: number}, ...}
  */
-exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo, resume=false,encryption="none", callback}) {
+exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo, resume=false, signal, encryption="none", callback}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
   ValidatePresence("fileInfo", fileInfo);
+
+  const CheckAborted = () => {
+    if(signal && signal.aborted) {
+      throw new DOMException("Upload aborted", "AbortError");
+    }
+  };
+
+  CheckAborted();
 
   this.Log(`Uploading files: ${libraryId} ${objectId} ${writeToken}`);
 
   let conk;
   if(encryption === "cgck") {
-    conk = await this.EncryptionConk({libraryId, objectId, writeToken});
+    conk = await this.EncryptionConk({libraryId, objectId, writeToken, signal});
   }
 
   // Extract file data into easily accessible hash while removing the data from the fileinfo for upload job creation
@@ -350,7 +372,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
 
   let idJobMap = new Map();
   if(resume) {
-    const ids = await this.ListFilesJob({ libraryId, objectId, writeToken, encryption });
+    const ids = await this.ListFilesJob({ libraryId, objectId, writeToken, encryption, signal });
 
     const jobsByStatus = ids.reduce((acc, job) => {
       acc[job.status] = acc[job.status] || [];
@@ -375,7 +397,8 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
         writeToken,
         ops: fileInfo,
         encryption,
-        stoppedOrFailedJobIds: jobs
+        stoppedOrFailedJobIds: jobs,
+        signal
       });
     };
 
@@ -393,7 +416,8 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
         objectId,
         writeToken,
         jobId: uploadId,
-        encryption
+        encryption,
+        signal
       });
       return result.jobs;
     });
@@ -405,7 +429,8 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
       objectId,
       writeToken,
       ops: fileInfo,
-      encryption
+      encryption,
+      signal
     });
     idJobMap.set(jobResponse.id, jobResponse.jobs);
   }
@@ -456,8 +481,11 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
     // Insert the data to upload into the job spec, encrypting if necessary
     const PrepareJobs = async () => {
       for(let j = 0; j < jobs.length; j++) {
+        CheckAborted();
+
         while(prepared - uploaded > bufferSize) {
           // Wait for more data to be uploaded
+          CheckAborted();
           await new Promise(resolve => setTimeout(resolve, 500));
         }
 
@@ -468,7 +496,8 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
           objectId,
           writeToken,
           uploadId,
-          jobId
+          jobId,
+          signal
         });
 
         for(let f = 0; f < job.files.length; f++) {
@@ -501,17 +530,28 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
 
     };
 
+    const CheckPrepareError = () => {
+      if(prepareError) { throw prepareError; }
+    };
+
     const UploadJob = async (jobId, j) => {
       while(!jobSpecs[j]) {
         // Wait for more jobs to be prepared
+        CheckAborted();
+        CheckPrepareError();
         await new Promise(resolve => setTimeout(resolve, 500));
       }
+
+      CheckAborted();
+      CheckPrepareError();
 
       const jobSpec = jobSpecs[j];
       const files = jobSpec.files;
 
       // Upload each item
       for(let f = 0; f < files.length; f++) {
+        CheckAborted();
+
         const fileInfo = files[f];
 
         let retries = 0;
@@ -526,11 +566,17 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
               jobId,
               filePath: fileInfo.path,
               fileData: fileInfo.data,
-              encryption
+              encryption,
+              signal
             });
 
             succeeded = true;
           } catch(error) {
+            // Intentional cancellation - propagate immediately, do not retry
+            if(error && error.name === "AbortError") {
+              throw error;
+            }
+
             this.Log(error, true);
 
             retries += 1;
@@ -557,13 +603,18 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
       }
     };
 
-    // Preparing jobs is done asynchronously
-    PrepareJobs().catch(e => { throw e; });
+    // Preparing jobs is done asynchronously - capture any failure so it surfaces through the
+    // main upload chain below, instead of rejecting an unawaited promise nobody is watching
+    let prepareError = null;
+    PrepareJobs().catch(e => { prepareError = e; });
 
     // Upload the first several chunks in sequence, to determine average upload rate
     const rateTestJobs = Math.min(3, jobs.length);
     let rates = [];
     for(let j = 0; j < rateTestJobs; j++) {
+      CheckAborted();
+      CheckPrepareError();
+
       const start = new Date().getTime();
       await UploadJob(jobs[j], j);
       const elapsed = (new Date().getTime() - start) / 1000;
@@ -579,10 +630,13 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
       concurrentUploads,
       jobs,
       async (jobId, j) => {
+        CheckAborted();
+        CheckPrepareError();
         if(j < rateTestJobs) { return; }
         try {
           await UploadJob(jobId, j);
         } catch(err) {
+          if(err && err.name === "AbortError") { throw err; }
           throw Error (`Failed upload for job ${jobId}: ${err}`);
         }
       }
@@ -590,7 +644,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
   }
 };
 
-exports.CreateFileUploadJob = async function({libraryId, objectId, writeToken, ops, defaults={}, encryption="none"}) {
+exports.CreateFileUploadJob = async function({libraryId, objectId, writeToken, ops, defaults={}, encryption="none", signal}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -615,11 +669,12 @@ exports.CreateFileUploadJob = async function({libraryId, objectId, writeToken, o
     method: "POST",
     path: path,
     body,
-    allowFailover: false
+    allowFailover: false,
+    signal
   });
 };
 
-exports.ListFilesJob = async function({libraryId, objectId, writeToken, encryption="none"}) {
+exports.ListFilesJob = async function({libraryId, objectId, writeToken, encryption="none", signal}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -631,11 +686,12 @@ exports.ListFilesJob = async function({libraryId, objectId, writeToken, encrypti
     headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
     method: "GET",
     path: path,
-    allowFailover: false
+    allowFailover: false,
+    signal
   });
 };
 
-exports.ListFilesUploadJobs = async function({libraryId, objectId, writeToken, jobId, encryption="none"}) {
+exports.ListFilesUploadJobs = async function({libraryId, objectId, writeToken, jobId, encryption="none", signal}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -647,11 +703,12 @@ exports.ListFilesUploadJobs = async function({libraryId, objectId, writeToken, j
     headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
     method: "GET",
     path: path,
-    allowFailover: false
+    allowFailover: false,
+    signal
   });
 };
 
-exports.ResumeFileUploadJob = async function({libraryId, objectId, writeToken, ops, defaults={}, encryption="none", stoppedOrFailedJobIds=[]}) {
+exports.ResumeFileUploadJob = async function({libraryId, objectId, writeToken, ops, defaults={}, encryption="none", stoppedOrFailedJobIds=[], signal}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -685,7 +742,8 @@ exports.ResumeFileUploadJob = async function({libraryId, objectId, writeToken, o
       method: "PUT",
       path: path,
       body,
-      allowFailover: false
+      allowFailover: false,
+      signal
     });
     responses.push({message: res, id: jobId});
   }
@@ -707,7 +765,7 @@ exports.UploadStatus = async function({libraryId, objectId, writeToken, uploadId
   );
 };
 
-exports.UploadJobStatus = async function({libraryId, objectId, writeToken, uploadId, jobId}) {
+exports.UploadJobStatus = async function({libraryId, objectId, writeToken, uploadId, jobId, signal}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -719,7 +777,8 @@ exports.UploadJobStatus = async function({libraryId, objectId, writeToken, uploa
       method: "GET",
       path: path,
       allowFailover: false,
-      queryParams: { start: 0, limit: 10000 }
+      queryParams: { start: 0, limit: 10000 },
+      signal
     })
   );
 
@@ -730,7 +789,8 @@ exports.UploadJobStatus = async function({libraryId, objectId, writeToken, uploa
         method: "GET",
         path: path,
         allowFailover: false,
-        queryParams: { start: response.next }
+        queryParams: { start: response.next },
+        signal
       })
     );
 
@@ -744,11 +804,11 @@ exports.UploadJobStatus = async function({libraryId, objectId, writeToken, uploa
   return response;
 };
 
-exports.UploadFileData = async function({libraryId, objectId, writeToken, encryption, uploadId, jobId, filePath, fileData}) {
+exports.UploadFileData = async function({libraryId, objectId, writeToken, encryption, uploadId, jobId, filePath, fileData, signal}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
-  const jobStatus = await this.UploadJobStatus({libraryId, objectId, writeToken, uploadId, jobId});
+  const jobStatus = await this.UploadJobStatus({libraryId, objectId, writeToken, uploadId, jobId, signal});
 
   // Find the status of this file
   let fileStatus = jobStatus.files.find(item => item.path === filePath);
@@ -776,7 +836,8 @@ exports.UploadFileData = async function({libraryId, objectId, writeToken, encryp
         ...(await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}))
       },
       allowFailover: false,
-      allowRetry: false
+      allowRetry: false,
+      signal
     })
   );
 
