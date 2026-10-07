@@ -3826,9 +3826,12 @@ exports.OutputsResolveSrtPullUrls = async function({value}) {
 exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
   ValidateObject(objectId);
 
-  if(!libraryId) {
-    libraryId = await this.ContentObjectLibraryId({objectId});
-  }
+  // Resolve Library ID and egress node concurrently
+  let egressUrl;
+  [libraryId, egressUrl] = await Promise.all([
+    libraryId || this.ContentObjectLibraryId({objectId}),
+    LiveEgressUrl({client: this})
+  ]);
 
   // Send the list call to any live egress node (only necessary until the API is globally available)
   let outputs;
@@ -3838,7 +3841,7 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
       objectId,
       method: "live/outputs",
       constant:  true,
-      nodeUrl: await LiveEgressUrl({client: this})
+      nodeUrl: egressUrl
     });
   } catch(error) {
     if(error.status === 404) {
@@ -4154,25 +4157,19 @@ const NodeFabricUrl = async ({client, nodeId}) => {
  * @returns {Promise<string|undefined>} - Fabric API URL of the egress node, if found
  */
 const LiveEgressUrl = async ({client}) => {
-  const nodeId = await RetrieveOutputNodeId({client});
-  return nodeId ? NodeFabricUrl({client, nodeId}) : undefined;
+  const node = await RetrieveLiveEgressNode({client});
+  return node.services?.fabric_api?.urls?.[0];
 };
 
 /**
- * Resolve a node ID for live egress output. If nodeIds is provided, uses the first element directly.
- * Otherwise, calls the /config API (optionally filtered by geo) to get live_egress endpoints,
- * then resolves the first endpoint to a node ID via SpaceNodes.
+ * Resolve an eligible live egress node. Calls the /config API (optionally filtered by geo)
+ * to get live_egress endpoints, then resolves the first endpoint to a node via SpaceNodes.
  *
  * @param {Object} client - ElvClient instance
- * @param {Array<string>=} nodeIds - Explicit node IDs to use
  * @param {Array<string>=} geos - Geo regions to filter config API results (max 1)
- * @returns {Promise<string>} - A node ID for the output
+ * @returns {Promise<Object>} - The matching node, including its services
  */
-const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
-  if(nodeIds) {
-    return nodeIds[0];
-  }
-
+const RetrieveLiveEgressNode = async ({client, geos}) => {
   const uri = new URI(client.ConfigUrl());
   uri.pathname("/config");
   if(geos && geos.length > 0) {
@@ -4188,14 +4185,31 @@ const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
     throw new Error("No live_egress endpoints found in fabric config");
   }
 
-  // Extract hostname from the first live_egress URL and resolve to a node ID
+  // Extract hostname from the first live_egress URL and resolve to a node
   const hostname = new URL(liveEgressUrls[0]).hostname;
   const nodes = await client.SpaceNodes({matchEndpoint: hostname});
   if(!nodes || nodes.length === 0) {
     throw new Error(`No node found matching live_egress endpoint: ${hostname}`);
   }
 
-  return nodes[0].id;
+  return nodes[0];
+};
+
+/**
+ * Resolve a node ID for live egress output. If nodeIds is provided, uses the first element directly.
+ * Otherwise, resolves an eligible live egress node via RetrieveLiveEgressNode.
+ *
+ * @param {Object} client - ElvClient instance
+ * @param {Array<string>=} nodeIds - Explicit node IDs to use
+ * @param {Array<string>=} geos - Geo regions to filter config API results (max 1)
+ * @returns {Promise<string>} - A node ID for the output
+ */
+const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
+  if(nodeIds) {
+    return nodeIds[0];
+  }
+
+  return (await RetrieveLiveEgressNode({client, geos})).id;
 };
 
 /**
