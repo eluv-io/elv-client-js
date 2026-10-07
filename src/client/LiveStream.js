@@ -3826,11 +3826,12 @@ exports.OutputsResolveSrtPullUrls = async function({value}) {
 exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
   ValidateObject(objectId);
 
-  // Resolve Library ID and egress node concurrently
-  let egressUrl;
-  [libraryId, egressUrl] = await Promise.all([
+  // Resolve Library ID and egress node concurrently. The node list fetched for the egress
+  // lookup is reused below to resolve each output's egress node.
+  let egressNode, nodes;
+  [libraryId, {node: egressNode, nodes}] = await Promise.all([
     libraryId || this.ContentObjectLibraryId({objectId}),
-    LiveEgressUrl({client: this})
+    RetrieveLiveEgressNode({client: this})
   ]);
 
   // Send the list call to any live egress node (only necessary until the API is globally available)
@@ -3841,7 +3842,7 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
       objectId,
       method: "live/outputs",
       constant:  true,
-      nodeUrl: egressUrl
+      nodeUrl: NodeUrl(egressNode)
     });
   } catch(error) {
     if(error.status === 404) {
@@ -3888,7 +3889,8 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
 
     await this.utils.LimitedMap(10, nodeIds, async nodeId => {
       try {
-        const fabricUrl = await NodeFabricUrl({client: this, nodeId});
+        // Fall back to a direct lookup if the node is missing from the list
+        const fabricUrl = NodeFabricUrlFromList({nodes, nodeId}) || await NodeFabricUrl({client: this, nodeId});
         if(fabricUrl) { nodeUrls[nodeId] = fabricUrl; }
       } catch(error) {
         this.Log(`Failed to resolve node ${nodeId}: ${error.message}`, true);
@@ -4145,8 +4147,21 @@ const RouteToLiveEgress = async ({client}) => {
  */
 const NodeFabricUrl = async ({client, nodeId}) => {
   const nodes = await client.SpaceNodes({matchNodeId: nodeId});
-  return nodes?.[0]?.services?.fabric_api?.urls?.[0];
+  return NodeUrl(nodes?.[0]);
 };
+
+/**
+ * Find the fabric API URL of a node by ID in an already retrieved list of nodes.
+ *
+ * @param {Array<Object>} nodes - Nodes, as returned by SpaceNodes
+ * @param {string} nodeId - Node ID
+ * @returns {string|undefined} - Fabric API URL of the node, if found
+ */
+const NodeFabricUrlFromList = ({nodes, nodeId}) =>
+  NodeUrl((nodes || []).find(node => node?.id === nodeId));
+
+// Fabric API URL of a node object
+const NodeUrl = node => node?.services?.fabric_api?.urls?.[0];
 
 /**
  * Resolve the fabric API URL of an eligible live egress node from the /config API.
@@ -4157,19 +4172,18 @@ const NodeFabricUrl = async ({client, nodeId}) => {
  * @returns {Promise<string|undefined>} - Fabric API URL of the egress node, if found
  */
 const LiveEgressUrl = async ({client}) => {
-  const node = await RetrieveLiveEgressNode({client});
-  return node.services?.fabric_api?.urls?.[0];
+  const {node} = await RetrieveLiveEgressNode({client});
+  return NodeUrl(node);
 };
 
 /**
- * Resolve an eligible live egress node. Calls the /config API (optionally filtered by geo)
- * to get live_egress endpoints, then resolves the first endpoint to a node via SpaceNodes.
+ * Retrieve the hostname of the first live_egress endpoint from the /config API.
  *
  * @param {Object} client - ElvClient instance
  * @param {Array<string>=} geos - Geo regions to filter config API results (max 1)
- * @returns {Promise<Object>} - The matching node, including its services
+ * @returns {Promise<string>} - Hostname of the live egress endpoint
  */
-const RetrieveLiveEgressNode = async ({client, geos}) => {
+const LiveEgressHostname = async ({client, geos}) => {
   const uri = new URI(client.ConfigUrl());
   uri.pathname("/config");
   if(geos && geos.length > 0) {
@@ -4185,14 +4199,32 @@ const RetrieveLiveEgressNode = async ({client, geos}) => {
     throw new Error("No live_egress endpoints found in fabric config");
   }
 
-  // Extract hostname from the first live_egress URL and resolve to a node
-  const hostname = new URL(liveEgressUrls[0]).hostname;
-  const nodes = await client.SpaceNodes({matchEndpoint: hostname});
-  if(!nodes || nodes.length === 0) {
+  return new URL(liveEgressUrls[0]).hostname;
+};
+
+/**
+ * Resolve an eligible live egress node. The /config API (optionally filtered by geo) and the
+ * space node list are fetched concurrently, then the first live_egress endpoint is matched
+ * against the node list.
+ *
+ * @param {Object} client - ElvClient instance
+ * @param {Array<string>=} geos - Geo regions to filter config API results (max 1)
+ * @returns {Promise<{node: Object, nodes: Array<Object>}>} - The matching node, and the full node list for reuse
+ */
+const RetrieveLiveEgressNode = async ({client, geos}) => {
+  const [hostname, nodes] = await Promise.all([
+    LiveEgressHostname({client, geos}),
+    client.SpaceNodes()
+  ]);
+
+  const node = (nodes || []).find(node =>
+    (node.services?.fabric_api?.urls || []).some(url => url.includes(hostname))
+  );
+  if(!node) {
     throw new Error(`No node found matching live_egress endpoint: ${hostname}`);
   }
 
-  return nodes[0];
+  return {node, nodes};
 };
 
 /**
@@ -4209,7 +4241,7 @@ const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
     return nodeIds[0];
   }
 
-  return (await RetrieveLiveEgressNode({client, geos})).id;
+  return (await RetrieveLiveEgressNode({client, geos})).node.id;
 };
 
 /**
