@@ -1902,6 +1902,8 @@ exports.MakeFileServiceRequest = async function({
  * @param {boolean=} constant=true - If specified, a GET request authenticated with an AccessRequest will be made.
  * Otherwise, a POST with an UpdateRequest will be performed
  * @param {string=} format=json - The format of the response
+ * @param {string=} nodeUrl - If specified, the call is made directly to this fabric node instead of
+ * the client's currently configured node(s)
  *
  * @returns {Promise<format>} - The response from the call in the specified format
  */
@@ -1916,7 +1918,8 @@ exports.CallBitcodeMethod = async function({
   body={},
   headers={},
   constant=true,
-  format="json"
+  format="json",
+  nodeUrl
 }) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(!method) { throw "Bitcode method not specified"; }
@@ -1960,7 +1963,8 @@ exports.CallBitcodeMethod = async function({
       method: verb,
       path,
       queryParams,
-      allowFailover: false
+      allowFailover: false,
+      nodeUrl
     }),
     this.HttpClient.debug,
     this.HttpClient.Log.bind(this.HttpClient)
