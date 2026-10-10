@@ -150,6 +150,7 @@ class OfferingDownloadMedia2 extends ScriptBase {
     const partsMap = {};
 
     streamKeyArray.forEach(key => {
+			     console.dir(streamsMap[key], {depth:null})
       let sourcesMetadata = streamsMap[key].sources;
       let durationMetadata = streamsMap[key].duration;
 
@@ -159,14 +160,27 @@ class OfferingDownloadMedia2 extends ScriptBase {
         endTime = totalDuration;
       }
 
+      let nextStart = new Fraction(0)
       const sourcesTimeInfo = sourcesMetadata.map(part => {
-        const start = new Fraction(part.timeline_start.ts).mul(new Fraction(part.timeline_start.time_base));
-        const end = new Fraction(part.timeline_end.ts).mul(new Fraction(part.timeline_end.time_base));
-        return {
-          start: start.valueOf(),
-          end: end.valueOf(),
-          source: part.source
-        };
+        if (part.length != 2) {
+          const start = new Fraction(part.timeline_start.ts).mul(new Fraction(part.timeline_start.time_base));
+          const end = new Fraction(part.timeline_end.ts).mul(new Fraction(part.timeline_end.time_base));
+          return {
+            start: start.valueOf(),
+            end: end.valueOf(),
+            source: part.source
+          };
+	}
+	else {
+          const start = nextStart
+          const end = nextStart + new Fraction(part[1]).mul(new Fraction(streamsMap[key].time_base));
+	  nextStart = end
+          return {
+            start: start.valueOf(),
+            end: end.valueOf(),
+            source: part[0]
+          };
+	}
       });
 
       let parts = [];
