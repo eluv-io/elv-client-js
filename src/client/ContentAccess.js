@@ -1495,6 +1495,13 @@ exports.PlayoutOptions = async function({
     const cert = option.properties.cert;
     const thumbnailTrackUri = option.properties.thumbnails_webvtt_uri;
 
+    // Exclude any options that do not satisfy the specified protocols and/or DRMs
+    const protocolMatch = protocols.includes(protocol);
+    const drmMatch = drms.includes(drm || "clear") || (drms.length === 0 && !drm);
+    if(!protocolMatch || !drmMatch) {
+      continue;
+    }
+
     if(hlsjsProfile && protocol === "hls" && drm === "aes-128") {
       queryParams.player_profile = "hls-js";
     }
@@ -1558,13 +1565,6 @@ exports.PlayoutOptions = async function({
         certUrl.pathname = certUrl.pathname.split("/").slice(0,-1).concat(["drm.cert"]).join("/");
         playoutMap[protocol].playoutMethods[method].drms[drm].cert_url = certUrl.toString();
       }
-    }
-
-    // Exclude any options that do not satisfy the specified protocols and/or DRMs
-    const protocolMatch = protocols.includes(protocol);
-    const drmMatch = drms.includes(drm || "clear") || (drms.length === 0 && !drm);
-    if(!protocolMatch || !drmMatch) {
-      continue;
     }
 
     // This protocol / DRM satisfies the specifications (prefer DRM over clear, if available)
