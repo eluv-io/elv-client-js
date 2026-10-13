@@ -3469,11 +3469,6 @@ exports.TenantContent = async function({
   // Tenant query works best with plain token - it allows it to return objecte metadata fields.
   const token = authorizationToken || await this.CreatePlainToken();
 
-  const httpClient =
-    this.TenantQueryHttpClient && this.TenantQueryHttpClient.uris && this.TenantQueryHttpClient.uris.length > 0
-      ? this.TenantQueryHttpClient
-      : this.HttpClient;
-
   const queryParams = {
     filter,
     sort_by: sortBy,
@@ -3493,7 +3488,7 @@ exports.TenantContent = async function({
   });
 
   return this.utils.ResponseToJson(
-    httpClient.Request({
+    this.HttpClient.Request({
       headers: { "Authorization": `Bearer ${token}` },
       method: "GET",
       path: path,
