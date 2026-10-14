@@ -3577,6 +3577,16 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  * @typedef {Object} OutputInput
  * @property {string=} stream - Object ID of the input stream, e.g. "iq__AAA" (null to disconnect)
  * @property {string=} offering - Offering key of the input stream to use (optional; defaults to the stream's default offering)
+ * @property {OutputFmp4=} fmp4 - fMP4 source selection (rtmp outputs)
+ */
+
+/**
+ * fMP4 source selection for an output input.
+ *
+ * @typedef {Object} OutputFmp4
+ * @property {string=} audio_name - Audio stream to use, e.g. "audio_1"
+ * @property {string=} latency - Target latency with time units, e.g. "750ms"
+ * @property {string=} representation - Video representation to use, e.g. "videovideo_960x540_h264@2000000"
  */
 
 /**
@@ -3691,6 +3701,7 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  * @typedef {Object} OutputDelivery
  * @property {OutputDeliveryType} type - Delivery protocol
  * @property {(OutputSrtPush|OutputSrtPull|OutputRtp|OutputUdp|OutputRtmp)} settings - Protocol-specific delivery settings
+ * @property {OutputFmp4=} fmp4 - fMP4 source selection (rtmp only); written to the output's input.fmp4 when a stream is specified
  */
 
 const DELIVERY_PROTOCOLS = ["srt_pull", "srt_push", "rtp", "udp", "rtmp"];
@@ -4133,7 +4144,7 @@ exports.OutputsCreate = async function({
 }) {
   ValidateObject(objectId);
 
-  const {type, settings = {}} = delivery || {};
+  const {type, settings = {}, fmp4} = delivery || {};
 
   if(!DELIVERY_PROTOCOLS.includes(type)) {
     throw new Error(`delivery.type must be one of ${DELIVERY_PROTOCOLS.join(", ")}`);
@@ -4198,7 +4209,7 @@ exports.OutputsCreate = async function({
       name,
       description,
       external_id: externalId,
-      input: streamObjectId ? {stream: streamObjectId, offering} : undefined,
+      input: streamObjectId ? {stream: streamObjectId, offering, fmp4: type === "rtmp" ? fmp4 : undefined} : undefined,
       [type]: settings
     };
 
