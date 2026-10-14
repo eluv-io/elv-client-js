@@ -21,7 +21,6 @@ const {
   ValidatePresence,
 } = require("../Validation");
 
-const MergeWith = require("lodash/mergeWith");
 const LodashSet = require("lodash/set");
 const LodashGet = require("lodash/get");
 
@@ -818,6 +817,32 @@ exports.MetadataAuth = async function({
   }
 };
 
+exports.MergeLocalization = function(original, localized) {
+  if(Array.isArray(original)) {
+    localized = Array.isArray(localized) ? localized : [];
+    return original.map((item, index) => this.MergeLocalization(item, localized[index]));
+  } else if(typeof original === "object") {
+    localized = typeof localized === "object" ? localized : {};
+
+    let merged = { ...localized };
+    Object.keys(original).forEach(key =>
+      merged[key] = this.MergeLocalization(original[key], localized[key])
+    )
+
+    return merged;
+  }
+
+  if(
+    typeof localized === typeof original &&
+    // Blank strings should be overwritten by original
+    typeof localized !== "string"
+  ) {
+    return localized;
+  }
+
+  return localized || original;
+};
+
 /**
  * Get the metadata of a content object
  *
@@ -960,7 +985,7 @@ exports.ContentObjectMetadata = async function({
       localizationSubtree: undefined
     });
 
-    return MergeWith({}, metadata, localizedMetadata, (a, b) => b === null || b === "" ? a : undefined);
+    return this.MergeLocalization(metadata, localizedMetadata);
   } catch(error) {
     this.Log(error, true);
 
@@ -1029,7 +1054,8 @@ exports.AssetMetadata = async function({libraryId, objectId, versionHash, metada
   if(localization) {
     localization.reverse().forEach(keys => {
       const localizedMetadata = this.utils.SafeTraverse(metadata, ...keys) || {};
-      mergedMetadata = MergeWith({}, mergedMetadata, localizedMetadata, (a, b) => b === null || b === "" ? a : undefined);
+
+      this.MergeLocalization(mergedMetadata, localizedMetadata);
     });
   }
 
