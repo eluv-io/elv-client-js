@@ -21,10 +21,6 @@ const {
   ValidatePresence,
 } = require("../Validation");
 
-const MergeWith = require("lodash/mergeWith");
-const LodashSet = require("lodash/set");
-const LodashGet = require("lodash/get");
-
 // Note: Keep these ordered by most-restrictive to least-restrictive
 exports.permissionLevels = {
   "owner": {
