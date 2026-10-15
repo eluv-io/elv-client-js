@@ -709,7 +709,6 @@ exports.LRODraftInfo = async function({libraryId, objectId}) {
   const lastJobOfferingsInfo = await this.ContentObjectMetadata({
     libraryId,
     objectId,
-    writeToken,
     metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
   });
 
@@ -725,7 +724,6 @@ exports.LRODraftInfo = async function({libraryId, objectId}) {
   const oldPathContents = await this.ContentObjectMetadata({
     libraryId,
     objectId,
-    writeToken,
     metadataSubtree: `lro_draft_${mainOfferingKey}`
   });
   if(oldPathContents) {
@@ -847,7 +845,7 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, preFinalizeF
   let preFinalizeWarnings = [];
   if(preFinalizeFn) {
     const params = {
-      nodeUrl,
+      nodeUrl: fabricNodeUrl,
       offeringKey,
       writeToken
     };

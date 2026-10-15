@@ -50,13 +50,42 @@ let mediaLibraryId, masterId, masterHash, mezzanineId, linkLibraryId, linkObject
 let mediaLibraryIdForTestingWriteToken, mezzanineIdForTestingWriteToken, ingestWriteToken;
 let s3Access;
 let tenantId, tenantAdminAddress, contentAdminAddress;
-let isUsingExternalTenantContractId;
 
 let playoutResult;
 
 let testFile1, testFile2, testFile3, testHash;
 let fileInfo = [];
 let partInfo = {};
+
+// Poll mezzanine LRO status until all jobs have ended, failing on job errors or timeout
+const WaitForLROs = async (GetStatus, timeout=600000) => {
+  const startTime = new Date().getTime();
+
+  // eslint-disable-next-line no-constant-condition
+  while(true) {
+    const status = await GetStatus();
+    const lros = Object.values(status || {});
+
+    if(lros.some(info => ["failed", "cancelled", "terminated"].includes(info.run_state))) {
+      throw Error(`Mezzanine processing failed: ${JSON.stringify(status, null, 2)}`);
+    }
+
+    // An empty status means the LROs have not been registered yet, so keep waiting
+    if(lros.length > 0 && lros.every(info => info.end)) {
+      return status;
+    }
+
+    const elapsed = new Date().getTime() - startTime;
+    if(elapsed > timeout) {
+      throw Error(`Mezzanine processing timed out: ${JSON.stringify(status, null, 2)}`);
+    } else if(elapsed > 120000) {
+      // If processing takes too long, start logging status for debugging
+      console.log(status);
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 5000));
+  }
+};
 
 // Describe blocks and  tests within them are run in order
 describe("Test ElvClient", () => {
@@ -109,7 +138,6 @@ describe("Test ElvClient", () => {
     const userAddr = client.CurrentAccountAddress();
     if(tenantContractId !== ""){
       let tenantContractAddress = client.utils.HashToAddress(tenantContractId);
-      isUsingExternalTenantContractId = true;
 
       const owner = await client.CallContractMethod({
         contractAddress: tenantContractAddress,
@@ -850,8 +878,11 @@ describe("Test ElvClient", () => {
       });
 
       expect(automaticCommit).toBeDefined();
-      if(isUsingExternalTenantContractId){
-        expect(automaticCommit.author).toContain("elv-admin");
+
+      // Author is the user's profile name if set, otherwise their address
+      const userName = await client.userProfileClient.UserMetadata({metadataSubtree: "public/name"});
+      if(userName) {
+        expect(automaticCommit.author).toEqual(userName);
       } else {
         expect(client.utils.EqualAddress(automaticCommit.author, automaticCommit.author_address)).toBeTruthy();
       }
@@ -881,11 +912,8 @@ describe("Test ElvClient", () => {
       });
 
       expect(customCommit).toBeDefined();
-      if(isUsingExternalTenantContractId){
-        expect(customCommit.author).toContain("elv-admin");
-      } else {
-        expect(client.utils.EqualAddress(customCommit.author, customCommit.author_address)).toBeTruthy();
-      }
+      // public/name was set to the previous author above
+      expect(customCommit.author).toEqual(automaticCommit.author);
       expect(client.utils.EqualAddress(client.CurrentAccountAddress(), customCommit.author_address)).toBeTruthy();
       expect(customCommit.timestamp).toBeDefined();
       expect(isNaN((new Date(customCommit.timestamp)).getTime())).toBeFalsy();
@@ -2028,45 +2056,25 @@ describe("Test ElvClient", () => {
         expect(startResponse.lro_draft).toBeDefined();
         expect(startResponse.lro_draft.write_token).toBeDefined();
         expect(startResponse.lro_draft.node).toBeDefined();
+        expect(startResponse.errors).toEqual([]);
 
-        const startTime = new Date().getTime();
+        await WaitForLROs(() => client.LROStatus({libraryId: mediaLibraryId, objectId: mezzanineId}));
 
-        // eslint-disable-next-line no-constant-condition
-        while(true) {
-          const status = await client.LROStatus({libraryId: mediaLibraryId, objectId: mezzanineId});
-
-          let done = true;
-          Object.keys(status).forEach(id => {
-            const info = status[id];
-
-            if(!info.end) {
-              done = false;
-            }
-          });
-
-          if(done) {
-            break;
-          }
-
-          if(new Date().getTime() - startTime > 120000) {
-            // If processing takes too long, start logging status for debugging
-            console.log(status);
-          }
-
-          await new Promise(resolve => setTimeout(resolve, 5000));
-        }
-
-        await client.FinalizeABRMezzanine({
+        const finalizeResponse = await client.FinalizeABRMezzanine({
           libraryId: mediaLibraryId,
           objectId: mezzanineId,
           offeringKey: "default"
         });
 
+        expect(finalizeResponse.errors).toEqual([]);
+
         await new Promise(resolve => setTimeout(resolve, 5000));
       } catch(error) {
         console.log("\n\nERROR:");
-        console.log(JSON.stringify(error, null, 2));
+        // JSON.stringify drops the message and stack of Error objects
+        console.log(error instanceof Error ? error : JSON.stringify(error, null, 2));
         console.log();
+        throw error;
       }
     });
 
@@ -2079,53 +2087,36 @@ describe("Test ElvClient", () => {
           offeringKey: "default"
         });
 
+        // With a write token supplied, no /lro_draft bread crumb version is created
         expect(startResponse).toBeDefined();
-        expect(startResponse.lro_draft).toBeDefined();
-        expect(startResponse.lro_draft.write_token).toBeDefined();
-        expect(startResponse.lro_draft.node).toBeDefined();
-        epxect(startResponse.hash).toBeUndefined();
+        expect(startResponse.lro_draft).toBeUndefined();
+        expect(startResponse.hash).toBeUndefined();
+        expect(startResponse.writeToken).toEqual(ingestWriteToken);
+        expect(startResponse.nodeUrl).toBeDefined();
+        expect(startResponse.errors).toEqual([]);
 
-        // eslint-disable-next-line no-constant-condition
-        while(true) {
-          const status = await client.LROStatus({
-            libraryId: mediaLibraryIdForTestingWriteToken,
-            objectId: mezzanineIdForTestingWriteToken,
-            writeToken: ingestWriteToken
-          });
+        await WaitForLROs(() => client.LROStatus({
+          libraryId: mediaLibraryIdForTestingWriteToken,
+          objectId: mezzanineIdForTestingWriteToken,
+          writeToken: ingestWriteToken
+        }));
 
-          let done = true;
-          Object.keys(status).forEach(id => {
-            const info = status[id];
-
-            if(!info.end) {
-              done = false;
-            }
-          });
-
-          if(done) {
-            break;
-          }
-
-          if(new Date().getTime() - startTime > 120000) {
-            // If processing takes too long, start logging status for debugging
-            console.log(status);
-          }
-
-          await new Promise(resolve => setTimeout(resolve, 5000));
-        }
-
-        await client.FinalizeABRMezzanine({
+        const finalizeResponse = await client.FinalizeABRMezzanine({
           libraryId: mediaLibraryIdForTestingWriteToken,
           objectId: mezzanineIdForTestingWriteToken,
           writeToken: ingestWriteToken,
           offeringKey: "default"
         });
 
+        expect(finalizeResponse.errors).toEqual([]);
+
         await new Promise(resolve => setTimeout(resolve, 5000));
       } catch(error) {
         console.log("\n\nERROR:");
-        console.log(JSON.stringify(error, null, 2));
+        // JSON.stringify drops the message and stack of Error objects
+        console.log(error instanceof Error ? error : JSON.stringify(error, null, 2));
         console.log();
+        throw error;
       }
     });
 
@@ -2807,10 +2798,13 @@ describe("Test ElvClient", () => {
 
       const token = client.utils.DecodeAuthorizationToken(authToken);
 
+      // URL methods don't make access requests by default, so tokens are signed but have no tx_id
+      expect(token.tx_id).not.toBeDefined();
+
       if(authorization) {
-        expect(token.tx_id).toBeDefined();
-      } else {
-        expect(token.tx_id).not.toBeDefined();
+        expect(token.qspace_id).toEqual(client.contentSpaceId);
+        expect(token.addr).toEqual(client.utils.FormatAddress(client.signer.address));
+        expect(token.signature).toBeDefined();
       }
 
       if(expectedQueryParams) {
@@ -2994,8 +2988,17 @@ describe("Test ElvClient", () => {
       // Remove tenantId from user metadata
       await client.userProfileClient.ResetTenantId();
 
-      tenantId = await client.userProfileClient.TenantId();
-      tenantContractId = await client.userProfileClient.TenantContractId();
+      // Reads right after the reset may hit a node that hasn't caught up yet - retry up to 3 times.
+      // Read from the wallet directly, since the user profile client caches the values
+      const {objectId: walletObjectId} = await client.userProfileClient.UserWalletObjectInfo();
+      for(let attempt = 1; attempt <= 3; attempt++) {
+        tenantId = await client.TenantId({objectId: walletObjectId});
+        tenantContractId = await client.TenantContractId({objectId: walletObjectId});
+
+        if((!tenantId && !tenantContractId) || attempt === 3) { break; }
+
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
       expect(tenantId).toEqual("");
       expect(tenantContractId).toEqual("");
 
@@ -3041,7 +3044,8 @@ describe("Test ElvClient", () => {
     let matchEndpoint = process.env.NODE_ENDPOINT;
     let matchNodeId = process.env.NODE_ID;
 
-    test("List Nodes By Endpoint", async () => {
+    // Skip unless NODE_ENDPOINT / NODE_ID are set
+    (matchEndpoint ? test : test.skip)("List Nodes By Endpoint", async () => {
       const nodes = await client.SpaceNodes({
         matchEndpoint
       });
@@ -3050,7 +3054,7 @@ describe("Test ElvClient", () => {
       expect(nodes[0]).toBeDefined();
     });
 
-    test("List Nodes By ID", async () => {
+    (matchNodeId ? test : test.skip)("List Nodes By ID", async () => {
       const nodes = await client.SpaceNodes({
         matchNodeId
       });
