@@ -636,6 +636,7 @@ class ElvClient {
 
   /**
    * Return a list of nodes in the content space, optionally filtered by node ID or endpoint.
+   * If no filter is specified, all nodes in the space are returned.
    *
    * @methodGroup Nodes
    * @namedParams
@@ -646,81 +647,43 @@ class ElvClient {
    * @return {Promise<Array<Object>>} - A list of nodes in the space matching the parameters
    */
   async SpaceNodes({matchEndpoint, matchNodeId, matchWriteToken}={}) {
-    let nodes;
-    this.SetStaticToken();
+    const headers = {
+      Authorization: `Bearer ${this.utils.B64(JSON.stringify({qspace_id: this.contentSpaceId}))}`
+    };
 
-    if(matchEndpoint) {
-      ({nodes} = await this.utils.ResponseToJson(
-        this.HttpClient.Request({
-          path: UrlJoin("nodes"),
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${this.staticToken}`
-          }
-        })
-      ));
-
-      if(!nodes || !Array.isArray(nodes) || nodes.length === 0) {
-        return [];
-      }
-
-      return nodes.filter(node => {
-        let match = false;
-
-        if(
-          node.services &&
-          node.services.fabric_api &&
-          node.services.fabric_api.urls
-        ) {
-          const results = (node.services.fabric_api.urls || []).find(url => url.includes(matchEndpoint));
-
-          if(results) {
-            match = true;
-          }
-        }
-
-        if(matchNodeId && node.id === matchNodeId) {
-          match = true;
-        }
-
-        this.ClearStaticToken();
-
-        return match;
-      });
-    } else if(matchNodeId) {
-      this.SetStaticToken();
-
-      let node = await this.utils.ResponseToJson(
+    if(matchNodeId && !matchEndpoint) {
+      const node = await this.utils.ResponseToJson(
         this.HttpClient.Request({
           path: UrlJoin("nodes", matchNodeId),
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${this.staticToken}`
-          }
+          headers
         })
       );
 
-      this.ClearStaticToken();
       return [node];
-    } else if(matchWriteToken) {
-      this.SetStaticToken();
+    }
 
-      const {nodes} = await this.utils.ResponseToJson(
-        this.HttpClient.Request({
-          path: UrlJoin("nodes"),
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${this.staticToken}`
-          },
-          queryParams: {
-            token: matchWriteToken
-          }
-        })
-      );
+    const {nodes} = await this.utils.ResponseToJson(
+      this.HttpClient.Request({
+        path: UrlJoin("nodes"),
+        method: "GET",
+        headers,
+        queryParams: !matchEndpoint && matchWriteToken ? {token: matchWriteToken} : {}
+      })
+    );
 
-      this.ClearStaticToken();
+    if(!matchEndpoint) {
       return nodes;
     }
+
+    if(!nodes || !Array.isArray(nodes) || nodes.length === 0) {
+      return [];
+    }
+
+    return nodes.filter(node =>
+      (node.services?.fabric_api?.urls || []).some(url => url.includes(matchEndpoint)) ||
+      (matchNodeId && node.id === matchNodeId)
+    );
   }
 
   /**
