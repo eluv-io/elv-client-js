@@ -448,6 +448,7 @@ class FrameClient {
       "MakeAuthServiceRequest",
       "MakeFileServiceRequest",
       "MergeContractMetadata",
+      "MergeLocalization",
       "MergeMetadata",
       "MetadataAuth",
       "MigrateEncryptionConkForUserProvided",
