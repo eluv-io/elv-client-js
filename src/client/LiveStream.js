@@ -3568,7 +3568,7 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
 /**
  * Live output delivery protocols. Exactly one delivery block is present on a LiveOutput.
  *
- * @typedef {("srt_pull"|"srt_push"|"rtp"|"udp")} OutputDeliveryType
+ * @typedef {("srt_pull"|"srt_push"|"rtp"|"udp"|"rtmp")} OutputDeliveryType
  */
 
 /**
@@ -3577,6 +3577,16 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  * @typedef {Object} OutputInput
  * @property {string=} stream - Object ID of the input stream, e.g. "iq__AAA" (null to disconnect)
  * @property {string=} offering - Offering key of the input stream to use (optional; defaults to the stream's default offering)
+ * @property {OutputFmp4=} fmp4 - fMP4 source selection (rtmp outputs)
+ */
+
+/**
+ * fMP4 source selection for an output input.
+ *
+ * @typedef {Object} OutputFmp4
+ * @property {string=} audio_name - Audio stream to use, e.g. "audio_1"
+ * @property {string=} latency - Target latency with time units, e.g. "750ms"
+ * @property {string=} representation - Video representation to use, e.g. "videovideo_960x540_h264@2000000"
  */
 
 /**
@@ -3657,8 +3667,19 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  */
 
 /**
+ * RTMP/RTMPS delivery: the fabric node designated by node_id pushes the live stream to the specified
+ * URL, authenticating with the stream key.
+ *
+ * @typedef {Object} OutputRtmp
+ * @property {string} url - Destination RTMP or RTMPS URL (e.g. "rtmps://a.rtmps.youtube.com/live2")
+ * @property {string} stream_key - Stream key for the destination
+ * @property {string=} node_id - ID of the fabric node that pushes to the destination URL, e.g. "inodAAA" (resolved from elvgeo if omitted)
+ * @property {string=} elvgeo - Geo region used to select a node; resolved to node_id on create
+ */
+
+/**
  * A single live output. Keyed by output ID in the outputs map. Exactly one of
- * srt_push / srt_pull / rtp / udp is present and selects the delivery protocol.
+ * srt_push / srt_pull / rtp / udp / rtmp is present and selects the delivery protocol.
  *
  * @typedef {Object} LiveOutput
  * @property {boolean=} enabled - Whether the output is enabled
@@ -3670,18 +3691,20 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  * @property {OutputSrtPull=} srt_pull - SRT pull delivery configuration
  * @property {OutputRtp=} rtp - RTP delivery configuration
  * @property {OutputUdp=} udp - UDP delivery configuration
+ * @property {OutputRtmp=} rtmp - RTMP/RTMPS delivery configuration
  */
 
 /**
  * Delivery envelope accepted by OutputsCreate. The `type` selects the protocol and `settings`
- * carries the matching delivery block (OutputSrtPush / OutputSrtPull / OutputRtp / OutputUdp).
+ * carries the matching delivery block (OutputSrtPush / OutputSrtPull / OutputRtp / OutputUdp / OutputRtmp).
  *
  * @typedef {Object} OutputDelivery
  * @property {OutputDeliveryType} type - Delivery protocol
- * @property {(OutputSrtPush|OutputSrtPull|OutputRtp|OutputUdp)} settings - Protocol-specific delivery settings
+ * @property {(OutputSrtPush|OutputSrtPull|OutputRtp|OutputUdp|OutputRtmp)} settings - Protocol-specific delivery settings
+ * @property {OutputFmp4=} fmp4 - fMP4 source selection (rtmp only); written to the output's input.fmp4 when a stream is specified
  */
 
-const DELIVERY_PROTOCOLS = ["srt_pull", "srt_push", "rtp", "udp"];
+const DELIVERY_PROTOCOLS = ["srt_pull", "srt_push", "rtp", "udp", "rtmp"];
 
 const OutputDeliverySettings = (value) => {
   const type = DELIVERY_PROTOCOLS.find(protocol => value && value[protocol]);
@@ -3977,7 +4000,7 @@ exports.OutputsState = async function({libraryId, objectId, outputId, nodeId, in
 /**
  * Pin (route) the client to the egress node for a specific output. Fetches the output config
  * to determine the node ID then sets the client fabric URIs.
- * Node ID is retrieved from the output's delivery block (srt_push / srt_pull / rtp / udp).
+ * Node ID is retrieved from the output's delivery block (srt_push / srt_pull / rtp / udp / rtmp).
  * Assumes the client is already routed to an eligible egress node (via RouteToLiveEgress).
  * Returns a function that restores the original fabric URIs.
  *
@@ -4084,8 +4107,8 @@ const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
  *
  * The delivery protocol is selected with `delivery.type` and configured with `delivery.settings`,
  * whose fields match the corresponding delivery block (see {@link OutputSrtPush}, {@link OutputSrtPull},
- * {@link OutputRtp}, {@link OutputUdp}). The output is pinned to an egress node, resolved in order
- * (node_ids/elvgeos for srt_pull, node_id/elvgeo for srt_push/rtp/udp):
+ * {@link OutputRtp}, {@link OutputUdp}, {@link OutputRtmp}). The output is pinned to an egress node, resolved in order
+ * (node_ids/elvgeos for srt_pull, node_id/elvgeo for srt_push/rtp/udp/rtmp):
  * - the node ID, if provided directly
  * - the geo, resolved against the fabric config `live_egress` services
  * - otherwise, the first available `live_egress` node
@@ -4121,20 +4144,26 @@ exports.OutputsCreate = async function({
 }) {
   ValidateObject(objectId);
 
-  const {type, settings = {}} = delivery || {};
+  const {type, settings = {}, fmp4} = delivery || {};
 
   if(!DELIVERY_PROTOCOLS.includes(type)) {
     throw new Error(`delivery.type must be one of ${DELIVERY_PROTOCOLS.join(", ")}`);
   }
 
-  // srt_pull uses array node_ids/elvgeos; srt_push/rtp/udp use singular node_id/elvgeo/url
+  // srt_pull uses array node_ids/elvgeos; srt_push/rtp/udp/rtmp use singular node_id/elvgeo/url
   const isPull = type === "srt_pull";
 
   if(isPull && settings.node_ids?.length && settings.elvgeos?.length) {
     throw new Error("delivery.settings may specify either node_ids or elvgeos, not both");
   }
-  if(["srt_push", "rtp", "udp"].includes(type) && !settings.url) {
+  if(["srt_push", "rtp", "udp", "rtmp"].includes(type) && !settings.url) {
     throw new Error(`delivery.settings.url is required for ${type} outputs`);
+  }
+  if(type === "rtmp" && !/^rtmps?:\/\//i.test(settings.url)) {
+    throw new Error("delivery.settings.url must start with rtmp:// or rtmps:// for rtmp outputs");
+  }
+  if(type === "rtmp" && !settings.stream_key) {
+    throw new Error("delivery.settings.stream_key is required for rtmp outputs");
   }
 
   if(!libraryId) {
@@ -4180,7 +4209,7 @@ exports.OutputsCreate = async function({
       name,
       description,
       external_id: externalId,
-      input: streamObjectId ? {stream: streamObjectId, offering} : undefined,
+      input: streamObjectId ? {stream: streamObjectId, offering, fmp4: type === "rtmp" ? fmp4 : undefined} : undefined,
       [type]: settings
     };
 
