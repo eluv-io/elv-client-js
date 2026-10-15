@@ -21,6 +21,7 @@ const {
   ValidatePresence,
 } = require("../Validation");
 
+const MergeWith = require("lodash/mergeWith");
 const LodashSet = require("lodash/set");
 const LodashGet = require("lodash/get");
 
@@ -717,11 +718,11 @@ exports.ProduceMetadataLinks = async function({
 }) {
   path = UrlJoin(path || "").replace(/^\//, "").replace(/\/$/, "");
 
-  const Traverse = async (currentPath="") => {
-    const currentMetadata = !currentPath ? metadata : LodashGet(metadata, currentPath.split("/"));
-
+  // Walk the metadata objects directly, tracking the path as segments - joining keys into a
+  // string path can collapse keys like "/" or "" into the parent path and recurse forever
+  const Traverse = async (currentMetadata, pathSegments=[]) => {
     if(log) {
-      console.log(path, currentPath, currentMetadata)
+      console.log(path, pathSegments.join("/"), currentMetadata)
     }
 
     // Primitive
@@ -732,28 +733,26 @@ exports.ProduceMetadataLinks = async function({
     // Array
     if(Array.isArray(currentMetadata)) {
       for(let i = 0; i < currentMetadata.length; i++) {
-        await Traverse(UrlJoin(currentPath, i.toString()));
+        await Traverse(currentMetadata[i], [...pathSegments, i.toString()]);
       }
+
+      return;
     }
 
     // Object
-    if(currentMetadata["/"] &&
+    if(typeof currentMetadata["/"] === "string" &&
       (currentMetadata["/"].match(/\.\/(rep|files)\/.+/) ||
         currentMetadata["/"].match(/^\/?qfab\/([\w]+)\/?(rep|files)\/.+/))) {
       // Is file or rep link - produce a url
-      LodashSet(
-        metadata,
-        UrlJoin(currentPath, "url").split("/"),
-        await this.LinkUrl({libraryId, objectId, versionHash, linkPath: UrlJoin(path, currentPath), authorizationToken, noAuth})
-      )
+      currentMetadata.url = await this.LinkUrl({libraryId, objectId, versionHash, linkPath: UrlJoin(path, ...pathSegments), authorizationToken, noAuth});
     } else {
       for(let key of Object.keys(currentMetadata)) {
-        await Traverse(UrlJoin(currentPath, key))
+        await Traverse(currentMetadata[key], [...pathSegments, key]);
       }
     }
-  }
+  };
 
-  await Traverse();
+  await Traverse(metadata);
 
   return metadata;
 };

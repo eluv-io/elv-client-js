@@ -10,6 +10,7 @@ const {
   keccak256,
   getAddress
 } = require("ethers").utils;
+const EthersBigNumber = require("ethers").BigNumber;
 
 /**
  * @namespace
@@ -42,6 +43,12 @@ const Utils = {
    * @returns {BigNumber} - Given value as a BigNumber
    */
   ToBigNumber: (value) => {
+    // ethers BigNumbers carry the same _isBigNumber flag that bignumber.js uses to detect its own
+    // instances, so passing one directly produces NaN - convert ethers values and bigints via string
+    if(EthersBigNumber.isBigNumber(value) || typeof value === "bigint") {
+      value = value.toString();
+    }
+
     return new BigNumber(value);
   },
 
