@@ -48,6 +48,31 @@ const DefaultABRLadder = {
   ]
 };
 
+/*
+ * xc_params that only mean something when video is being transcoded. They are
+ * removed from an audio only configuration unless the profile states them
+ */
+const VIDEO_ONLY_XC_PARAMS = [
+  "bitdepth",
+  "crf_str",
+  "dcodec",
+  "deinterlace",
+  "ecodec",
+  "enc_height",
+  "enc_width",
+  "filter_descriptor",
+  "force_keyint",
+  "level",
+  "preset",
+  "profile",
+  "rc_buffer_size",
+  "rc_max_rate",
+  "video_bitrate",
+  "video_frame_duration_ts",
+  "video_seg_duration_ts",
+  "video_time_base"
+];
+
 const LiveconfTemplate = {
   live_recording: {
     fabric_config: {
@@ -530,6 +555,13 @@ class LiveConf {
     const customRecordingParams = customSettings.liveRecordingConfigProfile?.recording_params;
     const customXcParams = customRecordingParams?.xc_params;
 
+    // A profile that states a ladder is taken as given, including one with no
+    // video rungs at all - that is an audio only recording, not an omission.
+    // Only a profile stating no ladder falls back to the default one
+    const ladder_specs = customSettings.liveRecordingConfigProfile?.playout_config?.ladder_specs;
+    const ladderProfile = ladder_specs ? ladder_specs : DefaultABRLadder;
+    const videoLadder = ladderProfile.video || [];
+
     // Fill in liveconf all formats have in common
     conf.live_recording.fabric_config.ingress_node_api = this.nodeUrl || null;
     conf.live_recording.fabric_config.ingress_node_id = this.nodeId || null;
@@ -549,7 +581,9 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.xc_params.audio_index[i] = parseInt(Object.keys(audioStreams)[i]);
     }
 
-    if(this.syncAudioToVideo) {
+    // An audio only ladder has no video stream to sync to, so the profile's own
+    // value stands
+    if(this.syncAudioToVideo && videoLadder.length > 0) {
       conf.live_recording.recording_config.recording_params.xc_params.sync_audio_to_stream_id = this.syncAudioToStreamIdValue();
     }
 
@@ -607,16 +641,13 @@ class LiveConf {
         segDurations.videoFrameDurationTs || null;
     }
 
-    const ladder_specs = customSettings.liveRecordingConfigProfile?.playout_config?.ladder_specs;
-    const ladderProfile = ladder_specs?.video?.length > 0 ? ladder_specs : DefaultABRLadder;
-
     // Reset ladder specs (updating existing stream will carry over old specs
     conf.live_recording.recording_config.recording_params.ladder_specs = [];
 
     // Determine video recording bitrate and ABR ladder
     let topLadderRate = 0;
-    for(let i = 0; i < ladderProfile.video.length; i ++) {
-      let elem = ladderProfile.video[i];
+    for(let i = 0; i < videoLadder.length; i ++) {
+      let elem = videoLadder[i];
       if(elem.height > videoStream.height)
         continue;
       if(elem.bit_rate > topLadderRate) {
@@ -628,8 +659,23 @@ class LiveConf {
       elem.representation = "videovideo_" + elem.width + "x" + elem.height + "_h264@" + elem.bit_rate;
       conf.live_recording.recording_config.recording_params.ladder_specs.push(elem);
     }
-    // Currently the recording bitrate is the top bitrate of the ladder (it will be configurable separately in the future)
-    conf.live_recording.recording_config.recording_params.xc_params.video_bitrate = topLadderRate;
+    // Currently the recording bitrate is the top bitrate of the ladder (it will be configurable separately in the future).
+    // An audio only ladder has no top rate to take it from, so it is left alone rather than set to zero
+    if(videoLadder.length > 0) {
+      conf.live_recording.recording_config.recording_params.xc_params.video_bitrate = topLadderRate;
+    } else {
+      // Audio only. Reconfiguring an existing stream merges its current
+      // live_recording in underneath the profile, so video settings the new
+      // profile no longer states would otherwise survive from the old config -
+      // a video playout ladder and a video encoder that nothing will use
+      delete conf.live_recording.playout_config?.ladder_specs?.video;
+
+      const xcParams = conf.live_recording.recording_config.recording_params.xc_params;
+      VIDEO_ONLY_XC_PARAMS.forEach(key => {
+        if(customXcParams && key in customXcParams) return;  // stated by the profile - leave it
+        delete xcParams[key];
+      });
+    }
 
     // Determine audio recording bitrate and ABR ladder
     let globalAudioBitrate = 0;
