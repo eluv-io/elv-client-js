@@ -1367,6 +1367,7 @@ exports.AvailableOfferings = async function({
  * @param {Array<string>} drms - Acceptable DRM formats ("aes-128", "clear", "fairplay", "playready", "sample-aes", "widevine")
  * @param {string=} handler=playout - The handler to use for playout (not used with links)
  * @param {string=} offering=default - The offering to play
+ * @param {boolean=} vertical=false - If specified, will play the vertical crop of this content (if available)
  * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request.
  * - Note: Context must be a map of string->string
@@ -1383,6 +1384,7 @@ exports.PlayoutOptions = async function({
   protocols=["dash", "hls"],
   handler="playout",
   offering="default",
+  vertical=false,
   playoutType,
   drms=[],
   context,
@@ -1390,6 +1392,10 @@ exports.PlayoutOptions = async function({
   authorizationToken,
   options={}
 }) {
+  if(vertical) {
+    options.v = 1;
+  }
+
   if(offeringURI) {
     const uriInfo = offeringURI.match(/(hq__[^/]+)\/rep\/([^/]+)\/([^/]+)\/options.json/);
     versionHash = uriInfo[1];
@@ -1443,6 +1449,7 @@ exports.PlayoutOptions = async function({
     signedLink,
     handler,
     offering,
+    vertical,
     authorizationToken
   });
 
@@ -1539,7 +1546,8 @@ exports.PlayoutOptions = async function({
                 writeToken,
                 linkPath: UrlJoin(linkPath, offering, playoutPath),
                 queryParams,
-                noAuth: true
+                noAuth: true,
+                HttpClient: vertical ? this.VerticalPlayoutHttpClient : this.HttpClient
               }) :
               await this.Rep({
                 libraryId: linkTarget.libraryId || libraryId,
@@ -1548,7 +1556,8 @@ exports.PlayoutOptions = async function({
                 writeToken,
                 rep: UrlJoin(handler, offering, playoutPath),
                 noAuth: true,
-                queryParams
+                queryParams,
+                service: vertical ? "vertical" : undefined
               }),
           globalPlayoutUrl:
             signedLink ?
@@ -1652,6 +1661,7 @@ exports.PlayoutOptions = async function({
  * @param {Array<string>} drms - Acceptable DRM formats ("aes-128", "clear", "fairplay", "playready", "sample-aes", "widevine")
  * @param {string=} handler=playout - The handler to use for playout
  * @param {string=} offering=default - The offering to play
+ * @param {boolean=} vertical=false - If specified, will play the vertical crop of this content (if available)
  * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request
  * - Note: Context must be a map of string->string
@@ -1668,6 +1678,7 @@ exports.BitmovinPlayoutOptions = async function({
   drms=[],
   handler="playout",
   offering="default",
+  vertical,
   playoutType,
   context,
   authorizationToken,
@@ -1689,6 +1700,7 @@ exports.BitmovinPlayoutOptions = async function({
     drms,
     handler,
     offering,
+    vertical,
     playoutType,
     hlsjsProfile: false,
     context,
@@ -2173,6 +2185,8 @@ exports.FabricUrl = async function({
     httpClient = this.AuthHttpClient;
   } else if(service === "files") {
     httpClient = this.FileServiceHttpClient;
+  } else if(service === "vertical") {
+    httpClient = this.VerticalPlayoutHttpClient;
   }
 
   return httpClient.URL({
@@ -2685,7 +2699,8 @@ exports.LinkUrl = async function({
   authorizationToken,
   queryParams={},
   channelAuth=false,
-  noAuth=false
+  noAuth=false,
+  HttpClient
 }) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(writeToken) { ValidateWriteToken(writeToken); }
@@ -2716,7 +2731,9 @@ exports.LinkUrl = async function({
 
   if(mimeType) { queryParams["header-accept"] = mimeType; }
 
-  return this.HttpClient.URL({
+  HttpClient = HttpClient || this.HttpClient;
+
+  return HttpClient.URL({
     path: path,
     queryParams
   });
