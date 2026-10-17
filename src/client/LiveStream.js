@@ -4154,6 +4154,135 @@ const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
  *
  * The delivery protocol is selected with `delivery.type` and configured with `delivery.settings`,
  * whose fields match the corresponding delivery block (see {@link OutputSrtPush}, {@link OutputSrtPull},
+ * {@link OutputRtp}, {@link OutputUdp}). The output is pinned to an egress node, resolved in order
+ * (node_ids/elvgeos for srt_pull, node_id/elvgeo for srt_push/rtp/udp):
+ * - the node ID, if provided directly
+ * - the geo, resolved against the fabric config `live_egress` services
+ * - otherwise, the first available `live_egress` node
+ *
+ * Note: Output creation and modification is transactional. To create multiple outputs in a single
+ * transaction, use EditContentObject to open a write token, call CallBitcodeMethod for each output,
+ * then finalize with FinalizeContentObject. This method handles a single output end-to-end.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the outputs settings object
+ * @param {string=} streamObjectId - Object ID of the input stream to use as the output source
+ * @param {string=} offering - Offering key of the input stream to use
+ * @param {boolean=} enabled - Whether the output is enabled (forced to false when no stream is specified)
+ * @param {string=} name - Display name for the output
+ * @param {string=} description - Description of the output
+ * @param {string=} externalId - External identifier for the output
+ * @param {OutputDelivery} delivery - Delivery configuration: `{type, settings}`
+ *
+ * @returns {Promise<Object>} - The created output
+ */
+exports.OutputsCreate = async function({
+  libraryId,
+  objectId,
+  streamObjectId,
+  offering,
+  enabled,
+  name,
+  description,
+  externalId,
+  delivery
+}) {
+  ValidateObject(objectId);
+
+  const {type, settings = {}} = delivery || {};
+
+  if(!DELIVERY_PROTOCOLS.includes(type)) {
+    throw new Error(`delivery.type must be one of ${DELIVERY_PROTOCOLS.join(", ")}`);
+  }
+
+  // srt_pull uses array node_ids/elvgeos; srt_push/rtp/udp use singular node_id/elvgeo/url
+  const isPull = type === "srt_pull";
+
+  if(isPull && settings.node_ids?.length && settings.elvgeos?.length) {
+    throw new Error("delivery.settings may specify either node_ids or elvgeos, not both");
+  }
+  if(["srt_push", "rtp", "udp"].includes(type) && !settings.url) {
+    throw new Error(`delivery.settings.url is required for ${type} outputs`);
+  }
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  if(isPull) {
+    // srt_pull delivers by node_ids only — resolve them (from elvgeos, or a default) then drop elvgeos
+    if(!settings.node_ids?.length) {
+      settings.node_ids = settings.elvgeos?.length
+        ? await Promise.all(
+          settings.elvgeos.map(geo => RetrieveOutputNodeId({client: this, geos: [geo]}))
+        )
+        : [await RetrieveOutputNodeId({client: this})];
+    }
+    delete settings.elvgeos;
+  } else {
+    // Resolve a concrete node_id (from elvgeo, or a default), then replace elvgeo with it
+    if(!settings.node_id) {
+      settings.node_id = await RetrieveOutputNodeId({
+        client: this,
+        geos: settings.elvgeo ? [settings.elvgeo] : undefined
+      });
+    }
+    delete settings.elvgeo;
+  }
+
+  const {restore} = await RouteToLiveEgress({client: this});
+
+  if(
+    (type === "srt_pull" || type === "srt_push") &&
+    settings.connection?.enforced_encryption &&
+    !settings.passphrase
+  ) {
+    settings.passphrase = Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(16)))
+      .toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+    settings.connection.pb_keylen = 16;
+  }
+
+  try {
+    const output = {
+      enabled: streamObjectId ? enabled : false,
+      name,
+      description,
+      external_id: externalId,
+      input: streamObjectId ? {stream: streamObjectId, offering} : undefined,
+      [type]: settings
+    };
+
+    const {writeToken} = await this.EditContentObject({libraryId, objectId});
+
+    const outputs = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      writeToken,
+      method: "live/outputs",
+      constant: false,
+      body: output
+    });
+
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Create output"
+    });
+
+    return outputs;
+  } finally {
+    restore();
+  }
+};
+
+/**
+ * Create a new live output.
+ *
+ * The delivery protocol is selected with `delivery.type` and configured with `delivery.settings`,
+ * whose fields match the corresponding delivery block (see {@link OutputSrtPush}, {@link OutputSrtPull},
  * {@link OutputRtp}, {@link OutputUdp}, {@link OutputRtmp}). The output is pinned to an egress node,
  * resolved in order (node_ids/elvgeos for srt_pull, node_id/elvgeo for the push protocols):
  * - the node ID, if provided directly
@@ -4181,7 +4310,7 @@ const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
  *
  * @returns {Promise<Object>} - The created output
  */
-exports.OutputsCreate = async function({
+exports.OutputsCreate2 = async function({
   libraryId,
   objectId,
   streamObjectId,
