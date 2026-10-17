@@ -231,9 +231,7 @@ exports.StreamCreate = async function({
     throw Error("Stream public asset metadata must be an object");
   }
 
-  // Retrieve the tenant's live stream content type. More than one live stream
-  // type can exist - this is the default, used only for an object that has no
-  // type of its own
+  // Retrieve the live stream content type
   let tenantId;
   try {
     tenantId = await this.userProfileClient.TenantContractId();
@@ -261,23 +259,13 @@ exports.StreamCreate = async function({
     console.error("Unable to load tenant data", error);
   }
 
-  // The type of the object being built on, when there is one
+  // When creating on an existing object preserve its content type if set
   const currentType = objectId
     ? (await this.ContentObject({libraryId, objectId})).type
     : null;
 
-  /*
-   * Guarded out here rather than inside the try above, which caught its own
-   * throw and only logged it - a tenant whose type could not be read went on to
-   * create an object with no type at all, reported as a success.
-   *
-   * Only the object that has no type of its own needs one: a new object, or one
-   * taken from the empty pool that was never typed. An object that already has
-   * a type keeps it, so a tenant missing the default is no obstacle to building
-   * on streams that are already typed.
-   */
   if(!currentType && !contentType) {
-    throw new Error(`No content type configured for tenant ${tenantId}`);
+    throw new Error("No live stream content type set for tenant");
   }
 
   let editResponse;
@@ -286,9 +274,7 @@ exports.StreamCreate = async function({
      editResponse = await this.EditContentObject({
       libraryId,
       objectId,
-      // Set only when the object has none - never replacing one it already has,
-      // which may deliberately be a type other than the tenant's default
-      options: currentType ? {} : {type: contentType}
+      options: currentType ? {} : {type: contentType} // Preserve existing object content type
     });
 
      // If no new URL is provided, use value from saved config
@@ -3598,7 +3584,7 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  * @typedef {Object} OutputInput
  * @property {string=} stream - Object ID of the input stream, e.g. "iq__AAA" (null to disconnect)
  * @property {string=} offering - Offering key of the input stream to use (optional; defaults to the stream's default offering)
- * @property {string=} token - Auth token for reading the live stream (defaults to the anonymous space token)
+ * @property {string=} token - Auth token for reading the live stream (defaults to anonymous token)
  * @property {OutputFmp4=} fmp4 - fMP4 source selection (rtmp outputs)
  */
 
@@ -3708,7 +3694,7 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  * @property {string=} name - Display name for the output
  * @property {string=} description - Description of the output
  * @property {string=} external_id - External identifier for the output
- * @property {Object=} custom - Arbitrary client data, stored and returned as-is and never interpreted. Numbers are decoded as float64, so an integer beyond 2^53 does not come back exactly
+ * @property {Object=} custom - Arbitrary client data, stored and returned as-is
  * @property {OutputInput=} input - Input stream configuration
  * @property {OutputSrtPush=} srt_push - SRT push delivery configuration
  * @property {OutputSrtPull=} srt_pull - SRT pull delivery configuration
