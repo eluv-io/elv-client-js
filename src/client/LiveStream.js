@@ -3593,27 +3593,22 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  */
 
 /**
- * Selects the ABR rung an rtmp output publishes as elementary samples, instead of the raw MPEG-TS
- * recording the other output types carry. Required on the input of an rtmp output, and rejected on
- * the input of any other type.
- *
- * The rung is produced by the same playout pipeline that serves players, so the output transcodes
- * nothing of its own.
- *
- * @typedef {Object} OutputFmp4
- * @property {string} representation - Representation of the video rung in the stream's ladder_specs, e.g. "720@8000000". Must be H.264
- * @property {string=} audio_name - stream_name of the audio in the stream's ladder_specs, e.g. "audio_1". Omitted selects the ladder's default audio; "none" publishes video only. Must be AAC
- * @property {string=} latency - Jitter buffer before publication, between "100ms" and "1s" (default "500ms")
- */
-
-/**
  * Input stream configuration for a live output.
  *
  * @typedef {Object} OutputInput
  * @property {string=} stream - Object ID of the input stream, e.g. "iq__AAA" (null to disconnect)
  * @property {string=} offering - Offering key of the input stream to use (optional; defaults to the stream's default offering)
  * @property {string=} token - Auth token for reading the live stream (defaults to the anonymous space token)
- * @property {OutputFmp4=} fmp4 - ABR rung selection - required for rtmp outputs, not allowed for the others
+ * @property {OutputFmp4=} fmp4 - fMP4 source selection (rtmp outputs)
+ */
+
+/**
+ * fMP4 source selection for an output input.
+ *
+ * @typedef {Object} OutputFmp4
+ * @property {string=} audio_name - Audio stream to use, e.g. "audio_1"
+ * @property {string=} latency - Target latency with time units, e.g. "750ms"
+ * @property {string=} representation - Video representation to use, e.g. "videovideo_960x540_h264@2000000"
  */
 
 /**
@@ -3694,30 +3689,14 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  */
 
 /**
- * TLS settings of an rtmps:// connection. Server certificates are verified against the system roots.
- *
- * @typedef {Object} OutputRtmpTls
- * @property {string=} ca_cert - PEM-encoded certificate or chain to trust in addition to the system roots
- */
-
-/**
- * RTMP / RTMPS push delivery: the fabric node designated by node_id publishes the ABR rung selected
- * by input.fmp4 as H.264 video and AAC audio to the given server and stream key. Each output is an
- * independent publish session, so several (e.g. YouTube and Facebook) can share one input.
- *
- * The stream key is kept apart from the URL: url is the server and application, stream_key the name
- * published under it. Facebook accepts RTMPS only; YouTube accepts both.
+ * RTMP/RTMPS delivery: the fabric node designated by node_id pushes the live stream to the specified
+ * URL, authenticating with the stream key.
  *
  * @typedef {Object} OutputRtmp
- * @property {string} url - Server and application, "rtmp://host[:port]/app" or "rtmps://host[:port]/app" (e.g. "rtmps://a.rtmps.youtube.com:443/live2"). Must not carry the stream key, a fragment or user info
- * @property {string} stream_key - The stream name published under url, typically the secret key issued by the platform
- * @property {string=} node_id - ID of the fabric node that publishes to the destination, e.g. "inodAAA" (resolved from elvgeo if omitted)
+ * @property {string} url - Destination RTMP or RTMPS URL (e.g. "rtmps://a.rtmps.youtube.com/live2")
+ * @property {string} stream_key - Stream key for the destination
+ * @property {string=} node_id - ID of the fabric node that pushes to the destination URL, e.g. "inodAAA" (resolved from elvgeo if omitted)
  * @property {string=} elvgeo - Geo region used to select a node; resolved to node_id on create
- * @property {string=} username - User name for RTMP connect authentication, set together with password
- * @property {string=} password - Password for RTMP connect authentication, set together with username
- * @property {string=} connect_timeout - Bounds the TCP connect, TLS and RTMP handshake of one attempt (default "10s")
- * @property {string=} write_timeout - Bounds each write to the server; a stalled peer is disconnected and the output reconnects (default "10s")
- * @property {OutputRtmpTls=} tls - TLS settings for an rtmps connection
  */
 
 /**
@@ -3735,17 +3714,17 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  * @property {OutputSrtPull=} srt_pull - SRT pull delivery configuration
  * @property {OutputRtp=} rtp - RTP delivery configuration
  * @property {OutputUdp=} udp - UDP delivery configuration
- * @property {OutputRtmp=} rtmp - RTMP / RTMPS push delivery configuration
+ * @property {OutputRtmp=} rtmp - RTMP/RTMPS delivery configuration
  */
 
 /**
  * Delivery envelope accepted by OutputsCreate. The `type` selects the protocol and `settings`
- * carries the matching delivery block (OutputSrtPush / OutputSrtPull / OutputRtp / OutputUdp /
- * OutputRtmp).
+ * carries the matching delivery block (OutputSrtPush / OutputSrtPull / OutputRtp / OutputUdp / OutputRtmp).
  *
  * @typedef {Object} OutputDelivery
  * @property {OutputDeliveryType} type - Delivery protocol
  * @property {(OutputSrtPush|OutputSrtPull|OutputRtp|OutputUdp|OutputRtmp)} settings - Protocol-specific delivery settings
+ * @property {OutputFmp4=} fmp4 - fMP4 source selection (rtmp only); written to the output's input.fmp4 when a stream is specified
  */
 
 const DELIVERY_PROTOCOLS = ["srt_pull", "srt_push", "rtp", "udp", "rtmp"];
@@ -4154,8 +4133,8 @@ const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
  *
  * The delivery protocol is selected with `delivery.type` and configured with `delivery.settings`,
  * whose fields match the corresponding delivery block (see {@link OutputSrtPush}, {@link OutputSrtPull},
- * {@link OutputRtp}, {@link OutputUdp}). The output is pinned to an egress node, resolved in order
- * (node_ids/elvgeos for srt_pull, node_id/elvgeo for srt_push/rtp/udp):
+ * {@link OutputRtp}, {@link OutputUdp}, {@link OutputRtmp}). The output is pinned to an egress node, resolved in order
+ * (node_ids/elvgeos for srt_pull, node_id/elvgeo for srt_push/rtp/udp/rtmp):
  * - the node ID, if provided directly
  * - the geo, resolved against the fabric config `live_egress` services
  * - otherwise, the first available `live_egress` node
@@ -4191,20 +4170,26 @@ exports.OutputsCreate = async function({
 }) {
   ValidateObject(objectId);
 
-  const {type, settings = {}} = delivery || {};
+  const {type, settings = {}, fmp4} = delivery || {};
 
   if(!DELIVERY_PROTOCOLS.includes(type)) {
     throw new Error(`delivery.type must be one of ${DELIVERY_PROTOCOLS.join(", ")}`);
   }
 
-  // srt_pull uses array node_ids/elvgeos; srt_push/rtp/udp use singular node_id/elvgeo/url
+  // srt_pull uses array node_ids/elvgeos; srt_push/rtp/udp/rtmp use singular node_id/elvgeo/url
   const isPull = type === "srt_pull";
 
   if(isPull && settings.node_ids?.length && settings.elvgeos?.length) {
     throw new Error("delivery.settings may specify either node_ids or elvgeos, not both");
   }
-  if(["srt_push", "rtp", "udp"].includes(type) && !settings.url) {
+  if(["srt_push", "rtp", "udp", "rtmp"].includes(type) && !settings.url) {
     throw new Error(`delivery.settings.url is required for ${type} outputs`);
+  }
+  if(type === "rtmp" && !/^rtmps?:\/\//i.test(settings.url)) {
+    throw new Error("delivery.settings.url must start with rtmp:// or rtmps:// for rtmp outputs");
+  }
+  if(type === "rtmp" && !settings.stream_key) {
+    throw new Error("delivery.settings.stream_key is required for rtmp outputs");
   }
 
   if(!libraryId) {
@@ -4250,7 +4235,7 @@ exports.OutputsCreate = async function({
       name,
       description,
       external_id: externalId,
-      input: streamObjectId ? {stream: streamObjectId, offering} : undefined,
+      input: streamObjectId ? {stream: streamObjectId, offering, fmp4: type === "rtmp" ? fmp4 : undefined} : undefined,
       [type]: settings
     };
 
