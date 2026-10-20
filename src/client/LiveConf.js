@@ -49,8 +49,7 @@ const DefaultABRLadder = {
 };
 
 /*
- * xc_params that only mean something when video is being transcoded. They are
- * removed from an audio only configuration unless the profile states them
+ * xc_params that pertain exclusively to video (removed from audio only configuration unless the profile states them)
  */
 const VIDEO_ONLY_XC_PARAMS = [
   "bitdepth",
@@ -555,9 +554,8 @@ class LiveConf {
     const customRecordingParams = customSettings.liveRecordingConfigProfile?.recording_params;
     const customXcParams = customRecordingParams?.xc_params;
 
-    // A profile that states a ladder is taken as given, including one with no
-    // video rungs at all - that is an audio only recording, not an omission.
-    // Only a profile stating no ladder falls back to the default one
+    // A profile that states a ladder is used as-is, including one with no video rungs (audio only)
+    // A profile stating no ladder falls back to the default one
     const ladder_specs = customSettings.liveRecordingConfigProfile?.playout_config?.ladder_specs;
     const ladderProfile = ladder_specs ? ladder_specs : DefaultABRLadder;
     const videoLadder = ladderProfile.video || [];
@@ -581,8 +579,7 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.xc_params.audio_index[i] = parseInt(Object.keys(audioStreams)[i]);
     }
 
-    // An audio only ladder has no video stream to sync to, so the profile's own
-    // value stands
+    // An audio only ladder has no video stream to sync to
     if(this.syncAudioToVideo && videoLadder.length > 0) {
       conf.live_recording.recording_config.recording_params.xc_params.sync_audio_to_stream_id = this.syncAudioToStreamIdValue();
     }
@@ -660,14 +657,11 @@ class LiveConf {
       conf.live_recording.recording_config.recording_params.ladder_specs.push(elem);
     }
     // Currently the recording bitrate is the top bitrate of the ladder (it will be configurable separately in the future).
-    // An audio only ladder has no top rate to take it from, so it is left alone rather than set to zero
+    // An audio only ladder has no top rate and is not set.
     if(videoLadder.length > 0) {
       conf.live_recording.recording_config.recording_params.xc_params.video_bitrate = topLadderRate;
     } else {
-      // Audio only. Reconfiguring an existing stream merges its current
-      // live_recording in underneath the profile, so video settings the new
-      // profile no longer states would otherwise survive from the old config -
-      // a video playout ladder and a video encoder that nothing will use
+      // Audio only (reconfiguring a stream to audio only needs to clear video)
       delete conf.live_recording.playout_config?.ladder_specs?.video;
 
       const xcParams = conf.live_recording.recording_config.recording_params.xc_params;
