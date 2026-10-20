@@ -3584,17 +3584,17 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  * @typedef {Object} OutputInput
  * @property {string=} stream - Object ID of the input stream, e.g. "iq__AAA" (null to disconnect)
  * @property {string=} offering - Offering key of the input stream to use (optional; defaults to the stream's default offering)
- * @property {string=} token - Auth token for reading the live stream (defaults to anonymous token)
+ * @property {string=} token - Auth token for accessing the live stream object
  * @property {OutputFmp4=} fmp4 - fMP4 source selection (rtmp outputs)
  */
 
 /**
- * fMP4 source selection for an output input.
+ * fMP4 source selection for an RTMP output - selects an existing ABR rung of its input stream.
  *
  * @typedef {Object} OutputFmp4
- * @property {string=} audio_name - Audio stream to use, e.g. "audio_1"
- * @property {string=} latency - Target latency with time units, e.g. "750ms"
- * @property {string=} representation - Video representation to use, e.g. "videovideo_960x540_h264@2000000"
+ * @property {string=} audio_name - Audio stream_name from the stream ladder_specs, e.g. "audio_1". Omit to select the default audio; "none" selects video only. Audio must be AAC.
+ * @property {string=} latency - Target latency (dejittering buffer) with time units, e.g. "750ms"
+ * @property {string=} representation - Video representation from the stream ladder_specs, e.g. "videovideo_960x540_h264@2000000".
  */
 
 /**
@@ -4135,11 +4135,27 @@ const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
  * @param {string} objectId - Object ID of the outputs settings object
  * @param {string=} streamObjectId - Object ID of the input stream to use as the output source
  * @param {string=} offering - Offering key of the input stream to use
+ * @param {string=} inputToken - Auth token for reading the input stream. If omitted, create an editor-signed token valid for 30 days
  * @param {boolean=} enabled - Whether the output is enabled (forced to false when no stream is specified)
  * @param {string=} name - Display name for the output
  * @param {string=} description - Description of the output
  * @param {string=} externalId - External identifier for the output
- * @param {OutputDelivery} delivery - Delivery configuration: `{type, settings}`
+ * @param {Object=} custom - Arbitrary client data, stored and returned as-is
+ * @param {OutputDelivery} delivery - Delivery configuration: `{type, settings, fmp4}`
+ * @param {OutputFmp4=} delivery.fmp4 - RTMP source selection, forwarded as input.fmp4 only when streamObjectId is supplied
+ * @param {string=} delivery.fmp4.representation - Video representation from the stream ladder_specs, e.g. "videovideo_960x540_h264@2000000"
+ * @param {string=} delivery.fmp4.audio_name - Audio stream_name from the stream ladder_specs, e.g. "audio_1". Omit to select the default audio; "none" selects video only. Audio must be AAC.
+ * @param {string=} delivery.fmp4.latency - Target latency (dejittering buffer)with time units, e.g. "750ms"
+ *
+ * @example
+ * await client.OutputsCreate({
+ *   objectId, streamObjectId, custom: {designation: "primary"},
+ *   delivery: {
+ *     type: "rtmp",
+ *     settings: {url: "rtmps://example.com/live", stream_key: "stream-key"},
+ *     fmp4: {representation: "videovideo_960x540_h264@2000000", audio_name: "audio_1", latency: "750ms"}
+ *   }
+ * });
  *
  * @returns {Promise<Object>} - The created output
  */
@@ -4148,10 +4164,12 @@ exports.OutputsCreate = async function({
   objectId,
   streamObjectId,
   offering,
+  inputToken,
   enabled,
   name,
   description,
   externalId,
+  custom,
   delivery
 }) {
   ValidateObject(objectId);
@@ -4176,6 +4194,13 @@ exports.OutputsCreate = async function({
   }
   if(type === "rtmp" && !settings.stream_key) {
     throw new Error("delivery.settings.stream_key is required for rtmp outputs");
+  }
+
+  if(streamObjectId && !inputToken) {
+    inputToken = await this.CreateSignedToken({
+      objectId: streamObjectId,
+      duration: 30 * 86400000
+    });
   }
 
   if(!libraryId) {
@@ -4221,7 +4246,8 @@ exports.OutputsCreate = async function({
       name,
       description,
       external_id: externalId,
-      input: streamObjectId ? {stream: streamObjectId, offering, fmp4: type === "rtmp" ? fmp4 : undefined} : undefined,
+      custom,
+      input: streamObjectId ? {stream: streamObjectId, offering, token: inputToken, fmp4: type === "rtmp" ? fmp4 : undefined} : undefined,
       [type]: settings
     };
 
