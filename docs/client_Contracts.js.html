@@ -939,8 +939,8 @@ exports.ResetTenantId = async function({contractAddress, objectId, versionHash})
     applicable only for wallet,group, library or content_type object.`);
   }
 
-  let tenantContractId = this.TenantContractId({objectId});
-  let tenantId = this.TenantId({objectId});
+  let tenantContractId = await this.TenantContractId({objectId});
+  let tenantId = await this.TenantId({objectId});
 
   if(tenantContractId || tenantId){
     const hasPutMetaMethod = await this.authClient.ContractHasMethod({

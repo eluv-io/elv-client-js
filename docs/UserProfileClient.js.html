@@ -562,8 +562,8 @@ await client.userProfileClient.UserMetadata()
   async ResetTenantId(){
     const {objectId} = await this.UserWalletObjectInfo();
     await this.client.ResetTenantId({objectId});
-    this.tenantId = this.client.TenantId({objectId});
-    this.tenantContractId = this.client.TenantContractId({objectId});
+    this.tenantId = await this.client.TenantId({objectId});
+    this.tenantContractId = await this.client.TenantContractId({objectId});
   }
 
   /**
