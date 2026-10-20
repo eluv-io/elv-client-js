@@ -131,6 +131,7 @@ class ElvClient {
    * @param {Array<string>} authServiceURIs - A list of full URIs to auth service endpoints
    * @param {Array<string>} fileServiceURIs - A list of full URIs to file service endpoints
    * @param {Array<string>=} searchURIs - A list of full URIs to search service endpoints
+   * @param {Array<string>=} verticalPlayoutURIs - A list of full URIs to nodes capable of vertical video playout
    * @param {Array<string>=} tenantQueryURIs - A list of full URIs to tenant query service endpoints
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
@@ -153,6 +154,7 @@ class ElvClient {
     authServiceURIs,
     fileServiceURIs,
     searchURIs,
+    verticalPlayoutURIs,
     tenantQueryURIs,
     ethereumContractTimeout = 10,
     trustAuthorityId,
@@ -181,6 +183,7 @@ class ElvClient {
     this.fileServiceURIs = fileServiceURIs || fabricURIs;
     this.ethereumURIs = ethereumURIs;
     this.searchURIs = searchURIs;
+    this.verticalPlayoutURIs = verticalPlayoutURIs;
     this.tenantQueryURIs = tenantQueryURIs || [];
     this.ethereumContractTimeout = ethereumContractTimeout;
 
@@ -265,6 +268,8 @@ class ElvClient {
 
       const searchURIs = fabricInfo.network.services.search || [];
 
+      const verticalPlayoutURIs = fabricInfo.network.services.vertical || [];
+
       let tenantQueryURIs = fabricInfo.network.services.tenant_query || [];
       if(tenantQueryURIs.find(filterHTTPS)) {
         tenantQueryURIs = tenantQueryURIs.filter(filterHTTPS);
@@ -283,6 +288,7 @@ class ElvClient {
         fileServiceURIs,
         kmsURIs: kmsUrls,
         searchURIs,
+        verticalPlayoutURIs,
         tenantQueryURIs,
         fabricVersion
       };
@@ -388,6 +394,7 @@ class ElvClient {
       fileServiceURIs,
       searchURIs,
       tenantQueryURIs,
+      verticalPlayoutURIs,
       fabricVersion
     } = await ElvClient.Configuration({
       configUrl,
@@ -406,6 +413,7 @@ class ElvClient {
       fileServiceURIs,
       searchURIs,
       tenantQueryURIs,
+      verticalPlayoutURIs,
       ethereumContractTimeout,
       trustAuthorityId,
       staticToken,
@@ -438,6 +446,7 @@ class ElvClient {
     this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, networkName: this.networkName, debug: this.debug});
     this.FileServiceHttpClient = new HttpClient({uris: this.fileServiceURIs, networkName: this.networkName, debug: this.debug});
     this.SearchHttpClient = new HttpClient({uris: this.searchURIs || [], networkName: this.networkName, debug: this.debug});
+    this.VerticalPlayoutHttpClient = new HttpClient({uris: this.verticalPlayoutURIs || [], networkName: this.networkName, debug: this.debug});
     this.TenantQueryHttpClient = new HttpClient({uris: this.tenantQueryURIs || [], networkName: this.networkName, debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, networkId: this.networkId, debug: this.debug, timeout: this.ethereumContractTimeout});
 
@@ -495,7 +504,7 @@ class ElvClient {
       throw Error("Unable to change region: Configuration URL not set");
     }
 
-    const {fabricURIs, ethereumURIs, authServiceURIs, fileServiceURIs, searchURIs, tenantQueryURIs} = await ElvClient.Configuration({
+    const {fabricURIs, ethereumURIs, authServiceURIs, fileServiceURIs, searchURIs, verticalPlayoutURIs, tenantQueryURIs} = await ElvClient.Configuration({
       configUrl: this.configUrl,
       region
     });
@@ -508,6 +517,7 @@ class ElvClient {
       authServiceURIs,
       fileServiceURIs,
       searchURIs,
+      verticalPlayoutURIs,
       tenantQueryURIs
     });
 
@@ -517,6 +527,7 @@ class ElvClient {
       fileServiceURIs,
       authServiceURIs,
       searchURIs,
+      verticalPlayoutURIs,
       tenantQueryURIs
     };
   }
@@ -573,6 +584,7 @@ class ElvClient {
       authServiceURIs: this.authServiceURIs,
       fileServiceURIs: this.fileServiceURIs,
       searchURIs: this.searchURIs,
+      verticalPlayoutURIs: this.verticalPlayoutURIs,
       tenantQueryURIs: this.tenantQueryURIs
     };
   }
@@ -586,11 +598,12 @@ class ElvClient {
    * @param {Array<string>=} authServiceURIs - A list of URLs for the auth service, in preference order
    * @param {Array<string>=} fileServiceURIs - A list of URLs for file service jobs, in preference order
    * @param {Array<string>=} searchURIs - A list of URLs for the search nodes, in preference order
+   * @param {Array<string>=} verticalPlayoutURIs - A list of URLs for the vertical playout nodes, in preference order
    * @param {Array<string>=} tenantQueryURIs - A list of URLs for the tenant query nodes, in preference order
    *
    * @methodGroup Nodes
    */
-  SetNodes({fabricURIs, ethereumURIs, authServiceURIs, fileServiceURIs, searchURIs, tenantQueryURIs}) {
+  SetNodes({fabricURIs, ethereumURIs, authServiceURIs, fileServiceURIs, searchURIs, verticalPlayoutURIs, tenantQueryURIs}) {
     if(fabricURIs) {
       this.fabricURIs = fabricURIs;
 
@@ -624,6 +637,13 @@ class ElvClient {
 
       this.SearchHttpClient.uris = searchURIs;
       this.SearchHttpClient.uriIndex = 0;
+    }
+
+    if(verticalPlayoutURIs) {
+      this.verticalPlayoutURIs = verticalPlayoutURIs;
+
+      this.VerticalPlayoutHttpClient.uris = verticalPlayoutURIs;
+      this.VerticalPlayoutHttpClient.uriIndex = 0;
     }
 
     if(tenantQueryURIs) {

@@ -21,9 +21,6 @@ const {
   ValidatePresence,
 } = require("../Validation");
 
-const LodashSet = require("lodash/set");
-const LodashGet = require("lodash/get");
-
 // Note: Keep these ordered by most-restrictive to least-restrictive
 exports.permissionLevels = {
   "owner": {
@@ -717,11 +714,11 @@ exports.ProduceMetadataLinks = async function({
 }) {
   path = UrlJoin(path || "").replace(/^\//, "").replace(/\/$/, "");
 
-  const Traverse = async (currentPath="") => {
-    const currentMetadata = !currentPath ? metadata : LodashGet(metadata, currentPath.split("/"));
-
+  // Walk the metadata objects directly, tracking the path as segments - joining keys into a
+  // string path can collapse keys like "/" or "" into the parent path and recurse forever
+  const Traverse = async (currentMetadata, pathSegments=[]) => {
     if(log) {
-      console.log(path, currentPath, currentMetadata)
+      console.log(path, pathSegments.join("/"), currentMetadata)
     }
 
     // Primitive
@@ -732,28 +729,26 @@ exports.ProduceMetadataLinks = async function({
     // Array
     if(Array.isArray(currentMetadata)) {
       for(let i = 0; i < currentMetadata.length; i++) {
-        await Traverse(UrlJoin(currentPath, i.toString()));
+        await Traverse(currentMetadata[i], [...pathSegments, i.toString()]);
       }
+
+      return;
     }
 
     // Object
-    if(currentMetadata["/"] &&
+    if(typeof currentMetadata["/"] === "string" &&
       (currentMetadata["/"].match(/\.\/(rep|files)\/.+/) ||
         currentMetadata["/"].match(/^\/?qfab\/([\w]+)\/?(rep|files)\/.+/))) {
       // Is file or rep link - produce a url
-      LodashSet(
-        metadata,
-        UrlJoin(currentPath, "url").split("/"),
-        await this.LinkUrl({libraryId, objectId, versionHash, linkPath: UrlJoin(path, currentPath), authorizationToken, noAuth})
-      )
+      currentMetadata.url = await this.LinkUrl({libraryId, objectId, versionHash, linkPath: UrlJoin(path, ...pathSegments), authorizationToken, noAuth});
     } else {
       for(let key of Object.keys(currentMetadata)) {
-        await Traverse(UrlJoin(currentPath, key))
+        await Traverse(currentMetadata[key], [...pathSegments, key]);
       }
     }
-  }
+  };
 
-  await Traverse();
+  await Traverse(metadata);
 
   return metadata;
 };
@@ -1367,6 +1362,7 @@ exports.AvailableOfferings = async function({
  * @param {Array<string>} drms - Acceptable DRM formats ("aes-128", "clear", "fairplay", "playready", "sample-aes", "widevine")
  * @param {string=} handler=playout - The handler to use for playout (not used with links)
  * @param {string=} offering=default - The offering to play
+ * @param {boolean=} vertical=false - If specified, will play the vertical crop of this content (if available)
  * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request.
  * - Note: Context must be a map of string->string
@@ -1383,6 +1379,7 @@ exports.PlayoutOptions = async function({
   protocols=["dash", "hls"],
   handler="playout",
   offering="default",
+  vertical=false,
   playoutType,
   drms=[],
   context,
@@ -1390,6 +1387,10 @@ exports.PlayoutOptions = async function({
   authorizationToken,
   options={}
 }) {
+  if(vertical) {
+    options.v = 1;
+  }
+
   if(offeringURI) {
     const uriInfo = offeringURI.match(/(hq__[^/]+)\/rep\/([^/]+)\/([^/]+)\/options.json/);
     versionHash = uriInfo[1];
@@ -1443,6 +1444,7 @@ exports.PlayoutOptions = async function({
     signedLink,
     handler,
     offering,
+    vertical,
     authorizationToken
   });
 
@@ -1539,7 +1541,8 @@ exports.PlayoutOptions = async function({
                 writeToken,
                 linkPath: UrlJoin(linkPath, offering, playoutPath),
                 queryParams,
-                noAuth: true
+                noAuth: true,
+                HttpClient: vertical ? this.VerticalPlayoutHttpClient : this.HttpClient
               }) :
               await this.Rep({
                 libraryId: linkTarget.libraryId || libraryId,
@@ -1548,7 +1551,8 @@ exports.PlayoutOptions = async function({
                 writeToken,
                 rep: UrlJoin(handler, offering, playoutPath),
                 noAuth: true,
-                queryParams
+                queryParams,
+                service: vertical ? "vertical" : undefined
               }),
           globalPlayoutUrl:
             signedLink ?
@@ -1652,6 +1656,7 @@ exports.PlayoutOptions = async function({
  * @param {Array<string>} drms - Acceptable DRM formats ("aes-128", "clear", "fairplay", "playready", "sample-aes", "widevine")
  * @param {string=} handler=playout - The handler to use for playout
  * @param {string=} offering=default - The offering to play
+ * @param {boolean=} vertical=false - If specified, will play the vertical crop of this content (if available)
  * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request
  * - Note: Context must be a map of string->string
@@ -1668,6 +1673,7 @@ exports.BitmovinPlayoutOptions = async function({
   drms=[],
   handler="playout",
   offering="default",
+  vertical,
   playoutType,
   context,
   authorizationToken,
@@ -1689,6 +1695,7 @@ exports.BitmovinPlayoutOptions = async function({
     drms,
     handler,
     offering,
+    vertical,
     playoutType,
     hlsjsProfile: false,
     context,
@@ -2173,6 +2180,8 @@ exports.FabricUrl = async function({
     httpClient = this.AuthHttpClient;
   } else if(service === "files") {
     httpClient = this.FileServiceHttpClient;
+  } else if(service === "vertical") {
+    httpClient = this.VerticalPlayoutHttpClient;
   }
 
   return httpClient.URL({
@@ -2685,7 +2694,8 @@ exports.LinkUrl = async function({
   authorizationToken,
   queryParams={},
   channelAuth=false,
-  noAuth=false
+  noAuth=false,
+  HttpClient
 }) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(writeToken) { ValidateWriteToken(writeToken); }
@@ -2716,7 +2726,9 @@ exports.LinkUrl = async function({
 
   if(mimeType) { queryParams["header-accept"] = mimeType; }
 
-  return this.HttpClient.URL({
+  HttpClient = HttpClient || this.HttpClient;
+
+  return HttpClient.URL({
     path: path,
     queryParams
   });
