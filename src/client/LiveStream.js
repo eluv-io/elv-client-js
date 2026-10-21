@@ -27,6 +27,22 @@ const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   return tok;
 };
 
+// Classify node connectivity errors so stream state becomes 'unreachable'
+const IsNodeUnreachable = (error, seen=new Set()) => {
+  if(!error || seen.has(error)) return false;
+  seen.add(error);
+
+  if(typeof error === "string") {
+    return /\b(?:ETIMEDOUT|ESOCKETTIMEDOUT|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENETUNREACH|ENOTFOUND|EAI_AGAIN|ERR_TOO_MANY_REDIRECTS|UND_ERR_(?:CONNECT_TIMEOUT|HEADERS_TIMEOUT|BODY_TIMEOUT|SOCKET))\b|timed?\s*out|timeout|failed to fetch|fetch failed|network\s*error|connection (?:refused|reset)|socket hang up|host unreachable|no route to host|too many redirects|maximum redirect|redirect (?:count exceeded|loop)/i.test(error);
+  }
+
+  // Gateway errors - uncreachable upstream
+  if([408, 504].includes(Number(error.status || error.statusCode))) return true;
+
+  return ["code", "name", "type", "message", "statusText", "cause", "error", "response", "body"]
+    .some(key => IsNodeUnreachable(error[key], seen));
+};
+
 const Sleep = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
@@ -997,6 +1013,56 @@ const StreamGenerateOffering = async({
 };
 
 /**
+ * Retrieve the running state of a known live stream session without reading main or edge metadata.
+ * Special handling:
+ * - LRO status 'terminated' is mapped to 'stopped'
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} libraryId - Library ID of the live stream object
+ * @param {string} objectId - Object ID of the live stream
+ * @param {string=} edgeWriteToken - Known edge write token; if absent, returns 'inactive'
+ * @returns {Promise<Object>} - State, lroStatusUrl, warnings, quality, input_stats and recordingStatus.
+ */
+exports.StreamRunningState = async function({libraryId, objectId, edgeWriteToken}) {
+  ValidatePresence("libraryId", libraryId);
+  ValidateObject(objectId);
+
+  if(!edgeWriteToken) {
+    return {state: "inactive"};
+  }
+
+  const status = {};
+  try {
+    status.lroStatusUrl = await this.FabricUrl({
+      libraryId,
+      objectId,
+      writeToken: edgeWriteToken,
+      call: "live/status"
+    });
+
+    const response = await HttpClient.Fetch(status.lroStatusUrl);
+    if(response.ok === false) {
+      throw {response, message: response.statusText || `HTTP ${response.status}`};
+    }
+    const lroStatus = await this.utils.ResponseToJson(response);
+    status.state = lroStatus.state === "terminated" ? "stopped" : lroStatus.state;
+    status.warnings = lroStatus.custom && lroStatus.custom.warnings;
+    status.quality = lroStatus.custom && lroStatus.custom.quality;
+    status.input_stats = lroStatus.custom && lroStatus.custom.input_stats;
+    if(lroStatus.custom && lroStatus.custom.status) {
+      status.recordingStatus = lroStatus.custom.status;
+    }
+  } catch(error) {
+    console.log("LRO Status (failed): ", error.response?.statusCode);
+    status.state = IsNodeUnreachable(error) ? "unreachable" : "stopped";
+    status.error = error.response || error.message || error;
+  }
+
+  return status;
+};
+
+/**
  * Retrieve the status of the current live stream session
  *
  * @methodGroup Live Stream
@@ -1007,6 +1073,7 @@ const StreamGenerateOffering = async({
  * unconfigured    - no live_recording_config
  * uninitialized   - no live_recording config generated
  * inactive        - live_recording config initialized but no 'edge write token'
+ * unreachable     - edge metadata or live status request failed with a connection/timeout error
  * stopped         - edge-write-token but not started
  * starting        - LRO running but no source data yet
  * running         - stream is running and producing output
@@ -1069,8 +1136,6 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
       return status;
     }
 
-    this.RecordWriteToken({writeToken: edgeWriteToken, fabricNodeUrl: fabURI});
-
     status.edgeWriteToken = edgeWriteToken;
     status.streamId = edgeWriteToken; // By convention the stream ID is its write token
     let edgeMeta;
@@ -1082,9 +1147,9 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
         constant: true
       });
     } catch(error) {
-      if(error.message && error.message.includes("ERR_TOO_MANY_REDIRECTS")) {
-        console.error("Redirect loop detected when trying to read metadata.");
-        status.state = "unavailable";
+      if(IsNodeUnreachable(error)) {
+        status.state = "unreachable";
+        status.error = error.response || error.message || error;
       } else {
         console.error("Unable to read edge write token metadata. Has token been deleted?", error);
         status.state = "inactive";
@@ -1134,13 +1199,6 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
     };
     status.recordingPeriod = recordingPeriod;
 
-    status.lroStatusUrl = await this.FabricUrl({
-      libraryId: libraryId,
-      objectId: objectId,
-      writeToken: edgeWriteToken,
-      call: "live/status"
-    });
-
     status.insertions = [];
     if((edgeMeta.live_recording.playout_config.interleaves != undefined) &&
       (edgeMeta.live_recording.playout_config.interleaves[sequence] != undefined)) {
@@ -1159,31 +1217,12 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
       status.recordingParams = edgeMeta.live_recording.recording_config.recording_params;
     }
 
-    let state = "stopped";
-    let lroStatus = "";
-    try {
-      lroStatus = await this.utils.ResponseToJson(
-        await HttpClient.Fetch(status.lroStatusUrl)
-      );
-      state = lroStatus.state;
-      status.warnings = lroStatus.custom && lroStatus.custom.warnings;
-      status.quality = lroStatus.custom && lroStatus.custom.quality;
-      status.input_stats = lroStatus.custom && lroStatus.custom.input_stats;
-      if(lroStatus.custom && lroStatus.custom.status) {
-        status.recordingStatus = lroStatus.custom.status;
-      }
-    } catch(error) {
-      console.log("LRO Status (failed): ", error.response?.statusCode);
-      status.state = "stopped";
-      status.error = error.response || error.message;
+    // Merge running 'status' into existing stream 'status'
+    Object.assign(status, await this.StreamRunningState({libraryId, objectId, edgeWriteToken}));
+    if(status.error) {
       return status;
     }
-
-    // Convert LRO 'state' to desired 'state'
-    if(state == "terminated") {
-      state = "stopped"; // The LRO reports 'terminated' which for the recording means 'stopped'
-    }
-    status.state = state;
+    const state = status.state;
 
     const retrievePlayoutOptions = false; // PENDING(SS) make this a function argument if useful for the API
     if(retrievePlayoutOptions && state === "running") {
