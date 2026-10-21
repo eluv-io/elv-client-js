@@ -1073,7 +1073,7 @@ exports.StreamRunningState = async function({libraryId, objectId, edgeWriteToken
  * unconfigured    - no live_recording_config
  * uninitialized   - no live_recording config generated
  * inactive        - live_recording config initialized but no 'edge write token'
- * unreachable     - edge metadata or live status request failed with a connection/timeout error
+ * unreachable     - ingest node is down or unreachable
  * stopped         - edge-write-token but not started
  * starting        - LRO running but no source data yet
  * running         - stream is running and producing output
