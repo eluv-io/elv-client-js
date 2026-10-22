@@ -1013,7 +1013,7 @@ const StreamGenerateOffering = async({
 };
 
 /**
- * Retrieve the running state of a known live stream session without reading main or edge metadata.
+ * Retrieve the running state of a live stream by object ID without reading main or edge metadata.
  * Special handling:
  * - LRO status 'terminated' is mapped to 'stopped'
  *
@@ -1021,23 +1021,17 @@ const StreamGenerateOffering = async({
  * @namedParams
  * @param {string} libraryId - Library ID of the live stream object
  * @param {string} objectId - Object ID of the live stream
- * @param {string=} edgeWriteToken - Known edge write token; if absent, returns 'inactive'
  * @returns {Promise<Object>} - State, lroStatusUrl, warnings, quality, input_stats and recordingStatus.
  */
-exports.StreamRunningState = async function({libraryId, objectId, edgeWriteToken}) {
+exports.StreamRunningState = async function({libraryId, objectId}) {
   ValidatePresence("libraryId", libraryId);
   ValidateObject(objectId);
-
-  if(!edgeWriteToken) {
-    return {state: "inactive"};
-  }
 
   const status = {};
   try {
     status.lroStatusUrl = await this.FabricUrl({
       libraryId,
       objectId,
-      writeToken: edgeWriteToken,
       call: "live/status"
     });
 
@@ -1218,7 +1212,7 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
     }
 
     // Merge running 'status' into existing stream 'status'
-    Object.assign(status, await this.StreamRunningState({libraryId, objectId, edgeWriteToken}));
+    Object.assign(status, await this.StreamRunningState({libraryId, objectId}));
     if(status.error) {
       return status;
     }
