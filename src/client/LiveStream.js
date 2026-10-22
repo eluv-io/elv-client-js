@@ -1061,8 +1061,11 @@ exports.StreamRunningState = async function({libraryId, objectId}) {
  *
  * @methodGroup Live Stream
  * @namedParams
- * @param {string} name - Object ID or name of the live stream object
- * @param {boolean=} showParams - If specified, will return recording_params with status
+ * @param {string} name - Object ID of the stream object
+ * @param {boolean=} includeParams=false - return recording_params (requires includeRecordingInfo)
+ * @param {boolean=} includeRecordingInfo=false - Retrieve edge metadata and include recording details
+ * @param {string=} libraryId - Library ID of the live stream object (skips lookup if present)
+ * @param {Object=} mainMeta - Main object metadata (skips lookup if present)
  * States:
  * unconfigured    - no live_recording_config
  * uninitialized   - no live_recording config generated
@@ -1075,16 +1078,16 @@ exports.StreamRunningState = async function({libraryId, objectId}) {
  *
  * @return {Promise<Object>} - The status response for the object, as well as logs, warnings and errors from the master initialization
  */
-exports.StreamStatus = async function({name, showParams=false, writeToken}) {
+exports.StreamStatus = async function({name, writeToken, libraryId, mainMeta, includeRecordingInfo=false, includeParams=false}) {
   let objectId = name;
   let status = {name: name};
 
   try {
-    let libraryId = await this.ContentObjectLibraryId({objectId});
+    libraryId = libraryId || await this.ContentObjectLibraryId({objectId});
     status.libraryId = libraryId;
     status.objectId = objectId;
 
-    let mainMeta = await this.ContentObjectMetadata({
+    mainMeta = mainMeta || await this.ContentObjectMetadata({
       libraryId,
       objectId,
       writeToken,
@@ -1132,83 +1135,85 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
 
     status.edgeWriteToken = edgeWriteToken;
     status.streamId = edgeWriteToken; // By convention the stream ID is its write token
-    let edgeMeta;
-    try {
-      edgeMeta = await this.CallBitcodeMethod({
-        libraryId: libraryId,
-        objectId: objectId,
-        method: "/live/meta",
-        constant: true
-      });
-    } catch(error) {
-      if(IsNodeUnreachable(error)) {
-        status.state = "unreachable";
-        status.error = error.response || error.message || error;
-      } else {
-        console.error("Unable to read edge write token metadata. Has token been deleted?", error);
-        status.state = "inactive";
+    if(includeRecordingInfo) {
+      let edgeMeta;
+      try {
+        edgeMeta = await this.CallBitcodeMethod({
+          libraryId: libraryId,
+          objectId: objectId,
+          method: "/live/meta",
+          constant: true
+        });
+      } catch(error) {
+        if(IsNodeUnreachable(error)) {
+          status.state = "unreachable";
+          status.error = error.response || error.message || error;
+        } else {
+          console.error("Unable to read edge write token metadata. Has token been deleted?", error);
+          status.state = "inactive";
+        }
+
+        return status;
       }
 
-      return status;
-    }
+      status.edgeMetaSize = JSON.stringify(edgeMeta || "").length;
 
-    status.edgeMetaSize = JSON.stringify(edgeMeta || "").length;
-
-    // If a stream has never been started return state 'inactive'
-    if(edgeMeta.live_recording === undefined ||
-      edgeMeta.live_recording.recordings === undefined ||
-      edgeMeta.live_recording.recordings.recording_sequence === undefined) {
-      // StreamStartOrStopOrReset relies on the state being 'stopped' before launching the LRO - and so this state cannot be changed to 'inactive'
-      status.state = "stopped";
-      return status;
-    }
-
-    let recordings = edgeMeta.live_recording.recordings;
-    status.recordingPeriodSequence = recordings.recording_sequence;
-
-    let sequence = recordings.recording_sequence;
-    let period = recordings.live_offering[sequence - 1];
-
-    let tlro = period.live_recording_handle;
-    status.tlro = tlro;
-
-    let videoLastFinalizationTimeEpochSec = -1;
-    let videoFinalizedParts = 0;
-    let sinceLastFinalize = -1;
-    if(period.finalized_parts_info && period.finalized_parts_info.video && period.finalized_parts_info.video.last_finalization_time) {
-      videoLastFinalizationTimeEpochSec = period.finalized_parts_info.video.last_finalization_time / 1000000;
-      videoFinalizedParts = period.finalized_parts_info.video.n_parts;
-      sinceLastFinalize = Math.floor(new Date().getTime() / 1000) - videoLastFinalizationTimeEpochSec;
-    }
-
-    const recordingPeriod = {
-      activationTimeEpochSec: period.recording_start_time_epoch_sec,
-      startTimeEpochSec: period.start_time_epoch_sec,
-      startTimeText: new Date(period.start_time_epoch_sec * 1000).toLocaleString(),
-      endTimeEpochSec: period.end_time_epoch_sec,
-      endTimeText: period.end_time_epoch_sec === 0 ? null : new Date(period.end_time_epoch_sec * 1000).toLocaleString(),
-      videoParts: videoFinalizedParts,
-      videoLastPartFinalizedEpochSec: videoLastFinalizationTimeEpochSec,
-      videoSinceLastFinalizeSec: sinceLastFinalize
-    };
-    status.recordingPeriod = recordingPeriod;
-
-    status.insertions = [];
-    if((edgeMeta.live_recording.playout_config.interleaves != undefined) &&
-      (edgeMeta.live_recording.playout_config.interleaves[sequence] != undefined)) {
-      let insertions = edgeMeta.live_recording.playout_config.interleaves[sequence];
-      for(let i = 0; i < insertions.length; i ++) {
-        let insertionTimeSinceEpoch = recordingPeriod.startTimeEpochSec + insertions[i].insertion_time;
-        status.insertions[i] = {
-          insertionTimeSinceStart: insertions[i].insertion_time,
-          insertionTime: new Date(insertionTimeSinceEpoch * 1000).toISOString(),
-          insertionTimeLocal: new Date(insertionTimeSinceEpoch * 1000).toLocaleString(),
-          target: insertions[i].playout};
+      // If a stream has never been started return state 'inactive'
+      if(edgeMeta.live_recording === undefined ||
+        edgeMeta.live_recording.recordings === undefined ||
+        edgeMeta.live_recording.recordings.recording_sequence === undefined) {
+        // StreamStartOrStopOrReset relies on the state being 'stopped' before launching the LRO - and so this state cannot be changed to 'inactive'
+        status.state = "stopped";
+        return status;
       }
-    }
 
-    if(showParams) {
-      status.recordingParams = edgeMeta.live_recording.recording_config.recording_params;
+      let recordings = edgeMeta.live_recording.recordings;
+      status.recordingPeriodSequence = recordings.recording_sequence;
+
+      let sequence = recordings.recording_sequence;
+      let period = recordings.live_offering[sequence - 1];
+
+      let tlro = period.live_recording_handle;
+      status.tlro = tlro;
+
+      let videoLastFinalizationTimeEpochSec = -1;
+      let videoFinalizedParts = 0;
+      let sinceLastFinalize = -1;
+      if(period.finalized_parts_info && period.finalized_parts_info.video && period.finalized_parts_info.video.last_finalization_time) {
+        videoLastFinalizationTimeEpochSec = period.finalized_parts_info.video.last_finalization_time / 1000000;
+        videoFinalizedParts = period.finalized_parts_info.video.n_parts;
+        sinceLastFinalize = Math.floor(new Date().getTime() / 1000) - videoLastFinalizationTimeEpochSec;
+      }
+
+      const recordingPeriod = {
+        activationTimeEpochSec: period.recording_start_time_epoch_sec,
+        startTimeEpochSec: period.start_time_epoch_sec,
+        startTimeText: new Date(period.start_time_epoch_sec * 1000).toLocaleString(),
+        endTimeEpochSec: period.end_time_epoch_sec,
+        endTimeText: period.end_time_epoch_sec === 0 ? null : new Date(period.end_time_epoch_sec * 1000).toLocaleString(),
+        videoParts: videoFinalizedParts,
+        videoLastPartFinalizedEpochSec: videoLastFinalizationTimeEpochSec,
+        videoSinceLastFinalizeSec: sinceLastFinalize
+      };
+      status.recordingPeriod = recordingPeriod;
+
+      status.insertions = [];
+      if((edgeMeta.live_recording.playout_config.interleaves != undefined) &&
+        (edgeMeta.live_recording.playout_config.interleaves[sequence] != undefined)) {
+        let insertions = edgeMeta.live_recording.playout_config.interleaves[sequence];
+        for(let i = 0; i < insertions.length; i ++) {
+          let insertionTimeSinceEpoch = recordingPeriod.startTimeEpochSec + insertions[i].insertion_time;
+          status.insertions[i] = {
+            insertionTimeSinceStart: insertions[i].insertion_time,
+            insertionTime: new Date(insertionTimeSinceEpoch * 1000).toISOString(),
+            insertionTimeLocal: new Date(insertionTimeSinceEpoch * 1000).toLocaleString(),
+            target: insertions[i].playout};
+        }
+      }
+
+      if(includeParams) {
+        status.recordingParams = edgeMeta.live_recording.recording_config.recording_params;
+      }
     }
 
     // Merge running 'status' into existing stream 'status'
@@ -1531,7 +1536,7 @@ exports.StreamRestartRecording = async function({name}) {
 */
 exports.StreamStartOrStopOrReset = async function({name, op}) {
   try {
-    let status = await this.StreamStatus({name});
+    let status = await this.StreamStatus({name, includeRecordingInfo: true});
     if(status.state != "stopped") {
       if(op === "start") {
         status.error = "Unable to start stream - state: " + status.state;
