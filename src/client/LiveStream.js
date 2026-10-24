@@ -27,6 +27,22 @@ const MakeTxLessToken = async({client, libraryId, objectId, versionHash}) => {
   return tok;
 };
 
+// Classify node connectivity errors so stream state becomes 'unreachable'
+const IsNodeUnreachable = (error, seen=new Set()) => {
+  if(!error || seen.has(error)) return false;
+  seen.add(error);
+
+  if(typeof error === "string") {
+    return /\b(?:ETIMEDOUT|ESOCKETTIMEDOUT|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENETUNREACH|ENOTFOUND|EAI_AGAIN|ERR_TOO_MANY_REDIRECTS|UND_ERR_(?:CONNECT_TIMEOUT|HEADERS_TIMEOUT|BODY_TIMEOUT|SOCKET))\b|timed?\s*out|timeout|failed to fetch|fetch failed|network\s*error|connection (?:refused|reset)|socket hang up|host unreachable|no route to host|too many redirects|maximum redirect|redirect (?:count exceeded|loop)/i.test(error);
+  }
+
+  // Gateway errors - uncreachable upstream
+  if([408, 504].includes(Number(error.status || error.statusCode))) return true;
+
+  return ["code", "name", "type", "message", "statusText", "cause", "error", "response", "body"]
+    .some(key => IsNodeUnreachable(error[key], seen));
+};
+
 const Sleep = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
@@ -231,9 +247,10 @@ exports.StreamCreate = async function({
     throw Error("Stream public asset metadata must be an object");
   }
 
-  // Retrieve live stream content type
+  // Retrieve the live stream content type
+  let tenantId;
   try {
-    const tenantId = await this.userProfileClient.TenantContractId();
+    tenantId = await this.userProfileClient.TenantContractId();
 
     const tenantMeta = await this.ContentObjectMetadata({
       libraryId: tenantId.replace("iten", "ilib"),
@@ -254,12 +271,17 @@ exports.StreamCreate = async function({
     adminGroups = adminGroups.concat(tenantContentAdminGroup ?? []);
 
     contentType = tenantMeta.content_types?.live_stream;
-
-    if(!contentType) {
-      throw new Error(`No content type configured for tenant ${tenantId}`);
-    }
   } catch(error) {
     console.error("Unable to load tenant data", error);
+  }
+
+  // When creating on an existing object preserve its content type if set
+  const currentType = objectId
+    ? (await this.ContentObject({libraryId, objectId})).type
+    : null;
+
+  if(!currentType && !contentType) {
+    throw new Error("No live stream content type set for tenant");
   }
 
   let editResponse;
@@ -267,7 +289,8 @@ exports.StreamCreate = async function({
      // Edit existing object
      editResponse = await this.EditContentObject({
       libraryId,
-      objectId
+      objectId,
+      options: currentType ? {} : {type: contentType} // Preserve existing object content type
     });
 
      // If no new URL is provided, use value from saved config
@@ -990,16 +1013,64 @@ const StreamGenerateOffering = async({
 };
 
 /**
+ * Retrieve the running state of a live stream by object ID without reading main or edge metadata.
+ * Special handling:
+ * - LRO status 'terminated' is mapped to 'stopped'
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} libraryId - Library ID of the live stream object
+ * @param {string} objectId - Object ID of the live stream
+ * @returns {Promise<Object>} - State, lroStatusUrl, warnings, quality, input_stats and recordingStatus.
+ */
+exports.StreamRunningState = async function({libraryId, objectId}) {
+  ValidatePresence("libraryId", libraryId);
+  ValidateObject(objectId);
+
+  const status = {};
+  try {
+    status.lroStatusUrl = await this.FabricUrl({
+      libraryId,
+      objectId,
+      call: "live/status"
+    });
+
+    const response = await HttpClient.Fetch(status.lroStatusUrl);
+    if(response.ok === false) {
+      throw {response, message: response.statusText || `HTTP ${response.status}`};
+    }
+    const lroStatus = await this.utils.ResponseToJson(response);
+    status.state = lroStatus.state === "terminated" ? "stopped" : lroStatus.state;
+    status.warnings = lroStatus.custom && lroStatus.custom.warnings;
+    status.quality = lroStatus.custom && lroStatus.custom.quality;
+    status.input_stats = lroStatus.custom && lroStatus.custom.input_stats;
+    if(lroStatus.custom && lroStatus.custom.status) {
+      status.recordingStatus = lroStatus.custom.status;
+    }
+  } catch(error) {
+    console.log("LRO Status (failed): ", error.response?.statusCode);
+    status.state = IsNodeUnreachable(error) ? "unreachable" : "stopped";
+    status.error = error.response || error.message || error;
+  }
+
+  return status;
+};
+
+/**
  * Retrieve the status of the current live stream session
  *
  * @methodGroup Live Stream
  * @namedParams
- * @param {string} name - Object ID or name of the live stream object
- * @param {boolean=} showParams - If specified, will return recording_params with status
+ * @param {string} name - Object ID of the stream object
+ * @param {boolean=} includeParams=false - return recording_params (requires includeRecordingInfo)
+ * @param {boolean=} includeRecordingInfo=false - Retrieve edge metadata and include recording details
+ * @param {string=} libraryId - Library ID of the live stream object (skips lookup if present)
+ * @param {Object=} mainMeta - Main object metadata (skips lookup if present)
  * States:
  * unconfigured    - no live_recording_config
  * uninitialized   - no live_recording config generated
  * inactive        - live_recording config initialized but no 'edge write token'
+ * unreachable     - ingest node is down or unreachable
  * stopped         - edge-write-token but not started
  * starting        - LRO running but no source data yet
  * running         - stream is running and producing output
@@ -1007,16 +1078,16 @@ const StreamGenerateOffering = async({
  *
  * @return {Promise<Object>} - The status response for the object, as well as logs, warnings and errors from the master initialization
  */
-exports.StreamStatus = async function({name, showParams=false, writeToken}) {
+exports.StreamStatus = async function({name, writeToken, libraryId, mainMeta, includeRecordingInfo=false, includeParams=false}) {
   let objectId = name;
   let status = {name: name};
 
   try {
-    let libraryId = await this.ContentObjectLibraryId({objectId});
+    libraryId = libraryId || await this.ContentObjectLibraryId({objectId});
     status.libraryId = libraryId;
     status.objectId = objectId;
 
-    let mainMeta = await this.ContentObjectMetadata({
+    mainMeta = mainMeta || await this.ContentObjectMetadata({
       libraryId,
       objectId,
       writeToken,
@@ -1062,121 +1133,95 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
       return status;
     }
 
-    this.RecordWriteToken({writeToken: edgeWriteToken, fabricNodeUrl: fabURI});
-
     status.edgeWriteToken = edgeWriteToken;
     status.streamId = edgeWriteToken; // By convention the stream ID is its write token
-    let edgeMeta;
-    try {
-      edgeMeta = await this.CallBitcodeMethod({
-        libraryId: libraryId,
-        objectId: objectId,
-        method: "/live/meta",
-        constant: true
-      });
-    } catch(error) {
-      if(error.message && error.message.includes("ERR_TOO_MANY_REDIRECTS")) {
-        console.error("Redirect loop detected when trying to read metadata.");
-        status.state = "unavailable";
-      } else {
-        console.error("Unable to read edge write token metadata. Has token been deleted?", error);
-        status.state = "inactive";
+    if(includeRecordingInfo) {
+      let edgeMeta;
+      try {
+        edgeMeta = await this.CallBitcodeMethod({
+          libraryId: libraryId,
+          objectId: objectId,
+          method: "/live/meta",
+          constant: true
+        });
+      } catch(error) {
+        if(IsNodeUnreachable(error)) {
+          status.state = "unreachable";
+          status.error = error.response || error.message || error;
+        } else {
+          console.error("Unable to read edge write token metadata. Has token been deleted?", error);
+          status.state = "inactive";
+        }
+
+        return status;
       }
 
-      return status;
-    }
+      status.edgeMetaSize = JSON.stringify(edgeMeta || "").length;
 
-    status.edgeMetaSize = JSON.stringify(edgeMeta || "").length;
+      // If a stream has never been started return state 'inactive'
+      if(edgeMeta.live_recording === undefined ||
+        edgeMeta.live_recording.recordings === undefined ||
+        edgeMeta.live_recording.recordings.recording_sequence === undefined) {
+        // StreamStartOrStopOrReset relies on the state being 'stopped' before launching the LRO - and so this state cannot be changed to 'inactive'
+        status.state = "stopped";
+        return status;
+      }
 
-    // If a stream has never been started return state 'inactive'
-    if(edgeMeta.live_recording === undefined ||
-      edgeMeta.live_recording.recordings === undefined ||
-      edgeMeta.live_recording.recordings.recording_sequence === undefined) {
-      // StreamStartOrStopOrReset relies on the state being 'stopped' before launching the LRO - and so this state cannot be changed to 'inactive'
-      status.state = "stopped";
-      return status;
-    }
+      let recordings = edgeMeta.live_recording.recordings;
+      status.recordingPeriodSequence = recordings.recording_sequence;
 
-    let recordings = edgeMeta.live_recording.recordings;
-    status.recordingPeriodSequence = recordings.recording_sequence;
+      let sequence = recordings.recording_sequence;
+      let period = recordings.live_offering[sequence - 1];
 
-    let sequence = recordings.recording_sequence;
-    let period = recordings.live_offering[sequence - 1];
+      let tlro = period.live_recording_handle;
+      status.tlro = tlro;
 
-    let tlro = period.live_recording_handle;
-    status.tlro = tlro;
+      let videoLastFinalizationTimeEpochSec = -1;
+      let videoFinalizedParts = 0;
+      let sinceLastFinalize = -1;
+      if(period.finalized_parts_info && period.finalized_parts_info.video && period.finalized_parts_info.video.last_finalization_time) {
+        videoLastFinalizationTimeEpochSec = period.finalized_parts_info.video.last_finalization_time / 1000000;
+        videoFinalizedParts = period.finalized_parts_info.video.n_parts;
+        sinceLastFinalize = Math.floor(new Date().getTime() / 1000) - videoLastFinalizationTimeEpochSec;
+      }
 
-    let videoLastFinalizationTimeEpochSec = -1;
-    let videoFinalizedParts = 0;
-    let sinceLastFinalize = -1;
-    if(period.finalized_parts_info && period.finalized_parts_info.video && period.finalized_parts_info.video.last_finalization_time) {
-      videoLastFinalizationTimeEpochSec = period.finalized_parts_info.video.last_finalization_time / 1000000;
-      videoFinalizedParts = period.finalized_parts_info.video.n_parts;
-      sinceLastFinalize = Math.floor(new Date().getTime() / 1000) - videoLastFinalizationTimeEpochSec;
-    }
+      const recordingPeriod = {
+        activationTimeEpochSec: period.recording_start_time_epoch_sec,
+        startTimeEpochSec: period.start_time_epoch_sec,
+        startTimeText: new Date(period.start_time_epoch_sec * 1000).toLocaleString(),
+        endTimeEpochSec: period.end_time_epoch_sec,
+        endTimeText: period.end_time_epoch_sec === 0 ? null : new Date(period.end_time_epoch_sec * 1000).toLocaleString(),
+        videoParts: videoFinalizedParts,
+        videoLastPartFinalizedEpochSec: videoLastFinalizationTimeEpochSec,
+        videoSinceLastFinalizeSec: sinceLastFinalize
+      };
+      status.recordingPeriod = recordingPeriod;
 
-    const recordingPeriod = {
-      activationTimeEpochSec: period.recording_start_time_epoch_sec,
-      startTimeEpochSec: period.start_time_epoch_sec,
-      startTimeText: new Date(period.start_time_epoch_sec * 1000).toLocaleString(),
-      endTimeEpochSec: period.end_time_epoch_sec,
-      endTimeText: period.end_time_epoch_sec === 0 ? null : new Date(period.end_time_epoch_sec * 1000).toLocaleString(),
-      videoParts: videoFinalizedParts,
-      videoLastPartFinalizedEpochSec: videoLastFinalizationTimeEpochSec,
-      videoSinceLastFinalizeSec: sinceLastFinalize
-    };
-    status.recordingPeriod = recordingPeriod;
+      status.insertions = [];
+      if((edgeMeta.live_recording.playout_config.interleaves != undefined) &&
+        (edgeMeta.live_recording.playout_config.interleaves[sequence] != undefined)) {
+        let insertions = edgeMeta.live_recording.playout_config.interleaves[sequence];
+        for(let i = 0; i < insertions.length; i ++) {
+          let insertionTimeSinceEpoch = recordingPeriod.startTimeEpochSec + insertions[i].insertion_time;
+          status.insertions[i] = {
+            insertionTimeSinceStart: insertions[i].insertion_time,
+            insertionTime: new Date(insertionTimeSinceEpoch * 1000).toISOString(),
+            insertionTimeLocal: new Date(insertionTimeSinceEpoch * 1000).toLocaleString(),
+            target: insertions[i].playout};
+        }
+      }
 
-    status.lroStatusUrl = await this.FabricUrl({
-      libraryId: libraryId,
-      objectId: objectId,
-      writeToken: edgeWriteToken,
-      call: "live/status"
-    });
-
-    status.insertions = [];
-    if((edgeMeta.live_recording.playout_config.interleaves != undefined) &&
-      (edgeMeta.live_recording.playout_config.interleaves[sequence] != undefined)) {
-      let insertions = edgeMeta.live_recording.playout_config.interleaves[sequence];
-      for(let i = 0; i < insertions.length; i ++) {
-        let insertionTimeSinceEpoch = recordingPeriod.startTimeEpochSec + insertions[i].insertion_time;
-        status.insertions[i] = {
-          insertionTimeSinceStart: insertions[i].insertion_time,
-          insertionTime: new Date(insertionTimeSinceEpoch * 1000).toISOString(),
-          insertionTimeLocal: new Date(insertionTimeSinceEpoch * 1000).toLocaleString(),
-          target: insertions[i].playout};
+      if(includeParams) {
+        status.recordingParams = edgeMeta.live_recording.recording_config.recording_params;
       }
     }
 
-    if(showParams) {
-      status.recordingParams = edgeMeta.live_recording.recording_config.recording_params;
-    }
-
-    let state = "stopped";
-    let lroStatus = "";
-    try {
-      lroStatus = await this.utils.ResponseToJson(
-        await HttpClient.Fetch(status.lroStatusUrl)
-      );
-      state = lroStatus.state;
-      status.warnings = lroStatus.custom && lroStatus.custom.warnings;
-      status.quality = lroStatus.custom && lroStatus.custom.quality;
-      status.input_stats = lroStatus.custom && lroStatus.custom.input_stats;
-      if(lroStatus.custom && lroStatus.custom.status) {
-        status.recordingStatus = lroStatus.custom.status;
-      }
-    } catch(error) {
-      console.log("LRO Status (failed): ", error.response?.statusCode);
-      status.state = "stopped";
-      status.error = error.response || error.message;
+    // Merge running 'status' into existing stream 'status'
+    Object.assign(status, await this.StreamRunningState({libraryId, objectId}));
+    if(status.error) {
       return status;
     }
-
-    // Convert LRO 'state' to desired 'state'
-    if(state == "terminated") {
-      state = "stopped"; // The LRO reports 'terminated' which for the recording means 'stopped'
-    }
-    status.state = state;
+    const state = status.state;
 
     const retrievePlayoutOptions = false; // PENDING(SS) make this a function argument if useful for the API
     if(retrievePlayoutOptions && state === "running") {
@@ -1491,7 +1536,7 @@ exports.StreamRestartRecording = async function({name}) {
 */
 exports.StreamStartOrStopOrReset = async function({name, op}) {
   try {
-    let status = await this.StreamStatus({name});
+    let status = await this.StreamStatus({name, includeRecordingInfo: true});
     if(status.state != "stopped") {
       if(op === "start") {
         status.error = "Unable to start stream - state: " + status.state;
@@ -2501,8 +2546,8 @@ exports.StreamApplyProfile = async function({
     metadataSubtree: "live_recording_config"
   }) || {};
 
-  // Only preserve stream-identity fields from the current config; all technical settings come from the new profile
-  const preservedConfig = R.pick(["url", "name"], currentConfig);
+  // Only preserve stream-identity fields and probe data from the current config; all technical settings come from the new profile
+  const preservedConfig = R.pick(["url", "name", "probe_info", "input_stream_info"], currentConfig);
   const config = R.mergeDeepRight(preservedConfig, profile);
 
   const currentProfileName = await this.ContentObjectMetadata({
@@ -2538,12 +2583,13 @@ exports.StreamApplyProfile = async function({
     metadata: {}
   });
 
-  // If input_stream_info is available, regenerate live_recording from the new profile now
-  if(config.input_stream_info) {
+  // If probe data is available, regenerate live_recording from the new profile now
+  const probe = config.probe_info || config.input_stream_info;
+  if(probe) {
     await this.StreamConfig({
       name: objectId,
       liveRecordingConfig: config,
-      inputStreamInfo: config.input_stream_info,
+      inputStreamInfo: probe,
       writeToken: streamWriteToken,
       finalize: false
     });
@@ -3568,7 +3614,7 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
 /**
  * Live output delivery protocols. Exactly one delivery block is present on a LiveOutput.
  *
- * @typedef {("srt_pull"|"srt_push"|"rtp"|"udp")} OutputDeliveryType
+ * @typedef {("srt_pull"|"srt_push"|"rtp"|"udp"|"rtmp")} OutputDeliveryType
  */
 
 /**
@@ -3577,6 +3623,17 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  * @typedef {Object} OutputInput
  * @property {string=} stream - Object ID of the input stream, e.g. "iq__AAA" (null to disconnect)
  * @property {string=} offering - Offering key of the input stream to use (optional; defaults to the stream's default offering)
+ * @property {string=} token - Auth token for accessing the live stream object
+ * @property {OutputFmp4=} fmp4 - fMP4 source selection (rtmp outputs)
+ */
+
+/**
+ * fMP4 source selection for an RTMP output - selects an existing ABR rung of its input stream.
+ *
+ * @typedef {Object} OutputFmp4
+ * @property {string=} audio_name - Audio stream_name from the stream ladder_specs, e.g. "audio_1". Omit to select the default audio; "none" selects video only. Audio must be AAC.
+ * @property {string=} latency - Target latency (dejittering buffer) with time units, e.g. "750ms"
+ * @property {string=} representation - Video representation from the stream ladder_specs, e.g. "videovideo_960x540_h264@2000000".
  */
 
 /**
@@ -3657,31 +3714,48 @@ exports.AuditStream = async function({objectId, versionHash, salt, samples, auth
  */
 
 /**
+ * RTMP/RTMPS delivery: the fabric node designated by node_id pushes the live stream to the specified
+ * URL, authenticating with the stream key.
+ *
+ * @typedef {Object} OutputRtmp
+ * @property {string} url - Destination RTMP or RTMPS URL (e.g. "rtmps://a.rtmps.youtube.com/live2")
+ * @property {string} stream_key - Stream key for the destination
+ * @property {string=} node_id - ID of the fabric node that pushes to the destination URL, e.g. "inodAAA" (resolved from elvgeo if omitted)
+ * @property {string=} elvgeo - Geo region used to select a node; resolved to node_id on create
+ */
+
+/**
  * A single live output. Keyed by output ID in the outputs map. Exactly one of
- * srt_push / srt_pull / rtp / udp is present and selects the delivery protocol.
+ * srt_push / srt_pull / rtp / udp / rtmp is present and selects the delivery protocol.
  *
  * @typedef {Object} LiveOutput
  * @property {boolean=} enabled - Whether the output is enabled
  * @property {string=} name - Display name for the output
  * @property {string=} description - Description of the output
  * @property {string=} external_id - External identifier for the output
+ * @property {Object=} custom - Arbitrary client data, stored and returned as-is
  * @property {OutputInput=} input - Input stream configuration
  * @property {OutputSrtPush=} srt_push - SRT push delivery configuration
  * @property {OutputSrtPull=} srt_pull - SRT pull delivery configuration
  * @property {OutputRtp=} rtp - RTP delivery configuration
  * @property {OutputUdp=} udp - UDP delivery configuration
+ * @property {OutputRtmp=} rtmp - RTMP/RTMPS delivery configuration
  */
 
 /**
  * Delivery envelope accepted by OutputsCreate. The `type` selects the protocol and `settings`
- * carries the matching delivery block (OutputSrtPush / OutputSrtPull / OutputRtp / OutputUdp).
+ * carries the matching delivery block (OutputSrtPush / OutputSrtPull / OutputRtp / OutputUdp / OutputRtmp).
  *
  * @typedef {Object} OutputDelivery
  * @property {OutputDeliveryType} type - Delivery protocol
- * @property {(OutputSrtPush|OutputSrtPull|OutputRtp|OutputUdp)} settings - Protocol-specific delivery settings
+ * @property {(OutputSrtPush|OutputSrtPull|OutputRtp|OutputUdp|OutputRtmp)} settings - Protocol-specific delivery settings
+ * @property {OutputFmp4=} fmp4 - fMP4 source selection (rtmp only); written to the output's input.fmp4 when a stream is specified
  */
 
-const DELIVERY_PROTOCOLS = ["srt_pull", "srt_push", "rtp", "udp"];
+const DELIVERY_PROTOCOLS = ["srt_pull", "srt_push", "rtp", "udp", "rtmp"];
+
+// Protocols delivered by pushing from a single node to a destination URL
+const PUSH_PROTOCOLS = ["srt_push", "rtp", "udp", "rtmp"];
 
 const OutputDeliverySettings = (value) => {
   const type = DELIVERY_PROTOCOLS.find(protocol => value && value[protocol]);
@@ -3977,7 +4051,7 @@ exports.OutputsState = async function({libraryId, objectId, outputId, nodeId, in
 /**
  * Pin (route) the client to the egress node for a specific output. Fetches the output config
  * to determine the node ID then sets the client fabric URIs.
- * Node ID is retrieved from the output's delivery block (srt_push / srt_pull / rtp / udp).
+ * Node ID is retrieved from the output's delivery block (srt_push / srt_pull / rtp / udp / rtmp).
  * Assumes the client is already routed to an eligible egress node (via RouteToLiveEgress).
  * Returns a function that restores the original fabric URIs.
  *
@@ -4084,8 +4158,8 @@ const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
  *
  * The delivery protocol is selected with `delivery.type` and configured with `delivery.settings`,
  * whose fields match the corresponding delivery block (see {@link OutputSrtPush}, {@link OutputSrtPull},
- * {@link OutputRtp}, {@link OutputUdp}). The output is pinned to an egress node, resolved in order
- * (node_ids/elvgeos for srt_pull, node_id/elvgeo for srt_push/rtp/udp):
+ * {@link OutputRtp}, {@link OutputUdp}, {@link OutputRtmp}). The output is pinned to an egress node, resolved in order
+ * (node_ids/elvgeos for srt_pull, node_id/elvgeo for srt_push/rtp/udp/rtmp):
  * - the node ID, if provided directly
  * - the geo, resolved against the fabric config `live_egress` services
  * - otherwise, the first available `live_egress` node
@@ -4100,11 +4174,27 @@ const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
  * @param {string} objectId - Object ID of the outputs settings object
  * @param {string=} streamObjectId - Object ID of the input stream to use as the output source
  * @param {string=} offering - Offering key of the input stream to use
+ * @param {string=} inputToken - Auth token for reading the input stream. If omitted, create an editor-signed token valid for 30 days
  * @param {boolean=} enabled - Whether the output is enabled (forced to false when no stream is specified)
  * @param {string=} name - Display name for the output
  * @param {string=} description - Description of the output
  * @param {string=} externalId - External identifier for the output
- * @param {OutputDelivery} delivery - Delivery configuration: `{type, settings}`
+ * @param {Object=} custom - Arbitrary client data, stored and returned as-is
+ * @param {OutputDelivery} delivery - Delivery configuration: `{type, settings, fmp4}`
+ * @param {OutputFmp4=} delivery.fmp4 - RTMP source selection, forwarded as input.fmp4 only when streamObjectId is supplied
+ * @param {string=} delivery.fmp4.representation - Video representation from the stream ladder_specs, e.g. "videovideo_960x540_h264@2000000"
+ * @param {string=} delivery.fmp4.audio_name - Audio stream_name from the stream ladder_specs, e.g. "audio_1". Omit to select the default audio; "none" selects video only. Audio must be AAC.
+ * @param {string=} delivery.fmp4.latency - Target latency (dejittering buffer)with time units, e.g. "750ms"
+ *
+ * @example
+ * await client.OutputsCreate({
+ *   objectId, streamObjectId, custom: {designation: "primary"},
+ *   delivery: {
+ *     type: "rtmp",
+ *     settings: {url: "rtmps://example.com/live", stream_key: "stream-key"},
+ *     fmp4: {representation: "videovideo_960x540_h264@2000000", audio_name: "audio_1", latency: "750ms"}
+ *   }
+ * });
  *
  * @returns {Promise<Object>} - The created output
  */
@@ -4113,28 +4203,43 @@ exports.OutputsCreate = async function({
   objectId,
   streamObjectId,
   offering,
+  inputToken,
   enabled,
   name,
   description,
   externalId,
+  custom,
   delivery
 }) {
   ValidateObject(objectId);
 
-  const {type, settings = {}} = delivery || {};
+  const {type, settings = {}, fmp4} = delivery || {};
 
   if(!DELIVERY_PROTOCOLS.includes(type)) {
     throw new Error(`delivery.type must be one of ${DELIVERY_PROTOCOLS.join(", ")}`);
   }
 
-  // srt_pull uses array node_ids/elvgeos; srt_push/rtp/udp use singular node_id/elvgeo/url
+  // srt_pull uses array node_ids/elvgeos; srt_push/rtp/udp/rtmp use singular node_id/elvgeo/url
   const isPull = type === "srt_pull";
 
   if(isPull && settings.node_ids?.length && settings.elvgeos?.length) {
     throw new Error("delivery.settings may specify either node_ids or elvgeos, not both");
   }
-  if(["srt_push", "rtp", "udp"].includes(type) && !settings.url) {
+  if(["srt_push", "rtp", "udp", "rtmp"].includes(type) && !settings.url) {
     throw new Error(`delivery.settings.url is required for ${type} outputs`);
+  }
+  if(type === "rtmp" && !/^rtmps?:\/\//i.test(settings.url)) {
+    throw new Error("delivery.settings.url must start with rtmp:// or rtmps:// for rtmp outputs");
+  }
+  if(type === "rtmp" && !settings.stream_key) {
+    throw new Error("delivery.settings.stream_key is required for rtmp outputs");
+  }
+
+  if(streamObjectId && !inputToken) {
+    inputToken = await this.CreateSignedToken({
+      objectId: streamObjectId,
+      duration: 30 * 86400000
+    });
   }
 
   if(!libraryId) {
@@ -4180,7 +4285,8 @@ exports.OutputsCreate = async function({
       name,
       description,
       external_id: externalId,
-      input: streamObjectId ? {stream: streamObjectId, offering} : undefined,
+      custom,
+      input: streamObjectId ? {stream: streamObjectId, offering, token: inputToken, fmp4: type === "rtmp" ? fmp4 : undefined} : undefined,
       [type]: settings
     };
 
