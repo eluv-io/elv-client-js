@@ -2546,8 +2546,8 @@ exports.StreamApplyProfile = async function({
     metadataSubtree: "live_recording_config"
   }) || {};
 
-  // Only preserve stream-identity fields from the current config; all technical settings come from the new profile
-  const preservedConfig = R.pick(["url", "name"], currentConfig);
+  // Only preserve stream-identity fields and probe data from the current config; all technical settings come from the new profile
+  const preservedConfig = R.pick(["url", "name", "probe_info", "input_stream_info"], currentConfig);
   const config = R.mergeDeepRight(preservedConfig, profile);
 
   const currentProfileName = await this.ContentObjectMetadata({
@@ -2583,12 +2583,13 @@ exports.StreamApplyProfile = async function({
     metadata: {}
   });
 
-  // If input_stream_info is available, regenerate live_recording from the new profile now
-  if(config.input_stream_info) {
+  // If probe data is available, regenerate live_recording from the new profile now
+  const probe = config.probe_info || config.input_stream_info;
+  if(probe) {
     await this.StreamConfig({
       name: objectId,
       liveRecordingConfig: config,
-      inputStreamInfo: config.input_stream_info,
+      inputStreamInfo: probe,
       writeToken: streamWriteToken,
       finalize: false
     });
