@@ -3809,8 +3809,8 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  // Route to any live egress node for the initial list call (only necessary until the API is globally available)
-  const {restore} = await RouteToLiveEgress({client: this});
+  // Send the list call to any live egress node (only necessary until the API is globally available)
+  const egressUrl = await LiveEgressNodeUrl({client: this});
 
   let outputs;
   try {
@@ -3818,7 +3818,8 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
       libraryId,
       objectId,
       method: "live/outputs",
-      constant:  true
+      constant:  true,
+      nodeUrl: egressUrl
     });
   } catch(error) {
     if(error.status === 404) {
@@ -3827,11 +3828,9 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
     }
 
     throw error;
-  } finally {
-    restore();
   }
 
-  // Enrich each output's input stream name/status concurrently (read-only, no routing changes)
+  // Enrich each output's input stream name/status concurrently (read-only)
   await this.utils.LimitedMap(
     10,
     Object.values(outputs),
@@ -3878,8 +3877,8 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
     }
   });
 
-  // Rewrite fabric-generated srt_pull URLs to the egress host, and group outputs by node
-  const outputsByNode = {};
+  // Rewrite fabric-generated srt_pull URLs to the egress host, and collect outputs with a resolved node
+  const outputNodeUrls = {};
   for(const [key, value] of Object.entries(outputs)) {
     const nodeId = OutputDeliveryNodeId(value);
     const fabricUrl = nodeId && nodeUrls[nodeId];
@@ -3890,36 +3889,28 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
       value.state = {};
       continue;
     }
-    (outputsByNode[nodeId] = outputsByNode[nodeId] || []).push(key);
+    outputNodeUrls[key] = fabricUrl;
   }
 
-  // Fetch state per node: route to the node once, fetch its outputs concurrently, then restore
-  const savedURIs = [...this.fabricURIs];
-  try {
-    for(const [nodeId, outputIds] of Object.entries(outputsByNode)) {
-      this.SetNodes({fabricURIs: [nodeUrls[nodeId]]});
-
-      await this.utils.LimitedMap(10, outputIds, async outputId => {
-        try {
-          outputs[outputId].state = await this.CallBitcodeMethod({
-            libraryId,
-            objectId,
-            method: UrlJoin("live", "outputs", outputId, "state"),
-            queryParams: {
-              "client_stats": 1,
-              "srt_stats": 1
-            },
-            constant: true
-          });
-        } catch(error) {
-          this.Log(`Failed to retrieve state for output ${outputId}: ${error.message}`, true);
-          outputs[outputId].state = {};
-        }
+  // Fetch each output's state from its own egress node concurrently
+  await this.utils.LimitedMap(10, Object.keys(outputNodeUrls), async outputId => {
+    try {
+      outputs[outputId].state = await this.CallBitcodeMethod({
+        libraryId,
+        objectId,
+        method: UrlJoin("live", "outputs", outputId, "state"),
+        queryParams: {
+          "client_stats": 1,
+          "srt_stats": 1
+        },
+        constant: true,
+        nodeUrl: outputNodeUrls[outputId]
       });
+    } catch(error) {
+      this.Log(`Failed to retrieve state for output ${outputId}: ${error.message}`, true);
+      outputs[outputId].state = {};
     }
-  } finally {
-    this.SetNodes({fabricURIs: savedURIs});
-  }
+  });
 
   return outputs;
 };
@@ -3944,19 +3935,13 @@ exports.OutputsListItem = async function({libraryId, objectId, outputId, include
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  const {restore} = await RouteToLiveEgress({client: this});
-
-  let outputs;
-  try {
-    outputs = await this.CallBitcodeMethod({
-      libraryId,
-      objectId,
-      method: "live/outputs",
-      constant: true
-    });
-  } finally {
-    restore();
-  }
+  const outputs = await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    method: "live/outputs",
+    constant: true,
+    nodeUrl: await LiveEgressNodeUrl({client: this})
+  });
 
   let value = outputs[outputId];
 
@@ -4018,99 +4003,79 @@ exports.OutputsState = async function({libraryId, objectId, outputId, nodeId, in
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  // Route to a live egress node first so the output config fetch below succeeds
-  const {restore} = await RouteToLiveEgress({client: this});
+  const {nodeUrl, config} = await OutputNodeUrl({client: this, libraryId, objectId, outputId, nodeId});
 
-  try {
-    const {config} = await RouteToOutputNode({client: this, libraryId, objectId, outputId, nodeId});
-
-    if(!includeState) {
-      return config;
-    }
-
-    const state = await this.CallBitcodeMethod({
-      libraryId,
-      objectId,
-      method: UrlJoin("live", "outputs", outputId, "state"),
-      queryParams: {
-        "client_stats": 1,
-        "srt_stats": 1
-      },
-      constant: true
-    });
-
-    return {
-      ...config,
-      state
-    };
-  } finally {
-    restore();
+  if(!includeState) {
+    return config;
   }
+
+  const state = await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    method: UrlJoin("live", "outputs", outputId, "state"),
+    queryParams: {
+      "client_stats": 1,
+      "srt_stats": 1
+    },
+    constant: true,
+    nodeUrl
+  });
+
+  return {
+    ...config,
+    state
+  };
 };
 
 /**
- * Pin (route) the client to the egress node for a specific output. Fetches the output config
- * to determine the node ID then sets the client fabric URIs.
+ * Resolve the fabric URL of the egress node serving a specific output. Without a nodeId, fetches
+ * the output config from a live egress node to find it.
  * Node ID is retrieved from the output's delivery block (srt_push / srt_pull / rtp / udp / rtmp).
- * Assumes the client is already routed to an eligible egress node (via RouteToLiveEgress).
- * Returns a function that restores the original fabric URIs.
+ * Requests are sent with this URL per call, so the client's fabric URIs are never changed.
  *
  * @param {Object} client - ElvClient instance
  * @param {string} libraryId - Library ID of the output settings object
  * @param {string} objectId - Object ID of the output settings object
  * @param {string} outputId - ID of the output
  * @param {string=} nodeId - Node ID if already known (skips config fetch)
- * @returns {Promise<{restore: Function, config: Object}>} - restore function and output config
+ * @returns {Promise<{nodeUrl: (string|undefined), config: Object}>} - The output node's fabric URL and output config
  */
-const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}) => {
-  const savedURIs = [...client.fabricURIs];
-  const restore = () => client.SetNodes({fabricURIs: savedURIs});
-
+const OutputNodeUrl = async ({client, libraryId, objectId, outputId, nodeId}) => {
   let config;
   if(!nodeId) {
     config = await client.CallBitcodeMethod({
       libraryId,
       objectId,
       method: UrlJoin("live", "outputs", outputId),
-      constant: true
+      constant: true,
+      nodeUrl: await LiveEgressNodeUrl({client})
     });
     nodeId = OutputDeliveryNodeId(config);
   }
 
-  if(nodeId) {
-    const nodes = await client.SpaceNodes({matchNodeId: nodeId});
-    const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
-    if(fabricUrl) {
-      client.SetNodes({fabricURIs: [fabricUrl]});
-      if(config) { await client.OutputsResolveSrtPullUrls({value: config}); }
-    }
-  }
+  if(!nodeId) { return {config}; }
 
-  return {restore, config};
+  const nodeUrl = await NodeFabricUrl({client, nodeId});
+  if(nodeUrl && config) { await client.OutputsResolveSrtPullUrls({value: config}); }
+
+  return {nodeUrl, config};
 };
 
 /**
- * Pin (route) the client to any eligible live egress node from the /config API.
- * Returns a function that restores the original fabric URIs.
+ * Resolve the fabric URL of any eligible live egress node from the /config API.
+ * Requests are sent with this URL per call, so the client's fabric URIs are never changed.
  *
  * @param {Object} client - ElvClient instance
- * @returns {Promise<{restore: Function}>} - restore function
+ * @returns {Promise<string|undefined>} - Egress node fabric URL, or undefined to use the default nodes
  */
-const RouteToLiveEgress = async ({client}) => {
-  const savedURIs = [...client.fabricURIs];
-  const restore = () => client.SetNodes({fabricURIs: savedURIs});
-
+const LiveEgressNodeUrl = async ({client}) => {
   const nodeId = await RetrieveOutputNodeId({client});
+  return nodeId ? NodeFabricUrl({client, nodeId}) : undefined;
+};
 
-  if(nodeId) {
-    const nodes = await client.SpaceNodes({matchNodeId: nodeId});
-    const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
-    if(fabricUrl) {
-      client.SetNodes({fabricURIs: [fabricUrl]});
-    }
-  }
-
-  return {restore};
+const NodeFabricUrl = async ({client, nodeId}) => {
+  const nodes = await client.SpaceNodes({matchNodeId: nodeId});
+  return nodes?.[0]?.services?.fabric_api?.urls?.[0];
 };
 
 /**
@@ -4267,8 +4232,6 @@ exports.OutputsCreate = async function({
     delete settings.elvgeo;
   }
 
-  const {restore} = await RouteToLiveEgress({client: this});
-
   if(
     (type === "srt_pull" || type === "srt_push") &&
     settings.connection?.enforced_encryption &&
@@ -4279,39 +4242,40 @@ exports.OutputsCreate = async function({
     settings.connection.pb_keylen = 16;
   }
 
-  try {
-    const output = {
-      enabled: streamObjectId ? enabled : false,
-      name,
-      description,
-      external_id: externalId,
-      custom,
-      input: streamObjectId ? {stream: streamObjectId, offering, token: inputToken, fmp4: type === "rtmp" ? fmp4 : undefined} : undefined,
-      [type]: settings
-    };
+  const output = {
+    enabled: streamObjectId ? enabled : false,
+    name,
+    description,
+    external_id: externalId,
+    custom,
+    input: streamObjectId ? {stream: streamObjectId, offering, token: inputToken, fmp4: type === "rtmp" ? fmp4 : undefined} : undefined,
+    [type]: settings
+  };
 
-    const {writeToken} = await this.EditContentObject({libraryId, objectId});
+  // The write token is created on a live egress node; requests using it stay pinned there
+  const {writeToken} = await this.EditContentObject({
+    libraryId,
+    objectId,
+    nodeUrl: await LiveEgressNodeUrl({client: this})
+  });
 
-    const outputs = await this.CallBitcodeMethod({
-      libraryId,
-      objectId,
-      writeToken,
-      method: "live/outputs",
-      constant: false,
-      body: output
-    });
+  const outputs = await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    writeToken,
+    method: "live/outputs",
+    constant: false,
+    body: output
+  });
 
-    await this.FinalizeContentObject({
-      libraryId,
-      objectId,
-      writeToken,
-      commitMessage: "Create output"
-    });
+  await this.FinalizeContentObject({
+    libraryId,
+    objectId,
+    writeToken,
+    commitMessage: "Create output"
+  });
 
-    return outputs;
-  } finally {
-    restore();
-  }
+  return outputs;
 };
 
 /**
@@ -4349,44 +4313,42 @@ exports.OutputsModify = async function({
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  // Route to any live egress node
-  const {restore} = await RouteToLiveEgress({client: this});
+  // The write token is created on a live egress node; requests using it stay pinned there
+  if(!writeToken) {
+    ({writeToken} = await this.EditContentObject({
+      libraryId,
+      objectId,
+      nodeUrl: await LiveEgressNodeUrl({client: this})
+    }));
+  }
 
-  try {
-    if(!writeToken) {
-      ({writeToken} = await this.EditContentObject({libraryId, objectId}));
-    }
+  const deliverySettings = OutputDeliverySettings(output);
+  if(deliverySettings?.connection?.enforced_encryption && !deliverySettings.passphrase) {
+    deliverySettings.passphrase = Buffer.from(
+      globalThis.crypto.getRandomValues(new Uint8Array(16))
+    ).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  }
 
-    const deliverySettings = OutputDeliverySettings(output);
-    if(deliverySettings?.connection?.enforced_encryption && !deliverySettings.passphrase) {
-      deliverySettings.passphrase = Buffer.from(
-        globalThis.crypto.getRandomValues(new Uint8Array(16))
-      ).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
-    }
+  const outputs = await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    writeToken,
+    method: UrlJoin("live", "outputs", outputId),
+    verb: "PUT",
+    constant: false,
+    body: output
+  });
 
-    const outputs = await this.CallBitcodeMethod({
+  if(finalize) {
+    await this.FinalizeContentObject({
       libraryId,
       objectId,
       writeToken,
-      method: UrlJoin("live", "outputs", outputId),
-      verb: "PUT",
-      constant: false,
-      body: output
+      commitMessage: "Modify output"
     });
-
-    if(finalize) {
-      await this.FinalizeContentObject({
-        libraryId,
-        objectId,
-        writeToken,
-        commitMessage: "Modify output"
-      });
-    }
-
-    return outputs;
-  } finally {
-    restore();
   }
+
+  return outputs;
 };
 
 /**
@@ -4417,45 +4379,42 @@ exports.OutputsModifyBatch = async function({libraryId, objectId, outputs}) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  const {restore} = await RouteToLiveEgress({client: this});
+  const nodeUrl = await LiveEgressNodeUrl({client: this});
 
-  try {
-    // Read all current outputs and merge changes on top
-    const current = await this.CallBitcodeMethod({
-      libraryId,
-      objectId,
-      method: "live/outputs",
-      constant: true
-    });
+  // Read all current outputs and merge changes on top
+  const current = await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    method: "live/outputs",
+    constant: true,
+    nodeUrl
+  });
 
-    const merged = {...current};
-    for(const [id, changes] of Object.entries(outputs)) {
-      merged[id] = {...(current[id] || {}), ...changes};
-    }
-
-    const {writeToken} = await this.EditContentObject({libraryId, objectId});
-
-    const result = await this.CallBitcodeMethod({
-      libraryId,
-      objectId,
-      writeToken,
-      method: "live/outputs",
-      verb: "PUT",
-      constant: false,
-      body: merged
-    });
-
-    await this.FinalizeContentObject({
-      libraryId,
-      objectId,
-      writeToken,
-      commitMessage: "Modify outputs (batch)"
-    });
-
-    return result;
-  } finally {
-    restore();
+  const merged = {...current};
+  for(const [id, changes] of Object.entries(outputs)) {
+    merged[id] = {...(current[id] || {}), ...changes};
   }
+
+  const {writeToken} = await this.EditContentObject({libraryId, objectId, nodeUrl});
+
+  const result = await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    writeToken,
+    method: "live/outputs",
+    verb: "PUT",
+    constant: false,
+    body: merged
+  });
+
+  await this.FinalizeContentObject({
+    libraryId,
+    objectId,
+    writeToken,
+    commitMessage: "Modify outputs (batch)"
+  });
+
+  return result;
 };
 
 /**
@@ -4477,27 +4436,21 @@ exports.OutputsStop = async function({libraryId, objectId, outputId}) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  // Route to a live egress node, then to the specific output's node
-  const {restore} = await RouteToLiveEgress({client: this});
-  await RouteToOutputNode({client: this, libraryId, objectId, outputId});
+  // The write token is created on the output's own node; requests using it stay pinned there
+  const {nodeUrl} = await OutputNodeUrl({client: this, libraryId, objectId, outputId});
+  const {writeToken} = await this.EditContentObject({libraryId, objectId, nodeUrl});
 
-  try {
-    const {writeToken} = await this.EditContentObject({libraryId, objectId});
+  const response = await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    writeToken,
+    method: UrlJoin("live", "outputs", outputId, "ctrl", "stop"),
+    constant: false
+  });
 
-    const response = await this.CallBitcodeMethod({
-      libraryId,
-      objectId,
-      writeToken,
-      method: UrlJoin("live", "outputs", outputId, "ctrl", "stop"),
-      constant: false
-    });
+  await this.DeleteWriteToken({writeToken});
 
-    await this.DeleteWriteToken({writeToken});
-
-    return response;
-  } finally {
-    restore();
-  }
+  return response;
 };
 
 /**
@@ -4519,20 +4472,15 @@ exports.OutputsReset = async function({libraryId, objectId, outputId}) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  // Route to a live egress node, then to the specific output's node
-  const {restore} = await RouteToLiveEgress({client: this});
-  await RouteToOutputNode({client: this, libraryId, objectId, outputId});
+  const {nodeUrl} = await OutputNodeUrl({client: this, libraryId, objectId, outputId});
 
-  try {
-    return await this.CallBitcodeMethod({
-      libraryId,
-      objectId,
-      method: UrlJoin("live", "outputs", outputId, "ctrl", "reset"),
-      constant: false
-    });
-  } finally {
-    restore();
-  }
+  return await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    method: UrlJoin("live", "outputs", outputId, "ctrl", "reset"),
+    constant: false,
+    nodeUrl
+  });
 };
 
 /**
@@ -4555,21 +4503,16 @@ exports.OutputsHop = async function({libraryId, objectId, outputId, hop=0}) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  // Route to a live egress node, then to the specific output's node
-  const {restore} = await RouteToLiveEgress({client: this});
-  await RouteToOutputNode({client: this, libraryId, objectId, outputId});
+  const {nodeUrl} = await OutputNodeUrl({client: this, libraryId, objectId, outputId});
 
-  try {
-    return await this.CallBitcodeMethod({
-      libraryId,
-      objectId,
-      method: UrlJoin("live", "outputs", outputId, "ctrl", "hop"),
-      queryParams: {hop},
-      constant: false
-    });
-  } finally {
-    restore();
-  }
+  return await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    method: UrlJoin("live", "outputs", outputId, "ctrl", "hop"),
+    queryParams: {hop},
+    constant: false,
+    nodeUrl
+  });
 };
 
 /**
@@ -4591,32 +4534,30 @@ exports.OutputsDelete = async function({libraryId, objectId, outputId}) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  // Route to any live egress node
-  const {restore} = await RouteToLiveEgress({client: this});
+  // The write token is created on a live egress node; requests using it stay pinned there
+  const {writeToken} = await this.EditContentObject({
+    libraryId,
+    objectId,
+    nodeUrl: await LiveEgressNodeUrl({client: this})
+  });
 
-  try {
-    const {writeToken} = await this.EditContentObject({libraryId, objectId});
+  const result = await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    writeToken,
+    method: UrlJoin("live", "outputs", outputId),
+    verb: "DELETE",
+    constant: false,
+  });
 
-    const result = await this.CallBitcodeMethod({
-      libraryId,
-      objectId,
-      writeToken,
-      method: UrlJoin("live", "outputs", outputId),
-      verb: "DELETE",
-      constant: false,
-    });
+  await this.FinalizeContentObject({
+    libraryId,
+    objectId,
+    writeToken,
+    commitMessage: "Remove output"
+  });
 
-    await this.FinalizeContentObject({
-      libraryId,
-      objectId,
-      writeToken,
-      commitMessage: "Remove output"
-    });
-
-    return result;
-  } finally {
-    restore();
-  }
+  return result;
 };
 
 /**
@@ -4638,32 +4579,31 @@ exports.OutputsDeleteBatch = async function({libraryId, objectId, outputs}) {
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  const {restore} = await RouteToLiveEgress({client: this});
+  // The write token is created on a live egress node; requests using it stay pinned there
+  const {writeToken} = await this.EditContentObject({
+    libraryId,
+    objectId,
+    nodeUrl: await LiveEgressNodeUrl({client: this})
+  });
 
-  try {
-    const {writeToken} = await this.EditContentObject({libraryId, objectId});
-
-    const results = [];
-    for(let outputId of outputs) {
-      results.push(await this.CallBitcodeMethod({
-        libraryId,
-        objectId,
-        writeToken,
-        method: UrlJoin("live", "outputs", outputId),
-        verb: "DELETE",
-        constant: false,
-      }));
-    }
-
-    await this.FinalizeContentObject({
+  const results = [];
+  for(let outputId of outputs) {
+    results.push(await this.CallBitcodeMethod({
       libraryId,
       objectId,
       writeToken,
-      commitMessage: "Remove outputs (batch)"
-    });
-
-    return results;
-  } finally {
-    restore();
+      method: UrlJoin("live", "outputs", outputId),
+      verb: "DELETE",
+      constant: false,
+    }));
   }
+
+  await this.FinalizeContentObject({
+    libraryId,
+    objectId,
+    writeToken,
+    commitMessage: "Remove outputs (batch)"
+  });
+
+  return results;
 };
