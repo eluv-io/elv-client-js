@@ -613,8 +613,7 @@ const GetObjectIDAndContractAddress = async function({contractAddress, objectId,
  * @returns {Promise<string|undefined>}
  */
 exports.TenantId = async function({contractAddress, objectId, versionHash}) {
-
-  objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
+  const objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
   contractAddress = objectInfo.contractAddress;
   objectId = objectInfo.objectId;
 
