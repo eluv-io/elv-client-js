@@ -659,8 +659,7 @@ exports.TenantId = async function({contractAddress, objectId, versionHash}) {
  * @returns {Promise<string|undefined>}
  */
 exports.TenantContractId = async function({contractAddress, objectId, versionHash}) {
-
-  objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
+  const objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
   contractAddress = objectInfo.contractAddress;
   objectId = objectInfo.objectId;
 
@@ -708,7 +707,7 @@ exports.TenantContractId = async function({contractAddress, objectId, versionHas
  * @returns {Promise<{tenantId: (undefined|string), tenantContractId}>}
  */
 exports.SetTenantId = async function({contractAddress, objectId, versionHash, tenantId}) {
-  objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
+  const objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
   contractAddress = objectInfo.contractAddress;
   objectId = objectInfo.objectId;
 
@@ -764,8 +763,7 @@ exports.SetTenantId = async function({contractAddress, objectId, versionHash, te
  * @returns {Promise<{tenantId: (undefined|string), tenantContractId}>}
  */
 exports.SetTenantContractId = async function({contractAddress, objectId, versionHash, tenantContractId}) {
-
-  objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
+  const objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
   contractAddress = objectInfo.contractAddress;
   objectId = objectInfo.objectId;
 
@@ -856,8 +854,7 @@ exports.SetTenantContractId = async function({contractAddress, objectId, version
  * @returns {Promise<void>}
  */
 exports.ResetTenantId = async function({contractAddress, objectId, versionHash}) {
-
-  objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
+  const objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
   contractAddress = objectInfo.contractAddress;
   objectId = objectInfo.objectId;
 
@@ -1086,7 +1083,7 @@ exports.ObjectCleanup = async function ({
   versionHash,
   objectTypeToClean = ObjectTypesToClean.ALL
 }) {
-  objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
+  const objectInfo = await GetObjectIDAndContractAddress({contractAddress, objectId, versionHash});
   contractAddress = objectInfo.contractAddress;
   let isUserWallet = false;
   let userAddress;
