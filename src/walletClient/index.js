@@ -1272,7 +1272,7 @@ class ElvWalletClient {
         })
       );
 
-      return response
+      return (response || [])
         .map(status => {
           let [op, address, id] = status.op.split(":");
           address = address && address.startsWith("0x") ? Utils.FormatAddress(address) : address;
