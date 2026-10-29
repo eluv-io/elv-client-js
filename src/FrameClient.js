@@ -547,6 +547,7 @@ class FrameClient {
       "StreamSetOfferingAndDRM",
       "StreamSiteSettings",
       "StreamRestartRecording",
+      "StreamRunningState",
       "StreamStartRecording",
       "StreamStartOrStopOrReset",
       "StreamStatus",
