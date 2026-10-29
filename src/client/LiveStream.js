@@ -1258,6 +1258,102 @@ exports.StreamStatus = async function({name, showParams=false, writeToken}) {
 };
 
 /**
+ * Retrieve the state of a live stream. A lightweight alternative to StreamStatus for when only the
+ * state is needed (e.g. when listing many streams): it reads only the metadata required to determine
+ * the state, and fetches the edge metadata and LRO status in parallel rather than sequentially.
+ *
+ * Unlike StreamStatus, errors reading the stream object's metadata (e.g. if it has been deleted) are thrown.
+ *
+ * The state logic mirrors StreamStatus and must be kept consistent with it.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string} name - Object ID of the live stream object
+ * @param {string=} writeToken - Write token of a draft of the live stream object
+ *
+ * @return {Promise<string>} - The stream state, as reported by StreamStatus (e.g. "unconfigured", "uninitialized", "inactive", "stopped", "running")
+ */
+exports.StreamState = async function({name, writeToken}) {
+  const objectId = name;
+  const libraryId = await this.ContentObjectLibraryId({objectId});
+
+  const meta = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    select: [
+      "live_recording_config/url",
+      "live_recording/fabric_config",
+      "live_recording/playout_config",
+      "live_recording/recording_config"
+    ]
+  }) || {};
+
+  const liveRecording = meta.live_recording;
+
+  if(meta.live_recording_config?.url == undefined) {
+    return "unconfigured";
+  }
+
+  if(liveRecording?.fabric_config == undefined || liveRecording.playout_config == undefined || liveRecording.recording_config == undefined) {
+    return "uninitialized";
+  }
+
+  let fabURI = liveRecording.fabric_config.ingress_node_api;
+  if(fabURI === undefined) {
+    return "uninitialized";
+  }
+
+  // Support both hostname and URL ingress_node_api
+  if(!fabURI.startsWith("http")) {
+    fabURI = "https://" + fabURI;
+  }
+
+  const edgeWriteToken = liveRecording.fabric_config.edge_write_token;
+  if(!edgeWriteToken) {
+    return "inactive";
+  }
+
+  this.RecordWriteToken({writeToken: edgeWriteToken, fabricNodeUrl: fabURI});
+
+  const [edgeMeta, lroStatus] = await Promise.allSettled([
+    this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      method: "/live/meta",
+      constant: true
+    }),
+    (async () => this.utils.ResponseToJson(
+      HttpClient.Fetch(
+        await this.FabricUrl({
+          libraryId,
+          objectId,
+          writeToken: edgeWriteToken,
+          call: "live/status"
+        })
+      )
+    ))()
+  ]);
+
+  if(edgeMeta.status === "rejected") {
+    return edgeMeta.reason?.message?.includes("ERR_TOO_MANY_REDIRECTS") ? "unavailable" : "inactive";
+  }
+
+  // Stream has never been started
+  if(edgeMeta.value?.live_recording?.recordings?.recording_sequence === undefined) {
+    return "stopped";
+  }
+
+  if(lroStatus.status === "rejected") {
+    return "stopped";
+  }
+
+  // The LRO reports 'terminated' which for the recording means 'stopped'
+  const state = lroStatus.value.state;
+  return state === "terminated" ? "stopped" : state;
+};
+
+/**
  * Create a new edge write token
  *
  * @methodGroup Live Stream
@@ -3710,8 +3806,7 @@ exports.OutputsResolveSrtPullUrls = async function({value}) {
   const nodeId = value.srt_pull?.node_ids?.[0];
   if(!nodeId) { return value; }
 
-  const nodes = await this.SpaceNodes({matchNodeId: nodeId});
-  const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+  const fabricUrl = await NodeFabricUrl({client: this, nodeId});
   RewriteSrtPullUrls(value, fabricUrl);
 
   return value;
@@ -3731,20 +3826,127 @@ exports.OutputsResolveSrtPullUrls = async function({value}) {
 exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
   ValidateObject(objectId);
 
-  if(!libraryId) {
-    libraryId = await this.ContentObjectLibraryId({objectId});
+  // Fetch Library ID and egress node concurrently. Reuse node list for outputs
+  let egressNode, nodes;
+  [libraryId, {node: egressNode, nodes}] = await Promise.all([
+    libraryId || this.ContentObjectLibraryId({objectId}),
+    RetrieveLiveEgressNode({client: this})
+  ]);
+
+  const outputs = await RetrieveOutputs({client: this, libraryId, objectId, egressNode});
+
+  // Enrich input stream info. Each stream is looked up once, even if it feeds multiple outputs.
+  const EnrichInputStreams = async () => {
+    const streamIds = [...new Set(Object.values(outputs).map(value => value.input?.stream).filter(el => !!el))];
+    const streamInfo = {};
+
+    await this.utils.LimitedMap(10, streamIds, async streamId => {
+      try {
+        const [name, status] = await Promise.all([
+          (async () => this.ContentObjectMetadata({
+            libraryId: await this.ContentObjectLibraryId({objectId: streamId}),
+            objectId: streamId,
+            metadataSubtree: "/public/name",
+          }))(),
+          this.StreamState({name: streamId})
+        ]);
+
+        streamInfo[streamId] = {name, status};
+      } catch(error) {
+        // Stream object may have been deleted
+        streamInfo[streamId] = {status: "unavailable"};
+      }
+    });
+
+    for(const value of Object.values(outputs)) {
+      const info = streamInfo[value.input?.stream];
+      if(info) { Object.assign(value.input, info); }
+    }
+  };
+
+  // Resolve each egress node's URL, then fetch output state routed directly to that node
+  const RetrieveState = async () => {
+    const nodeUrls = await ResolveOutputNodeUrls({client: this, outputs, nodes});
+
+    // Rewrite srt_pull URLs to the egress host
+    for(const value of Object.values(outputs)) {
+      RewriteSrtPullUrls(value, nodeUrls[OutputDeliveryNodeId(value)]);
+    }
+
+    const states = await RetrieveOutputsState({client: this, libraryId, objectId, outputs, nodeUrls});
+    for(const [key, state] of Object.entries(states)) {
+      outputs[key].state = state;
+    }
+  };
+
+  await Promise.all([
+    EnrichInputStreams(),
+    includeState ? RetrieveState() : undefined
+  ]);
+
+  return outputs;
+};
+
+/**
+ * Retrieve the live state of each output of a stream object. State is fetched from each output's
+ * egress node. Passing the outputs returned by OutputsList (with includeState=false) avoids
+ * retrieving the list again, and allows the list to be displayed before the slower state calls complete.
+ *
+ * @methodGroup Live Stream
+ * @namedParams
+ * @param {string=} libraryId - Library ID of the output settings object. If not provided, it will be retrieved automatically.
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {Object<string, LiveOutput>=} outputs - Map of output IDs to LiveOutput objects, as returned by OutputsList.
+ * If not provided, the list will be retrieved automatically.
+ *
+ * @returns {Promise<Object<string, Object>>} - Map of output IDs to state, containing client_stats and srt_stats. Outputs whose
+ * state could not be retrieved have an empty state.
+ */
+exports.OutputsListState = async function({libraryId, objectId, outputs}) {
+  ValidateObject(objectId);
+
+  let nodes;
+  if(outputs) {
+    // If the node list can't be retrieved, nodes are resolved individually instead
+    [libraryId, nodes] = await Promise.all([
+      libraryId || this.ContentObjectLibraryId({objectId}),
+      this.SpaceNodes().catch(error => {
+        this.Log(`Failed to retrieve node list: ${error.message}`, true);
+      })
+    ]);
+  } else {
+    let egressNode;
+    [libraryId, {node: egressNode, nodes}] = await Promise.all([
+      libraryId || this.ContentObjectLibraryId({objectId}),
+      RetrieveLiveEgressNode({client: this})
+    ]);
+
+    outputs = await RetrieveOutputs({client: this, libraryId, objectId, egressNode});
   }
 
-  // Route to any live egress node for the initial list call (only necessary until the API is globally available)
-  const {restore} = await RouteToLiveEgress({client: this});
+  const nodeUrls = await ResolveOutputNodeUrls({client: this, outputs, nodes});
 
-  let outputs;
+  return RetrieveOutputsState({client: this, libraryId, objectId, outputs, nodeUrls});
+};
+
+/**
+ * Retrieve the output list of a stream object from a live egress node (only necessary until the
+ * API is globally available).
+ *
+ * @param {Object} client - ElvClient instance
+ * @param {string} libraryId - Library ID of the output settings object
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {Object} egressNode - Live egress node, as returned by RetrieveLiveEgressNode
+ * @returns {Promise<Object<string, LiveOutput>>} - Map of output IDs to LiveOutput objects. Empty if the object was not found.
+ */
+const RetrieveOutputs = async ({client, libraryId, objectId, egressNode}) => {
   try {
-    outputs = await this.CallBitcodeMethod({
+    return await client.CallBitcodeMethod({
       libraryId,
       objectId,
       method: "live/outputs",
-      constant:  true
+      constant: true,
+      nodeUrl: NodeUrl(egressNode)
     });
   } catch(error) {
     if(error.status === 404) {
@@ -3753,101 +3955,74 @@ exports.OutputsList = async function({libraryId, objectId, includeState=true}) {
     }
 
     throw error;
-  } finally {
-    restore();
   }
+};
 
-  // Enrich each output's input stream name/status concurrently (read-only, no routing changes)
-  await this.utils.LimitedMap(
-    10,
-    Object.values(outputs),
-    async value => {
-      const streamId = value.input?.stream;
-      if(!streamId) { return; }
-
-      try {
-        const [streamLibraryId, streamStatus] = await Promise.all([
-          this.ContentObjectLibraryId({objectId: streamId}),
-          this.StreamStatus({name: streamId})
-        ]);
-
-        value.input.name = await this.ContentObjectMetadata({
-          libraryId: streamLibraryId,
-          objectId: streamId,
-          metadataSubtree: "/public/name",
-        });
-        value.input.status = streamStatus?.state;
-      } catch(error) {
-        // Stream object may have been deleted
-        value.input.status = "unavailable";
-      }
-    }
-  );
-
-  if(!includeState) {
-    return outputs;
-  }
-
-  // Resolve each distinct egress node's fabric URL once (concurrent, read-only)
-  const nodeIds = [...new Set(
-    Object.values(outputs).map(value => OutputDeliveryNodeId(value)).filter(Boolean)
-  )];
-
+/**
+ * Resolve the fabric API URL of each output's egress node. Nodes are looked up in the provided
+ * node list, falling back to a direct lookup for any node missing from it.
+ *
+ * @param {Object} client - ElvClient instance
+ * @param {Object<string, LiveOutput>} outputs - Map of output IDs to LiveOutput objects
+ * @param {Array<Object>=} nodes - Nodes, as returned by SpaceNodes
+ * @returns {Promise<Object<string, string>>} - Map of node IDs to fabric API URLs. Unresolvable nodes are omitted.
+ */
+const ResolveOutputNodeUrls = async ({client, outputs, nodes}) => {
+  const nodeIds = [...new Set(Object.values(outputs).map(value => OutputDeliveryNodeId(value)).filter(el => !!el))];
   const nodeUrls = {};
-  await this.utils.LimitedMap(10, nodeIds, async nodeId => {
+
+  await client.utils.LimitedMap(10, nodeIds, async nodeId => {
     try {
-      const nodes = await this.SpaceNodes({matchNodeId: nodeId});
-      const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+      const fabricUrl = NodeFabricUrlFromList({nodes, nodeId}) || await NodeFabricUrl({client, nodeId});
       if(fabricUrl) { nodeUrls[nodeId] = fabricUrl; }
     } catch(error) {
-      this.Log(`Failed to resolve node ${nodeId}: ${error.message}`, true);
+      client.Log(`Failed to resolve node ${nodeId}: ${error.message}`, true);
     }
   });
 
-  // Rewrite fabric-generated srt_pull URLs to the egress host, and group outputs by node
-  const outputsByNode = {};
-  for(const [key, value] of Object.entries(outputs)) {
-    const nodeId = OutputDeliveryNodeId(value);
-    const fabricUrl = nodeId && nodeUrls[nodeId];
+  return nodeUrls;
+};
 
-    RewriteSrtPullUrls(value, fabricUrl);
+/**
+ * Fetch the live state of each output, routed directly to its egress node.
+ *
+ * @param {Object} client - ElvClient instance
+ * @param {string} libraryId - Library ID of the output settings object
+ * @param {string} objectId - Object ID of the output settings object
+ * @param {Object<string, LiveOutput>} outputs - Map of output IDs to LiveOutput objects
+ * @param {Object<string, string>} nodeUrls - Map of node IDs to fabric API URLs
+ * @returns {Promise<Object<string, Object>>} - Map of output IDs to state. Outputs without a resolvable node, or
+ * whose state could not be retrieved, have an empty state.
+ */
+const RetrieveOutputsState = async ({client, libraryId, objectId, outputs, nodeUrls}) => {
+  const states = {};
 
+  await client.utils.LimitedMap(10, Object.keys(outputs), async key => {
+    const fabricUrl = nodeUrls[OutputDeliveryNodeId(outputs[key])];
     if(!fabricUrl) {
-      value.state = {};
-      continue;
+      states[key] = {};
+      return;
     }
-    (outputsByNode[nodeId] = outputsByNode[nodeId] || []).push(key);
-  }
 
-  // Fetch state per node: route to the node once, fetch its outputs concurrently, then restore
-  const savedURIs = [...this.fabricURIs];
-  try {
-    for(const [nodeId, outputIds] of Object.entries(outputsByNode)) {
-      this.SetNodes({fabricURIs: [nodeUrls[nodeId]]});
-
-      await this.utils.LimitedMap(10, outputIds, async outputId => {
-        try {
-          outputs[outputId].state = await this.CallBitcodeMethod({
-            libraryId,
-            objectId,
-            method: UrlJoin("live", "outputs", outputId, "state"),
-            queryParams: {
-              "client_stats": 1,
-              "srt_stats": 1
-            },
-            constant: true
-          });
-        } catch(error) {
-          this.Log(`Failed to retrieve state for output ${outputId}: ${error.message}`, true);
-          outputs[outputId].state = {};
-        }
+    try {
+      states[key] = await client.CallBitcodeMethod({
+        libraryId,
+        objectId,
+        method: UrlJoin("live", "outputs", key, "state"),
+        queryParams: {
+          "client_stats": 1,
+          "srt_stats": 1
+        },
+        constant: true,
+        nodeUrl: fabricUrl
       });
+    } catch(error) {
+      client.Log(`Failed to retrieve state for output ${key}: ${error.message}`, true);
+      states[key] = {};
     }
-  } finally {
-    this.SetNodes({fabricURIs: savedURIs});
-  }
+  });
 
-  return outputs;
+  return states;
 };
 
 /**
@@ -3870,19 +4045,13 @@ exports.OutputsListItem = async function({libraryId, objectId, outputId, include
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  const {restore} = await RouteToLiveEgress({client: this});
-
-  let outputs;
-  try {
-    outputs = await this.CallBitcodeMethod({
-      libraryId,
-      objectId,
-      method: "live/outputs",
-      constant: true
-    });
-  } finally {
-    restore();
-  }
+  const outputs = await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    method: "live/outputs",
+    constant: true,
+    nodeUrl: await LiveEgressUrl({client: this})
+  });
 
   let value = outputs[outputId];
 
@@ -3944,34 +4113,55 @@ exports.OutputsState = async function({libraryId, objectId, outputId, nodeId, in
     libraryId = await this.ContentObjectLibraryId({objectId});
   }
 
-  // Route to a live egress node first so the output config fetch below succeeds
-  const {restore} = await RouteToLiveEgress({client: this});
-
-  try {
-    const {config} = await RouteToOutputNode({client: this, libraryId, objectId, outputId, nodeId});
-
-    if(!includeState) {
-      return config;
-    }
-
-    const state = await this.CallBitcodeMethod({
+  // Calls are routed per request via nodeUrl rather than by pinning the client's fabric URIs,
+  // so concurrent requests made with this client are unaffected
+  let config, nodeUrl;
+  if(!nodeId) {
+    // The output config is only available from a live egress node
+    nodeUrl = await LiveEgressUrl({client: this});
+    config = await this.CallBitcodeMethod({
       libraryId,
       objectId,
-      method: UrlJoin("live", "outputs", outputId, "state"),
-      queryParams: {
-        "client_stats": 1,
-        "srt_stats": 1
-      },
-      constant: true
+      method: UrlJoin("live", "outputs", outputId),
+      constant: true,
+      nodeUrl
     });
-
-    return {
-      ...config,
-      state
-    };
-  } finally {
-    restore();
+    nodeId = OutputDeliveryNodeId(config);
   }
+
+  if(nodeId) {
+    const outputNodeUrl = await NodeFabricUrl({client: this, nodeId});
+    if(outputNodeUrl) {
+      nodeUrl = outputNodeUrl;
+      if(config) { RewriteSrtPullUrls(config, outputNodeUrl); }
+    }
+  }
+
+  if(!includeState) {
+    return config;
+  }
+
+  // Fall back to any live egress node if the output's node could not be resolved
+  if(!nodeUrl) {
+    nodeUrl = await LiveEgressUrl({client: this});
+  }
+
+  const state = await this.CallBitcodeMethod({
+    libraryId,
+    objectId,
+    method: UrlJoin("live", "outputs", outputId, "state"),
+    queryParams: {
+      "client_stats": 1,
+      "srt_stats": 1
+    },
+    constant: true,
+    nodeUrl
+  });
+
+  return {
+    ...config,
+    state
+  };
 };
 
 /**
@@ -4004,8 +4194,7 @@ const RouteToOutputNode = async ({client, libraryId, objectId, outputId, nodeId}
   }
 
   if(nodeId) {
-    const nodes = await client.SpaceNodes({matchNodeId: nodeId});
-    const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
+    const fabricUrl = await NodeFabricUrl({client, nodeId});
     if(fabricUrl) {
       client.SetNodes({fabricURIs: [fabricUrl]});
       if(config) { await client.OutputsResolveSrtPullUrls({value: config}); }
@@ -4026,34 +4215,60 @@ const RouteToLiveEgress = async ({client}) => {
   const savedURIs = [...client.fabricURIs];
   const restore = () => client.SetNodes({fabricURIs: savedURIs});
 
-  const nodeId = await RetrieveOutputNodeId({client});
-
-  if(nodeId) {
-    const nodes = await client.SpaceNodes({matchNodeId: nodeId});
-    const fabricUrl = nodes?.[0]?.services?.fabric_api?.urls?.[0];
-    if(fabricUrl) {
-      client.SetNodes({fabricURIs: [fabricUrl]});
-    }
+  const fabricUrl = await LiveEgressUrl({client});
+  if(fabricUrl) {
+    client.SetNodes({fabricURIs: [fabricUrl]});
   }
 
   return {restore};
 };
 
 /**
- * Resolve a node ID for live egress output. If nodeIds is provided, uses the first element directly.
- * Otherwise, calls the /config API (optionally filtered by geo) to get live_egress endpoints,
- * then resolves the first endpoint to a node ID via SpaceNodes.
+ * Resolve the fabric API URL of a node by ID.
  *
  * @param {Object} client - ElvClient instance
- * @param {Array<string>=} nodeIds - Explicit node IDs to use
- * @param {Array<string>=} geos - Geo regions to filter config API results (max 1)
- * @returns {Promise<string>} - A node ID for the output
+ * @param {string} nodeId - Node ID
+ * @returns {Promise<string|undefined>} - Fabric API URL of the node, if found
  */
-const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
-  if(nodeIds) {
-    return nodeIds[0];
-  }
+const NodeFabricUrl = async ({client, nodeId}) => {
+  const nodes = await client.SpaceNodes({matchNodeId: nodeId});
+  return NodeUrl(nodes?.[0]);
+};
 
+/**
+ * Find the fabric API URL of a node by ID in an already retrieved list of nodes.
+ *
+ * @param {Array<Object>} nodes - Nodes, as returned by SpaceNodes
+ * @param {string} nodeId - Node ID
+ * @returns {string|undefined} - Fabric API URL of the node, if found
+ */
+const NodeFabricUrlFromList = ({nodes, nodeId}) =>
+  NodeUrl((nodes || []).find(node => node?.id === nodeId));
+
+// Fabric API URL of a node object
+const NodeUrl = node => node?.services?.fabric_api?.urls?.[0];
+
+/**
+ * Resolve the fabric API URL of an eligible live egress node from the /config API.
+ * Unlike RouteToLiveEgress, this does not modify the client's fabric URIs, so the result
+ * can be passed as `nodeUrl` to individual calls without affecting concurrent requests.
+ *
+ * @param {Object} client - ElvClient instance
+ * @returns {Promise<string|undefined>} - Fabric API URL of the egress node, if found
+ */
+const LiveEgressUrl = async ({client}) => {
+  const {node} = await RetrieveLiveEgressNode({client});
+  return NodeUrl(node);
+};
+
+/**
+ * Retrieve the hostname of the first live_egress endpoint from the /config API.
+ *
+ * @param {Object} client - ElvClient instance
+ * @param {Array<string>=} geos - Geo regions to filter config API results (max 1)
+ * @returns {Promise<string>} - Hostname of the live egress endpoint
+ */
+const LiveEgressHostname = async ({client, geos}) => {
   const uri = new URI(client.ConfigUrl());
   uri.pathname("/config");
   if(geos && geos.length > 0) {
@@ -4069,14 +4284,49 @@ const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
     throw new Error("No live_egress endpoints found in fabric config");
   }
 
-  // Extract hostname from the first live_egress URL and resolve to a node ID
-  const hostname = new URL(liveEgressUrls[0]).hostname;
-  const nodes = await client.SpaceNodes({matchEndpoint: hostname});
-  if(!nodes || nodes.length === 0) {
+  return new URL(liveEgressUrls[0]).hostname;
+};
+
+/**
+ * Resolve an eligible live egress node. The /config API (optionally filtered by geo) and the
+ * space node list are fetched concurrently, then the first live_egress endpoint is matched
+ * against the node list.
+ *
+ * @param {Object} client - ElvClient instance
+ * @param {Array<string>=} geos - Geo regions to filter config API results (max 1)
+ * @returns {Promise<{node: Object, nodes: Array<Object>}>} - The matching node, and the full node list for reuse
+ */
+const RetrieveLiveEgressNode = async ({client, geos}) => {
+  const [hostname, nodes] = await Promise.all([
+    LiveEgressHostname({client, geos}),
+    client.SpaceNodes()
+  ]);
+
+  const node = (nodes || []).find(node =>
+    (node.services?.fabric_api?.urls || []).some(url => url.includes(hostname))
+  );
+  if(!node) {
     throw new Error(`No node found matching live_egress endpoint: ${hostname}`);
   }
 
-  return nodes[0].id;
+  return {node, nodes};
+};
+
+/**
+ * Resolve a node ID for live egress output. If nodeIds is provided, uses the first element directly.
+ * Otherwise, resolves an eligible live egress node via RetrieveLiveEgressNode.
+ *
+ * @param {Object} client - ElvClient instance
+ * @param {Array<string>=} nodeIds - Explicit node IDs to use
+ * @param {Array<string>=} geos - Geo regions to filter config API results (max 1)
+ * @returns {Promise<string>} - A node ID for the output
+ */
+const RetrieveOutputNodeId = async ({client, nodeIds, geos}) => {
+  if(nodeIds) {
+    return nodeIds[0];
+  }
+
+  return (await RetrieveLiveEgressNode({client, geos})).node.id;
 };
 
 /**
