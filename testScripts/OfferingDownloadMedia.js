@@ -32,13 +32,21 @@ class OfferingDownloadMedia extends ScriptBase {
     }
 
     const transcodesMetadata = metadata.transcodes || {};
-
-    const streamKeyArray = streamKey.split(",").map(key => key.trim()).filter(Boolean);
+    let streamKeyArray = {}; 
+    if (streamKey.toLowerCase() === "all") {
+       streamKeyArray = Object.keys(offeringMetadata.playout && offeringMetadata.playout.streams || {});
+      if (!streamKeyArray.length) {
+        throw new Error(`No streams found for offering "${offeringKey}"`);
+      }
+    } else {
+       streamKeyArray = streamKey.split(",").map(key => key.trim()).filter(Boolean);
+    }
+    console.log(`Stream keys to download: ${streamKeyArray.join(", ")}`);
     const partsMap = Object.fromEntries(streamKeyArray.map(key => {
-      const transcodeParts = this.getTranscodeParts(offeringMetadata, transcodesMetadata, key);
-      console.log(`Stream "${key}" uses transcode ${transcodeParts.transcodeId} (${transcodeParts.parts.length} parts)`);
+    const transcodeParts = this.getTranscodeParts(offeringMetadata, transcodesMetadata, key);
+    console.log(`Stream "${key}" uses transcode ${transcodeParts.transcodeId} (${transcodeParts.parts.length} parts)`);
 
-      return [key, transcodeParts.parts];
+    return [key, transcodeParts.parts];
     }));
 
     // handle directories
@@ -129,10 +137,10 @@ class OfferingDownloadMedia extends ScriptBase {
 
     const partsFile=path.join(outDir, `parts_${streamKey}.txt`);
     const client=await this.client();
-
+    const pad = String(parts.length).length;
     console.log("\nDownloading parts...\n");
     for(const [index, partHash] of parts.entries()) {
-      let ph=(index + 1).toString().padStart(4, "0") + "." + partHash;
+      let ph=(index + 1).toString().padStart(pad, "0") + "." + partHash;
       console.log(`processing ${ph}...`);
 
       const buf=await client.DownloadPart({
