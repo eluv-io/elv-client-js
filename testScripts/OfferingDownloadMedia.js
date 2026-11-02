@@ -253,7 +253,7 @@ class OfferingDownloadMedia extends ScriptBase {
         alias: "stream-key",
         describe: "comma separated list of offerings stream key (all for all streams)",
         type: "string",
-        default: "video",
+        default: "all",
       })
       .option("out",{
         describe: "output directory",
