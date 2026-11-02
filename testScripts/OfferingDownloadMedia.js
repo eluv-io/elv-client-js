@@ -14,6 +14,9 @@ class OfferingDownloadMedia extends ScriptBase {
     const offeringKey=this.args.offeringKey;
     const streamKey=this.args.streamKey;
     const out=this.args.out;
+    const mergeStreams=this.args.mergeStreams;
+    const mergeFile=this.args.mergeFile;
+    const ffmpegExec=this.args.ffmpegExec;
 
     if(!objectId && !versionHash) throw new Error("Require object-id or object-hash to be provided");
     if(!objectId) {
@@ -71,15 +74,71 @@ class OfferingDownloadMedia extends ScriptBase {
       // concatenate the parts
       const mediaFile=path.join(contentObjDirPath, `${streamKey}.mp4`);
       const ffmpegArgs = ["-f", "concat", "-safe", "0", "-i", partsFile, "-c", "copy", mediaFile];
-      console.log("Running", "ffmpeg", ffmpegArgs.join(" "));
+      console.log("Running", ffmpegExec, ffmpegArgs.join(" "));
       try {
-        execFileSync("ffmpeg", ffmpegArgs, {stdio: "inherit"});
+        execFileSync(ffmpegExec, ffmpegArgs, {stdio: "inherit"});
         console.log("Concatenation complete.");
       } catch(error) {
         console.error("Error running ffmpeg:", error);
       }
 
       console.log("================================================");
+    }
+
+    if (mergeStreams) {
+
+
+      const concatFilePath = path.join(contentObjDirPath, mergeFile || "output_shortened.mp4");
+      const audioStreams = streamKeyArray.filter(key => key.startsWith("audio"));
+      audioStreams.sort((a, b) => {
+        return a.localeCompare(b, undefined, { numeric: true });
+      });
+
+      // Find the video stream key (first non-audio stream)
+      const videoStreamKey = streamKeyArray.find(key => !key.startsWith("audio"));
+      if (!videoStreamKey) {
+        throw new Error("No video stream key found in streamKeyArray");
+      }
+      // Build ffmpeg command line in logical sections for readability
+
+      // Input files: first the video, then each audio stream
+      const ffmpegMergeArgs = [];
+      // Add video input
+      ffmpegMergeArgs.push("-i", path.join(contentObjDirPath, `${videoStreamKey}.mp4`));
+      // Add audio inputs
+      audioStreams.forEach((item) => {
+        ffmpegMergeArgs.push("-i", path.join(contentObjDirPath, `${item}.mp4`));
+      });
+
+      // Filter complex: mix each audio input
+      ffmpegMergeArgs.push("-filter_complex");
+      const filterComplexParts = audioStreams.map((item, index) => {
+        if (item.startsWith("audio")) {
+          return `[${index + 1}:a]amix=inputs=1:duration=shortest[a${index}]`;
+        }
+      });
+      ffmpegMergeArgs.push(filterComplexParts.join("; "));
+
+      // Map video stream
+      ffmpegMergeArgs.push("-map", "0:v:0");
+
+      // Map each mixed audio stream
+      audioStreams.forEach((item, index) => {
+        ffmpegMergeArgs.push("-map", `[a${index}]`);
+      });
+
+      // Output codecs and file
+      ffmpegMergeArgs.push("-c:v", "copy");
+      ffmpegMergeArgs.push("-c:a", "aac");
+      ffmpegMergeArgs.push("-shortest", concatFilePath);
+
+      console.log("Running", ffmpegExec, ffmpegMergeArgs.join(" "));
+      try {
+        execFileSync(ffmpegExec, ffmpegMergeArgs, { stdio: "inherit" });
+        console.log(`All streams merged into ${concatFilePath}`);
+      } catch (error) {
+        console.error("Error running ffmpeg for merging:", error);
+      }
     }
 
   }
@@ -192,7 +251,7 @@ class OfferingDownloadMedia extends ScriptBase {
       })
       .option("streamKey", {
         alias: "stream-key",
-        describe: "comma separated list of offerings stream key",
+        describe: "comma separated list of offerings stream key (all for all streams)",
         type: "string",
         default: "video",
       })
@@ -200,6 +259,23 @@ class OfferingDownloadMedia extends ScriptBase {
         describe: "output directory",
         type: "string",
         default: "./out",
+      })
+      .option("merge-streams", {
+        alias: "merge",
+        describe: "merge all streams into a single file",
+        type: "boolean",
+        default: false
+      })
+      .option("merge-file", {
+        alias: "merge-file",
+        describe: "file to merge all streams into (default: output_shortened.mp4)",
+        type: "string",
+        default: "output_shortened.mp4",
+      })
+       .option("ffmpeg-exec", {
+        describe: "path to ffmpeg executable",
+        type: "string",
+        default: "ffmpeg",
       });
   }
 }
