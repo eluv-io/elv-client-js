@@ -1877,6 +1877,13 @@ const AbrProfileLiveVod = {
       "protocol": {
         "type": "ProtoHls"
       }
+    },
+    "dash-clear": {
+      "drm": null,
+      "protocol": {
+        "min_buffer_length": 2,
+        "type": "ProtoDash"
+      }
     }
   },
   "segment_specs": {
