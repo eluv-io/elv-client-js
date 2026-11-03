@@ -3507,7 +3507,7 @@ exports.TenantContent = async function({
 
   const path = UrlJoin("tenants", tenantId, "q", "query");
 
-  // Tenant query works best with plain token - it allows it to return objecte metadata fields.
+  // Tenant query works best with plain token - it allows it to return object metadata fields.
   const token = authorizationToken || await this.CreatePlainToken();
 
   const httpClient =
