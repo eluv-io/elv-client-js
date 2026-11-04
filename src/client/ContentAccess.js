@@ -928,7 +928,10 @@ exports.ContentObjectMetadata = async function({
   let metadata;
   try {
     metadata = await this.HttpClient.RequestJsonBody({
-      headers: { "Authorization": authTokens.map(token => `Bearer ${token}`) },
+      headers: {
+        "Authorization": authTokens.map(token => `Bearer ${token}`),
+        "Cache-Control": "no-store"
+      },
       queryParams: {
         ...queryParams,
         select,
