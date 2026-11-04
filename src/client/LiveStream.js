@@ -159,11 +159,11 @@ const GetNodeFromStreamData = async ({client, url, nodeId, nodeApi}) => {
   return {node, endpoint, streamHref};
 };
 
-const CueInfo = async ({eventId, status}) => {
+const CueInfo = async function({eventId, status}) {
   let cues;
   try {
     const lroStatusResponse = await this.utils.ResponseToJson(
-      await HttpClient.Fetch(status.lro_status_url)
+      await HttpClient.Fetch(status.lroStatusUrl)
     );
     cues = lroStatusResponse.custom.cues;
   } catch(error) {
@@ -3145,13 +3145,20 @@ exports.StreamListUrls = async function({siteId}={}) {
  * - for an event stream, make sure the TTL is long enough to allow running the live-to-vod command before the beginning of the recording expires
  * - for 24/7 streams, make sure to reset the stream before the desired recording (as to create a new recording period) and have the TTL long enough
  *  to allow running the live-to-vod command before the beginning of the recording expires.
- * - startTime and endTime are not currently implemented by this method
  *
  *
  * @methodGroup Live Stream
  * @namedParams
  * @param {string} name - Object ID or name of the live stream
  * @param {string} targetObjectId - Object ID of the target VOD object
+ * @param {string=} writeToken - Use this draft (by default 'finalize' is true and the object gets finalized)
+ * @param {boolean=} drm - Enable DRM (default false)
+ * @param {boolean=} includeTags - Copy video tags from the live stream (default false)
+ * @param {boolean=} defaultDash - Add a clear DASH default_dash offering for Chromecast (default false)
+ * @param {boolean=} keepExistingStreams - Preserve existing target stream info, including thumbnails (default false)
+ * @param {Object=} streams - Stream selection map passed to live-to-VOD initialization
+ * @param {string=} startTime - ISO-8601 start time for the clip
+ * @param {string=} endTime - ISO-8601 end time for the clip
  * @param {string=} eventId -
  * @param {boolean=} finalize - If enabled, target object will be finalized after copy to vod operations
  * @param {number=} recordingPeriod - Determines which recording period to copy, which are 0-based. -1 copies the current (or last) period
@@ -3194,6 +3201,11 @@ exports.StreamListUrls = async function({siteId}={}) {
 exports.StreamCopyToVod = async function({
   name,
   targetObjectId,
+  writeToken,
+  drm=false,
+  includeTags=false,
+  defaultDash=false,
+  keepExistingStreams=false,
   eventId,
   streams=null,
   finalize=true,
@@ -3202,10 +3214,30 @@ exports.StreamCopyToVod = async function({
   endTime=""
 }) {
   const objectId = name;
-  const abrProfile = require("../abr_profiles/abr_profile_live_to_vod.js");
+  const abrProfile = R.clone(drm ?
+    require("../abr_profiles/abr_profile_live_to_vod_drm.js") :
+    require("../abr_profiles/abr_profile_live_to_vod.js"));
 
-  const status = await this.StreamStatus({name});
+  const status = await this.StreamStatus({name, showParams: true});
   const libraryId = status.libraryId;
+  const recordingParams = status.recordingParams;
+  const xcParams = recordingParams?.xc_params;
+
+  // Determine segment durations for audio and video
+  // Stream config uses '_seg_duration_ts' which represents part duration (15 segments)
+  // Note recordingParams.source_timescale is actually the timescale of the mez output
+  for(const [type, durationTs, timescale] of [
+    ["audio", xcParams?.audio_seg_duration_ts, xcParams?.sample_rate],
+    ["video", xcParams?.video_seg_duration_ts, recordingParams?.source_timescale]
+  ]) {
+    if(!Number.isFinite(durationTs) || durationTs <= 0 ||
+      !Number.isFinite(timescale) || timescale <= 0) {
+      throw Error(`Bad recording config segment duration - ${type}`);
+    }
+
+    abrProfile.segment_specs[type].target_dur = Fraction(durationTs)
+      .div(timescale).div(abrProfile.segment_specs[type].segs_per_chunk).valueOf();
+  }
 
   this.Log(`Copying stream ${name} to target ${targetObjectId}`);
 
@@ -3219,6 +3251,7 @@ exports.StreamCopyToVod = async function({
   const kmsCap = await this.ContentObjectMetadata({
     libraryId: targetLibraryId,
     objectId: targetObjectId,
+    writeToken,
     metadataSubtree: kmsCapId
   });
 
@@ -3234,21 +3267,40 @@ exports.StreamCopyToVod = async function({
 
     if(eventId) {
       // Retrieve start and end times for the event
-      let event = await this.CueInfo({eventId, status});
+      let event = await CueInfo.call(this, {eventId, status});
       if(event.eventStart && event.eventEnd) {
         startTime = event.eventStart;
         endTime = event.eventEnd;
       }
     }
 
-    const {writeToken} = await this.EditContentObject({
-      objectId: targetObjectId,
-      libraryId: targetLibraryId
-    });
+    if(!writeToken) {
+      const response = await this.EditContentObject({
+        objectId: targetObjectId,
+        libraryId: targetLibraryId
+      });
+      writeToken = response.writeToken;
+    }
 
     status.targetObjectId = targetObjectId;
     status.targetLibraryId = targetLibraryId;
     status.targetWriteToken = writeToken;
+
+    const preservedOfferingPoints = {};
+    for(const offeringKey of ["default", "default_dash"]) {
+      const existing = await this.ContentObjectMetadata({
+        libraryId: targetLibraryId,
+        objectId: targetObjectId,
+        writeToken,
+        metadataSubtree: `offerings/${offeringKey}`
+      });
+      if(existing && (existing.entry_point_rat !== undefined || existing.exit_point_rat !== undefined)) {
+        preservedOfferingPoints[offeringKey] = {
+          entry_point_rat: existing.entry_point_rat,
+          exit_point_rat: existing.exit_point_rat
+        };
+      }
+    }
 
     this.Log("Process live source (takes around 20 sec per hour of content)");
 
@@ -3263,7 +3315,8 @@ exports.StreamCopyToVod = async function({
         "end_time": endTime, // eg. "2023-10-03T02:15:00.00Z",
         "streams": streams,
         "recording_period": recordingPeriod,
-        "variant_key": "default"
+        "variant_key": "default",
+        "include_tags": includeTags
       },
       constant: false,
       format: "text"
@@ -3274,7 +3327,21 @@ exports.StreamCopyToVod = async function({
       "offering_key": "default",
       "prod_master_hash": writeToken,
       "variant_key": "default",
-      "keep_other_streams": false
+      "keep_other_streams": keepExistingStreams,
+      ...(defaultDash && {
+        "additional_offering_specs": {
+          "default_dash": [{
+            "op": "replace",
+            "path": "/playout/playout_formats",
+            "value": {
+              "dash-clear": {
+                "drm": null,
+                "protocol": {"min_buffer_length": 2, "type": "ProtoDash"}
+              }
+            }
+          }]
+        }
+      })
     };
 
     await this.CallBitcodeMethod({
@@ -3311,6 +3378,31 @@ exports.StreamCopyToVod = async function({
       constant: false,
       format: "text"
     });
+
+    // Mezzanine initialization/finalization can overwrite playback trim points.
+    for(const [offeringKey, points] of Object.entries(preservedOfferingPoints)) {
+      const offering = await this.ContentObjectMetadata({
+        libraryId: targetLibraryId,
+        objectId: targetObjectId,
+        writeToken,
+        metadataSubtree: `offerings/${offeringKey}`
+      });
+      if(!offering) { continue; }
+
+      if(points.entry_point_rat !== undefined) {
+        offering.entry_point_rat = points.entry_point_rat;
+      }
+      if(points.exit_point_rat !== undefined) {
+        offering.exit_point_rat = points.exit_point_rat;
+      }
+      await this.ReplaceMetadata({
+        libraryId: targetLibraryId,
+        objectId: targetObjectId,
+        writeToken,
+        metadataSubtree: `offerings/${offeringKey}`,
+        metadata: offering
+      });
+    }
 
     if(finalize) {
       const finalizeResponse = await this.FinalizeContentObject({
