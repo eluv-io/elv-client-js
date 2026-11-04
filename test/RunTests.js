@@ -5,12 +5,13 @@ const ClientConfiguration = require("../TestConfiguration");
 const configUrl = process.env["CONFIG_URL"] || ClientConfiguration["config-url"];
 
 const Tests = {
-  Utils: require("./Utils.test"),
-  Wallet: require("./ElvWallet.test"),
-  FrameClient: require("./FrameClient.test"),
-  UserProfileClient: require("./UserProfileClient.test"),
-  ElvClient: require("./ElvClient.test"),
-  PermissionsClient: require("./PermissionsClient.test")
+  Utils: "./Utils.test",
+  Wallet: "./ElvWallet.test",
+  FrameClient: "./FrameClient.test",
+  UserProfileClient: "./UserProfileClient.test",
+  ElvClient: "./ElvClient.test",
+  PermissionsClient: "./PermissionsClient.test",
+  LiveStream: "./LiveStream.test"
 };
 
 const RunTests = async () => {
@@ -35,7 +36,7 @@ const RunTests = async () => {
     const suiteStartTime = performance.now();
     try {
       console.log(`\n== Running Test Suite: ${keys[i]} ==`);
-      stats[keys[i]] = await Tests[keys[i]]();
+      stats[keys[i]] = await require(Tests[keys[i]])();
 
       const passed = stats[keys[i]].passed.length;
       const failed = stats[keys[i]].failed.length;
