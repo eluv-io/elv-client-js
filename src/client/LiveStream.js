@@ -3218,7 +3218,7 @@ exports.StreamCopyToVod = async function({
     require("../abr_profiles/abr_profile_live_to_vod_drm.js") :
     require("../abr_profiles/abr_profile_live_to_vod.js"));
 
-  const status = await this.StreamStatus({name, showParams: true});
+  const status = await this.StreamStatus({name, includeRecordingInfo: true, includeParams: true});
   const libraryId = status.libraryId;
   const recordingParams = status.recordingParams;
   const xcParams = recordingParams?.xc_params;
