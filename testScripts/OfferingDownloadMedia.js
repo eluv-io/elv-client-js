@@ -1,13 +1,11 @@
 /* eslint-disable no-console */
 const ScriptBase = require("./parentClasses/ScriptBase");
 const utils = require("../src/Utils");
-const Fraction = require("fraction.js");
-const {JSONPath} = require("jsonpath-plus");
 const fs = require("fs");
 const path = require("path");
-const { execSync } = require("child_process");
+const { execFileSync } = require("child_process");
 
-class OfferingDownloadMedia2 extends ScriptBase {
+class OfferingDownloadMedia extends ScriptBase {
 
   async body(){
 
@@ -15,8 +13,6 @@ class OfferingDownloadMedia2 extends ScriptBase {
     const versionHash=this.args.versionHash;
     const offeringKey=this.args.offeringKey;
     const streamKey=this.args.streamKey;
-    const startTime=this.args.startTime;
-    let endTime=this.args.endTime;
     const out=this.args.out;
 
     if(!objectId && !versionHash) throw new Error("Require object-id or object-hash to be provided");
@@ -24,57 +20,26 @@ class OfferingDownloadMedia2 extends ScriptBase {
       objectId = utils.DecodeVersionHash(versionHash).objectId;
     }
 
-    if(startTime < 0) {
-      throw new Error(`start time provided needs to be greater than 0: start=${startTime}s`);
-    }
-    if(startTime >= endTime) {
-      throw new Error(`end time needs to be greater than start time, values provided: start=${startTime}s, end=${endTime}s`);
-    }
-
     const client=await this.client();
     const libraryId=await client.ContentObjectLibraryId({objectId, versionHash});
 
     // get object metadata
-    const metadata = await client.ContentObjectMetadata({ libraryId, objectId });
+    const metadata = await client.ContentObjectMetadata({ libraryId, objectId, versionHash });
 
-    const offeringMetadata=JSONPath({
-      json: metadata,
-      path: `offerings.${offeringKey}`,
-      wrap: false
-    });
+    const offeringMetadata = metadata.offerings && metadata.offerings[offeringKey];
+    if(!offeringMetadata) {
+      throw new Error(`Offering "${offeringKey}" not found`);
+    }
 
-    const transcodesMetadata=JSONPath({
-      json:metadata,
-      path: "transcodes"
-    });
+    const transcodesMetadata = metadata.transcodes || {};
 
-    // Retrieve stream metadata from transcodes or offering metadata
-    // Create a map of streamKey => stream metadata
-    const streamsMap = Object.fromEntries(
-      Object.keys(offeringMetadata.playout.streams).map(streamKey => {
-        const info = this.getStreamInfo(offeringMetadata, transcodesMetadata, streamKey);
-        if (info === undefined) {
-          console.log(`StreamInfo returned undefined for streamKey: ${streamKey}`);
-        }
-        return [streamKey, info || {}];
-      })
-    );
+    const streamKeyArray = streamKey.split(",").map(key => key.trim()).filter(Boolean);
+    const partsMap = Object.fromEntries(streamKeyArray.map(key => {
+      const transcodeParts = this.getTranscodeParts(offeringMetadata, transcodesMetadata, key);
+      console.log(`Stream "${key}" uses transcode ${transcodeParts.transcodeId} (${transcodeParts.parts.length} parts)`);
 
-    let streamKeyArray = streamKey.split(",").map(key => key.trim()); // trim() to remove any extra spaces
-    const streamsMapKeys = new Set(Object.keys(streamsMap));
-
-    // Filter the streamKeyArray to only include keys present in streamsMap
-    streamKeyArray = streamKeyArray.filter(key => {
-      if (!streamsMapKeys.has(key)) {
-        console.warn(`Warning: Stream key "${key}" not found in streamsMap.`);
-        return false;
-      }
-      return true;
-    });
-
-    // Retrieve all parts that includes the start and end time for each streamKey
-    const partsMap = this.getPartsMap(streamsMap, streamKeyArray, startTime, endTime);
-    console.log("PARTS MAP => { parts, minStart, maxEnd } map:", partsMap);
+      return [key, transcodeParts.parts];
+    }));
 
     // handle directories
     const dirPath=path.resolve(out);
@@ -84,53 +49,24 @@ class OfferingDownloadMedia2 extends ScriptBase {
     } else {
       console.log(`Directory already exists at ${dirPath}`);
     }
-    // create directory for object provided : iq_XXX_start-time_end-time
-    const contentObjDirPath = path.join(dirPath, `${objectId}_${this.secondsToHms(startTime, "-")}_${this.secondsToHms(endTime, "-")}`);
-    // if(fs.existsSync(contentObjDirPath)) throw new Error(`Directory already exists at ${contentObjDirPath}`);
-    // fs.mkdirSync(contentObjDirPath, { recursive: true });
+    const contentObjDirPath = path.join(dirPath, `${objectId}_${offeringKey}`);
     if(!fs.existsSync(contentObjDirPath)) {
       fs.mkdirSync(contentObjDirPath, { recursive: true });
       console.log(`Directory created at ${contentObjDirPath}`);
     }
 
-    const trimmedDirectory = path.join(contentObjDirPath, "trimmed");
-    if(!fs.existsSync(trimmedDirectory)) {
-      fs.mkdirSync(trimmedDirectory, { recursive: true });
-    }
-
-    // Download and concatenate the parts for each streamKey
-    // Then, trim the concatenated media
-    for(const streamKey of Object.keys(partsMap)) {
-      const { parts, minStart, maxEnd } = partsMap[streamKey];
-      const partsFile = await this.downloadParts(contentObjDirPath, libraryId, objectId, streamKey, parts);
+    // Download and concatenate all parts for each stream key.
+    for(const [streamKey, parts] of Object.entries(partsMap)) {
+      const partsFile = await this.downloadParts(contentObjDirPath, libraryId, objectId, versionHash, streamKey, parts);
       console.log(`parts file for ${streamKey}: ${partsFile}\n`);
 
       // concatenate the parts
-      let mediaFile=path.join(contentObjDirPath, `${streamKey}.mp4`);
-      let cmd=`ffmpeg -f concat -safe 0 -i ${partsFile} -c copy ${mediaFile}`;
-      console.log("Running", cmd);
+      const mediaFile=path.join(contentObjDirPath, `${streamKey}.mp4`);
+      const ffmpegArgs = ["-f", "concat", "-safe", "0", "-i", partsFile, "-c", "copy", mediaFile];
+      console.log("Running", "ffmpeg", ffmpegArgs.join(" "));
       try {
-        execSync(cmd);
+        execFileSync("ffmpeg", ffmpegArgs, {stdio: "inherit"});
         console.log("Concatenation complete.");
-      } catch(error) {
-        console.error("Error running ffmpeg:", error);
-      }
-
-      // trim the parts
-      let trimStartTime=null;
-      let trimEndTime=null;
-      // since new concatenated video starts from 0s
-      if(minStart !== null && maxEnd !== null) {
-        trimStartTime=startTime - minStart;
-        trimEndTime=endTime - minStart;
-      }
-
-      let mediaTrimmedFile=path.join(trimmedDirectory, `${streamKey}_trimmed.mp4`);
-      cmd=`ffmpeg -i ${mediaFile} -ss ${this.secondsToHms(trimStartTime, ":")} -t ${this.secondsToHms(trimEndTime - trimStartTime, ":")} ${mediaTrimmedFile}`;
-      console.log("Running", cmd);
-      try {
-        execSync(cmd);
-        console.log(`\nTrimmed ${streamKey} file: ${mediaTrimmedFile}`);
       } catch(error) {
         console.error("Error running ffmpeg:", error);
       }
@@ -140,60 +76,49 @@ class OfferingDownloadMedia2 extends ScriptBase {
 
   }
 
-  getStreamInfo(offering, transcodes, streamKey) {
-    const reps = offering.playout.streams[streamKey].representations;
-    const rep = reps && Object.values(reps).find(r => r.transcode_id);
-    return rep && (transcodes[0] && transcodes[0][rep.transcode_id] && transcodes[0][rep.transcode_id].stream) || offering.media_struct.streams[streamKey];
-  }
+  getTranscodeParts(offering, transcodes, streamKey) {
+    const playoutStream = offering.playout && offering.playout.streams && offering.playout.streams[streamKey];
+    if(!playoutStream) {
+      const availableStreams = Object.keys(offering.playout && offering.playout.streams || {});
+      throw new Error(`Stream "${streamKey}" not found. Available streams: ${availableStreams.join(", ")}`);
+    }
 
-  getPartsMap(streamsMap, streamKeyArray, startTime, endTime){
-    const partsMap = {};
+    const representations = Object.values(playoutStream.representations || {});
+    const representation = representations.find(rep => rep.transcode_matches_rep && rep.transcode_id) ||
+      representations.find(rep => rep.transcode_id);
+    if(!representation) {
+      throw new Error(`No transcode ID found for stream "${streamKey}"`);
+    }
 
-    streamKeyArray.forEach(key => {
-      let sourcesMetadata = streamsMap[key].sources;
-      let durationMetadata = streamsMap[key].duration;
+    const transcodeId = representation.transcode_id;
+    const transcode = transcodes[transcodeId];
+    if(!transcode) {
+      throw new Error(`Transcode "${transcodeId}" for stream "${streamKey}" not found in metadata.transcodes`);
+    }
 
-      const totalDuration = new Fraction(durationMetadata.ts).mul(new Fraction(durationMetadata.time_base));
-      if (endTime > totalDuration) {
-        console.warn(`Warning: end time exceeds total duration. Setting end time to total duration: ${totalDuration}s`);
-        endTime = totalDuration;
+    // Current metadata stores sources as [partHash, durationTs]. Keep support
+    // for the older {source: partHash} representation as well.
+    const sources = transcode.stream && transcode.stream.sources;
+    const rawParts = Array.isArray(sources) && sources.length > 0
+      ? sources
+      : transcode.mez_prep_spec && transcode.mez_prep_spec.part_hashes;
+    if(!Array.isArray(rawParts) || rawParts.length === 0) {
+      throw new Error(`No parts found for stream "${streamKey}" in transcode "${transcodeId}"`);
+    }
+
+    const parts = rawParts.map((part, index) => {
+      const partHash = Array.isArray(part) ? part[0] : (typeof part === "string" ? part : part.source);
+      if(typeof partHash !== "string" || !partHash) {
+        throw new Error(`Invalid part entry ${index + 1} for stream "${streamKey}" in transcode "${transcodeId}"`);
       }
 
-      const sourcesTimeInfo = sourcesMetadata.map(part => {
-        const start = new Fraction(part.timeline_start.ts).mul(new Fraction(part.timeline_start.time_base));
-        const end = new Fraction(part.timeline_end.ts).mul(new Fraction(part.timeline_end.time_base));
-        return {
-          start: start.valueOf(),
-          end: end.valueOf(),
-          source: part.source
-        };
-      });
-
-      let parts = [];
-      let minStart = null;
-      let maxEnd = null;
-      sourcesTimeInfo.forEach(item => {
-        if(startTime < item.end && endTime > item.start) {
-          parts.push(item.source);
-          if (minStart === null || item.start < minStart) {
-            minStart = item.start;
-          }
-          if(maxEnd === null || item.end > maxEnd) {
-            maxEnd = item.end;
-          }
-        }
-      });
-
-      partsMap[key] = {
-        parts,
-        minStart,
-        maxEnd
-      };
+      return partHash;
     });
-    return partsMap;
+
+    return {transcodeId, parts};
   }
 
-  async downloadParts(outDir, libraryId, objectId, streamKey, parts) {
+  async downloadParts(outDir, libraryId, objectId, versionHash, streamKey, parts) {
     const mtPath=path.join(outDir, streamKey);
     if(!fs.existsSync(mtPath)) {
       fs.mkdirSync(mtPath, {recursive: true});
@@ -213,6 +138,7 @@ class OfferingDownloadMedia2 extends ScriptBase {
       const buf=await client.DownloadPart({
         libraryId,
         objectId,
+        versionHash,
         partHash,
         format: "buffer",
         chunked: false,
@@ -234,17 +160,8 @@ class OfferingDownloadMedia2 extends ScriptBase {
     return partsFile;
   }
 
-  secondsToHms(seconds, separator) {
-    const date=new Date(seconds * 1000);
-    const hh=String(date.getUTCHours()).padStart(2, "0");
-    const mm=String(date.getUTCMinutes()).padStart(2, "0");
-    const ss=String(date.getUTCSeconds()).padStart(2, "0");
-    const ms=String(date.getUTCMilliseconds()).padStart(3, "0");
-    return `${hh}${separator}${mm}${separator}${ss}.${ms}`;
-  }
-
   header() {
-    return `Downloading parts from startTime: ${this.args.startTime}s to endTime: ${this.args.endTime}s`;
+    return `Downloading all parts for streams: ${this.args.streamKey}`;
   }
 
   options() {
@@ -260,24 +177,16 @@ class OfferingDownloadMedia2 extends ScriptBase {
         type: "string"
       })
       .option("offeringKey", {
+        alias: "offering-key",
         describe: "offering key",
         type: "string",
         default: "default",
       })
       .option("streamKey", {
+        alias: "stream-key",
         describe: "comma separated list of offerings stream key",
         type: "string",
         default: "video",
-      })
-      .option("startTime", {
-        describe: "start time to retrieve parts in seconds",
-        demandOption: true,
-        type: "number",
-      })
-      .option("endTime", {
-        describe: "end time to retrieve parts in seconds",
-        demandOption: true,
-        type: "number",
       })
       .option("out",{
         describe: "output directory",
@@ -287,5 +196,9 @@ class OfferingDownloadMedia2 extends ScriptBase {
   }
 }
 
-const script = new OfferingDownloadMedia2();
-script.run();
+if(require.main === module) {
+  const script = new OfferingDownloadMedia();
+  script.run();
+} else {
+  module.exports = OfferingDownloadMedia;
+}

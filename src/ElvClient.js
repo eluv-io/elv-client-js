@@ -131,6 +131,7 @@ class ElvClient {
    * @param {Array<string>} authServiceURIs - A list of full URIs to auth service endpoints
    * @param {Array<string>} fileServiceURIs - A list of full URIs to file service endpoints
    * @param {Array<string>=} searchURIs - A list of full URIs to search service endpoints
+   * @param {Array<string>=} verticalPlayoutURIs - A list of full URIs to nodes capable of vertical video playout
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth. Also known as an anonymous token containing the space
@@ -152,6 +153,7 @@ class ElvClient {
     authServiceURIs,
     fileServiceURIs,
     searchURIs,
+    verticalPlayoutURIs,
     ethereumContractTimeout = 10,
     trustAuthorityId,
     staticToken,
@@ -179,6 +181,7 @@ class ElvClient {
     this.fileServiceURIs = fileServiceURIs || fabricURIs;
     this.ethereumURIs = ethereumURIs;
     this.searchURIs = searchURIs;
+    this.verticalPlayoutURIs = verticalPlayoutURIs;
     this.ethereumContractTimeout = ethereumContractTimeout;
 
     this.trustAuthorityId = trustAuthorityId;
@@ -262,6 +265,8 @@ class ElvClient {
 
       const searchURIs = fabricInfo.network.services.search || [];
 
+      const verticalPlayoutURIs = fabricInfo.network.services.vertical || [];
+
       const fabricVersion = Math.max(...(fabricInfo.network.api_versions || [2]));
 
       return {
@@ -275,6 +280,7 @@ class ElvClient {
         fileServiceURIs,
         kmsURIs: kmsUrls,
         searchURIs,
+        verticalPlayoutURIs,
         fabricVersion
       };
     } catch(error) {
@@ -378,6 +384,7 @@ class ElvClient {
       authServiceURIs,
       fileServiceURIs,
       searchURIs,
+      verticalPlayoutURIs,
       fabricVersion
     } = await ElvClient.Configuration({
       configUrl,
@@ -395,6 +402,7 @@ class ElvClient {
       authServiceURIs,
       fileServiceURIs,
       searchURIs,
+      verticalPlayoutURIs,
       ethereumContractTimeout,
       trustAuthorityId,
       staticToken,
@@ -427,6 +435,7 @@ class ElvClient {
     this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, networkName: this.networkName, debug: this.debug});
     this.FileServiceHttpClient = new HttpClient({uris: this.fileServiceURIs, networkName: this.networkName, debug: this.debug});
     this.SearchHttpClient = new HttpClient({uris: this.searchURIs || [], networkName: this.networkName, debug: this.debug});
+    this.VerticalPlayoutHttpClient = new HttpClient({uris: this.verticalPlayoutURIs || [], networkName: this.networkName, debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, networkId: this.networkId, debug: this.debug, timeout: this.ethereumContractTimeout});
 
     if(!this.signer) {
@@ -483,7 +492,7 @@ class ElvClient {
       throw Error("Unable to change region: Configuration URL not set");
     }
 
-    const {fabricURIs, ethereumURIs, authServiceURIs, fileServiceURIs, searchURIs} = await ElvClient.Configuration({
+    const {fabricURIs, ethereumURIs, authServiceURIs, fileServiceURIs, searchURIs, verticalPlayoutURIs} = await ElvClient.Configuration({
       configUrl: this.configUrl,
       region
     });
@@ -495,7 +504,8 @@ class ElvClient {
       ethereumURIs,
       authServiceURIs,
       fileServiceURIs,
-      searchURIs
+      searchURIs,
+      verticalPlayoutURIs
     });
 
     return {
@@ -503,7 +513,8 @@ class ElvClient {
       ethereumURIs,
       fileServiceURIs,
       authServiceURIs,
-      searchURIs
+      searchURIs,
+      verticalPlayoutURIs
     };
   }
 
@@ -558,7 +569,8 @@ class ElvClient {
       ethereumURIs: this.ethereumURIs,
       authServiceURIs: this.authServiceURIs,
       fileServiceURIs: this.fileServiceURIs,
-      searchURIs: this.searchURIs
+      searchURIs: this.searchURIs,
+      verticalPlayoutURIs: this.verticalPlayoutURIs
     };
   }
 
@@ -571,10 +583,11 @@ class ElvClient {
    * @param {Array<string>=} authServiceURIs - A list of URLs for the auth service, in preference order
    * @param {Array<string>=} fileServiceURIs - A list of URLs for file service jobs, in preference order
    * @param {Array<string>=} searchURIs - A list of URLs for the search nodes, in preference order
+   * @param {Array<string>=} verticalPlayoutURIs - A list of URLs for the vertical playout nodes, in preference order
    *
    * @methodGroup Nodes
    */
-  SetNodes({fabricURIs, ethereumURIs, authServiceURIs, fileServiceURIs, searchURIs}) {
+  SetNodes({fabricURIs, ethereumURIs, authServiceURIs, fileServiceURIs, searchURIs, verticalPlayoutURIs}) {
     if(fabricURIs) {
       this.fabricURIs = fabricURIs;
 
@@ -609,6 +622,13 @@ class ElvClient {
       this.SearchHttpClient.uris = searchURIs;
       this.SearchHttpClient.uriIndex = 0;
     }
+
+    if(verticalPlayoutURIs) {
+      this.verticalPlayoutURIs = verticalPlayoutURIs;
+
+      this.VerticalPlayoutHttpClient.uris = verticalPlayoutURIs;
+      this.VerticalPlayoutHttpClient.uriIndex = 0;
+    }
   }
 
   /**
@@ -624,7 +644,7 @@ class ElvClient {
    */
   async SpaceNodes({matchEndpoint, matchNodeId, matchWriteToken}={}) {
     let nodes;
-    this.SetStaticToken();
+    const staticToken = this.utils.B64(JSON.stringify({qspace_id: this.contentSpaceId}));
 
     if(matchEndpoint) {
       ({nodes} = await this.utils.ResponseToJson(
@@ -632,7 +652,7 @@ class ElvClient {
           path: UrlJoin("nodes"),
           method: "GET",
           headers: {
-            Authorization: `Bearer ${this.staticToken}`
+            Authorization: `Bearer ${staticToken}`
           }
         })
       ));
@@ -660,34 +680,27 @@ class ElvClient {
           match = true;
         }
 
-        this.ClearStaticToken();
-
         return match;
       });
     } else if(matchNodeId) {
-      this.SetStaticToken();
-
       let node = await this.utils.ResponseToJson(
         this.HttpClient.Request({
           path: UrlJoin("nodes", matchNodeId),
           method: "GET",
           headers: {
-            Authorization: `Bearer ${this.staticToken}`
+            Authorization: `Bearer ${staticToken}`
           }
         })
       );
 
-      this.ClearStaticToken();
       return [node];
     } else if(matchWriteToken) {
-      this.SetStaticToken();
-
       const {nodes} = await this.utils.ResponseToJson(
         this.HttpClient.Request({
           path: UrlJoin("nodes"),
           method: "GET",
           headers: {
-            Authorization: `Bearer ${this.staticToken}`
+            Authorization: `Bearer ${staticToken}`
           },
           queryParams: {
             token: matchWriteToken
@@ -695,7 +708,6 @@ class ElvClient {
         })
       );
 
-      this.ClearStaticToken();
       return nodes;
     }
   }
@@ -1130,7 +1142,7 @@ class ElvClient {
     const signature = await this.authClient.Sign(Ethers.utils.keccak256(compressedToken));
 
     return `aessjc${this.utils.B58(Buffer.concat([
-      Buffer.from(signature.replace(/^0x/, ""), "hex"), 
+      Buffer.from(signature.replace(/^0x/, ""), "hex"),
       Buffer.from(compressedToken)
     ]))}`;
   }
