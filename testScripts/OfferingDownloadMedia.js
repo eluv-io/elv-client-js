@@ -15,7 +15,7 @@ class OfferingDownloadMedia extends ScriptBase {
     const streamKey=this.args.streamKey;
     const out=this.args.out;
     const mergeStreams=this.args.mergeStreams;
-    const mergeFile=this.args.mergeFile;
+    const outFile=this.args.outFile;
     const ffmpegExec=this.args.ffmpegExec;
 
     if(!objectId && !versionHash) throw new Error("Require object-id or object-hash to be provided");
@@ -88,7 +88,7 @@ class OfferingDownloadMedia extends ScriptBase {
     if (mergeStreams) {
 
 
-      const concatFilePath = path.join(contentObjDirPath, mergeFile || "output_shortened.mp4");
+      const outFilePath = path.join(contentObjDirPath, outFile || "output_shortened.mp4");
       const audioStreams = streamKeyArray.filter(key => key.startsWith("audio"));
       audioStreams.sort((a, b) => {
         return a.localeCompare(b, undefined, { numeric: true });
@@ -130,12 +130,12 @@ class OfferingDownloadMedia extends ScriptBase {
       // Output codecs and file
       ffmpegMergeArgs.push("-c:v", "copy");
       ffmpegMergeArgs.push("-c:a", "aac");
-      ffmpegMergeArgs.push("-shortest", concatFilePath);
+      ffmpegMergeArgs.push("-shortest", outFilePath);
 
       console.log("Running", ffmpegExec, ffmpegMergeArgs.join(" "));
       try {
         execFileSync(ffmpegExec, ffmpegMergeArgs, { stdio: "inherit" });
-        console.log(`All streams merged into ${concatFilePath}`);
+        console.log(`All streams merged into ${outFilePath}`);
       } catch (error) {
         console.error("Error running ffmpeg for merging:", error);
       }
@@ -266,8 +266,8 @@ class OfferingDownloadMedia extends ScriptBase {
         type: "boolean",
         default: false
       })
-      .option("merge-file", {
-        alias: "merge-file",
+      .option("out-file", {
+        alias: "out-file",
         describe: "file to merge all streams into (default: output_shortened.mp4)",
         type: "string",
         default: "output_shortened.mp4",
