@@ -667,7 +667,7 @@ class ElvClient {
    */
   async SpaceNodes({matchEndpoint, matchNodeId, matchWriteToken}={}) {
     let nodes;
-    this.SetStaticToken();
+    const staticToken = this.utils.B64(JSON.stringify({qspace_id: this.contentSpaceId}));
 
     if(matchEndpoint) {
       ({nodes} = await this.utils.ResponseToJson(
@@ -675,7 +675,7 @@ class ElvClient {
           path: UrlJoin("nodes"),
           method: "GET",
           headers: {
-            Authorization: `Bearer ${this.staticToken}`
+            Authorization: `Bearer ${staticToken}`
           }
         })
       ));
@@ -703,34 +703,27 @@ class ElvClient {
           match = true;
         }
 
-        this.ClearStaticToken();
-
         return match;
       });
     } else if(matchNodeId) {
-      this.SetStaticToken();
-
       let node = await this.utils.ResponseToJson(
         this.HttpClient.Request({
           path: UrlJoin("nodes", matchNodeId),
           method: "GET",
           headers: {
-            Authorization: `Bearer ${this.staticToken}`
+            Authorization: `Bearer ${staticToken}`
           }
         })
       );
 
-      this.ClearStaticToken();
       return [node];
     } else if(matchWriteToken) {
-      this.SetStaticToken();
-
       const {nodes} = await this.utils.ResponseToJson(
         this.HttpClient.Request({
           path: UrlJoin("nodes"),
           method: "GET",
           headers: {
-            Authorization: `Bearer ${this.staticToken}`
+            Authorization: `Bearer ${staticToken}`
           },
           queryParams: {
             token: matchWriteToken
@@ -738,7 +731,6 @@ class ElvClient {
         })
       );
 
-      this.ClearStaticToken();
       return nodes;
     }
   }
