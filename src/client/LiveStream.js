@@ -2546,8 +2546,8 @@ exports.StreamApplyProfile = async function({
     metadataSubtree: "live_recording_config"
   }) || {};
 
-  // Only preserve stream-identity fields and probe data from the current config; all technical settings come from the new profile.
-  // A profile with its own input_stream_info replaces the stream's probe data outright, so a stale probe can't override it.
+  // Only preserve stream-identity fields and probe data from the current config; all technical settings come from the new profile
+  // A profile's own input_stream_info replaces the stream's probe so a stale one can't win
   const preservedFields = profile.input_stream_info ?
     ["url", "name"] :
     ["url", "name", "probe_info", "input_stream_info"];
@@ -2598,7 +2598,7 @@ exports.StreamApplyProfile = async function({
       finalize: false
     });
 
-    // input_stream_info is the single source of probe data after an apply; StreamConfig rewrites probe_info, so drop it
+    // Keep input_stream_info as the only probe; StreamConfig rewrites probe_info
     await this.ReplaceMetadata({
       libraryId,
       objectId,
