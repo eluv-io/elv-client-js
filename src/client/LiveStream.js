@@ -2546,8 +2546,12 @@ exports.StreamApplyProfile = async function({
     metadataSubtree: "live_recording_config"
   }) || {};
 
-  // Only preserve stream-identity fields and probe data from the current config; all technical settings come from the new profile
-  const preservedConfig = R.pick(["url", "name", "probe_info", "input_stream_info"], currentConfig);
+  // Only preserve stream-identity fields and probe data from the current config; all technical settings come from the new profile.
+  // A profile with its own input_stream_info replaces the stream's probe data outright, so a stale probe can't override it.
+  const preservedFields = profile.input_stream_info ?
+    ["url", "name"] :
+    ["url", "name", "probe_info", "input_stream_info"];
+  const preservedConfig = R.pick(preservedFields, currentConfig);
   const config = R.mergeDeepRight(preservedConfig, profile);
 
   const currentProfileName = await this.ContentObjectMetadata({
@@ -2592,6 +2596,22 @@ exports.StreamApplyProfile = async function({
       inputStreamInfo: probe,
       writeToken: streamWriteToken,
       finalize: false
+    });
+
+    // input_stream_info is the single source of probe data after an apply; StreamConfig rewrites probe_info, so drop it
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: streamWriteToken,
+      metadataSubtree: "live_recording_config/input_stream_info",
+      metadata: probe
+    });
+
+    await this.DeleteMetadata({
+      libraryId,
+      objectId,
+      writeToken: streamWriteToken,
+      metadataSubtree: "live_recording_config/probe_info"
     });
   }
 
