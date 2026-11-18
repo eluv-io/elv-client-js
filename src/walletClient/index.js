@@ -463,7 +463,7 @@ class ElvWalletClient {
    * @param {string=} tenantId - ID of tenant with which to associate the user. If marketplace info was set upon initialization, this will be determined automatically.
    * @param {string=} email - Email address of the user. If not specified, this method will attempt to extract the email from the ID token.
    * @param {Array<string>=} signerURIs - (Only if using custom OAuth) - URIs corresponding to the key server(s) to use
-   * @param {boolean=} shareEmail=false - Whether or not the user consents to sharing their email
+   * @param {boolean=} shareEmail - Whether or not the user consents to sharing their email. If not specified, the user's existing setting is left unchanged.
    * @param {number=} tokenDuration=24 - Token expiration duration, in hours
    *
    * @returns {Promise<Object>} - Returns an authorization tokens that can be used to initialize the client using <a href="#Authenticate">Authenticate</a>.
@@ -480,7 +480,7 @@ class ElvWalletClient {
     tenantId,
     email,
     signerURIs,
-    shareEmail=false,
+    shareEmail,
     extraData={},
     nonce,
     installId,
@@ -495,15 +495,17 @@ class ElvWalletClient {
       tenantId = this.selectedMarketplaceInfo.tenantId;
     }
 
+    const loginData = { ...extraData };
+    if(typeof shareEmail !== "undefined") {
+      loginData.share_email = shareEmail;
+    }
+
     await this.client.SetRemoteSigner({
       idToken,
       userIdCode,
       tenantId,
       signerURIs,
-      extraData: {
-        ...extraData,
-        share_email: shareEmail
-      },
+      extraData: loginData,
       unsignedPublicAuth: true
     });
 
