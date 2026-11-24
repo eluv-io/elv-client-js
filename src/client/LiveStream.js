@@ -1800,7 +1800,7 @@ exports.StreamInitialize = async function({
       return {};
     }
 
-    res = await this.StreamSetOfferingAndDRM({
+    return await this.StreamSetOfferingAndDRM({
       name,
       typeAbrMaster,
       typeLiveStream,
@@ -1809,8 +1809,6 @@ exports.StreamInitialize = async function({
       writeToken,
       finalize
     });
-
-    return res;
   } catch(error) {
     console.error("Unable to intitialize stream", error);
   }
